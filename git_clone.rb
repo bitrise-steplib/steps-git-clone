@@ -90,6 +90,7 @@ prepared_repository_url = options[:repo_url]
 if options[:auth_ssh_key_base64] and options[:auth_ssh_key_base64].length > 0
   p "[i] Auth: using SSH private key (base64)"
   write_private_key_to_file(options[:user_home], options[:auth_ssh_key_base64])
+  # suppress known-host prompt
   add_host_to_known_hosts_if_needed(prepared_repository_url)
 elsif options[:auth_username] and options[:auth_username].length > 0 and options[:auth_password] and options[:auth_password].length > 0
   p "[i] Auth: with username and password"
