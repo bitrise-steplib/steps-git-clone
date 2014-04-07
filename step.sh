@@ -7,4 +7,6 @@ else
 fi
 
 # Clone the repository
-git clone --recursive $GIT_BRANCH_PARAMETER $GIT_REPOSITORY_URL $CONCRETE_RELATIVE_GIT_DIRECTORY
+# git clone --recursive $GIT_BRANCH_PARAMETER $GIT_REPOSITORY_URL $CONCRETE_RELATIVE_GIT_DIRECTORY
+
+ruby ./git_clone.rb
