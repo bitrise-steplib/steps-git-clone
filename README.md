@@ -11,6 +11,10 @@ GIT_BRANCH - optional; Set only if you want to clone just that branch
 Before starting this step the core-step-runner should copy the user's private ssh key to the ssh key storage ( ~/.ssh/ ).
 
 
+# Notes
+- GIT_ASKPASS=echo git clone... -> GIT_ASKPASS=echo will automatically fail if git would show a password prompt
+
+
 # How-Tos
 - how to convert a file into Base64 on OSX: http://superuser.com/a/120815
 
