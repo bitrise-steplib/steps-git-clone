@@ -16,7 +16,7 @@ options = {
 p "options: #{options}"
 
 if options[:AUTH_SSH_PRIVATE_KEY_BASE64]
-  private_key_file_path = File.join(options[:USER_HOME], './ssh/id_rsa')
+  private_key_file_path = File.join(options[:USER_HOME], '.ssh/id_rsa')
   p "private_key_file_path: #{private_key_file_path}"
   # create the folder if not yet created
   FileUtils::mkdir_p(File.join(options[:USER_HOME], '.ssh'))
