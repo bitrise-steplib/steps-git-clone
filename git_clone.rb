@@ -78,6 +78,6 @@ end
 
 full_git_clone_command_string = "git clone --recursive #{git_branch_parameter} #{prepared_repository_url} #{options[:CLONE_DESTINATION_DIR]}"
 p "full_git_clone_command_string: #{full_git_clone_command_string}"
-# system full_git_clone_command_string
+system full_git_clone_command_string
 
 
