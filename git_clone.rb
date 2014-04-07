@@ -17,7 +17,7 @@ p "options: #{options}"
 if options[:AUTH_SSH_PRIVATE_KEY_BASE64]
   private_key_file_path = File.join(options[:USER_HOME], './ssh/id_rsa')
   p "private_key_file_path: #{private_key_file_path}"
-  private_key_decoded = Base64.decode64(options[:AUTH_SSH_PRIVATE_KEY])
+  private_key_decoded = Base64.decode64(options[:AUTH_SSH_PRIVATE_KEY_BASE64])
   File.open(private_key_file_path, 'wt') { |f| f.write(private_key_decoded) }
   system "chmod 600 #{private_key_file_path}"
 end
