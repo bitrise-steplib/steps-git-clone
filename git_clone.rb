@@ -50,9 +50,12 @@ unless options[:repo_url] and options[:repo_url].length > 0
   exit
 end
 
+
+
 # -----------------------
 # --- functions
 # -----------------------
+
 
 def write_private_key_to_file(user_home, auth_ssh_private_key_base64)
   private_key_file_path = File.join(user_home, '.ssh/id_rsa')
@@ -66,7 +69,13 @@ def write_private_key_to_file(user_home, auth_ssh_private_key_base64)
   p "Private key written to file."
 end
 
+
 def add_host_to_known_hosts_if_needed(repo_url)
+  #
+  # regex based because it's used for repos with url like this: git@bitbucket.org:...-team/...-writer.git
+  #  Ruby uri module doesn't support urls like this
+  #
+
   host_regex = /@[a-z]*\.[a-z]*/
   match_res = host_regex.match(repo_url)
   unless match_res
@@ -78,6 +87,7 @@ def add_host_to_known_hosts_if_needed(repo_url)
   system "ssh -o StrictHostKeyChecking=no #{host}"
   return true
 end
+
 
 
 # -----------------------
