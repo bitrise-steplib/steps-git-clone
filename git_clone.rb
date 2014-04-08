@@ -97,6 +97,15 @@ end
 #
 prepared_repository_url = options[:repo_url]
 
+begin
+  URI.parse(prepared_repository_url)
+rescue => ex
+  p "[info] URI parse failed for repo url: #{prepared_repository_url} | exception: #{ex}"
+  # probably an git ssh url like git@bitbucket.org:...
+  # suppress known-host prompt
+  add_host_to_known_hosts_if_needed(prepared_repository_url)
+end
+
 if options[:auth_ssh_key_base64] and options[:auth_ssh_key_base64].length > 0
   p "[i] Auth: using SSH private key (base64)"
   write_private_key_to_file(options[:user_home], options[:auth_ssh_key_base64])
