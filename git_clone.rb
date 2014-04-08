@@ -8,7 +8,7 @@ options = {
 }
 
 opt_parser = OptionParser.new do |opt|
-  opt.banner = "Usage: work.rb [OPTIONS]"
+  opt.banner = "Usage: git_clone.rb [OPTIONS]"
   opt.separator  ""
   opt.separator  "Options (options without [] are required)"
 
