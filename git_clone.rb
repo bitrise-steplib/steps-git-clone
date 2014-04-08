@@ -94,19 +94,11 @@ if options[:auth_ssh_key_base64] and options[:auth_ssh_key_base64].length > 0
   add_host_to_known_hosts_if_needed(prepared_repository_url)
 elsif options[:auth_username] and options[:auth_username].length > 0 and options[:auth_password] and options[:auth_password].length > 0
   p "[i] Auth: with username and password"
-  # https://viktorbenei@bitbucket.org/concrete-team/step-environment-writer.git
-  repo_prefix_regex = /^https?:\/\/[a-z]*@/
-  rres = repo_prefix_regex.match(prepared_repository_url)
-  unless rres
-    p "[!] Invalid url prefix: should start with 'http(s)://...@'"
-    exit 1
-  else
-    http_part = /^https?:\/\//.match(prepared_repository_url)[0]
-    # strip out the "prefix" part
-    prepared_repository_url = prepared_repository_url[rres[0].length .. -1]
-    # and recunstruct, with the auth parameters
-    prepared_repository_url = "#{http_part}#{options[:auth_username]}:#{options[:auth_password]}@#{prepared_repository_url}"
-  end
+  repo_uri = URI.parse(prepared_repository_url)
+  # set the userinfo
+  repo_uri.userinfo = "#{options[:auth_username]}:#{options[:auth_password]}"
+  # 'serialize'
+  prepared_repository_url = repo_uri.to_s
 else
   p "[i] Auth: No Authentication information found - trying without authentication"
 end
