@@ -3,10 +3,10 @@
 Clones a specified git repository to the desired relative path
 
 ## Environment variables
-GIT_REPOSITORY_URL - the git repository you want to clone
-AUTH_USER - username for authorizing git repository
-AUTH_PASSWORD - password for authorizing git repository
-AUTH_SSH_PRIVATE_KEY - private key for authorizing git repository; should be encoded in base64 format
+- GIT_REPOSITORY_URL - the git repository you want to clone
+- AUTH_USER - username for authorizing git repository
+- AUTH_PASSWORD - password for authorizing git repository
+- AUTH_SSH_PRIVATE_KEY - private key for authorizing git repository; should be encoded in base64 format
 
 # Notes
 - GIT_ASKPASS=echo git clone... -> GIT_ASKPASS=echo will automatically fail if git would show a password prompt
