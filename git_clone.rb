@@ -97,7 +97,7 @@ prepared_repository_url = options[:repo_url]
 
 begin
   URI.parse(prepared_repository_url)
-rescue => ex
+rescue
   # probably an git ssh url like git@bitbucket.org:...
   # suppress known-host prompt
   add_host_to_known_hosts_if_needed(prepared_repository_url)
