@@ -62,7 +62,7 @@ def write_private_key_to_file(user_home, auth_ssh_private_key_base64)
   FileUtils::mkdir_p(File.dirname(private_key_file_path))
 
   # private key - save to file
-  private_key_decoded = Base64.decode64(auth_ssh_private_key_base64)
+  private_key_decoded = Base64.strict_decode64(auth_ssh_private_key_base64)
   File.open(private_key_file_path, 'wt') { |f| f.write(private_key_decoded) }
   system "chmod 600 #{private_key_file_path}"
 end
@@ -82,7 +82,7 @@ def add_host_to_known_hosts_if_needed(repo_url)
   end
   host = match_res[0][1..-1] # remove the @ from the beginning of the host url
 
-  system "ssh -o StrictHostKeyChecking=no #{host}"
+  system "ssh -o StrictHostKeyChecking=no -o BatchMode=yes #{host}"
   return true
 end
 
