@@ -99,7 +99,8 @@ end
 # GIT_ASKPASS=echo : this will automatically fail if git would show a password prompt
 full_git_clone_command_string = "git clone --recursive #{git_branch_parameter} #{prepared_repository_url} #{options[:clone_destination_dir]}"
 
+this_script_path = File.expand_path(File.dirname(File.dirname(__FILE__)))
 puts "$ #{full_git_clone_command_string}"
-system('GIT_ASKPASS=echo GIT_SSH="./ssh_no_prompt.sh" ' + full_git_clone_command_string)
+system("GIT_ASKPASS=echo GIT_SSH=\"#{this_script_path}/ssh_no_prompt.sh\" #{full_git_clone_command_string}")
 
 
