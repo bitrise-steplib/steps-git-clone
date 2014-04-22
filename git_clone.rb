@@ -131,6 +131,7 @@ end
 full_git_clone_command_string = "git clone --recursive #{git_branch_parameter} #{prepared_repository_url} #{options[:clone_destination_dir]}"
 
 system "export GIT_ASKPASS=echo"
+system 'export GIT_SSH="$PWD/ssh_no_prompt.sh"'
 puts "$ #{full_git_clone_command_string}"
 system full_git_clone_command_string
 
