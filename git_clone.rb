@@ -101,6 +101,9 @@ full_git_clone_command_string = "git clone --recursive #{git_branch_parameter} #
 
 this_script_path = File.expand_path(File.dirname(File.dirname(__FILE__)))
 puts "$ #{full_git_clone_command_string}"
-system("GIT_ASKPASS=echo GIT_SSH=\"#{this_script_path}/ssh_no_prompt.sh\" #{full_git_clone_command_string}")
+is_clone_success=system("GIT_ASKPASS=echo GIT_SSH=\"#{this_script_path}/ssh_no_prompt.sh\" #{full_git_clone_command_string}")
+puts "Clone Is Success?: #{is_clone_success}"
+
+exit (is_clone_success ? 0 : 1)
 
 
