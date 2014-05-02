@@ -7,3 +7,5 @@ ruby ./git_clone.rb \
   --auth-username=$AUTH_USER \
   --auth-password=$AUTH_PASSWORD \
   --auth-ssh-base64=$AUTH_SSH_PRIVATE_KEY_BASE64
+
+exit $?
