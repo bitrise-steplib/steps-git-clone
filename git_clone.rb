@@ -75,9 +75,12 @@ end
 #
 prepared_repository_url = options[:repo_url]
 
+used_auth_type=nil
 if options[:auth_ssh_key_base64] and options[:auth_ssh_key_base64].length > 0
+  used_auth_type='ssh'
   write_private_key_to_file(options[:user_home], options[:auth_ssh_key_base64])
 elsif options[:auth_username] and options[:auth_username].length > 0 and options[:auth_password] and options[:auth_password].length > 0
+  used_auth_type='login'
   repo_uri = URI.parse(prepared_repository_url)
   
   # set the userinfo
@@ -101,7 +104,11 @@ full_git_clone_command_string = "git clone --recursive #{git_branch_parameter} #
 
 this_script_path = File.expand_path(File.dirname(File.dirname(__FILE__)))
 puts "$ #{full_git_clone_command_string}"
-is_clone_success=system("GIT_ASKPASS=echo GIT_SSH=\"#{this_script_path}/ssh_no_prompt.sh\" #{full_git_clone_command_string}")
+full_cmd_string="GIT_ASKPASS=echo GIT_SSH=\"#{this_script_path}/ssh_no_prompt.sh\" #{full_git_clone_command_string}"
+if used_auth_type=='ssh'
+  full_cmd_string = "ssh-agent bash -c 'ssh-add ~/.ssh/id_rsa; #{full_cmd_string}'"
+end
+is_clone_success=system(full_cmd_string)
 puts "Clone Is Success?: #{is_clone_success}"
 
 exit (is_clone_success ? 0 : 1)
