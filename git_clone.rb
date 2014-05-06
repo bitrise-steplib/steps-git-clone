@@ -45,7 +45,7 @@ opt_parser.parse!
 
 unless options[:repo_url] and options[:repo_url].length > 0
   puts opt_parser
-  exit
+  exit 1
 end
 
 
