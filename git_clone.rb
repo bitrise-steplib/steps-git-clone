@@ -43,6 +43,8 @@ end
 
 opt_parser.parse!
 
+puts "Provided options: #{opt_parser}"
+
 unless options[:repo_url] and options[:repo_url].length > 0
   puts opt_parser
   exit 1
