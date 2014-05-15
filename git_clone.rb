@@ -108,10 +108,9 @@ this_script_path = File.expand_path(File.dirname(File.dirname(__FILE__)))
 puts "$ #{full_git_clone_command_string}"
 full_cmd_string="GIT_ASKPASS=echo GIT_SSH=\"#{this_script_path}/ssh_no_prompt.sh\" #{full_git_clone_command_string}"
 if used_auth_type=='ssh'
-  full_cmd_string = "ssh-agent bash -c 'ssh-add ~/.ssh/id_rsa; #{full_cmd_string}'"
-else
-  full_cmd_string = "ssh-agent bash -c '#{full_cmd_string}'"
+  system(%Q{expect -c "spawn ssh-add $HOME/.ssh/id_rsa; expect -r \"Enter\";"})
 end
+full_cmd_string = "ssh-agent bash -c '#{full_cmd_string}'"
 is_clone_success=system(full_cmd_string)
 puts "Clone Is Success?: #{is_clone_success}"
 
