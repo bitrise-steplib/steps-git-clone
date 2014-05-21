@@ -16,8 +16,12 @@ opt_parser = OptionParser.new do |opt|
     options[:repo_url] = value
   end
 
-  opt.on("--branch [BRANCH]", "branch name") do |value|
+  opt.on("--branch [BRANCH]", "branch name. IMPORTANT: if tag is specified the branch parameter will be ignored!") do |value|
     options[:branch] = value
+  end
+
+  opt.on("--tag [TAG]", "tag name. IMPORTANT: if tag is specified the branch parameter will be ignored!") do |value|
+    options[:tag] = value
   end
 
   opt.on("--dest-dir [DESTINATIONDIR]", "local clone destination directory path") do |value|
@@ -95,14 +99,18 @@ end
 
 # do clone
 git_branch_parameter = ""
-if options[:branch] and options[:branch].length > 0
+if options[:tag] and options[:tag].length > 0
+  # since git 1.8.x tags can be specified as "branch" too ( http://git-scm.com/docs/git-clone )
+  #  [!] this will create a detached head, won't switch to a branch!
+  git_branch_parameter = "--single-branch --branch #{options[:tag]}"
+elsif options[:branch] and options[:branch].length > 0
   git_branch_parameter = "--single-branch --branch #{options[:branch]}"
 else
   git_branch_parameter = "--no-single-branch"
 end
 
 # GIT_ASKPASS=echo : this will automatically fail if git would show a password prompt
-full_git_clone_command_string = "git clone --recursive #{git_branch_parameter} #{prepared_repository_url} #{options[:clone_destination_dir]}"
+full_git_clone_command_string = "git clone --recursive --depth 1 #{git_branch_parameter} #{prepared_repository_url} #{options[:clone_destination_dir]}"
 
 this_script_path = File.expand_path(File.dirname(File.dirname(__FILE__)))
 puts "$ #{full_git_clone_command_string}"
