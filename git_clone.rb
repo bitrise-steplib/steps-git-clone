@@ -4,7 +4,9 @@ require 'uri'
 require 'optparse'
 
 options = {
-  user_home: ENV['HOME']
+  user_home: ENV['HOME'],
+  retry_count: 2, # if first attempt fails retry x times
+  retry_delay_secs: 2 # delay between retrys
 }
 
 opt_parser = OptionParser.new do |opt|
@@ -119,7 +121,22 @@ if used_auth_type=='ssh'
   system(%Q{expect -c "spawn ssh-add $HOME/.ssh/id_rsa; expect -r \"Enter\";"})
 end
 full_cmd_string = "ssh-agent bash -c '#{full_cmd_string}'"
-is_clone_success=system(full_cmd_string)
+
+$options = options
+def do_clone_command(cmd_string, retry_count=0)
+  is_clone_success=system(cmd_string)
+
+  if not is_clone_success and retry_count < $options[:retry_count]
+    sleep $options[:retry_delay_secs]
+    retry_count = retry_count+1
+    puts "Attempt failed - retry... (#{retry_count} / 2)"
+    is_clone_success = do_clone_command(cmd_string, retry_count)
+  end
+
+  return is_clone_success
+end
+
+is_clone_success = do_clone_command(full_cmd_string)
 puts "Clone Is Success?: #{is_clone_success}"
 
 exit (is_clone_success ? 0 : 1)
