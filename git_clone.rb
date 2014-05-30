@@ -6,7 +6,7 @@ require 'optparse'
 options = {
   user_home: ENV['HOME'],
   retry_count: 2, # if first attempt fails retry x times
-  retry_delay_secs: 2 # delay between retrys
+  retry_delay_secs: 5 # delay between retrys
 }
 
 opt_parser = OptionParser.new do |opt|
