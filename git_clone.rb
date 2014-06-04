@@ -124,6 +124,9 @@ full_cmd_string = "ssh-agent bash -c '#{full_cmd_string}'"
 
 $options = options
 def do_clone_command(cmd_string, retry_count=0)
+  # first delete the destination folder - for git, especially if it's a retry
+  system(%Q{rm -rf "#{$options[:clone_destination_dir]}"})
+  # do: clone
   is_clone_success=system(cmd_string)
 
   if not is_clone_success and retry_count < $options[:retry_count]
