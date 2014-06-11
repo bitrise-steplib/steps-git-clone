@@ -1,1 +1,1 @@
-ssh -oBatchMode=yes -oStrictHostKeyChecking=no $@
+ssh -oBatchMode=yes -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no $@
