@@ -130,6 +130,7 @@ end
 $options = options
 $prepared_repository_url = prepared_repository_url
 $git_checkout_parameter = git_checkout_parameter
+$this_script_path = File.expand_path('.')
 def do_clone()
   # first delete the destination folder - for git, especially if it's a retry
   return false unless system(%Q{rm -rf "#{$options[:clone_destination_dir]}"})
@@ -139,17 +140,15 @@ def do_clone()
   is_clone_success = false
   Dir.chdir($options[:clone_destination_dir]) do
     begin
-      this_script_path = File.expand_path(File.dirname(File.dirname(__FILE__)))
-
       unless system(%Q{git init})
         raise 'Could not init git repository'
       end
 
-      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{this_script_path}/ssh_no_prompt.sh" git remote add origin "#{$prepared_repository_url}"})
+      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" git remote add origin "#{$prepared_repository_url}"})
         raise 'Could not add remote'
       end
 
-      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{this_script_path}/ssh_no_prompt.sh" git fetch})
+      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" git fetch})
         raise 'Could not fetch from repository'
       end
 
