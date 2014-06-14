@@ -2,8 +2,9 @@
 
 ruby ./git_clone.rb \
   --repo-url=$GIT_REPOSITORY_URL \
-  --branch=$CONCRETE_GIT_BRANCH \
+  --commit-hash=$CONCRETE_GIT_COMMIT \
   --tag=$CONCRETE_GIT_TAG \
+  --branch=$CONCRETE_GIT_BRANCH \
   --dest-dir=$CONCRETE_SOURCE_DIR \
   --auth-username=$AUTH_USER \
   --auth-password=$AUTH_PASSWORD \

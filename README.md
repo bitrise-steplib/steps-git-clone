@@ -1,15 +1,11 @@
 # Concrete
+
 ## Git-clone
-Clones a specified git repository to the desired relative path
 
-## Environment variables
-- GIT_REPOSITORY_URL - the git repository you want to clone
-- AUTH_USER - username for authorizing git repository
-- AUTH_PASSWORD - password for authorizing git repository
-- AUTH_SSH_PRIVATE_KEY - private key for authorizing git repository; should be encoded in base64 format
+Clones a specified git repository to the desired local path
 
-# Notes
-- GIT_ASKPASS=echo git clone... -> GIT_ASKPASS=echo will automatically fail if git would show a password prompt
+# Inputs
+See step.yml
 
 
 # How-Tos
@@ -17,5 +13,5 @@ Clones a specified git repository to the desired relative path
 
 
 # Best Practices
-- create a new user which can access the repository you want to clone
--- and use this "bot" user's username&password or ssh key, _don't_ use your own, especially don't use your own username&password!
+- add a new "bot" user to the repository you want to clone
+-- and use this "bot" user's SSH key (or username&password, but SSH is preferred), _don't_ use your own, especially don't use your own username&password!

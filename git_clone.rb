@@ -26,6 +26,10 @@ opt_parser = OptionParser.new do |opt|
     options[:tag] = value
   end
 
+  opt.on("--commit-hash [COMMITHASH]", "commit hash. IMPORTANT: if commit-hash is specified the branch and tag parameters will be ignored!") do |value|
+    options[:commit_hash] = value
+  end
+
   opt.on("--dest-dir [DESTINATIONDIR]", "local clone destination directory path") do |value|
     options[:clone_destination_dir] = value
   end
@@ -100,46 +104,74 @@ else
 end
 
 # do clone
-git_branch_parameter = ""
-if options[:tag] and options[:tag].length > 0
+git_checkout_parameter = 'master'
+# git_branch_parameter = ""
+if options[:commit_hash] and options[:commit_hash].length > 0
+  git_checkout_parameter = options[:commit_hash]
+elsif options[:tag] and options[:tag].length > 0
   # since git 1.8.x tags can be specified as "branch" too ( http://git-scm.com/docs/git-clone )
   #  [!] this will create a detached head, won't switch to a branch!
-  git_branch_parameter = "--single-branch --branch #{options[:tag]}"
+  # git_branch_parameter = "--single-branch --branch #{options[:tag]}"
+  git_checkout_parameter = options[:tag]
 elsif options[:branch] and options[:branch].length > 0
-  git_branch_parameter = "--single-branch --branch #{options[:branch]}"
+  # git_branch_parameter = "--single-branch --branch #{options[:branch]}"
+  git_checkout_parameter = options[:branch]
 else
-  git_branch_parameter = "--no-single-branch"
+  # git_branch_parameter = "--no-single-branch"
+  puts " [!] No checkout parameter found, will use 'master'"
 end
 
-# GIT_ASKPASS=echo : this will automatically fail if git would show a password prompt
-full_git_clone_command_string = "git clone --recursive --depth 1 #{git_branch_parameter} #{prepared_repository_url} #{options[:clone_destination_dir]}"
 
-this_script_path = File.expand_path(File.dirname(File.dirname(__FILE__)))
-puts "$ #{full_git_clone_command_string}"
-full_cmd_string="GIT_ASKPASS=echo GIT_SSH=\"#{this_script_path}/ssh_no_prompt.sh\" #{full_git_clone_command_string}"
-if used_auth_type=='ssh'
-  system(%Q{expect -c "spawn ssh-add $HOME/.ssh/id_rsa; expect -r \"Enter\";"})
-end
-full_cmd_string = "ssh-agent bash -c '#{full_cmd_string}'"
 
 $options = options
-def do_clone_command(cmd_string, retry_count=0)
+$prepared_repository_url = prepared_repository_url
+$git_checkout_parameter = git_checkout_parameter
+def do_clone()
   # first delete the destination folder - for git, especially if it's a retry
-  system(%Q{rm -rf "#{$options[:clone_destination_dir]}"})
-  # do: clone
-  is_clone_success=system(cmd_string)
+  return false unless system(%Q{rm -rf "#{$options[:clone_destination_dir]}"})
+  # (re-)create
+  return false unless system(%Q{mkdir -p "#{$options[:clone_destination_dir]}"})
 
-  if not is_clone_success and retry_count < $options[:retry_count]
-    sleep $options[:retry_delay_secs]
-    retry_count = retry_count+1
-    puts "Attempt failed - retry... (#{retry_count} / 2)"
-    is_clone_success = do_clone_command(cmd_string, retry_count)
+  is_clone_success = false
+  Dir.chdir($options[:clone_destination_dir]) do
+    begin
+      this_script_path = File.expand_path(File.dirname(File.dirname(__FILE__)))
+
+      unless system(%Q{git init})
+        raise 'Could not init git repository'
+      end
+
+      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{this_script_path}/ssh_no_prompt.sh" git remote add origin "#{$prepared_repository_url}"})
+        raise 'Could not add remote'
+      end
+
+      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{this_script_path}/ssh_no_prompt.sh" git fetch})
+        raise 'Could not fetch from repository'
+      end
+
+      unless system("git checkout #{$git_checkout_parameter}")
+        raise 'Could not fetch from repository'
+      end
+
+      unless system("git submodule update --init --recursive")
+        raise 'Could not fetch from repository'
+      end
+
+      is_clone_success = true
+    rescue => ex
+      puts "Error: #{ex}"
+    end
+  end
+
+  unless is_clone_success
+    # delete it
+    system(%Q{rm -rf "#{$options[:clone_destination_dir]}"})
   end
 
   return is_clone_success
 end
 
-is_clone_success = do_clone_command(full_cmd_string)
+is_clone_success = do_clone()
 puts "Clone Is Success?: #{is_clone_success}"
 
 exit (is_clone_success ? 0 : 1)
