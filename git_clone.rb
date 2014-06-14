@@ -84,6 +84,10 @@ end
 # --- main
 # -----------------------
 
+# normalize input pathes
+options[:clone_destination_dir] = File.expand_path(options[:clone_destination_dir])
+
+
 #
 prepared_repository_url = options[:repo_url]
 
