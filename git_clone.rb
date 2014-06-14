@@ -171,41 +171,6 @@ def do_clone()
   return is_clone_success
 end
 
-
-
-
-
-
-
-# # GIT_ASKPASS=echo : this will automatically fail if git would show a password prompt
-# full_git_clone_command_string = "git clone --recursive --depth 1 #{git_branch_parameter} #{prepared_repository_url} #{options[:clone_destination_dir]}"
-
-# this_script_path = File.expand_path(File.dirname(File.dirname(__FILE__)))
-# puts "$ #{full_git_clone_command_string}"
-# full_cmd_string="GIT_ASKPASS=echo GIT_SSH=\"#{this_script_path}/ssh_no_prompt.sh\" #{full_git_clone_command_string}"
-# if used_auth_type=='ssh'
-#   system(%Q{expect -c "spawn ssh-add $HOME/.ssh/id_rsa; expect -r \"Enter\";"})
-# end
-# full_cmd_string = "ssh-agent bash -c '#{full_cmd_string}'"
-
-# # $options = options
-# # def do_clone_command(cmd_string, retry_count=0)
-# #   # first delete the destination folder - for git, especially if it's a retry
-# #   system(%Q{rm -rf "#{$options[:clone_destination_dir]}"})
-# #   # do: clone
-# #   is_clone_success=system(cmd_string)
-
-# #   if not is_clone_success and retry_count < $options[:retry_count]
-# #     sleep $options[:retry_delay_secs]
-# #     retry_count = retry_count+1
-# #     puts "Attempt failed - retry... (#{retry_count} / 2)"
-# #     is_clone_success = do_clone_command(cmd_string, retry_count)
-# #   end
-
-# #   return is_clone_success
-# # end
-
-# is_clone_success = do_clone_command(full_cmd_string)
 is_clone_success = do_clone()
 puts "Clone Is Success?: #{is_clone_success}"
 
