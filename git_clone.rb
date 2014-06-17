@@ -5,8 +5,7 @@ require 'optparse'
 
 options = {
   user_home: ENV['HOME'],
-  retry_count: 2, # if first attempt fails retry x times
-  retry_delay_secs: 5 # delay between retrys
+  private_key_file_path: nil
 }
 
 opt_parser = OptionParser.new do |opt|
@@ -68,7 +67,7 @@ end
 
 
 def write_private_key_to_file(user_home, auth_ssh_private_key_base64)
-  private_key_file_path = File.join(user_home, '.ssh/id_rsa')
+  private_key_file_path = File.join(user_home, '.ssh/concrete')
 
   # create the folder if not yet created
   FileUtils::mkdir_p(File.dirname(private_key_file_path))
@@ -77,6 +76,8 @@ def write_private_key_to_file(user_home, auth_ssh_private_key_base64)
   private_key_decoded = Base64.strict_decode64(auth_ssh_private_key_base64)
   File.open(private_key_file_path, 'wt') { |f| f.write(private_key_decoded) }
   system "chmod 600 #{private_key_file_path}"
+
+  return private_key_file_path
 end
 
 
@@ -94,7 +95,7 @@ prepared_repository_url = options[:repo_url]
 used_auth_type=nil
 if options[:auth_ssh_key_base64] and options[:auth_ssh_key_base64].length > 0
   used_auth_type='ssh'
-  write_private_key_to_file(options[:user_home], options[:auth_ssh_key_base64])
+  options[:private_key_file_path] = write_private_key_to_file(options[:user_home], options[:auth_ssh_key_base64])
 elsif options[:auth_username] and options[:auth_username].length > 0 and options[:auth_password] and options[:auth_password].length > 0
   used_auth_type='login'
   repo_uri = URI.parse(prepared_repository_url)
@@ -156,7 +157,7 @@ def do_clone()
         raise 'Could not fetch from repository'
       end
 
-      unless system("git submodule update --init --recursive")
+      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" git submodule update --init --recursive})
         raise 'Could not fetch from repository'
       end
 
@@ -176,6 +177,11 @@ end
 
 is_clone_success = do_clone()
 puts "Clone Is Success?: #{is_clone_success}"
+
+if options[:private_key_file_path]
+  puts " (i) Removing private key file: #{options[:private_key_file_path]}"
+  system(%Q{rm -P #{options[:private_key_file_path]}})
+end
 
 exit (is_clone_success ? 0 : 1)
 

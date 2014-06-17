@@ -1,1 +1,1 @@
-ssh -oBatchMode=yes -oStrictHostKeyChecking=no $@
+ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $HOME/.ssh/concrete $@
