@@ -156,7 +156,7 @@ def write_formatted_output_to_file(file_path)
     f.puts('# Commit Hash')
     f.puts
     commit_hash_str = `git log -1 --format="%H"`
-    f.puts "    **#{commit_hash_str.chomp}**"
+    f.puts "#{commit_hash_str.chomp}"
     f.puts
     f.puts('# Commit Log')
     f.puts
