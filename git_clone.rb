@@ -5,7 +5,8 @@ require 'optparse'
 
 options = {
   user_home: ENV['HOME'],
-  private_key_file_path: nil
+  private_key_file_path: nil,
+  formatted_output_file_path: nil
 }
 
 opt_parser = OptionParser.new do |opt|
@@ -45,12 +46,20 @@ opt_parser = OptionParser.new do |opt|
     options[:auth_ssh_key_base64] = value
   end
 
+  opt.on("--formatted-output-file [FILE-PATH]", "If given a formatted (markdown) output will be generated") do |value|
+    options[:formatted_output_file_path] = value
+  end
+
   opt.on("-h","--help","Shows this help message") do
     puts opt_parser
   end
 end
 
 opt_parser.parse!
+
+if options[:formatted_output_file_path] and options[:formatted_output_file_path].length < 1
+  options[:formatted_output_file_path] = nil
+end
 
 puts "Provided options: #{options}"
 
@@ -87,6 +96,9 @@ end
 
 # normalize input pathes
 options[:clone_destination_dir] = File.expand_path(options[:clone_destination_dir])
+if options[:formatted_output_file_path]
+  options[:formatted_output_file_path] = File.expand_path(options[:formatted_output_file_path])
+end
 
 
 #
@@ -132,6 +144,28 @@ $options = options
 $prepared_repository_url = prepared_repository_url
 $git_checkout_parameter = git_checkout_parameter
 $this_script_path = File.expand_path('.')
+
+class String
+  def prepend_lines_with(prepend_with_string)
+    return self.gsub(/^.*$/, prepend_with_string.to_s+'\&')
+  end
+end
+
+def write_formatted_output_to_file(file_path)
+  File.open("#{file_path}", "w") { |f|
+    f.puts('# Commit Hash')
+    f.puts
+    commit_hash_str = `git log -1 --format="%H"`
+    f.puts "    **#{commit_hash_str.chomp}**"
+    f.puts
+    f.puts('# Commit Log')
+    f.puts
+    commit_log_str = `git log -n 1 --tags --branches --remotes --format="fuller"`
+    commit_log_str = commit_log_str.prepend_lines_with('    ')
+    f.puts commit_log_str
+  }
+end
+
 def do_clone()
   # first delete the destination folder - for git, especially if it's a retry
   return false unless system(%Q{rm -rf "#{$options[:clone_destination_dir]}"})
@@ -159,6 +193,12 @@ def do_clone()
 
       unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" git submodule update --init --recursive})
         raise 'Could not fetch from repository'
+      end
+
+
+      formatted_output_file_path = $options[:formatted_output_file_path]
+      if formatted_output_file_path
+        write_formatted_output_to_file(formatted_output_file_path)
       end
 
       is_clone_success = true

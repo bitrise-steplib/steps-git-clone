@@ -30,5 +30,8 @@ inputs:
   - title: |
       Auth: Base64 (strict) encoded SSH private key - without a passphrase!
     mapped_to: AUTH_SSH_PRIVATE_KEY_BASE64
+  - title: |
+      [optional] Generate a Formatted (markdown) output file to this path
+    mapped_to: GIT_CLONE_FORMATTED_OUTPUT_FILE_PATH
 
 # outputs:
