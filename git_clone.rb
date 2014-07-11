@@ -76,7 +76,7 @@ end
 
 
 def write_private_key_to_file(user_home, auth_ssh_private_key_base64)
-  private_key_file_path = File.join(user_home, '.ssh/concrete')
+  private_key_file_path = File.join(user_home, '.ssh/bitrise')
 
   # create the folder if not yet created
   FileUtils::mkdir_p(File.dirname(private_key_file_path))
