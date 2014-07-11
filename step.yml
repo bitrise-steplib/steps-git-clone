@@ -11,16 +11,16 @@ inputs:
     mapped_to: GIT_REPOSITORY_URL
   - title: |
       Git Commit to clone
-    mapped_to: CONCRETE_GIT_COMMIT
+    mapped_to: BITRISE_GIT_COMMIT
   - title: |
       Git Tag to clone
-    mapped_to: CONCRETE_GIT_TAG
+    mapped_to: BITRISE_GIT_TAG
   - title: |
       Git Branch to clone
-    mapped_to: CONCRETE_GIT_BRANCH
+    mapped_to: BITRISE_GIT_BRANCH
   - title: |
       Clone destination (local) directory path
-    mapped_to: CONCRETE_SOURCE_DIR
+    mapped_to: BITRISE_SOURCE_DIR
   - title: |
       Auth: Username
     mapped_to: AUTH_USER
