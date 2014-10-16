@@ -42,10 +42,6 @@ opt_parser = OptionParser.new do |opt|
     options[:auth_password] = value
   end
 
-  opt.on("--auth-ssh-raw [SSH-RAW]", "Raw ssh private key to be used") do |value|
-    options[:auth_ssh_key_raw] = value
-  end
-
   opt.on("--auth-ssh-base64 [SSH-BASE64]", "Base64 representation of the ssh private key to be used") do |value|
     options[:auth_ssh_key_base64] = value
   end
@@ -57,6 +53,11 @@ opt_parser = OptionParser.new do |opt|
   opt.on("-h","--help","Shows this help message") do
     puts opt_parser
   end
+end
+
+ssh_key_from_env = ENV['AUTH_SSH_PRIVATE_KEY']
+if ssh_key_from_env
+  options[:auth_ssh_key_raw] = ssh_key_from_env
 end
 
 opt_parser.parse!

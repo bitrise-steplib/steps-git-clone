@@ -13,7 +13,7 @@ ruby ./git_clone.rb \
 	--dest-dir=${BITRISE_SOURCE_DIR} \
 	--auth-username=${AUTH_USER} \
 	--auth-password=${AUTH_PASSWORD} \
-	--auth-ssh-raw=${AUTH_SSH_PRIVATE_KEY} \
+	# --auth-ssh-raw=${AUTH_SSH_PRIVATE_KEY} \ # this is a multiline input -> will be directly retrieved from the environment
 	--auth-ssh-base64=${AUTH_SSH_PRIVATE_KEY_BASE64} \
 	--formatted-output-file="${formatted_output_file_path}"
 
