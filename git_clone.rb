@@ -55,6 +55,11 @@ opt_parser = OptionParser.new do |opt|
   end
 end
 
+ssh_key_from_env = ENV['AUTH_SSH_PRIVATE_KEY']
+if ssh_key_from_env
+  options[:auth_ssh_key_raw] = ssh_key_from_env
+end
+
 opt_parser.parse!
 
 if options[:formatted_output_file_path] and options[:formatted_output_file_path].length < 1
@@ -75,15 +80,14 @@ end
 # -----------------------
 
 
-def write_private_key_to_file(user_home, auth_ssh_private_key_base64)
+def write_private_key_to_file(user_home, auth_ssh_private_key)
   private_key_file_path = File.join(user_home, '.ssh/bitrise')
 
   # create the folder if not yet created
   FileUtils::mkdir_p(File.dirname(private_key_file_path))
 
   # private key - save to file
-  private_key_decoded = Base64.strict_decode64(auth_ssh_private_key_base64)
-  File.open(private_key_file_path, 'wt') { |f| f.write(private_key_decoded) }
+  File.open(private_key_file_path, 'wt') { |f| f.write(auth_ssh_private_key) }
   system "chmod 600 #{private_key_file_path}"
 
   return private_key_file_path
@@ -105,9 +109,13 @@ end
 prepared_repository_url = options[:repo_url]
 
 used_auth_type=nil
-if options[:auth_ssh_key_base64] and options[:auth_ssh_key_base64].length > 0
+if options[:auth_ssh_key_raw] and options[:auth_ssh_key_raw].length > 0
   used_auth_type='ssh'
-  options[:private_key_file_path] = write_private_key_to_file(options[:user_home], options[:auth_ssh_key_base64])
+  options[:private_key_file_path] = write_private_key_to_file(options[:user_home], options[:auth_ssh_key_raw])
+elsif options[:auth_ssh_key_base64] and options[:auth_ssh_key_base64].length > 0
+  used_auth_type='ssh'
+  private_key_decoded = Base64.strict_decode64(options[:auth_ssh_key_base64])
+  options[:private_key_file_path] = write_private_key_to_file(options[:user_home], private_key_decoded)
 elsif options[:auth_username] and options[:auth_username].length > 0 and options[:auth_password] and options[:auth_password].length > 0
   used_auth_type='login'
   repo_uri = URI.parse(prepared_repository_url)
