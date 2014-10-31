@@ -9,8 +9,6 @@ description: |
 
   Use either the *AUTH_SSH_PRIVATE_KEY* or the *AUTH_SSH_PRIVATE_KEY_BASE64* input to specify
   the SSH key. If both specified the *AUTH_SSH_PRIVATE_KEY* will be used.
-  
-  This Step is part of the [Open StepLib](http://www.steplib.com/), you can find its StepLib page [here](http://www.steplib.com/step/git-clone)
 
 inputs:
   - title: |
