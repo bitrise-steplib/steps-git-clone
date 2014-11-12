@@ -6,9 +6,18 @@
 #
 
 formatted_output_file_path=''
-if [ -n "${GIT_CLONE_FORMATTED_OUTPUT_FILE_PATH}" ]; then
+if [ -n "${GIT_CLONE_FORMATTED_OUTPUT_FILE_PATH}" ] ; then
 	formatted_output_file_path="${GIT_CLONE_FORMATTED_OUTPUT_FILE_PATH}"
 fi
+
+echo " (i) formatted_output_file_path: ${formatted_output_file_path}"
+
+is_export_outputs='false'
+if [[ "${GIT_CLONE_IS_EXPORT_OUTPUTS}" == "true" ]] ; then
+	is_export_outputs='true'
+fi
+
+echo " (i) is_export_outputs: ${is_export_outputs}"
 
 ruby ./git_clone.rb \
 	--repo-url=${GIT_REPOSITORY_URL} \
@@ -19,6 +28,7 @@ ruby ./git_clone.rb \
 	--auth-username=${AUTH_USER} \
 	--auth-password=${AUTH_PASSWORD} \
 	--auth-ssh-base64=${AUTH_SSH_PRIVATE_KEY_BASE64} \
-	--formatted-output-file="${formatted_output_file_path}"
+	--formatted-output-file="${formatted_output_file_path}" \
+	--is-export-outputs="${is_export_outputs}"
 
 exit $?

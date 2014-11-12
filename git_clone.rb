@@ -6,7 +6,9 @@ require 'optparse'
 options = {
   user_home: ENV['HOME'],
   private_key_file_path: nil,
-  formatted_output_file_path: nil
+  formatted_output_file_path: nil,
+  output_env_file_path: "#{ENV['HOME']}/.bash_profile",
+  is_export_outputs: false
 }
 
 opt_parser = OptionParser.new do |opt|
@@ -48,6 +50,12 @@ opt_parser = OptionParser.new do |opt|
 
   opt.on("--formatted-output-file [FILE-PATH]", "If given a formatted (markdown) output will be generated") do |value|
     options[:formatted_output_file_path] = value
+  end
+
+  opt.on("--is-export-outputs [true/false]", "if false (default) then it won't export it's outputs. If true then it will.") do |value|
+    if value == 'true'
+      options[:is_export_outputs] = true
+    end
   end
 
   opt.on("-h","--help","Shows this help message") do
@@ -159,18 +167,22 @@ class String
   end
 end
 
-def write_formatted_output_to_file(file_path)
-  File.open("#{file_path}", "w") { |f|
-    f.puts('# Commit Hash')
-    f.puts
-    commit_hash_str = `git log -1 --format="%H"`
-    f.puts "    #{commit_hash_str.chomp}"
-    f.puts
-    f.puts('# Commit Log')
-    f.puts
-    commit_log_str = `git log -n 1 --tags --branches --remotes --format="fuller"`
-    commit_log_str = commit_log_str.prepend_lines_with('    ')
-    f.puts commit_log_str
+def write_string_to_formatted_output(str_to_write)
+  formatted_output_file_path = $options[:formatted_output_file_path]
+  if formatted_output_file_path
+    File.open(formatted_output_file_path, "w+") { |f|
+      f.puts(str_to_write)
+    }
+  end
+end
+
+def bash_export_escape(str)
+  return str.gsub('"'){'\\"'}
+end
+
+def export_step_output(key, value)
+  File.open($options[:output_env_file_path], "a") { |f|
+    f.puts %Q{export #{key}="#{bash_export_escape(value)}"}
   }
 end
 
@@ -187,7 +199,12 @@ def do_clone()
         raise 'Could not init git repository'
       end
 
-      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" git remote add origin "#{$prepared_repository_url}"})
+      ssh_no_prompt_file = 'ssh_no_prompt.sh'
+      if $options[:private_key_file_path]
+        ssh_no_prompt_file = 'ssh_no_prompt_with_id.sh'
+      end
+
+      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/#{ssh_no_prompt_file}" git remote add origin "#{$prepared_repository_url}"})
         raise 'Could not add remote'
       end
 
@@ -196,17 +213,47 @@ def do_clone()
       end
 
       unless system("git checkout #{$git_checkout_parameter}")
-        raise 'Could not fetch from repository'
+        raise "Could not do checkout #{$git_checkout_parameter}"
       end
 
       unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" git submodule update --init --recursive})
-        raise 'Could not fetch from repository'
+        raise 'Could not fetch from submodule repositories!'
+      end
+
+      # git clone stats
+      commit_hash_str = `git log -1 --format="%H"`.chomp
+      commit_msg_subject_str = `git log -1 --format="%s"`.chomp
+      commit_msg_body_str = `git log -1 --format="%b"`.chomp
+      commit_author_name_str = `git log -1 --format="%an"`.chomp
+      commit_author_email_str = `git log -1 --format="%ae"`.chomp
+      commit_commiter_name_str = `git log -1 --format="%cn"`.chomp
+      commit_commiter_email_str = `git log -1 --format="%ce"`.chomp
+      
+
+      if $options[:is_export_outputs]
+        export_step_output('GIT_CLONE_COMMIT_HASH', commit_hash_str)
+        export_step_output('GIT_CLONE_COMMIT_MESSAGE_SUBJECT', commit_msg_subject_str)
+        export_step_output('GIT_CLONE_COMMIT_MESSAGE_BODY', commit_msg_body_str)
+        export_step_output('GIT_CLONE_COMMIT_AUTHOR_NAME', commit_author_name_str)
+        export_step_output('GIT_CLONE_COMMIT_AUTHOR_EMAIL', commit_author_email_str)
+        export_step_output('GIT_CLONE_COMMIT_COMMITER_NAME', commit_commiter_name_str)
+        export_step_output('GIT_CLONE_COMMIT_COMMITER_EMAIL', commit_commiter_email_str)
       end
 
 
       formatted_output_file_path = $options[:formatted_output_file_path]
       if formatted_output_file_path
-        write_formatted_output_to_file(formatted_output_file_path)
+        commit_log_str = `git log -n 1 --tags --branches --remotes --format="fuller"`
+        commit_log_str = commit_log_str.prepend_lines_with('    ')
+        write_string_to_formatted_output(%Q{
+# Commit Hash
+
+    #{commit_hash_str}
+
+# Commit Log
+
+#{commit_log_str}
+})
       end
 
       is_clone_success = true

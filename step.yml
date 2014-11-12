@@ -1,14 +1,25 @@
 name: Git Clone Repository
 description: |
-  Clones a repository based on the provided inputs. NOTE: it will remove the specified (*local*) Destination Directory before cloning!
+  Clones a repository based on the provided inputs.
+
+  **NOTE**: it will remove the specified (local) Destination Directory before cloning!
   
   If a git commit is provided it will ignore the tag and branch parameters.
   If no git commit but a tag is provided then it will ignore the branch parameter.
 
   Auth: if SSH private key parameter provided the other auth parameters will be ignored.
 
-  Use either the *AUTH_SSH_PRIVATE_KEY* or the *AUTH_SSH_PRIVATE_KEY_BASE64* input to specify
-  the SSH key. If both specified the *AUTH_SSH_PRIVATE_KEY* will be used.
+  Use either the *(raw) SSH* or the *Base64 encoded SSH* key input to specify
+  the SSH key. If both specified the *(raw) SSH* key input will be used.
+website: https://github.com/bitrise-io/steps-git-clone
+source:
+  git: https://github.com/bitrise-io/steps-git-clone.git
+host_os_tags:
+  - osx-10.9
+type_tags:
+  - git
+  - vcs
+requires_admin_user: false
 
 inputs:
   - title: |
@@ -36,10 +47,33 @@ inputs:
       Auth: SSH private key - without a passphrase!
     mapped_to: AUTH_SSH_PRIVATE_KEY
   - title: |
-      Auth: Base64 (strict) encoded SSH private key - without a passphrase!
+      Auth: Base64 (strict - RFC 4648) encoded SSH private key - without a passphrase!
     mapped_to: AUTH_SSH_PRIVATE_KEY_BASE64
   - title: |
       [optional] Generate a Formatted (markdown) output file to this path
     mapped_to: GIT_CLONE_FORMATTED_OUTPUT_FILE_PATH
-
-# outputs:
+  - title: |
+      [optional] Is export outputs. Set it to true to allow the export of the outputs. Default is false.
+    mapped_to: GIT_CLONE_IS_EXPORT_OUTPUTS
+outputs:
+  - title: |
+      Cloned git commit's commit hash
+    mapped_to: GIT_CLONE_COMMIT_HASH
+  - title: |
+      Cloned git commit's message subject
+    mapped_to: GIT_CLONE_COMMIT_MESSAGE_SUBJECT
+  - title: |
+      Cloned git commit's message body
+    mapped_to: GIT_CLONE_COMMIT_MESSAGE_BODY
+  - title: |
+      Cloned git commit's author name
+    mapped_to: GIT_CLONE_COMMIT_AUTHOR_NAME
+  - title: |
+      Cloned git commit's author email address
+    mapped_to: GIT_CLONE_COMMIT_AUTHOR_EMAIL
+  - title: |
+      Cloned git commit's committer name
+    mapped_to: GIT_CLONE_COMMIT_COMMITER_NAME
+  - title: |
+      Cloned git commit's committer email
+    mapped_to: GIT_CLONE_COMMIT_COMMITER_EMAIL
