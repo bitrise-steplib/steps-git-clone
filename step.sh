@@ -24,6 +24,7 @@ ruby ./git_clone.rb \
 	--commit-hash="${BITRISE_GIT_COMMIT}" \
 	--tag="${BITRISE_GIT_TAG}" \
 	--branch="${BITRISE_GIT_BRANCH}" \
+	--pull-request="${BITRISE_PULL_REQUEST}" \
 	--dest-dir="${BITRISE_SOURCE_DIR}" \
 	--auth-username="${AUTH_USER}" \
 	--auth-password="${AUTH_PASSWORD}" \

@@ -32,6 +32,10 @@ opt_parser = OptionParser.new do |opt|
     options[:commit_hash] = value
   end
 
+  opt.on("--pull-request [PULL-REQUEST-ID]", "pull request id. IMPORTANT: works only with GitHub") do |value|
+    options[:pull_request_id] = value
+  end
+
   opt.on("--dest-dir [DESTINATIONDIR]", "local clone destination directory path") do |value|
     options[:clone_destination_dir] = value
   end
@@ -139,7 +143,9 @@ end
 # do clone
 git_checkout_parameter = nil
 # git_branch_parameter = ""
-if options[:commit_hash] and options[:commit_hash].length > 0
+if options[:pull_request_id] and options[:pull_request_id].length > 0
+  git_checkout_parameter = "pull/#{options[:pull_request_id]}"
+elsif options[:commit_hash] and options[:commit_hash].length > 0
   git_checkout_parameter = options[:commit_hash]
 elsif options[:tag] and options[:tag].length > 0
   # since git 1.8.x tags can be specified as "branch" too ( http://git-scm.com/docs/git-clone )
@@ -208,7 +214,11 @@ def do_clone()
         raise 'Could not add remote'
       end
 
-      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" git fetch})
+      fetch_command = "git fetch"
+      if $options[:pull_request_id] and $options[:pull_request_id].length > 0
+        fetch_command += " origin pull/#{$options[:pull_request_id]}/merge:#{$git_checkout_parameter}"
+      end
+      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" #{fetch_command}})
         raise 'Could not fetch from repository'
       end
 
