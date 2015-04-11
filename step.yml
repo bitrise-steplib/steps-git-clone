@@ -35,6 +35,9 @@ inputs:
       Git Branch to clone
     mapped_to: BITRISE_GIT_BRANCH
   - title: |
+      Pull request id on GitHub
+    mapped_to: BITRISE_PULL_REQUEST
+  - title: |
       Clone destination (local) directory path
     mapped_to: BITRISE_SOURCE_DIR
   - title: |

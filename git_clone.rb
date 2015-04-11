@@ -32,6 +32,10 @@ opt_parser = OptionParser.new do |opt|
     options[:commit_hash] = value
   end
 
+  opt.on("--pull-request [PULL-REQUEST-ID]", "pull request id. IMPORTANT: works only with GitHub") do |value|
+    options[:pull_request_id] = value
+  end
+
   opt.on("--dest-dir [DESTINATIONDIR]", "local clone destination directory path") do |value|
     options[:clone_destination_dir] = value
   end
@@ -137,9 +141,11 @@ else
 end
 
 # do clone
-git_checkout_parameter = 'master'
+git_checkout_parameter = nil
 # git_branch_parameter = ""
-if options[:commit_hash] and options[:commit_hash].length > 0
+if options[:pull_request_id] and options[:pull_request_id].length > 0
+  git_checkout_parameter = "pull/#{options[:pull_request_id]}"
+elsif options[:commit_hash] and options[:commit_hash].length > 0
   git_checkout_parameter = options[:commit_hash]
 elsif options[:tag] and options[:tag].length > 0
   # since git 1.8.x tags can be specified as "branch" too ( http://git-scm.com/docs/git-clone )
@@ -151,7 +157,7 @@ elsif options[:branch] and options[:branch].length > 0
   git_checkout_parameter = options[:branch]
 else
   # git_branch_parameter = "--no-single-branch"
-  puts " [!] No checkout parameter found, will use 'master'"
+  puts " [!] No checkout parameter found"
 end
 
 
@@ -208,52 +214,58 @@ def do_clone()
         raise 'Could not add remote'
       end
 
-      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" git fetch})
+      fetch_command = "git fetch"
+      if $options[:pull_request_id] and $options[:pull_request_id].length > 0
+        fetch_command += " origin pull/#{$options[:pull_request_id]}/merge:#{$git_checkout_parameter}"
+      end
+      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" #{fetch_command}})
         raise 'Could not fetch from repository'
       end
 
-      unless system("git checkout #{$git_checkout_parameter}")
-        raise "Could not do checkout #{$git_checkout_parameter}"
-      end
+      if $git_checkout_parameter != nil
+        unless system("git checkout #{$git_checkout_parameter}")
+          raise "Could not do checkout #{$git_checkout_parameter}"
+        end
 
-      unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" git submodule update --init --recursive})
-        raise 'Could not fetch from submodule repositories!'
-      end
+        unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" git submodule update --init --recursive})
+          raise 'Could not fetch from submodule repositories!'
+        end
 
-      # git clone stats
-      commit_hash_str = `git log -1 --format="%H"`.chomp
-      commit_msg_subject_str = `git log -1 --format="%s"`.chomp
-      commit_msg_body_str = `git log -1 --format="%b"`.chomp
-      commit_author_name_str = `git log -1 --format="%an"`.chomp
-      commit_author_email_str = `git log -1 --format="%ae"`.chomp
-      commit_commiter_name_str = `git log -1 --format="%cn"`.chomp
-      commit_commiter_email_str = `git log -1 --format="%ce"`.chomp
-      
+        # git clone stats
+        commit_hash_str = `git log -1 --format="%H"`.chomp
+        commit_msg_subject_str = `git log -1 --format="%s"`.chomp
+        commit_msg_body_str = `git log -1 --format="%b"`.chomp
+        commit_author_name_str = `git log -1 --format="%an"`.chomp
+        commit_author_email_str = `git log -1 --format="%ae"`.chomp
+        commit_commiter_name_str = `git log -1 --format="%cn"`.chomp
+        commit_commiter_email_str = `git log -1 --format="%ce"`.chomp
+        
 
-      if $options[:is_export_outputs]
-        export_step_output('GIT_CLONE_COMMIT_HASH', commit_hash_str)
-        export_step_output('GIT_CLONE_COMMIT_MESSAGE_SUBJECT', commit_msg_subject_str)
-        export_step_output('GIT_CLONE_COMMIT_MESSAGE_BODY', commit_msg_body_str)
-        export_step_output('GIT_CLONE_COMMIT_AUTHOR_NAME', commit_author_name_str)
-        export_step_output('GIT_CLONE_COMMIT_AUTHOR_EMAIL', commit_author_email_str)
-        export_step_output('GIT_CLONE_COMMIT_COMMITER_NAME', commit_commiter_name_str)
-        export_step_output('GIT_CLONE_COMMIT_COMMITER_EMAIL', commit_commiter_email_str)
-      end
+        if $options[:is_export_outputs]
+          export_step_output('GIT_CLONE_COMMIT_HASH', commit_hash_str)
+          export_step_output('GIT_CLONE_COMMIT_MESSAGE_SUBJECT', commit_msg_subject_str)
+          export_step_output('GIT_CLONE_COMMIT_MESSAGE_BODY', commit_msg_body_str)
+          export_step_output('GIT_CLONE_COMMIT_AUTHOR_NAME', commit_author_name_str)
+          export_step_output('GIT_CLONE_COMMIT_AUTHOR_EMAIL', commit_author_email_str)
+          export_step_output('GIT_CLONE_COMMIT_COMMITER_NAME', commit_commiter_name_str)
+          export_step_output('GIT_CLONE_COMMIT_COMMITER_EMAIL', commit_commiter_email_str)
+        end
 
 
-      formatted_output_file_path = $options[:formatted_output_file_path]
-      if formatted_output_file_path
-        commit_log_str = `git log -n 1 --tags --branches --remotes --format="fuller"`
-        commit_log_str = commit_log_str.prepend_lines_with('    ')
-        write_string_to_formatted_output(%Q{
-# Commit Hash
+        formatted_output_file_path = $options[:formatted_output_file_path]
+        if formatted_output_file_path
+          commit_log_str = `git log -n 1 --tags --branches --remotes --format="fuller"`
+          commit_log_str = commit_log_str.prepend_lines_with('    ')
+          write_string_to_formatted_output(%Q{
+  # Commit Hash
 
-    #{commit_hash_str}
+      #{commit_hash_str}
 
-# Commit Log
+  # Commit Log
 
-#{commit_log_str}
-})
+  #{commit_log_str}
+  })
+        end
       end
 
       is_clone_success = true
