@@ -202,6 +202,10 @@ def do_clone()
 	is_clone_success = false
 	Dir.chdir($options[:clone_destination_dir]) do
 		begin
+			if $git_checkout_parameter.nil?
+				raise "No checkout parameter (branch, tag, commit hash or pull-request ID) provided!"
+			end
+
 			unless system(%Q{git init})
 				raise 'Could not init git repository'
 			end
