@@ -1,4 +1,4 @@
-name: Git Clone Repository
+name: "Git Clone Repository"
 description: |
   Clones a repository based on the provided inputs.
 
@@ -12,6 +12,7 @@ description: |
   Use either the *(raw) SSH* or the *Base64 encoded SSH* key input to specify
   the SSH key. If both specified the *(raw) SSH* key input will be used.
 website: https://github.com/bitrise-io/steps-git-clone
+fork_url: https://github.com/bitrise-io/steps-git-clone
 source:
   git: https://github.com/bitrise-io/steps-git-clone.git
 host_os_tags:
@@ -21,58 +22,76 @@ type_tags:
   - vcs
 is_requires_admin_user: false
 inputs:
-  - title: |
-      Git repository URL
+  -
+    title: "Git repository URL"
     mapped_to: GIT_REPOSITORY_URL
-  - title: |
-      Git Commit to clone
+    is_required: true
+    is_expand: true
+  -
+    title: "Git Commit to clone"
     mapped_to: BITRISE_GIT_COMMIT
-  - title: |
-      Git Tag to clone
+    is_expand: true
+  -
+    title: "Git Tag to clone"
     mapped_to: BITRISE_GIT_TAG
-  - title: |
-      Git Branch to clone
+    is_expand: true
+  -
+    title: "Git Branch to clone"
     mapped_to: BITRISE_GIT_BRANCH
-  - title: |
-      Pull request id on GitHub
+    is_expand: true
+  -
+    title: "Pull request ID on GitHub"
     mapped_to: BITRISE_PULL_REQUEST
-  - title: |
-      Clone destination (local) directory path
+    is_expand: true
+  -
+    title: "Clone destination (local) directory path"
     mapped_to: BITRISE_SOURCE_DIR
-  - title: |
-      Auth: Username
+    is_expand: true
+  -
+    title: "Auth: Username"
     mapped_to: AUTH_USER
-  - title: |
-      Auth: Password
+    is_expand: false
+  -
+    title: "Auth: Password"
     mapped_to: AUTH_PASSWORD
-  - title: |
-      Auth: SSH private key - without a passphrase!
+    is_expand: false
+  -
+    title: "Auth: SSH private key - without a passphrase!"
     mapped_to: AUTH_SSH_PRIVATE_KEY
-  - title: |
-      [optional] Generate a Formatted (markdown) output file to this path
+    is_expand: true
+  -
+    title: "Auth: Base64 (strict - RFC 4648) encoded SSH private key - without a passphrase!"
+    mapped_to: AUTH_SSH_PRIVATE_KEY_BASE64
+    is_expand: true
+  -
+    title: "Generate a Formatted (markdown) output file to this path"
     mapped_to: GIT_CLONE_FORMATTED_OUTPUT_FILE_PATH
-  - title: |
-      [optional] Is export outputs. Set it to true to allow the export of the outputs. Default is false.
+    is_expand: true
+  -
+    title: "[optional] Is export outputs."
     mapped_to: GIT_CLONE_IS_EXPORT_OUTPUTS
+    value: "true"
+    value_options: ["true", "false"]
+    is_expand: false
 outputs:
-  - title: |
-      Cloned git commit's commit hash
+  -
+    title: "Cloned git commit's commit hash"
     mapped_to: GIT_CLONE_COMMIT_HASH
-  - title: |
-      Cloned git commit's message subject
+  -
+    title: "Cloned git commit's message subject"
     mapped_to: GIT_CLONE_COMMIT_MESSAGE_SUBJECT
-  - title: |
-      Cloned git commit's message body
+  -
+    title: "Cloned git commit's message body"
     mapped_to: GIT_CLONE_COMMIT_MESSAGE_BODY
-  - title: |
-      Cloned git commit's author name
+  -
+    title: "Cloned git commit's author name"
     mapped_to: GIT_CLONE_COMMIT_AUTHOR_NAME
-  - title: |
-      Cloned git commit's author email address
+  -
+    title: "Cloned git commit's author email address"
     mapped_to: GIT_CLONE_COMMIT_AUTHOR_EMAIL
-  - title: |
-      Cloned git commit's committer name
+  -
+    title: "Cloned git commit's committer name"
     mapped_to: GIT_CLONE_COMMIT_COMMITER_NAME
-  - title: |
-      Cloned git commit's committer email
+  -
+    title: "Cloned git commit's committer email"
     mapped_to: GIT_CLONE_COMMIT_COMMITER_EMAIL
