@@ -60,10 +60,6 @@ inputs:
     mapped_to: AUTH_SSH_PRIVATE_KEY
     is_expand: true
   -
-    title: "Auth: Base64 (strict - RFC 4648) encoded SSH private key - without a passphrase!"
-    mapped_to: AUTH_SSH_PRIVATE_KEY_BASE64
-    is_expand: true
-  -
     title: "Generate a Formatted (markdown) output file to this path"
     mapped_to: GIT_CLONE_FORMATTED_OUTPUT_FILE_PATH
     is_expand: true
