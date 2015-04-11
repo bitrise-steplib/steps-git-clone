@@ -28,7 +28,7 @@ ruby ./git_clone.rb \
 	--dest-dir="${BITRISE_SOURCE_DIR}" \
 	--auth-username="${AUTH_USER}" \
 	--auth-password="${AUTH_PASSWORD}" \
-	--auth-ssh-base64="${AUTH_SSH_PRIVATE_KEY_BASE64}" \
+	--auth-ssh-base64="${AUTH_SSH_PRIVATE_KEY_BASE64}" \ # deprecated
 	--formatted-output-file="${formatted_output_file_path}" \
 	--is-export-outputs="${is_export_outputs}"
 
