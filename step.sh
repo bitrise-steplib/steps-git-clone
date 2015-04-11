@@ -33,5 +33,4 @@ ruby ./git_clone.rb \
 	--auth-ssh-base64="${AUTH_SSH_PRIVATE_KEY_BASE64}" \
 	--formatted-output-file="${formatted_output_file_path}" \
 	--is-export-outputs="${is_export_outputs}"
-
 exit $?
