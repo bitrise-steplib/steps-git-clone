@@ -19,6 +19,8 @@ fi
 
 echo " (i) is_export_outputs: ${is_export_outputs}"
 
+# DEPRECATED:
+#  --auth-ssh-base64 : will be removed in the next version
 ruby ./git_clone.rb \
 	--repo-url="${GIT_REPOSITORY_URL}" \
 	--commit-hash="${BITRISE_GIT_COMMIT}" \
@@ -28,7 +30,7 @@ ruby ./git_clone.rb \
 	--dest-dir="${BITRISE_SOURCE_DIR}" \
 	--auth-username="${AUTH_USER}" \
 	--auth-password="${AUTH_PASSWORD}" \
-	--auth-ssh-base64="${AUTH_SSH_PRIVATE_KEY_BASE64}" \ # deprecated
+	--auth-ssh-base64="${AUTH_SSH_PRIVATE_KEY_BASE64}" \
 	--formatted-output-file="${formatted_output_file_path}" \
 	--is-export-outputs="${is_export_outputs}"
 
