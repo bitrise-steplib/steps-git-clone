@@ -131,7 +131,7 @@ elsif options[:auth_ssh_key_base64] and options[:auth_ssh_key_base64].length > 0
 elsif options[:auth_username] and options[:auth_username].length > 0 and options[:auth_password] and options[:auth_password].length > 0
   used_auth_type='login'
   repo_uri = URI.parse(prepared_repository_url)
-  
+
   # set the userinfo
   repo_uri.userinfo = "#{options[:auth_username]}:#{options[:auth_password]}"
   # 'serialize'
@@ -239,7 +239,7 @@ def do_clone()
         commit_author_email_str = `git log -1 --format="%ae"`.chomp
         commit_commiter_name_str = `git log -1 --format="%cn"`.chomp
         commit_commiter_email_str = `git log -1 --format="%ce"`.chomp
-        
+
 
         if $options[:is_export_outputs]
           export_step_output('GIT_CLONE_COMMIT_HASH', commit_hash_str)
@@ -257,14 +257,14 @@ def do_clone()
           commit_log_str = `git log -n 1 --tags --branches --remotes --format="fuller"`
           commit_log_str = commit_log_str.prepend_lines_with('    ')
           write_string_to_formatted_output(%Q{
-  # Commit Hash
+# Commit Hash
 
-      #{commit_hash_str}
+    #{commit_hash_str}
 
-  # Commit Log
+# Commit Log
 
-  #{commit_log_str}
-  })
+    #{commit_log_str}
+})
         end
       end
 
@@ -291,5 +291,3 @@ if options[:private_key_file_path]
 end
 
 exit (is_clone_success ? 0 : 1)
-
-
