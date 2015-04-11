@@ -48,6 +48,7 @@ opt_parser = OptionParser.new do |opt|
     options[:auth_password] = value
   end
 
+  # DEPRECATED!
   opt.on("--auth-ssh-base64 [SSH-BASE64]", "Base64 representation of the ssh private key to be used") do |value|
     options[:auth_ssh_key_base64] = value
   end
