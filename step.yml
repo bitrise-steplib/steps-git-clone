@@ -45,7 +45,7 @@ inputs:
     is_expand: true
   -
     title: "Clone destination (local) directory path"
-    mapped_to: BITRISE_SOURCE_DIR
+    mapped_to: BITRISE_DEST_DIR
     is_expand: true
   -
     title: "Auth: Username"
