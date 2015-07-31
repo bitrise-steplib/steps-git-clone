@@ -11,10 +11,10 @@ description: |
 
   Use either the *(raw) SSH* or the *Base64 encoded SSH* key input to specify
   the SSH key. If both specified the *(raw) SSH* key input will be used.
-website: https://github.com/bitrise-io/steps-git-clone
-fork_url: https://github.com/bitrise-io/steps-git-clone
+website: https://github.com/birmacher/steps-git-clone
+fork_url: https://github.com/birmacher/steps-git-clone
 source:
-  git: https://github.com/bitrise-io/steps-git-clone.git
+  git: https://github.com/birmacher/steps-git-clone.git
 host_os_tags:
   - osx-10.10
 type_tags:
