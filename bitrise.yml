@@ -1,0 +1,15 @@
+format_version: 1.0.0
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+workflows:
+  test:
+    steps:
+    - path::./:
+        run_if: true
+        inputs:
+        - clone_into_dir: ./_tmp/repo-dir
+        - repository_url: https://github.com/bitrise-io/bitrise.git
+        - commit:
+        - tag:
+        - branch:
+        - auth_ssh_private_key:

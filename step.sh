@@ -6,14 +6,14 @@
 #
 
 formatted_output_file_path=''
-if [ -n "${GIT_CLONE_FORMATTED_OUTPUT_FILE_PATH}" ] ; then
-	formatted_output_file_path="${GIT_CLONE_FORMATTED_OUTPUT_FILE_PATH}"
+if [ -n "${BITRISE_STEP_FORMATTED_OUTPUT_FILE_PATH}" ] ; then
+	formatted_output_file_path="${BITRISE_STEP_FORMATTED_OUTPUT_FILE_PATH}"
 fi
 
 echo " (i) formatted_output_file_path: ${formatted_output_file_path}"
 
 is_export_outputs='false'
-if [[ "${GIT_CLONE_IS_EXPORT_OUTPUTS}" == "true" ]] ; then
+if [[ "${is_expose_outputs}" == "true" ]] ; then
 	is_export_outputs='true'
 fi
 
@@ -22,14 +22,14 @@ echo " (i) is_export_outputs: ${is_export_outputs}"
 # DEPRECATED:
 #  --auth-ssh-base64 : will be removed in the next version
 ruby ./git_clone.rb \
-	--repo-url="${GIT_REPOSITORY_URL}" \
-	--commit-hash="${BITRISE_GIT_COMMIT}" \
-	--tag="${BITRISE_GIT_TAG}" \
-	--branch="${BITRISE_GIT_BRANCH}" \
-	--pull-request="${BITRISE_PULL_REQUEST}" \
-	--dest-dir="${BITRISE_SOURCE_DIR}" \
-	--auth-username="${AUTH_USER}" \
-	--auth-password="${AUTH_PASSWORD}" \
+	--repo-url="${repository_url}" \
+	--commit-hash="${commit}" \
+	--tag="${tag}" \
+	--branch="${branch}" \
+	--pull-request="${pull_request_id}" \
+	--dest-dir="${clone_into_dir}" \
+	--auth-username="${auth_user}" \
+	--auth-password="${auth_password}" \
 	--auth-ssh-base64="${AUTH_SSH_PRIVATE_KEY_BASE64}" \
 	--formatted-output-file="${formatted_output_file_path}" \
 	--is-export-outputs="${is_export_outputs}"

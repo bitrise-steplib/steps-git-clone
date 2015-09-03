@@ -1,4 +1,5 @@
-name: "Git Clone Repository"
+title: "Git Clone Repository"
+summary: Clones a repository based on the provided inputs.
 description: |
   Clones a repository based on the provided inputs.
 
@@ -12,82 +13,80 @@ description: |
   Use either the *(raw) SSH* or the *Base64 encoded SSH* key input to specify
   the SSH key. If both specified the *(raw) SSH* key input will be used.
 website: https://github.com/bitrise-io/steps-git-clone
-fork_url: https://github.com/bitrise-io/steps-git-clone
-source:
-  git: https://github.com/bitrise-io/steps-git-clone.git
+source_code_url: https://github.com/bitrise-io/steps-git-clone
+support_url: https://github.com/bitrise-io/steps-git-clone/issues
 host_os_tags:
   - osx-10.10
 type_tags:
   - git
   - vcs
 is_requires_admin_user: false
+is_always_run: false
+is_skippable: false
+dependencies: []
+run_if: .IsCI
 inputs:
-  -
-    title: "Git repository URL"
-    mapped_to: GIT_REPOSITORY_URL
-    is_required: true
-    is_expand: true
-  -
-    title: "Git Commit to clone"
-    mapped_to: BITRISE_GIT_COMMIT
-    is_expand: true
-  -
-    title: "Git Tag to clone"
-    mapped_to: BITRISE_GIT_TAG
-    is_expand: true
-  -
-    title: "Git Branch to clone"
-    mapped_to: BITRISE_GIT_BRANCH
-    is_expand: true
-  -
-    title: "Pull request ID on GitHub"
-    mapped_to: BITRISE_PULL_REQUEST
-    is_expand: true
-  -
-    title: "Clone destination (local) directory path"
-    mapped_to: BITRISE_SOURCE_DIR
-    is_expand: true
-  -
-    title: "Auth: Username"
-    mapped_to: AUTH_USER
-    is_expand: false
-  -
-    title: "Auth: Password"
-    mapped_to: AUTH_PASSWORD
-    is_expand: false
-  -
-    title: "Auth: SSH private key - without a passphrase!"
-    mapped_to: AUTH_SSH_PRIVATE_KEY
-    is_expand: true
-  -
-    title: "Generate a Formatted (markdown) output file to this path"
-    mapped_to: GIT_CLONE_FORMATTED_OUTPUT_FILE_PATH
-    is_expand: true
-  -
-    title: "[optional] Is export outputs."
-    mapped_to: GIT_CLONE_IS_EXPORT_OUTPUTS
-    value: "true"
-    value_options: ["true", "false"]
-    is_expand: false
+  - repository_url: "$GIT_REPOSITORY_URL"
+    opts:
+      title: "Git repository URL"
+      is_required: true
+      is_expand: true
+  - commit: "$BITRISE_GIT_COMMIT"
+    opts:
+      title: "Git Commit to clone"
+      is_expand: true
+  - tag: "$BITRISE_GIT_TAG"
+    opts:
+      title: "Git Tag to clone"
+      is_expand: true
+  - branch: "$BITRISE_GIT_BRANCH"
+    opts:
+      title: "Git Branch to clone"
+      is_expand: true
+  - pull_request_id: "$BITRISE_PULL_REQUEST"
+    opts:
+      title: "Pull request ID on GitHub"
+      is_expand: true
+  - clone_into_dir: "$BITRISE_SOURCE_DIR"
+    opts:
+      title: "Clone destination (local) directory path"
+      is_expand: true
+  - auth_user:
+    opts:
+      title: "Auth: Username"
+      is_expand: false
+  - auth_password:
+    opts:
+      title: "Auth: Password"
+      is_expand: false
+  - auth_ssh_private_key: "$SSH_RSA_PRIVATE_KEY"
+    opts:
+      title: "Auth: SSH private key - without a passphrase!"
+      is_expand: true
+  - is_expose_outputs: "true"
+    opts:
+      title: "[optional] Is export outputs."
+      value_options: ["true", "false"]
+      is_expand: false
 outputs:
-  -
-    title: "Cloned git commit's commit hash"
-    mapped_to: GIT_CLONE_COMMIT_HASH
-  -
-    title: "Cloned git commit's message subject"
-    mapped_to: GIT_CLONE_COMMIT_MESSAGE_SUBJECT
-  -
-    title: "Cloned git commit's message body"
-    mapped_to: GIT_CLONE_COMMIT_MESSAGE_BODY
-  -
-    title: "Cloned git commit's author name"
-    mapped_to: GIT_CLONE_COMMIT_AUTHOR_NAME
-  -
-    title: "Cloned git commit's author email address"
-    mapped_to: GIT_CLONE_COMMIT_AUTHOR_EMAIL
-  -
-    title: "Cloned git commit's committer name"
-    mapped_to: GIT_CLONE_COMMIT_COMMITER_NAME
-  -
-    title: "Cloned git commit's committer email"
-    mapped_to: GIT_CLONE_COMMIT_COMMITER_EMAIL
+  - GIT_CLONE_COMMIT_HASH:
+    opts:
+      title: "Cloned git commit's commit hash"
+  - GIT_CLONE_COMMIT_MESSAGE_SUBJECT:
+    opts:
+      title: "Cloned git commit's message subject"
+  - GIT_CLONE_COMMIT_MESSAGE_BODY:
+    opts:
+      title: "Cloned git commit's message body"
+  - GIT_CLONE_COMMIT_AUTHOR_NAME:
+    opts:
+      title: "Cloned git commit's author name"
+  - GIT_CLONE_COMMIT_AUTHOR_EMAIL:
+    opts:
+      title: "Cloned git commit's author email address"
+  - GIT_CLONE_COMMIT_COMMITER_NAME:
+    opts:
+      title: "Cloned git commit's committer name"
+  - GIT_CLONE_COMMIT_COMMITER_EMAIL:
+    opts:
+      title: "Cloned git commit's committer email"

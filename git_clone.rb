@@ -68,7 +68,7 @@ opt_parser = OptionParser.new do |opt|
 	end
 end
 
-ssh_key_from_env = ENV['AUTH_SSH_PRIVATE_KEY']
+ssh_key_from_env = ENV['auth_ssh_private_key']
 if ssh_key_from_env
 	options[:auth_ssh_key_raw] = ssh_key_from_env
 end
