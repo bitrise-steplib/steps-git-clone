@@ -260,11 +260,11 @@ def do_clone()
 					write_string_to_formatted_output(%Q{
 # Commit Hash
 
-		#{commit_hash_str}
+	#{commit_hash_str}
 
 # Commit Log
 
-		#{commit_log_str}
+	#{commit_log_str}
 })
 				end
 			else
