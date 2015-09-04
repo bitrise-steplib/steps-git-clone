@@ -11,5 +11,16 @@ workflows:
         - repository_url: https://github.com/bitrise-io/bitrise.git
         - commit:
         - tag:
-        - branch:
+        - branch: master
         - auth_ssh_private_key:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"

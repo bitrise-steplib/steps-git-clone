@@ -7,14 +7,13 @@ options = {
 	user_home: ENV['HOME'],
 	private_key_file_path: nil,
 	formatted_output_file_path: nil,
-	output_env_file_path: "#{ENV['HOME']}/.bash_profile",
 	is_export_outputs: false
 }
 
 opt_parser = OptionParser.new do |opt|
 	opt.banner = "Usage: git_clone.rb [OPTIONS]"
-	opt.separator  ""
-	opt.separator  "Options (options without [] are required)"
+	opt.separator ""
+	opt.separator "Options (options without [] are required)"
 
 	opt.on("--repo-url URL", "repository url") do |value|
 		options[:repo_url] = value
@@ -183,13 +182,11 @@ def write_string_to_formatted_output(str_to_write)
 	end
 end
 
-def bash_export_escape(str)
-	return str.gsub('"'){'\\"'}
-end
-
 def export_step_output(key, value)
-	File.open($options[:output_env_file_path], "a") { |f|
-		f.puts %Q{export #{key}="#{bash_export_escape(value)}"}
+	IO.popen("envman add --key #{key}", 'r+') {|f|
+		f.write(value)
+		f.close_write
+		f.read
 	}
 end
 

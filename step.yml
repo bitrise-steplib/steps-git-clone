@@ -51,23 +51,10 @@ inputs:
     opts:
       title: "Clone destination (local) directory path"
       is_expand: true
-  - auth_user:
-    opts:
-      title: "Auth: Username"
-      is_expand: false
-  - auth_password:
-    opts:
-      title: "Auth: Password"
-      is_expand: false
   - auth_ssh_private_key: "$SSH_RSA_PRIVATE_KEY"
     opts:
       title: "Auth: SSH private key - without a passphrase!"
       is_expand: true
-  - is_expose_outputs: "true"
-    opts:
-      title: "[optional] Is export outputs."
-      value_options: ["true", "false"]
-      is_expand: false
 outputs:
   - GIT_CLONE_COMMIT_HASH:
     opts:
