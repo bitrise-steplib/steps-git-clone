@@ -165,7 +165,7 @@ end
 $options = options
 $prepared_repository_url = prepared_repository_url
 $git_checkout_parameter = git_checkout_parameter
-$this_script_path = File.expand_path('.')
+$this_script_path = File.expand_path(File.dirname(__FILE__))
 
 class String
 	def prepend_lines_with(prepend_with_string)
