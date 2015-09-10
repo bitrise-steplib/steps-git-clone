@@ -1,18 +1,22 @@
 format_version: 1.0.0
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
+app:
+  envs:
+  # define these in your .bitrise.secrets.yml if not public
+  - GIT_REPOSITORY_URL: https://github.com/bitrise-io/bitrise.git
+  - BITRISE_GIT_COMMIT:
+  - BITRISE_GIT_TAG:
+  - BITRISE_GIT_BRANCH: master
+  - BITRISE_PULL_REQUEST:
+  - BITRISE_SOURCE_DIR: ./_tmp/repo-dir
+  - SSH_RSA_PRIVATE_KEY:
+
 workflows:
   test:
     steps:
     - path::./:
         run_if: true
-        inputs:
-        - clone_into_dir: ./_tmp/repo-dir
-        - repository_url: https://github.com/bitrise-io/bitrise.git
-        - commit:
-        - tag:
-        - branch: master
-        - auth_ssh_private_key:
     - script:
         inputs:
         - content: |-
