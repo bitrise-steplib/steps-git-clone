@@ -5,6 +5,8 @@
 #  the raw-ssh-key parameter is a multiline input -> will be directly retrieved from the environment
 #
 
+THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 formatted_output_file_path=''
 if [ -n "${BITRISE_STEP_FORMATTED_OUTPUT_FILE_PATH}" ] ; then
 	formatted_output_file_path="${BITRISE_STEP_FORMATTED_OUTPUT_FILE_PATH}"
@@ -19,7 +21,7 @@ echo " (i) formatted_output_file_path: ${formatted_output_file_path}"
 #  --auth_user
 #  --auth_password
 
-ruby ./git_clone.rb \
+ruby "${THIS_SCRIPT_DIR}/git_clone.rb" \
 	--repo-url="${repository_url}" \
 	--commit-hash="${commit}" \
 	--tag="${tag}" \
