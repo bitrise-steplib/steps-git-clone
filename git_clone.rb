@@ -34,7 +34,7 @@ opt_parser = OptionParser.new do |opt|
 		options[:commit_hash] = value
 	end
 
-	opt.on("--pull-request [PULL-REQUEST-ID]", "pull request id. IMPORTANT: works only with GitHub") do |value|
+	opt.on("--pull-request [PULL-REQUEST]", "pull request id. IMPORTANT: works only with GitHub and Bitbucket") do |value|
 		options[:pull_request_id] = value
 	end
 
@@ -48,11 +48,6 @@ opt_parser = OptionParser.new do |opt|
 
 	opt.on("--auth-password [PASSWORD]", "password for authentication - requires --auth-username to be specified") do |value|
 		options[:auth_password] = value
-	end
-
-	# DEPRECATED!
-	opt.on("--auth-ssh-base64 [SSH-BASE64]", "Base64 representation of the ssh private key to be used") do |value|
-		options[:auth_ssh_key_base64] = value
 	end
 
 	opt.on("--formatted-output-file [FILE-PATH]", "If given a formatted (markdown) output will be generated") do |value|
