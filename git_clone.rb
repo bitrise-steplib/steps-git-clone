@@ -146,7 +146,7 @@ git_checkout_parameter = nil
 if options[:pull_request_id] and options[:pull_request_id].length > 0
 	if options[:github]
 		git_checkout_parameter = "pull/#{options[:pull_request_id]}"
-	if options[:bitbucket]
+	elsif options[:bitbucket]
 		git_checkout_parameter = options[:branch]
 	else
 		# Pull Requests are only supported with GitHub and Bitbucket repositories
