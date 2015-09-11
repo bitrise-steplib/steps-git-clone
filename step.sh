@@ -14,18 +14,6 @@ fi
 
 echo " (i) formatted_output_file_path: ${formatted_output_file_path}"
 
-if [ -z "${clone_into_dir}" ] ; then
-	echo " [!] No clone_into_dir specified!"
-	exit 1
-fi
-# make clone_into_dir abs
-cd "${clone_into_dir}"
-clone_into_dir="$(pwd)"
-
-# cd into another dir, in case clone_into_dir would be the current dir
-#   because it'll be deleted before git clone
-cd "${HOME}"
-
 ruby "${THIS_SCRIPT_DIR}/git_clone.rb" \
 	--repo-url="${repository_url}" \
 	--commit-hash="${commit}" \

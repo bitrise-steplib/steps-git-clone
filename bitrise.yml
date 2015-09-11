@@ -15,6 +15,13 @@ app:
 workflows:
   test:
     steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            rm -rf ./_tmp/
     - path::./:
         run_if: true
     - script:

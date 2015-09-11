@@ -112,6 +112,8 @@ end
 
 # normalize input pathes
 options[:clone_destination_dir] = File.expand_path(options[:clone_destination_dir])
+puts " (i) expanded/absolute clone_destination_dir: #{options[:clone_destination_dir]}"
+
 if options[:formatted_output_file_path]
 	options[:formatted_output_file_path] = File.expand_path(options[:formatted_output_file_path])
 end
@@ -191,10 +193,15 @@ def export_step_output(key, value)
 end
 
 def do_clone()
-	# first delete the destination folder - for git, especially if it's a retry
-	return false unless system(%Q{rm -rf "#{$options[:clone_destination_dir]}"})
-	# (re-)create
-	return false unless system(%Q{mkdir -p "#{$options[:clone_destination_dir]}"})
+	git_check_path = File.join($options[:clone_destination_dir], '.git')
+	if Dir.exist?(git_check_path)
+		puts " [!] .git folder already exists in the destination dir at : #{git_check_path}"
+		return false
+	end
+	unless system(%Q{mkdir -p "#{$options[:clone_destination_dir]}"})
+		puts " [!] Failed to create the clone_destination_dir at : #{$options[:clone_destination_dir]}"
+		return false
+	end
 
 	is_clone_success = false
 	Dir.chdir($options[:clone_destination_dir]) do
