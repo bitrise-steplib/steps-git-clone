@@ -3,8 +3,6 @@ summary: Clones a repository based on the provided inputs.
 description: |
   Clones a repository based on the provided inputs.
 
-  **NOTE**: it will remove the specified (local) Destination Directory before cloning!
-
   If `pull_request_id` is provided then all other git checkout parameters will be ignored.
   If a git commit is provided it will ignore the tag and branch parameters.
   If no git commit but a tag is provided then it will ignore the branch parameter.
