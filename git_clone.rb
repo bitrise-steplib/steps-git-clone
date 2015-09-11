@@ -17,6 +17,9 @@ opt_parser = OptionParser.new do |opt|
 
 	opt.on("--repo-url URL", "repository url") do |value|
 		options[:repo_url] = value
+
+		options[:github] = true if /github.com/ =~ options[:repo_url]
+		options[:bitbucket] = true if /bitbucket.com/ =~ options[:repo_url]
 	end
 
 	opt.on("--branch [BRANCH]", "branch name. IMPORTANT: if tag is specified the branch parameter will be ignored!") do |value|
@@ -146,7 +149,14 @@ end
 git_checkout_parameter = nil
 # git_branch_parameter = ""
 if options[:pull_request_id] and options[:pull_request_id].length > 0
-	git_checkout_parameter = "pull/#{options[:pull_request_id]}"
+	if options[:github]
+		git_checkout_parameter = "pull/#{options[:pull_request_id]}"
+	if options[:bitbucket]
+		git_checkout_parameter = options[:branch]
+	else
+		# Pull Requests are only supported with GitHub and Bitbucket repositories
+		options[:pull_request_id] = nil
+	end
 elsif options[:commit_hash] and options[:commit_hash].length > 0
 	git_checkout_parameter = options[:commit_hash]
 elsif options[:tag] and options[:tag].length > 0
@@ -219,11 +229,13 @@ def do_clone()
 				raise 'Could not add remote'
 			end
 
-			fetch_command = "git fetch"
+			fetch_command = ["git fetch"]
 			if $options[:pull_request_id] and $options[:pull_request_id].length > 0
-				fetch_command += " origin pull/#{$options[:pull_request_id]}/merge:#{$git_checkout_parameter}"
+				if options[:github]
+					fetch_command << "origin pull/#{$options[:pull_request_id]}/merge:#{$git_checkout_parameter}"
+				end
 			end
-			unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" #{fetch_command}})
+			unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" #{fetch_command.join(" ")}})
 				raise 'Could not fetch from repository'
 			end
 
@@ -234,6 +246,16 @@ def do_clone()
 
 				unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" git submodule update --init --recursive})
 					raise 'Could not fetch from submodule repositories!'
+				end
+
+				if $options[:bitbucket] and $options[:pull_request_id] and $options[:pull_request_id].length > 0
+					unless system("git fetch #{$options[:pull_request_id]}")
+						raise "Could not fetch #{$options[:pull_request_id]}"
+					end
+
+					unless system("git merge FETCH_HEAD")
+						raise "Could not merge #{$options[:pull_request_id]}"
+					end
 				end
 
 				# git clone stats
