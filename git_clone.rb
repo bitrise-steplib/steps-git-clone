@@ -19,7 +19,7 @@ opt_parser = OptionParser.new do |opt|
 		options[:repo_url] = value
 
 		options[:github] = true if /github.com/ =~ options[:repo_url]
-		options[:bitbucket] = true if /bitbucket.com/ =~ options[:repo_url]
+		options[:bitbucket] = true if /bitbucket.org/ =~ options[:repo_url]
 	end
 
 	opt.on("--branch [BRANCH]", "branch name. IMPORTANT: if tag is specified the branch parameter will be ignored!") do |value|
@@ -226,7 +226,7 @@ def do_clone()
 
 			fetch_command = ["git fetch"]
 			if $options[:pull_request_id] and $options[:pull_request_id].length > 0
-				if options[:github]
+				if $options[:github]
 					fetch_command << "origin pull/#{$options[:pull_request_id]}/merge:#{$git_checkout_parameter}"
 				end
 			end
@@ -244,11 +244,11 @@ def do_clone()
 				end
 
 				if $options[:bitbucket] and $options[:pull_request_id] and $options[:pull_request_id].length > 0
-					unless system("git fetch #{$options[:pull_request_id]}")
+					unless system("git fetch origin #{$options[:pull_request_id]}")
 						raise "Could not fetch #{$options[:pull_request_id]}"
 					end
 
-					unless system("git merge FETCH_HEAD")
+					unless system("git merge FETCH_HEAD --no-commit")
 						raise "Could not merge #{$options[:pull_request_id]}"
 					end
 				end
