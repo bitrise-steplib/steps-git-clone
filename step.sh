@@ -12,8 +12,6 @@ if [ -n "${BITRISE_STEP_FORMATTED_OUTPUT_FILE_PATH}" ] ; then
 	formatted_output_file_path="${BITRISE_STEP_FORMATTED_OUTPUT_FILE_PATH}"
 fi
 
-echo " (i) formatted_output_file_path: ${formatted_output_file_path}"
-
 ruby "${THIS_SCRIPT_DIR}/git_clone.rb" \
 	--repo-url="${repository_url}" \
 	--commit-hash="${commit}" \
