@@ -38,19 +38,6 @@ opt_parser = OptionParser.new do |opt|
 		options[:clone_destination_dir] = value
 	end
 
-	opt.on("--auth-username [USERNAME]", "username for authentication - requires --auth-password to be specified") do |value|
-		options[:auth_username] = value
-	end
-
-	opt.on("--auth-password [PASSWORD]", "password for authentication - requires --auth-username to be specified") do |value|
-		options[:auth_password] = value
-	end
-
-	# DEPRECATED!
-	opt.on("--auth-ssh-base64 [SSH-BASE64]", "Base64 representation of the ssh private key to be used") do |value|
-		options[:auth_ssh_key_base64] = value
-	end
-
 	opt.on("--formatted-output-file [FILE-PATH]", "If given a formatted (markdown) output will be generated") do |value|
 		options[:formatted_output_file_path] = value
 	end
@@ -83,7 +70,7 @@ puts " * commit_hash: #{options[:commit_hash]}"
 puts " * pull_request_id: #{options[:pull_request_id]}"
 puts " * clone_destination_dir: #{options[:clone_destination_dir]}"
 puts " * formatted_output_file_path: #{options[:formatted_output_file_path]}"
-puts ' * auth_ssh_key_raw: *****'
+puts " * auth_ssh_key_raw: #{options[:auth_ssh_key_raw].to_s.empty? ? 'no SSH key provided' : '*****'}"
 puts
 
 unless options[:repo_url] and options[:repo_url].length > 0
@@ -128,9 +115,7 @@ end
 #
 prepared_repository_url = options[:repo_url]
 
-used_auth_type=nil
 if options[:auth_ssh_key_raw] and options[:auth_ssh_key_raw].length > 0
-	used_auth_type='ssh'
 	options[:private_key_file_path] = write_private_key_to_file(options[:user_home], options[:auth_ssh_key_raw])
 else
 	# Auth: No Authentication information found - trying without authentication
