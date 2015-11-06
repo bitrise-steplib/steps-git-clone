@@ -115,7 +115,7 @@ end
 #
 prepared_repository_url = options[:repo_url]
 
-if options[:auth_ssh_key_raw] and options[:auth_ssh_key_raw].length > 0
+if !options[:auth_ssh_key_raw].to_s.empty?
 	options[:private_key_file_path] = write_private_key_to_file(options[:user_home], options[:auth_ssh_key_raw])
 else
 	# Auth: No Authentication information found - trying without authentication
