@@ -21,6 +21,5 @@ ruby "${THIS_SCRIPT_DIR}/git_clone.rb" \
 	--branch="${branch}" \
 	--pull-request="${pull_request_id}" \
 	--dest-dir="${clone_into_dir}" \
-	--formatted-output-file="${formatted_output_file_path}" \
-	--is-export-outputs="true"
+	--formatted-output-file="${formatted_output_file_path}"
 exit $?

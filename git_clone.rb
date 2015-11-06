@@ -7,7 +7,6 @@ options = {
 	user_home: ENV['HOME'],
 	private_key_file_path: nil,
 	formatted_output_file_path: nil,
-	is_export_outputs: false
 }
 
 opt_parser = OptionParser.new do |opt|
@@ -56,12 +55,6 @@ opt_parser = OptionParser.new do |opt|
 		options[:formatted_output_file_path] = value
 	end
 
-	opt.on("--is-export-outputs [true/false]", "if false (default) then it won't export it's outputs. If true then it will.") do |value|
-		if value == 'true'
-			options[:is_export_outputs] = true
-		end
-	end
-
 	opt.on("-h","--help","Shows this help message") do
 		puts opt_parser
 	end
@@ -78,7 +71,20 @@ if options[:formatted_output_file_path] and options[:formatted_output_file_path]
 	options[:formatted_output_file_path] = nil
 end
 
-puts "Provided options: #{options}"
+
+#
+# Print configs
+puts
+puts '========== Configs =========='
+puts " * repo_url: #{options[:repo_url]}"
+puts " * branch: #{options[:branch]}"
+puts " * tag: #{options[:tag]}"
+puts " * commit_hash: #{options[:commit_hash]}"
+puts " * pull_request_id: #{options[:pull_request_id]}"
+puts " * clone_destination_dir: #{options[:clone_destination_dir]}"
+puts " * formatted_output_file_path: #{options[:formatted_output_file_path]}"
+puts ' * auth_ssh_key_raw: *****'
+puts
 
 unless options[:repo_url] and options[:repo_url].length > 0
 	puts opt_parser
@@ -126,18 +132,6 @@ used_auth_type=nil
 if options[:auth_ssh_key_raw] and options[:auth_ssh_key_raw].length > 0
 	used_auth_type='ssh'
 	options[:private_key_file_path] = write_private_key_to_file(options[:user_home], options[:auth_ssh_key_raw])
-elsif options[:auth_ssh_key_base64] and options[:auth_ssh_key_base64].length > 0
-	used_auth_type='ssh'
-	private_key_decoded = Base64.strict_decode64(options[:auth_ssh_key_base64])
-	options[:private_key_file_path] = write_private_key_to_file(options[:user_home], private_key_decoded)
-elsif options[:auth_username] and options[:auth_username].length > 0 and options[:auth_password] and options[:auth_password].length > 0
-	used_auth_type='login'
-	repo_uri = URI.parse(prepared_repository_url)
-
-	# set the userinfo
-	repo_uri.userinfo = "#{options[:auth_username]}:#{options[:auth_password]}"
-	# 'serialize'
-	prepared_repository_url = repo_uri.to_s
 else
 	# Auth: No Authentication information found - trying without authentication
 end
@@ -246,15 +240,14 @@ def do_clone()
 				commit_commiter_email_str = `git log -1 --format="%ce"`.chomp
 
 
-				if $options[:is_export_outputs]
-					export_step_output('GIT_CLONE_COMMIT_HASH', commit_hash_str)
-					export_step_output('GIT_CLONE_COMMIT_MESSAGE_SUBJECT', commit_msg_subject_str)
-					export_step_output('GIT_CLONE_COMMIT_MESSAGE_BODY', commit_msg_body_str)
-					export_step_output('GIT_CLONE_COMMIT_AUTHOR_NAME', commit_author_name_str)
-					export_step_output('GIT_CLONE_COMMIT_AUTHOR_EMAIL', commit_author_email_str)
-					export_step_output('GIT_CLONE_COMMIT_COMMITER_NAME', commit_commiter_name_str)
-					export_step_output('GIT_CLONE_COMMIT_COMMITER_EMAIL', commit_commiter_email_str)
-				end
+				export_step_output('GIT_CLONE_COMMIT_HASH', commit_hash_str)
+				export_step_output('GIT_CLONE_COMMIT_MESSAGE_SUBJECT', commit_msg_subject_str)
+				export_step_output('GIT_CLONE_COMMIT_MESSAGE_BODY', commit_msg_body_str)
+				export_step_output('GIT_CLONE_COMMIT_AUTHOR_NAME', commit_author_name_str)
+				export_step_output('GIT_CLONE_COMMIT_AUTHOR_EMAIL', commit_author_email_str)
+				export_step_output('GIT_CLONE_COMMIT_COMMITER_NAME', commit_commiter_name_str)
+				export_step_output('GIT_CLONE_COMMIT_COMMITER_EMAIL', commit_commiter_email_str)
+
 
 
 				formatted_output_file_path = $options[:formatted_output_file_path]
