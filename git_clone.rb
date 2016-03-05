@@ -183,6 +183,8 @@ def do_clone()
 	end
 
 	is_clone_success = false
+	commit_hash_str = ''
+
 	Dir.chdir($options[:clone_destination_dir]) do
 		begin
 			unless system(%Q{git init})
@@ -264,11 +266,12 @@ def do_clone()
 		system(%Q{rm -rf "#{$options[:clone_destination_dir]}"})
 	end
 
-	return is_clone_success
+	return is_clone_success, commit_hash_str
 end
 
-is_clone_success = do_clone()
+is_clone_success, commit_hash = do_clone()
 puts "Clone Is Success?: #{is_clone_success}"
+puts "Cloned commit hash: #{commit_hash}" if is_clone_success && commit_hash.to_s != ""
 
 if options[:private_key_file_path]
 	puts " (i) Removing private key file: #{options[:private_key_file_path]}"
