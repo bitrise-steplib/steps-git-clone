@@ -25,32 +25,25 @@ inputs:
     opts:
       title: "Git repository URL"
       is_required: true
-      is_expand: true
   - commit: "$BITRISE_GIT_COMMIT"
     opts:
       title: "Git Commit to clone"
-      is_expand: true
   - tag: "$BITRISE_GIT_TAG"
     opts:
       title: "Git Tag to clone"
-      is_expand: true
   - branch: "$BITRISE_GIT_BRANCH"
     opts:
       title: "Git Branch to clone"
-      is_expand: true
   - pull_request_id: "$BITRISE_PULL_REQUEST"
     opts:
       title: "Pull request ID on GitHub"
-      is_expand: true
   - clone_into_dir: "$BITRISE_SOURCE_DIR"
     opts:
       title: "Clone destination (local) directory path"
-      is_expand: true
       is_required: true
   - auth_ssh_private_key: "$SSH_RSA_PRIVATE_KEY"
     opts:
       title: "Auth: SSH private key - without a passphrase!"
-      is_expand: true
 outputs:
   - GIT_CLONE_COMMIT_HASH:
     opts:
