@@ -271,7 +271,7 @@ end
 
 is_clone_success, commit_hash = do_clone()
 puts "Clone Is Success?: #{is_clone_success}"
-puts "Cloned commit hash: #{commit_hash}" if is_clone_success && commit_hash.to_s != ""
+puts "Cloned commit hash: #{commit_hash}"
 
 if options[:private_key_file_path]
 	puts " (i) Removing private key file: #{options[:private_key_file_path]}"
