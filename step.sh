@@ -15,8 +15,8 @@ fi
 ruby "${THIS_SCRIPT_DIR}/git_clone.rb" \
 	--repo-url="${repository_url}" \
 	--commit-hash="${commit}" \
-	--tag="${tag}" \
-	--branch="${branch}" \
+	--tag="$(printf '%q' "${tag}")" \
+	--branch="$(printf '%q' "${branch}")" \
 	--pull-request="${pull_request_id}" \
 	--dest-dir="${clone_into_dir}" \
 	--formatted-output-file="${formatted_output_file_path}"
