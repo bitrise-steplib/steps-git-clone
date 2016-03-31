@@ -1,6 +1,13 @@
-## Changelog (Current version: 3.1.1)
+## Changelog (Current version: 3.2.0)
 
 -----------------
+
+### 3.2.0 (2016 Mar 31)
+
+* [42257b8] prepare for release
+* [8702104] Merge pull request #13 from bitrise-io/clone_depth_param
+* [4916a57] clone depth
+* [bc34cf3] step.yml updates
 
 ### 3.1.1 (2016 Mar 09)
 
@@ -145,4 +152,4 @@
 
 -----------------
 
-Updated: 2016 Mar 09
+Updated: 2016 Mar 31
