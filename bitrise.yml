@@ -5,11 +5,11 @@ app:
   envs:
   # define these in your .bitrise.secrets.yml if not public
   - GIT_REPOSITORY_URL: https://github.com/bitrise-io/bitrise.git
-  - BITRISE_GIT_COMMIT:
-  - BITRISE_GIT_TAG:
   - BITRISE_GIT_BRANCH: master
-  - BITRISE_PULL_REQUEST:
-  - SSH_RSA_PRIVATE_KEY:
+  # - BITRISE_GIT_COMMIT:
+  # - BITRISE_GIT_TAG:
+  # - BITRISE_PULL_REQUEST:
+  # - SSH_RSA_PRIVATE_KEY:
 
 workflows:
   # ----------------------------------------------------------------
@@ -37,6 +37,7 @@ workflows:
         run_if: true
         inputs:
         - clone_into_dir: repo-dir
+        - clone_depth: 10
     - script:
         inputs:
         - content: |-
