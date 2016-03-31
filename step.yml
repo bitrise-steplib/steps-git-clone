@@ -44,6 +44,12 @@ inputs:
   - auth_ssh_private_key: "$SSH_RSA_PRIVATE_KEY"
     opts:
       title: "Auth: SSH private key - without a passphrase!"
+  - clone_depth:
+    opts:
+      title: "Limit fetching to the specified number of commits"
+      description: |-
+        Limit fetching to the specified number of commits.
+        The value should be a decimal number, example: `10`.
 outputs:
   - GIT_CLONE_COMMIT_HASH:
     opts:

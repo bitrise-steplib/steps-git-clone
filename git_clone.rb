@@ -38,6 +38,10 @@ opt_parser = OptionParser.new do |opt|
 		options[:clone_destination_dir] = value
 	end
 
+	opt.on("--clone-depth [CLONE-DEPTH]", "limit fetching to the specified number of commits") do |value|
+		options[:clone_depth] = value
+	end
+
 	opt.on("--formatted-output-file [FILE-PATH]", "If given a formatted (markdown) output will be generated") do |value|
 		options[:formatted_output_file_path] = value
 	end
@@ -69,6 +73,7 @@ puts " * tag: #{options[:tag]}"
 puts " * commit_hash: #{options[:commit_hash]}"
 puts " * pull_request_id: #{options[:pull_request_id]}"
 puts " * clone_destination_dir: #{options[:clone_destination_dir]}"
+puts " * clone_depth: #{options[:clone_depth]}"
 puts " * formatted_output_file_path: #{options[:formatted_output_file_path]}"
 puts " * auth_ssh_key_raw: #{options[:auth_ssh_key_raw].to_s.empty? ? 'no SSH key provided' : '*****'}"
 puts
@@ -203,6 +208,9 @@ def do_clone()
 			fetch_command = "git fetch"
 			if $options[:pull_request_id] and $options[:pull_request_id].length > 0
 				fetch_command += " origin pull/#{$options[:pull_request_id]}/merge:#{$git_checkout_parameter}"
+			end
+			if $options[:clone_depth] and $options[:clone_depth].length > 0
+				fetch_command += " --depth=#{$options[:clone_depth]}"
 			end
 			unless system(%Q{GIT_ASKPASS=echo GIT_SSH="#{$this_script_path}/ssh_no_prompt.sh" #{fetch_command}})
 				raise 'Could not fetch from repository'
