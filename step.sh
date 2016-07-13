@@ -6,19 +6,9 @@
 #
 
 THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-formatted_output_file_path=''
-if [ -n "${BITRISE_STEP_FORMATTED_OUTPUT_FILE_PATH}" ] ; then
-	formatted_output_file_path="${BITRISE_STEP_FORMATTED_OUTPUT_FILE_PATH}"
-fi
-
-ruby "${THIS_SCRIPT_DIR}/git_clone.rb" \
-	--repo-url="${repository_url}" \
-	--commit-hash="${commit}" \
-	--tag="${tag}" \
-	--branch="${branch}" \
-	--pull-request="${pull_request_id}" \
-	--dest-dir="${clone_into_dir}" \
-	--clone-depth="${clone_depth}" \
-	--formatted-output-file="${formatted_output_file_path}"
+export THIS_SCRIPT_DIR=$THIS_SCRIPT_DIR
+export GO15VENDOREXPERIMENT="1"
+GOPATH="$THIS_SCRIPT_DIR/go" go run "${THIS_SCRIPT_DIR}/go/src/github.com/bitrise-io/git-clone/main.go"
 exit $?
+
+
