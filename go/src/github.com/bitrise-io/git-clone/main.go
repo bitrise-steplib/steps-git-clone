@@ -176,4 +176,6 @@ func main() {
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COMMITER_EMAIL", commitCommiterEmail)
 		}
 	}
+
+	log.Done("Success")
 }
