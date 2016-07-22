@@ -26,11 +26,11 @@ func TestProperReturn(t *testing.T) {
 		require.Error(t, properReturn(errors.New("error"), ""))
 	}
 
-	t.Log("it returns fallback message if error is exit status error")
+	t.Log("it returns fallback message if error is exit status error and fallback message provided")
 	{
 		err := properReturn(errors.New("exit status 1"), "")
 		require.Error(t, err)
-		require.Equal(t, "", err.Error())
+		require.Equal(t, "exit status 1", err.Error())
 	}
 
 	t.Log("it returns fallback message if error is exit status error")
@@ -199,17 +199,6 @@ func TestConfigureCheckoutParam(t *testing.T) {
 		require.Equal(t, "1", helper.cloneDepth)
 	}
 }
-
-/*
-func TestConfigureSSHNoPrompt(t *testing.T) {
-	t.Log("it sets sshNoPromptScriptPth")
-	{
-		helper := Helper{}
-		require.NoError(t, helper.ConfigureSSHNoPrompt())
-		require.NotEqual(t, "", helper.sshNoPromptScriptPth)
-	}
-}
-*/
 
 func TestNewHelper(t *testing.T) {
 	t.Log("it fails if destinationDir empty")

@@ -141,43 +141,43 @@ func (helper Helper) SubmoduleUpdate() error {
 // LogCommitHash ...
 func (helper Helper) LogCommitHash() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%H"`)
-	return executeForOutput(helper.destinationDir, cmdSlice)
+	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
 }
 
 // LogCommitMessageSubject ...
 func (helper Helper) LogCommitMessageSubject() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%s"`)
-	return executeForOutput(helper.destinationDir, cmdSlice)
+	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
 }
 
 // LogCommitMessageBody ...
 func (helper Helper) LogCommitMessageBody() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%b"`)
-	return executeForOutput(helper.destinationDir, cmdSlice)
+	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
 }
 
 // LogAuthorName ...
 func (helper Helper) LogAuthorName() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%an"`)
-	return executeForOutput(helper.destinationDir, cmdSlice)
+	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
 }
 
 // LogAuthorEmail ...
 func (helper Helper) LogAuthorEmail() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%ae"`)
-	return executeForOutput(helper.destinationDir, cmdSlice)
+	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
 }
 
 // LogCommiterName ...
 func (helper Helper) LogCommiterName() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%cn"`)
-	return executeForOutput(helper.destinationDir, cmdSlice)
+	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
 }
 
 // LogCommiterEmail ...
 func (helper Helper) LogCommiterEmail() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%ce"`)
-	return executeForOutput(helper.destinationDir, cmdSlice)
+	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
 }
 
 // ---------------------
@@ -201,7 +201,7 @@ func properReturn(err error, out string) error {
 		return nil
 	}
 
-	if errorutil.IsExitStatusError(err) {
+	if errorutil.IsExitStatusError(err) && out != "" {
 		return errors.New(out)
 	}
 	return err
@@ -212,8 +212,13 @@ func execute(dir string, cmdSlice []string) error {
 }
 
 func executeWithEnvs(dir string, envs []string, cmdSlice []string) error {
+	_, err := executeWithEnvsForOutput(dir, envs, cmdSlice)
+	return err
+}
+
+func executeWithEnvsForOutput(dir string, envs []string, cmdSlice []string) (string, error) {
 	if len(cmdSlice) == 0 {
-		return errors.New("no command specified")
+		return "", errors.New("no command specified")
 	}
 
 	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
@@ -225,25 +230,6 @@ func executeWithEnvs(dir string, envs []string, cmdSlice []string) error {
 		out, err = run(dir, envs, cmdSlice[0])
 	} else {
 		out, err = run(dir, envs, cmdSlice[0], cmdSlice[1:len(cmdSlice)]...)
-	}
-
-	return properReturn(err, out)
-}
-
-func executeForOutput(dir string, cmdSlice []string) (string, error) {
-	if len(cmdSlice) == 0 {
-		return "", errors.New("no command specified")
-	}
-
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Details("=> %s", prinatableCmd)
-
-	out := ""
-	var err error
-	if len(cmdSlice) == 1 {
-		out, err = run(dir, []string{}, cmdSlice[0])
-	} else {
-		out, err = run(dir, []string{}, cmdSlice[0], cmdSlice[1:len(cmdSlice)]...)
 	}
 
 	if err != nil {

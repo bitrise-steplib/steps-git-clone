@@ -134,6 +134,7 @@ func main() {
 		}
 
 		log.Info("Exporting git logs")
+
 		if commitHash, err := git.LogCommitHash(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
