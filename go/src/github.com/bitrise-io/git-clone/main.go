@@ -177,5 +177,6 @@ func main() {
 		}
 	}
 
+	fmt.Println("")
 	log.Done("Success")
 }
