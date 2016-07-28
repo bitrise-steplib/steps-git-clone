@@ -24,6 +24,7 @@ type Helper struct {
 	remoteURI      string
 
 	checkoutParam string
+	checkoutTag   bool
 	pullRequestID string
 	cloneDepth    string
 }
@@ -76,6 +77,7 @@ func (helper *Helper) ConfigureCheckoutParam(pullRequestID, commitHash, tag, bra
 		helper.checkoutParam = commitHash
 	} else if tag != "" {
 		helper.checkoutParam = tag
+		helper.checkoutTag = true
 	} else if branch != "" {
 		helper.checkoutParam = branch
 	}
@@ -109,9 +111,28 @@ func (helper Helper) Fetch() error {
 	return executeWithEnvs(helper.destinationDir, envs, cmdSlice)
 }
 
+// FetchTags ...
+func (helper Helper) FetchTags() error {
+	params := []string{"fetch", "--tags"}
+	if helper.pullRequestID != "" {
+		params = append(params, "origin", "pull/"+helper.pullRequestID+"/merge:"+helper.checkoutParam)
+	}
+	if helper.cloneDepth != "" {
+		params = append(params, "--depth="+helper.cloneDepth)
+	}
+
+	cmdSlice, envs := createGitCmdSliceWithoutGitAskpass(params...)
+	return executeWithEnvs(helper.destinationDir, envs, cmdSlice)
+}
+
 // ShouldCheckout ...
 func (helper Helper) ShouldCheckout() bool {
 	return (helper.checkoutParam != "")
+}
+
+// ShouldCheckoutTag ...
+func (helper Helper) ShouldCheckoutTag() bool {
+	return helper.checkoutTag
 }
 
 // Checkout ...

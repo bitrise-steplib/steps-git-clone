@@ -48,7 +48,7 @@ func main() {
 	pullRequestID := os.Getenv("pull_request_id")
 	cloneDepth := os.Getenv("clone_depth")
 
-	log.Configs(repositoryURL, commit, tag, branch, pullRequestID, cloneIntoDir, cloneDepth)
+	log.Configs(repositoryURL, cloneIntoDir, commit, tag, branch, pullRequestID, cloneDepth)
 
 	validateRequiredInput("repository_url", repositoryURL)
 	validateRequiredInput("clone_into_dir", cloneIntoDir)
@@ -88,6 +88,24 @@ func main() {
 	}
 
 	if git.ShouldCheckout() {
+		if git.ShouldCheckoutTag() {
+			if err := retry.Times(retryCount).Wait(waitTime).Retry(func(attempt uint) error {
+				if attempt > 0 {
+					log.Warn("Retrying...")
+				}
+
+				fetchErr := git.FetchTags()
+				if fetchErr != nil {
+					log.Warn("%d attempt failed:", attempt)
+					fmt.Println(fetchErr.Error())
+				}
+
+				return fetchErr
+			}); err != nil {
+				log.Fail("Failed, error: %s", err)
+			}
+		}
+
 		if err := git.Checkout(); err != nil {
 			if !git.ShouldTryFetchUnshallow() {
 				log.Fail("Failed, error: %s", err)

@@ -38,13 +38,13 @@ func Done(format string, v ...interface{}) {
 }
 
 // Configs ...
-func Configs(repositoryURL, commit, tag, branch, pullRequestID, cloneIntoDir, cloneDepth string) {
+func Configs(repositoryURL, cloneIntoDir, commit, tag, branch, pullRequestID, cloneDepth string) {
 	Info("Configs:")
 	Details("repository_url: %s", repositoryURL)
+	Details("clone_into_dir: %s", cloneIntoDir)
 	Details("commit: %s", commit)
 	Details("tag: %s", tag)
 	Details("branch: %s", branch)
 	Details("pull_request_id: %s", pullRequestID)
-	Details("clone_into_dir: %s", cloneIntoDir)
 	Details("clone_depth: %s", cloneDepth)
 }
