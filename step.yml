@@ -25,6 +25,10 @@ inputs:
     opts:
       title: "Git repository URL"
       is_required: true
+  - clone_into_dir: "$BITRISE_SOURCE_DIR"
+    opts:
+      title: "Clone destination (local) directory path"
+      is_required: true
   - commit: "$BITRISE_GIT_COMMIT"
     opts:
       title: "Git Commit to clone"
@@ -37,13 +41,6 @@ inputs:
   - pull_request_id: "$BITRISE_PULL_REQUEST"
     opts:
       title: "Pull request ID on GitHub"
-  - clone_into_dir: "$BITRISE_SOURCE_DIR"
-    opts:
-      title: "Clone destination (local) directory path"
-      is_required: true
-  - auth_ssh_private_key: "$SSH_RSA_PRIVATE_KEY"
-    opts:
-      title: "Auth: SSH private key - without a passphrase!"
   - clone_depth:
     opts:
       title: "Limit fetching to the specified number of commits"

@@ -3,19 +3,41 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  # define these in your .bitrise.secrets.yml if not public
-  - GIT_REPOSITORY_URL: https://github.com/bitrise-io/bitrise.git
-  - BITRISE_GIT_BRANCH: master
-  # - BITRISE_GIT_COMMIT:
-  # - BITRISE_GIT_TAG:
-  # - BITRISE_PULL_REQUEST:
-  # - SSH_RSA_PRIVATE_KEY:
+    # define these in your .bitrise.secrets.yml if not public
+    - GIT_REPOSITORY_URL: https://github.com/bitrise-samples/git-clone-test.git
+    - BITRISE_GIT_COMMIT: $BITRISE_GIT_COMMIT
+    - BITRISE_GIT_TAG: $BITRISE_GIT_TAG
+    - BITRISE_PULL_REQUEST: $BITRISE_PULL_REQUEST
 
 workflows:
   # ----------------------------------------------------------------
   # --- workflow to Step Test
   test:
     steps:
+    - script:
+        title: Print go environment
+        inputs:
+        - content: |-
+            set -x
+            go version
+            echo $GO15VENDOREXPERIMENT
+    - script:
+        title: Export GOPATH
+        inputs:
+        - content: |-
+            set -x
+            envman add --key GOPATH --value "$BITRISE_SOURCE_DIR/go"
+    - script:
+        title: "Go Test"
+        inputs:
+        - working_dir: $BITRISE_SOURCE_DIR/go/src/github.com/bitrise-io/git-clone
+        - content: |
+            set -ex
+            go test ./...
+    - script:
+        title: Step audit
+        inputs:
+        - content: stepman audit --step-yml=./step.yml
     - script:
         inputs:
         - content: |-
@@ -32,12 +54,17 @@ workflows:
         run_if: true
         inputs:
         - path: ./_tmp
-        - is_create_path: true
+    - activate-ssh-key:
+        run_if: true
     - path::./:
         run_if: true
         inputs:
         - clone_into_dir: repo-dir
-        - clone_depth: 10
+        - commit: ""
+        - tag: ""
+        - branch: "master"
+        - pull_request_id: ""
+        - clone_depth: ""
     - script:
         inputs:
         - content: |-
@@ -49,6 +76,280 @@ workflows:
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
             echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
             echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: repo-dir
+
+  ci:
+    envs:
+    - CLONE_INTO_DIR: ./_tmp
+    after_run:
+    - _test_submodule
+    - _test_no_checkout
+    - _test_checkout_commit
+    - _test_checkout_tag
+    - _test_checkout_branch
+    - _test_checkout_pull_request_id
+    - _test_unshallow
+    steps:
+    - script:
+        title: Print go environment
+        inputs:
+        - content: |-
+            set -x
+            go version
+            echo $GO15VENDOREXPERIMENT
+    - script:
+        title: Export GOPATH
+        inputs:
+        - content: |-
+            set -x
+            envman add --key GOPATH --value "$BITRISE_SOURCE_DIR/go"
+    - script:
+        title: "Go Test"
+        inputs:
+        - working_dir: $BITRISE_SOURCE_DIR/go/src/github.com/bitrise-io/git-clone
+        - content: |
+            set -ex
+            go test ./...
+    - script:
+        title: Step audit
+        inputs:
+        - content: stepman audit --step-yml=./step.yml
+    - activate-ssh-key:
+        run_if: true
+
+  _test_submodule:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            rm -rf $CLONE_INTO_DIR
+    - path::./:
+        run_if: true
+        inputs:
+        - repository_url: git@gitlab.com:godrei/sample-apps-android-sdk22.git
+        - clone_into_dir: $CLONE_INTO_DIR
+        - commit: ""
+        - tag: ""
+        - branch: "master"
+        - pull_request_id: ""
+        - clone_depth: ""
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
+
+  _test_no_checkout:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            rm -rf $CLONE_INTO_DIR
+    - path::./:
+        run_if: true
+        inputs:
+        - clone_into_dir: $CLONE_INTO_DIR
+        - commit: ""
+        - tag: ""
+        - branch: ""
+        - pull_request_id: ""
+        - clone_depth: ""
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
+
+  _test_checkout_commit:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            rm -rf $CLONE_INTO_DIR
+    - path::./:
+        run_if: true
+        inputs:
+        - clone_into_dir: $CLONE_INTO_DIR
+        - commit: 7a93251a9bf08fb8c6b19fc02f6d94618de6b386
+        - tag: ""
+        - branch: ""
+        - pull_request_id: ""
+        - clone_depth: ""
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
+
+  _test_checkout_tag:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            rm -rf $CLONE_INTO_DIR
+    - path::./:
+        run_if: true
+        inputs:
+        - clone_into_dir: $CLONE_INTO_DIR
+        - tag: 0.9.2
+        - commit: ""
+        - branch: ""
+        - pull_request_id: ""
+        - clone_depth: ""
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
+
+  _test_checkout_branch:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            rm -rf $CLONE_INTO_DIR
+    - path::./:
+        run_if: true
+        inputs:
+        - clone_into_dir: $CLONE_INTO_DIR
+        - branch: master
+        - commit: ""
+        - tag: ""
+        - pull_request_id: ""
+        - clone_depth: ""
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
+
+  _test_checkout_pull_request_id:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            rm -rf $CLONE_INTO_DIR
+    - path::./:
+        run_if: true
+        inputs:
+        - clone_into_dir: $CLONE_INTO_DIR
+        - pull_request_id: 4
+        - commit: ""
+        - tag: ""
+        - branch: ""
+        - clone_depth: ""
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
+
+  _test_unshallow:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            rm -rf $CLONE_INTO_DIR
+    - path::./:
+        run_if: true
+        inputs:
+        - clone_into_dir: $CLONE_INTO_DIR
+        - commit: cfba2b01332e31cb1568dbf3f22edce063118bae
+        - clone_depth: 1
+        - tag: ""
+        - branch: ""
+        - pull_request_id: ""
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
 
   # ----------------------------------------------------------------
   # --- workflow to create Release with auto bumped version
