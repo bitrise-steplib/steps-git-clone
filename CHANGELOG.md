@@ -1,6 +1,17 @@
-## Changelog (Current version: 3.2.0)
+## Changelog (Current version: 3.3.0)
 
 -----------------
+
+### 3.3.0 (2016 Jul 29)
+
+* [a04ea7d] prepare for 3.3.0
+* [e0dd0cd] Merge pull request #15 from bitrise-io/review
+* [5232d50] bitrise.yml cleanup
+* [5bc1091] cleanup
+* [cde0579] cleanup
+* [c2fd242] log
+* [5c31db6] log done
+* [a1c791b] review
 
 ### 3.2.0 (2016 Mar 31)
 
@@ -152,4 +163,4 @@
 
 -----------------
 
-Updated: 2016 Mar 31
+Updated: 2016 Jul 29
