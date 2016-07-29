@@ -54,7 +54,6 @@ workflows:
         run_if: true
         inputs:
         - path: ./_tmp
-        - is_create_path: true
     - activate-ssh-key:
         run_if: true
     - path::./:
@@ -129,7 +128,6 @@ workflows:
             set -e
             set -v
             rm -rf $CLONE_INTO_DIR
-        - is_create_path: true
     - path::./:
         run_if: true
         inputs:
