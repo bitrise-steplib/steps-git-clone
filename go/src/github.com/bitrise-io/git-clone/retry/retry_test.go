@@ -13,7 +13,7 @@ func TestRetry(t *testing.T) {
 	{
 		retryCnt := 0
 
-		err := Times(2).Retry(func(attempt uint) error {
+		err := Times(2).Try(func(attempt uint) error {
 			retryCnt++
 			return nil
 		})
@@ -24,27 +24,27 @@ func TestRetry(t *testing.T) {
 
 	t.Log("it retryies - if error")
 	{
-		retryCnt := 0
+		attempCnt := 0
 		actionErr := errors.New("error")
 
-		err := Times(2).Retry(func(attempt uint) error {
-			retryCnt++
+		err := Times(2).Try(func(attempt uint) error {
+			attempCnt++
 			return actionErr
 		})
 
 		require.Error(t, err)
 		require.Equal(t, "error", err.Error())
-		require.Equal(t, 2, retryCnt)
+		require.Equal(t, 3, attempCnt)
 	}
 
 	t.Log("it does not wait before first execution")
 	{
-		retryCnt := 0
+		attemptCnt := 0
 		actionErr := errors.New("error")
 		startTime := time.Now()
 
-		err := Times(1).Wait(10).Retry(func(attempt uint) error {
-			retryCnt++
+		err := Times(1).Wait(10).Try(func(attempt uint) error {
+			attemptCnt++
 			return actionErr
 		})
 
@@ -52,19 +52,19 @@ func TestRetry(t *testing.T) {
 
 		require.Error(t, err)
 		require.Equal(t, "error", err.Error())
-		require.Equal(t, 1, retryCnt)
-		if duration >= time.Duration(10)*time.Second {
+		require.Equal(t, 2, attemptCnt)
+		if duration >= 2*time.Duration(10)*time.Second {
 			t.Fatalf("Should take no more than 10 sec, but got: %s", duration)
 		}
 	}
 	t.Log("it waits before second execution")
 	{
-		retryCnt := 0
+		attemptCnt := 0
 		actionErr := errors.New("error")
 		startTime := time.Now()
 
-		err := Times(2).Wait(10).Retry(func(attempt uint) error {
-			retryCnt++
+		err := Times(2).Wait(10).Try(func(attempt uint) error {
+			attemptCnt++
 			return actionErr
 		})
 
@@ -72,7 +72,7 @@ func TestRetry(t *testing.T) {
 
 		require.Error(t, err)
 		require.Equal(t, "error", err.Error())
-		require.Equal(t, 2, retryCnt)
+		require.Equal(t, 3, attemptCnt)
 		if duration < time.Duration(10)*time.Second {
 			t.Fatalf("Should take at least 10 sec, but got: %s", duration)
 		}

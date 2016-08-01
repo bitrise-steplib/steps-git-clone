@@ -3,42 +3,15 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-    # define these in your .bitrise.secrets.yml if not public
-    - GIT_REPOSITORY_URL: https://github.com/bitrise-samples/git-clone-test.git
-    - BITRISE_GIT_COMMIT: $BITRISE_GIT_COMMIT
-    - BITRISE_GIT_TAG: $BITRISE_GIT_TAG
-    - BITRISE_PULL_REQUEST: $BITRISE_PULL_REQUEST
+    - GIT_REPOSITORY_URL: https://github.com/bitrise-io/steps-git-clone.git
 
 workflows:
   # ----------------------------------------------------------------
   # --- workflow to Step Test
   test:
+    before_run:
+    - _step-test
     steps:
-    - script:
-        title: Print go environment
-        inputs:
-        - content: |-
-            set -x
-            go version
-            echo $GO15VENDOREXPERIMENT
-    - script:
-        title: Export GOPATH
-        inputs:
-        - content: |-
-            set -x
-            envman add --key GOPATH --value "$BITRISE_SOURCE_DIR/go"
-    - script:
-        title: "Go Test"
-        inputs:
-        - working_dir: $BITRISE_SOURCE_DIR/go/src/github.com/bitrise-io/git-clone
-        - content: |
-            set -ex
-            export GO15VENDOREXPERIMENT=1
-            go test ./...
-    - script:
-        title: Step audit
-        inputs:
-        - content: stepman audit --step-yml=./step.yml
     - script:
         inputs:
         - content: |-
@@ -55,8 +28,6 @@ workflows:
         run_if: true
         inputs:
         - path: ./_tmp
-    - activate-ssh-key:
-        run_if: true
     - path::./:
         run_if: true
         inputs:
@@ -84,6 +55,9 @@ workflows:
   ci:
     envs:
     - CLONE_INTO_DIR: ./_tmp
+    - GIT_REPOSITORY_URL: https://github.com/bitrise-samples/git-clone-test.git
+    before_run:
+    - _step-test
     after_run:
     - _test_submodule
     - _test_no_checkout
@@ -92,6 +66,11 @@ workflows:
     - _test_checkout_branch
     - _test_checkout_pull_request_id
     - _test_unshallow
+    steps:
+    - activate-ssh-key:
+        run_if: true
+
+  _step-test:
     steps:
     - script:
         title: Print go environment
@@ -118,8 +97,6 @@ workflows:
         title: Step audit
         inputs:
         - content: stepman audit --step-yml=./step.yml
-    - activate-ssh-key:
-        run_if: true
 
   _test_submodule:
     steps:
