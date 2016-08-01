@@ -1,6 +1,13 @@
-## Changelog (Current version: 3.3.1)
+## Changelog (Current version: 3.3.2)
 
 -----------------
+
+### 3.3.2 (2016 Aug 01)
+
+* [87354d6] refactor create-release-version -> create-release
+* [9a56e20] prepare for 3.3.2
+* [490b8ed] Merge pull request #16 from bitrise-io/update
+* [d79e258] git log command outputs; run bitrise test localy; ci workflow updates; retry count increased,;wait time decreased
 
 ### 3.3.1 (2016 Aug 01)
 
