@@ -1,6 +1,15 @@
-## Changelog (Current version: 3.3.0)
+## Changelog (Current version: 3.3.1)
 
 -----------------
+
+### 3.3.1 (2016 Aug 01)
+
+* [cfb22b5] prep for v3.3.1
+* [deb46b9] bitrise.yml minimal revision (releaseman related)
+* [92e9241] readme - requirements - Go 1.5
+* [5f58d3c] ci workflow - export GO15VENDOREXPERIMENT=1
+* [d886f84] test - export GO15VENDOREXPERIMENT=1
+* [81f7427] enable `GO15VENDOREXPERIMENT` for Go 1.5
 
 ### 3.3.0 (2016 Jul 29)
 
@@ -163,4 +172,4 @@
 
 -----------------
 
-Updated: 2016 Jul 29
+Updated: 2016 Aug 01
