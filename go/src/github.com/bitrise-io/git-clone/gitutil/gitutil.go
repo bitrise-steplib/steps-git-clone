@@ -257,7 +257,7 @@ func executeWithEnvsForOutput(dir string, envs []string, cmdSlice []string) (str
 		return "", properReturn(err, out)
 	}
 
-	return out, nil
+	return strings.Trim(out, `"`), nil
 }
 
 func run(dir string, envs []string, name string, args ...string) (string, error) {

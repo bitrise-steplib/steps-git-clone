@@ -13,7 +13,7 @@ import (
 
 const (
 	retryCount = 2
-	waitTime   = 20 //seconds
+	waitTime   = 5 //seconds
 )
 
 // -----------------------
@@ -71,7 +71,7 @@ func main() {
 		log.Fail("Failed, error: %s", err)
 	}
 
-	if err := retry.Times(retryCount).Wait(waitTime).Retry(func(attempt uint) error {
+	if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
 		if attempt > 0 {
 			log.Warn("Retrying...")
 		}
@@ -89,7 +89,7 @@ func main() {
 
 	if git.ShouldCheckout() {
 		if git.ShouldCheckoutTag() {
-			if err := retry.Times(retryCount).Wait(waitTime).Retry(func(attempt uint) error {
+			if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
 				if attempt > 0 {
 					log.Warn("Retrying...")
 				}
@@ -114,7 +114,7 @@ func main() {
 			log.Warn("Failed, error: %s", err)
 			log.Warn("Unshallow...")
 
-			if err := retry.Times(retryCount).Wait(waitTime).Retry(func(attempt uint) error {
+			if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
 				if attempt > 0 {
 					log.Warn("Retrying...")
 				}
@@ -135,7 +135,7 @@ func main() {
 			}
 		}
 
-		if err := retry.Times(retryCount).Wait(waitTime).Retry(func(attempt uint) error {
+		if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
 			if attempt > 0 {
 				log.Warn("Retrying...")
 			}
@@ -156,42 +156,49 @@ func main() {
 		if commitHash, err := git.LogCommitHash(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
+			log.Details("   %s", commitHash)
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_HASH", commitHash)
 		}
 
 		if commitMessageSubject, err := git.LogCommitMessageSubject(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
+			log.Details("   %s", commitMessageSubject)
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_MESSAGE_SUBJECT", commitMessageSubject)
 		}
 
 		if commitMessageBody, err := git.LogCommitMessageBody(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
+			log.Details("   %s", commitMessageBody)
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_MESSAGE_BODY", commitMessageBody)
 		}
 
 		if commitAuthorName, err := git.LogAuthorName(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
+			log.Details("   %s", commitAuthorName)
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_AUTHOR_NAME", commitAuthorName)
 		}
 
 		if commitAuthorEmail, err := git.LogAuthorEmail(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
+			log.Details("   %s", commitAuthorEmail)
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_AUTHOR_EMAIL", commitAuthorEmail)
 		}
 
 		if commitCommiterName, err := git.LogCommiterName(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
+			log.Details("   %s", commitCommiterName)
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COMMITER_NAME", commitCommiterName)
 		}
 
 		if commitCommiterEmail, err := git.LogCommiterEmail(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
+			log.Details("   %s", commitCommiterEmail)
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COMMITER_EMAIL", commitCommiterEmail)
 		}
 	}
