@@ -35,7 +35,7 @@ workflows:
         - clone_into_dir: repo-dir
         - commit: ""
         - tag: ""
-        - branch: "master"
+        - branch: "git_logs"
         - pull_request_id: ""
         - clone_depth: ""
     - script:
