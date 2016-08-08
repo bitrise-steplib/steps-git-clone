@@ -1,6 +1,16 @@
-## Changelog (Current version: 3.3.2)
+## Changelog (Current version: 3.3.3)
 
 -----------------
+
+### 3.3.3 (2016 Aug 08)
+
+* [5827fe3] prepare for 3.3.3
+* [5f66d72] Merge pull request #18 from bitrise-io/git_logs
+* [02ae81a] pr fix
+* [d409727] bitrise.yml fix
+* [05ab673] git log cmd output fix
+* [7fdc376] Merge pull request #17 from bitrise-io/godep_update
+* [ff0413d] godep update
 
 ### 3.3.2 (2016 Aug 01)
 
@@ -179,4 +189,4 @@
 
 -----------------
 
-Updated: 2016 Aug 01
+Updated: 2016 Aug 08
