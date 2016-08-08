@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -85,16 +84,41 @@ func (helper *Helper) ConfigureCheckoutParam(pullRequestID, commitHash, tag, bra
 	helper.cloneDepth = cloneDepth
 }
 
+func runCommandInDirWithEnvs(cmdSlice []string, dir string, envs []string) error {
+	cmd, err := cmdex.NewCommandFromSlice(cmdSlice)
+	if err != nil {
+		return err
+	}
+
+	if len(envs) > 0 {
+		cmd.SetEnvs(envs)
+	}
+
+	if dir != "" {
+		cmd.SetDir(dir)
+	}
+
+	log.Details("=> %s", cmdex.PrintableCommandArgs(false, cmdSlice))
+
+	return cmd.Run()
+}
+
+func runCommandInDir(cmdSlice []string, dir string) error {
+	return runCommandInDirWithEnvs(cmdSlice, dir, []string{})
+}
+
 // Init ...
 func (helper Helper) Init() error {
 	cmdSlice := createGitCmdSlice("init")
-	return execute(helper.destinationDir, cmdSlice)
+
+	return runCommandInDir(cmdSlice, helper.destinationDir)
 }
 
 // RemoteAdd ...
 func (helper Helper) RemoteAdd() error {
-	cmdSlice, envs := createGitCmdSliceWithoutGitAskpass("remote", "add", "origin", helper.remoteURI)
-	return executeWithEnvs(helper.destinationDir, envs, cmdSlice)
+	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass("remote", "add", "origin", helper.remoteURI)
+
+	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
 }
 
 // Fetch ...
@@ -107,8 +131,9 @@ func (helper Helper) Fetch() error {
 		params = append(params, "--depth="+helper.cloneDepth)
 	}
 
-	cmdSlice, envs := createGitCmdSliceWithoutGitAskpass(params...)
-	return executeWithEnvs(helper.destinationDir, envs, cmdSlice)
+	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass(params...)
+
+	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
 }
 
 // FetchTags ...
@@ -121,8 +146,9 @@ func (helper Helper) FetchTags() error {
 		params = append(params, "--depth="+helper.cloneDepth)
 	}
 
-	cmdSlice, envs := createGitCmdSliceWithoutGitAskpass(params...)
-	return executeWithEnvs(helper.destinationDir, envs, cmdSlice)
+	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass(params...)
+
+	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
 }
 
 // ShouldCheckout ...
@@ -138,7 +164,8 @@ func (helper Helper) ShouldCheckoutTag() bool {
 // Checkout ...
 func (helper Helper) Checkout() error {
 	cmdSlice := createGitCmdSlice("checkout", helper.checkoutParam)
-	return execute(helper.destinationDir, cmdSlice)
+
+	return runCommandInDir(cmdSlice, helper.destinationDir)
 }
 
 // ShouldTryFetchUnshallow ...
@@ -148,57 +175,66 @@ func (helper Helper) ShouldTryFetchUnshallow() bool {
 
 // FetchUnshallow ...
 func (helper Helper) FetchUnshallow() error {
-	params := []string{"fetch", "--unshallow"}
-	cmdSlice, envs := createGitCmdSliceWithoutGitAskpass(params...)
-	return executeWithEnvs(helper.destinationDir, envs, cmdSlice)
+	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass("fetch", "--unshallow")
+
+	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
 }
 
 // SubmoduleUpdate ...
 func (helper Helper) SubmoduleUpdate() error {
-	cmdSlice, envs := createGitCmdSliceWithoutGitAskpass("submodule", "update", "--init", "--recursive")
-	return executeWithEnvs(helper.destinationDir, envs, cmdSlice)
+	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass("submodule", "update", "--init", "--recursive")
+
+	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
+}
+
+func runLogCommand(cmdSlice []string, dir string) (string, error) {
+	out, err := cmdex.NewCommand(cmdSlice[0], cmdSlice[1:]...).SetDir(dir).RunAndReturnTrimmedCombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	return strings.Trim(out, `"`), nil
 }
 
 // LogCommitHash ...
 func (helper Helper) LogCommitHash() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%H"`)
-	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
+	return runLogCommand(cmdSlice, helper.destinationDir)
 }
 
 // LogCommitMessageSubject ...
 func (helper Helper) LogCommitMessageSubject() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%s"`)
-	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
+	return runLogCommand(cmdSlice, helper.destinationDir)
 }
 
 // LogCommitMessageBody ...
 func (helper Helper) LogCommitMessageBody() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%b"`)
-	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
+	return runLogCommand(cmdSlice, helper.destinationDir)
 }
 
 // LogAuthorName ...
 func (helper Helper) LogAuthorName() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%an"`)
-	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
+	return runLogCommand(cmdSlice, helper.destinationDir)
 }
 
 // LogAuthorEmail ...
 func (helper Helper) LogAuthorEmail() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%ae"`)
-	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
+	return runLogCommand(cmdSlice, helper.destinationDir)
 }
 
 // LogCommiterName ...
 func (helper Helper) LogCommiterName() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%cn"`)
-	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
+	return runLogCommand(cmdSlice, helper.destinationDir)
 }
 
 // LogCommiterEmail ...
 func (helper Helper) LogCommiterEmail() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%ce"`)
-	return executeWithEnvsForOutput(helper.destinationDir, []string{}, cmdSlice)
+	return runLogCommand(cmdSlice, helper.destinationDir)
 }
 
 // ---------------------
@@ -209,7 +245,7 @@ func createGitCmdSlice(params ...string) []string {
 	return append([]string{"git"}, params...)
 }
 
-func createGitCmdSliceWithoutGitAskpass(params ...string) ([]string, []string) {
+func createGitCmdSliceWithGitDontAskpass(params ...string) ([]string, []string) {
 	return createGitCmdSlice(params...), []string{"GIT_ASKPASS=echo"}
 }
 
@@ -226,49 +262,4 @@ func properReturn(err error, out string) error {
 		return errors.New(out)
 	}
 	return err
-}
-
-func execute(dir string, cmdSlice []string) error {
-	return executeWithEnvs(dir, []string{}, cmdSlice)
-}
-
-func executeWithEnvs(dir string, envs []string, cmdSlice []string) error {
-	_, err := executeWithEnvsForOutput(dir, envs, cmdSlice)
-	return err
-}
-
-func executeWithEnvsForOutput(dir string, envs []string, cmdSlice []string) (string, error) {
-	if len(cmdSlice) == 0 {
-		return "", errors.New("no command specified")
-	}
-
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Details("=> %s", prinatableCmd)
-
-	out := ""
-	var err error
-	if len(cmdSlice) == 1 {
-		out, err = run(dir, envs, cmdSlice[0])
-	} else {
-		out, err = run(dir, envs, cmdSlice[0], cmdSlice[1:len(cmdSlice)]...)
-	}
-
-	if err != nil {
-		return "", properReturn(err, out)
-	}
-
-	return strings.Trim(out, `"`), nil
-}
-
-func run(dir string, envs []string, name string, args ...string) (string, error) {
-	cmd := exec.Command(name, args...)
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	if len(envs) > 0 {
-		cmd.Env = append(os.Environ(), envs...)
-	}
-	outBytes, err := cmd.CombinedOutput()
-	outStr := string(outBytes)
-	return strings.TrimSpace(outStr), err
 }

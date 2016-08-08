@@ -156,53 +156,73 @@ func main() {
 		if commitHash, err := git.LogCommitHash(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
-			log.Details("   %s", commitHash)
+			log.Details("=> GIT_CLONE_COMMIT_HASH")
+			log.Details("   value: %s", commitHash)
+			fmt.Println()
+
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_HASH", commitHash)
 		}
 
 		if commitMessageSubject, err := git.LogCommitMessageSubject(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
-			log.Details("   %s", commitMessageSubject)
+			log.Details("=> GIT_CLONE_COMMIT_MESSAGE_SUBJECT")
+			log.Details("   value: %s", commitMessageSubject)
+			fmt.Println()
+
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_MESSAGE_SUBJECT", commitMessageSubject)
 		}
 
 		if commitMessageBody, err := git.LogCommitMessageBody(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
-			log.Details("   %s", commitMessageBody)
+			log.Details("=> GIT_CLONE_COMMIT_MESSAGE_BODY")
+			log.Details("   value: %s", commitMessageBody)
+			fmt.Println()
+
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_MESSAGE_BODY", commitMessageBody)
 		}
 
 		if commitAuthorName, err := git.LogAuthorName(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
-			log.Details("   %s", commitAuthorName)
+			log.Details("=> GIT_CLONE_COMMIT_AUTHOR_NAME")
+			log.Details("   value: %s", commitAuthorName)
+			fmt.Println()
+
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_AUTHOR_NAME", commitAuthorName)
 		}
 
 		if commitAuthorEmail, err := git.LogAuthorEmail(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
-			log.Details("   %s", commitAuthorEmail)
+			log.Details("=> GIT_CLONE_COMMIT_AUTHOR_EMAIL")
+			log.Details("   value: %s", commitAuthorEmail)
+			fmt.Println()
+
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_AUTHOR_EMAIL", commitAuthorEmail)
 		}
 
 		if commitCommiterName, err := git.LogCommiterName(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
-			log.Details("   %s", commitCommiterName)
+			log.Details("=> GIT_CLONE_COMMIT_COMMITER_NAME")
+			log.Details("   value: %s", commitCommiterName)
+			fmt.Println()
+
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COMMITER_NAME", commitCommiterName)
 		}
 
 		if commitCommiterEmail, err := git.LogCommiterEmail(); err != nil {
 			log.Fail("Git log failed, error: %s", err)
 		} else {
-			log.Details("   %s", commitCommiterEmail)
+			log.Details("=> GIT_CLONE_COMMIT_COMMITER_EMAIL")
+			log.Details("   value: %s", commitCommiterEmail)
+			fmt.Println()
+
 			exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COMMITER_EMAIL", commitCommiterEmail)
 		}
 	}
 
-	fmt.Println("")
 	log.Done("Success")
 }
