@@ -84,24 +84,41 @@ func (helper *Helper) ConfigureCheckoutParam(pullRequestID, commitHash, tag, bra
 	helper.cloneDepth = cloneDepth
 }
 
+func runCommandInDirWithEnvs(cmdSlice []string, dir string, envs []string) error {
+	cmd, err := cmdex.NewCommandFromSlice(cmdSlice)
+	if err != nil {
+		return err
+	}
+
+	if len(envs) > 0 {
+		cmd.SetEnvs(envs)
+	}
+
+	if dir != "" {
+		cmd.SetDir(dir)
+	}
+
+	log.Details("=> %s", cmdex.PrintableCommandArgs(false, cmdSlice))
+
+	return cmd.Run()
+}
+
+func runCommandInDir(cmdSlice []string, dir string) error {
+	return runCommandInDirWithEnvs(cmdSlice, dir, []string{})
+}
+
 // Init ...
 func (helper Helper) Init() error {
 	cmdSlice := createGitCmdSlice("init")
 
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Details("=> %s", prinatableCmd)
-
-	return cmdex.NewCommand(cmdSlice[0], cmdSlice[1:]...).SetDir(helper.destinationDir).Run()
+	return runCommandInDir(cmdSlice, helper.destinationDir)
 }
 
 // RemoteAdd ...
 func (helper Helper) RemoteAdd() error {
-	cmdSlice, envs := createGitCmdSliceWithoutGitAskpass("remote", "add", "origin", helper.remoteURI)
+	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass("remote", "add", "origin", helper.remoteURI)
 
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Details("=> %s", prinatableCmd)
-
-	return cmdex.NewCommand(cmdSlice[0], cmdSlice[1:]...).SetDir(helper.destinationDir).SetEnvs(append(os.Environ(), envs...)).Run()
+	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
 }
 
 // Fetch ...
@@ -114,12 +131,9 @@ func (helper Helper) Fetch() error {
 		params = append(params, "--depth="+helper.cloneDepth)
 	}
 
-	cmdSlice, envs := createGitCmdSliceWithoutGitAskpass(params...)
+	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass(params...)
 
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Details("=> %s", prinatableCmd)
-
-	return cmdex.NewCommand(cmdSlice[0], cmdSlice[1:]...).SetDir(helper.destinationDir).SetEnvs(append(os.Environ(), envs...)).Run()
+	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
 }
 
 // FetchTags ...
@@ -132,12 +146,9 @@ func (helper Helper) FetchTags() error {
 		params = append(params, "--depth="+helper.cloneDepth)
 	}
 
-	cmdSlice, envs := createGitCmdSliceWithoutGitAskpass(params...)
+	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass(params...)
 
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Details("=> %s", prinatableCmd)
-
-	return cmdex.NewCommand(cmdSlice[0], cmdSlice[1:]...).SetDir(helper.destinationDir).SetEnvs(append(os.Environ(), envs...)).Run()
+	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
 }
 
 // ShouldCheckout ...
@@ -154,10 +165,7 @@ func (helper Helper) ShouldCheckoutTag() bool {
 func (helper Helper) Checkout() error {
 	cmdSlice := createGitCmdSlice("checkout", helper.checkoutParam)
 
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Details("=> %s", prinatableCmd)
-
-	return cmdex.NewCommand(cmdSlice[0], cmdSlice[1:]...).SetDir(helper.destinationDir).Run()
+	return runCommandInDir(cmdSlice, helper.destinationDir)
 }
 
 // ShouldTryFetchUnshallow ...
@@ -167,22 +175,16 @@ func (helper Helper) ShouldTryFetchUnshallow() bool {
 
 // FetchUnshallow ...
 func (helper Helper) FetchUnshallow() error {
-	cmdSlice, envs := createGitCmdSliceWithoutGitAskpass("fetch", "--unshallow")
+	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass("fetch", "--unshallow")
 
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Details("=> %s", prinatableCmd)
-
-	return cmdex.NewCommand(cmdSlice[0], cmdSlice[1:]...).SetDir(helper.destinationDir).SetEnvs(append(os.Environ(), envs...)).Run()
+	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
 }
 
 // SubmoduleUpdate ...
 func (helper Helper) SubmoduleUpdate() error {
-	cmdSlice, envs := createGitCmdSliceWithoutGitAskpass("submodule", "update", "--init", "--recursive")
+	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass("submodule", "update", "--init", "--recursive")
 
-	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
-	log.Details("=> %s", prinatableCmd)
-
-	return cmdex.NewCommand(cmdSlice[0], cmdSlice[1:]...).SetDir(helper.destinationDir).SetEnvs(append(os.Environ(), envs...)).Run()
+	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
 }
 
 func runLogCommand(cmdSlice []string, dir string) (string, error) {
@@ -243,7 +245,7 @@ func createGitCmdSlice(params ...string) []string {
 	return append([]string{"git"}, params...)
 }
 
-func createGitCmdSliceWithoutGitAskpass(params ...string) ([]string, []string) {
+func createGitCmdSliceWithGitDontAskpass(params ...string) ([]string, []string) {
 	return createGitCmdSlice(params...), []string{"GIT_ASKPASS=echo"}
 }
 
