@@ -1,6 +1,8 @@
 package gitutil
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -100,7 +102,29 @@ func runCommandInDirWithEnvs(cmdSlice []string, dir string, envs []string) error
 
 	log.Details("=> %s", cmdex.PrintableCommandArgs(false, cmdSlice))
 
-	return cmd.Run()
+	var errBuffer bytes.Buffer
+	errWriter := bufio.NewWriter(&errBuffer)
+	cmd.SetStderr(errWriter)
+
+	var outBuffer bytes.Buffer
+	outWriter := bufio.NewWriter(&outBuffer)
+	cmd.SetStdout(outWriter)
+
+	if err := cmd.Run(); err != nil {
+		if errorutil.IsExitStatusError(err) {
+			if !errorutil.IsExitStatusErrorStr(errBuffer.String()) {
+				return errors.New(errBuffer.String())
+			}
+
+			if !errorutil.IsExitStatusErrorStr(outBuffer.String()) {
+				return errors.New(outBuffer.String())
+			}
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func runCommandInDir(cmdSlice []string, dir string) error {
