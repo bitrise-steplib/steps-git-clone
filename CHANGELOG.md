@@ -1,6 +1,12 @@
-## Changelog (Current version: 3.3.3)
+## Changelog (Current version: 3.3.4)
 
 -----------------
+
+### 3.3.4 (2016 Aug 24)
+
+* [f1a7a4d] prepare for 3.3.4
+* [2cc034b] Merge pull request #19 from bitrise-io/error-message
+* [775f3f8] proper error message
 
 ### 3.3.3 (2016 Aug 08)
 
@@ -189,4 +195,4 @@
 
 -----------------
 
-Updated: 2016 Aug 08
+Updated: 2016 Aug 24
