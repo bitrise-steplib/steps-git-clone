@@ -47,6 +47,7 @@ func main() {
 	branch := os.Getenv("branch")
 	pullRequestID := os.Getenv("pull_request_id")
 	cloneDepth := os.Getenv("clone_depth")
+	resetRepository := os.Getenv("reset_repository") == "Yes"
 
 	log.Configs(repositoryURL, cloneIntoDir, commit, tag, branch, pullRequestID, cloneDepth)
 
@@ -56,7 +57,7 @@ func main() {
 	// git
 	log.Info("Git clone repository")
 
-	git, err := gitutil.NewHelper(cloneIntoDir, repositoryURL)
+	git, err := gitutil.NewHelper(cloneIntoDir, repositoryURL, resetRepository)
 	if err != nil {
 		log.Fail("Failed to create git helper, error: %s", err)
 	}
@@ -67,8 +68,10 @@ func main() {
 		log.Fail("Failed, error: %s", err)
 	}
 
-	if err := git.RemoteAdd(); err != nil {
-		log.Fail("Failed, error: %s", err)
+	if !git.IsOriginPresented() {
+		if err := git.RemoteAdd(); err != nil {
+			log.Fail("Failed, error: %s", err)
+		}
 	}
 
 	if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {

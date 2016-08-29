@@ -41,6 +41,13 @@ inputs:
   - pull_request_id: "$BITRISE_PULL_REQUEST"
     opts:
       title: "Pull request ID on GitHub"
+  - reset_repository: "No"
+    opts:
+      summary: Reset repository contents with git reset --hard HEAD and git clean -f after repository updated
+      title: Reset repository
+      value_options:
+      - "No"
+      - "Yes"
   - clone_depth:
     opts:
       title: "Limit fetching to the specified number of commits"

@@ -28,10 +28,11 @@ type Helper struct {
 	checkoutTag   bool
 	pullRequestID string
 	cloneDepth    string
+	originPresent bool
 }
 
 // NewHelper ...
-func NewHelper(destinationDir, remoteURI string) (Helper, error) {
+func NewHelper(destinationDir, remoteURI string, resetRepository bool) (Helper, error) {
 	if destinationDir == "" {
 		return Helper{}, errors.New("destination dir path is empty")
 	}
@@ -46,12 +47,30 @@ func NewHelper(destinationDir, remoteURI string) (Helper, error) {
 		return Helper{}, err
 	}
 
+	helper := Helper{
+		destinationDir: fullDestinationDir,
+		remoteURI:      remoteURI,
+	}
+
 	// Check if .git exist
 	gitDirPth := filepath.Join(fullDestinationDir, ".git")
 	if exist, err := pathutil.IsDirExists(gitDirPth); err != nil {
 		return Helper{}, err
 	} else if exist {
-		return Helper{}, fmt.Errorf(".git folder already exists in the destination dir: %s", fullDestinationDir)
+		if remotes, err := helper.RemoteList(); err != nil {
+			return Helper{}, err
+		} else {
+			if !strings.Contains(remotes, remoteURI) {
+				return Helper{}, fmt.Errorf(".git folder already exists in the destination dir: %s, using a different remote", fullDestinationDir)
+			} else {
+				if resetRepository {
+					if err = helper.Clean(); err != nil {
+						return Helper{}, err
+					}
+				}
+				helper.originPresent = true
+			}
+		}
 	}
 
 	// Create destination dir if not exist
@@ -63,10 +82,7 @@ func NewHelper(destinationDir, remoteURI string) (Helper, error) {
 		}
 	}
 
-	return Helper{
-		destinationDir: fullDestinationDir,
-		remoteURI:      remoteURI,
-	}, nil
+	return helper, nil
 }
 
 // ConfigureCheckoutParam ...
@@ -86,10 +102,10 @@ func (helper *Helper) ConfigureCheckoutParam(pullRequestID, commitHash, tag, bra
 	helper.cloneDepth = cloneDepth
 }
 
-func runCommandInDirWithEnvs(cmdSlice []string, dir string, envs []string) error {
+func runCommandInDirWithEnvsAndOutput(cmdSlice []string, dir string, envs []string) (string, string, error) {
 	cmd, err := cmdex.NewCommandFromSlice(cmdSlice)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	if len(envs) > 0 {
@@ -113,22 +129,31 @@ func runCommandInDirWithEnvs(cmdSlice []string, dir string, envs []string) error
 	if err := cmd.Run(); err != nil {
 		if errorutil.IsExitStatusError(err) {
 			if !errorutil.IsExitStatusErrorStr(errBuffer.String()) {
-				return errors.New(errBuffer.String())
+				return "", "", errors.New(errBuffer.String())
 			}
 
 			if !errorutil.IsExitStatusErrorStr(outBuffer.String()) {
-				return errors.New(outBuffer.String())
+				return "", "", errors.New(outBuffer.String())
 			}
 		}
 
-		return err
+		return "", "", err
 	}
 
-	return nil
+	return outBuffer.String(), errBuffer.String(), nil
+}
+
+func runCommandInDirWithEnvs(cmdSlice []string, dir string, envs []string) error {
+	_, _, err := runCommandInDirWithEnvsAndOutput(cmdSlice, dir, envs)
+	return err
 }
 
 func runCommandInDir(cmdSlice []string, dir string) error {
 	return runCommandInDirWithEnvs(cmdSlice, dir, []string{})
+}
+
+func (helper Helper) IsOriginPresented() bool {
+	return helper.originPresent
 }
 
 // Init ...
@@ -138,11 +163,44 @@ func (helper Helper) Init() error {
 	return runCommandInDir(cmdSlice, helper.destinationDir)
 }
 
+// RemoteList ...
+func (helper Helper) RemoteList() (string, error) {
+	cmdSlice := createGitCmdSlice("remote", "-v")
+
+	remotes, _, err := runCommandInDirWithEnvsAndOutput(cmdSlice, helper.destinationDir, []string{})
+	return remotes, err
+}
+
 // RemoteAdd ...
 func (helper Helper) RemoteAdd() error {
 	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass("remote", "add", "origin", helper.remoteURI)
 
 	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
+}
+
+// Clean
+func (helper Helper) Clean() error {
+	cmdSlice := createGitCmdSlice("reset", "--hard", "HEAD")
+	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
+		return err
+	}
+
+	cmdSlice = createGitCmdSlice("clean", "-xdf")
+	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
+		return err
+	}
+
+	cmdSlice = createGitCmdSlice("submodule", "foreach", "git", "reset", "--hard", "HEAD")
+	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
+		return err
+	}
+
+	cmdSlice = createGitCmdSlice("submodule", "foreach", "git", "clean", "-xdf")
+	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Fetch ...
