@@ -203,7 +203,7 @@ func TestConfigureCheckoutParam(t *testing.T) {
 func TestNewHelper(t *testing.T) {
 	t.Log("it fails if destinationDir empty")
 	{
-		helper, err := NewHelper("", "https://github.com/bitrise-samples/git-clone-test.git")
+		helper, err := NewHelper("", "https://github.com/bitrise-samples/git-clone-test.git", false)
 		require.Error(t, err)
 		require.Equal(t, "", helper.destinationDir)
 		require.Equal(t, "", helper.remoteURI)
@@ -211,7 +211,7 @@ func TestNewHelper(t *testing.T) {
 
 	t.Log("it fails if remote URI empty")
 	{
-		helper, err := NewHelper("./", "")
+		helper, err := NewHelper("./", "", false)
 		require.Error(t, err)
 		require.Equal(t, "", helper.destinationDir)
 		require.Equal(t, "", helper.remoteURI)
@@ -219,27 +219,10 @@ func TestNewHelper(t *testing.T) {
 
 	t.Log("it fails if remote URI empty")
 	{
-		helper, err := NewHelper("./", "")
+		helper, err := NewHelper("./", "", false)
 		require.Error(t, err)
 		require.Equal(t, "", helper.destinationDir)
 		require.Equal(t, "", helper.remoteURI)
-	}
-
-	t.Log("it fails if destination dir contains .git dir")
-	{
-		tmpDir, err := pathutil.NormalizedOSTempDirPath("__test__")
-		require.NoError(t, err)
-
-		destinationDir := filepath.Join(tmpDir, "dst")
-		gitDir := filepath.Join(destinationDir, ".git")
-		require.NoError(t, os.MkdirAll(gitDir, 0777))
-
-		helper, err := NewHelper(destinationDir, "https://github.com/bitrise-samples/git-clone-test.git")
-		require.Error(t, err)
-		require.Equal(t, "", helper.destinationDir)
-		require.Equal(t, "", helper.remoteURI)
-
-		require.NoError(t, os.RemoveAll(tmpDir))
 	}
 
 	t.Log("it creates destination dir if not exist")
@@ -252,7 +235,7 @@ func TestNewHelper(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, false, exist)
 
-		helper, err := NewHelper(destinationDir, "https://github.com/bitrise-samples/git-clone-test.git")
+		helper, err := NewHelper(destinationDir, "https://github.com/bitrise-samples/git-clone-test.git", false)
 		require.NoError(t, err)
 		require.Equal(t, destinationDir, helper.destinationDir)
 		require.Equal(t, "https://github.com/bitrise-samples/git-clone-test.git", helper.remoteURI)
