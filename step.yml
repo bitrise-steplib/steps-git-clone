@@ -38,9 +38,18 @@ inputs:
   - branch: "$BITRISE_GIT_BRANCH"
     opts:
       title: "Git Branch to clone"
-  - pull_request_id: "$BITRISE_PULL_REQUEST"
+  - branch_dest: "$BITRISEIO_GIT_BRANCH_DEST"
+    opts:
+      title: "Destination git Branch. Used for pull requests"
+  - pull_request_id: "$PULL_REQUEST_ID"
     opts:
       title: "Pull request ID on GitHub"
+  - pull_request_repository_url: "$BITRISEIO_PULL_REQUEST_REPOSITORY_URL"
+    opts:
+      title: "Pull request git URL"
+  - pull_request_merge_branch: "$BITRISEIO_PULL_REQUEST_MERGE_BRANCH"
+    opts:
+      title: "Merged pull request branch"
   - reset_repository: "No"
     opts:
       summary: Reset repository contents with git reset --hard HEAD and git clean -f after repository updated
@@ -54,6 +63,20 @@ inputs:
       description: |-
         Limit fetching to the specified number of commits.
         The value should be a decimal number, example: `10`.
+  - build_url: "$BITRISE_BUILD_URL"
+    opts:
+      title: "Bitrise Build URL"
+      summary: |-
+        Unique build URL of this build on Bitrise.io
+      description: |-
+        Unique build URL of this build on Bitrise.io
+  - build_api_token: "$BITRISE_BUILD_API_TOKEN"
+    opts:
+      title: Bitrise Build API Token
+      summary: |-
+        The build's API Token for the build on Bitrise.io
+      description: |-
+        The build's API Token for the build on Bitrise.io
 outputs:
   - GIT_CLONE_COMMIT_HASH:
     opts:

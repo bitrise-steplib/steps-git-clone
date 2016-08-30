@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,16 +21,26 @@ import (
 //	Model
 // ---------------------
 
+// PullRequestHelper ...
+type PullRequestHelper struct {
+	pullRequestID            string
+	pullRequestRepositoryURI string
+	pullRequestRemoteName    string
+	pullRequestBranch        string
+	pullRequestMergeBranch   string
+}
+
 // Helper ...
 type Helper struct {
 	destinationDir string
 	remoteURI      string
+	remoteName     string
 
-	checkoutParam string
-	checkoutTag   bool
-	pullRequestID string
-	cloneDepth    string
-	originPresent bool
+	checkoutParam     string
+	checkoutTag       bool
+	pullRequestHelper PullRequestHelper
+	cloneDepth        string
+	originPresent     bool
 }
 
 // NewHelper ...
@@ -50,6 +62,7 @@ func NewHelper(destinationDir, remoteURI string, resetRepository bool) (Helper, 
 	helper := Helper{
 		destinationDir: fullDestinationDir,
 		remoteURI:      remoteURI,
+		remoteName:     "origin",
 	}
 
 	// Check if .git exist
@@ -57,20 +70,21 @@ func NewHelper(destinationDir, remoteURI string, resetRepository bool) (Helper, 
 	if exist, err := pathutil.IsDirExists(gitDirPth); err != nil {
 		return Helper{}, err
 	} else if exist {
-		if remotes, err := helper.RemoteList(); err != nil {
+		remotes, err := helper.RemoteList()
+		if err != nil {
 			return Helper{}, err
-		} else {
-			if !strings.Contains(remotes, remoteURI) {
-				return Helper{}, fmt.Errorf(".git folder already exists in the destination dir: %s, using a different remote", fullDestinationDir)
-			} else {
-				if resetRepository {
-					if err = helper.Clean(); err != nil {
-						return Helper{}, err
-					}
-				}
-				helper.originPresent = true
+		}
+
+		if !strings.Contains(remotes, remoteURI) {
+			return Helper{}, fmt.Errorf(".git folder already exists in the destination dir: %s, using a different remote", fullDestinationDir)
+		}
+
+		if resetRepository {
+			if err = helper.Clean(); err != nil {
+				return Helper{}, err
 			}
 		}
+		helper.originPresent = true
 	}
 
 	// Create destination dir if not exist
@@ -85,12 +99,46 @@ func NewHelper(destinationDir, remoteURI string, resetRepository bool) (Helper, 
 	return helper, nil
 }
 
-// ConfigureCheckoutParam ...
-func (helper *Helper) ConfigureCheckoutParam(pullRequestID, commitHash, tag, branch, cloneDepth string) {
-	if pullRequestID != "" {
-		helper.checkoutParam = "pull/" + pullRequestID
-		helper.pullRequestID = pullRequestID
-	} else if commitHash != "" {
+// ConfigureCheckout ...
+func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth string) {
+	if pullRequestID != "" && pullRequestMergeBranch != "" {
+		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth)
+	} else {
+		if pullRequestID != "" && pullRequestURI != "" && branchDest != "" {
+			helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, helper.remoteURI, branchDest, cloneDepth)
+			helper.ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth)
+			helper.remoteURI = pullRequestURI
+		} else {
+			helper.ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth)
+		}
+	}
+}
+
+// ConfigureCheckoutWithPullRequestURI ...
+func (helper *Helper) ConfigureCheckoutWithPullRequestURI(pullRequestID, pullRequestURI, pullRequestBranch, cloneDepth string) {
+	helper.pullRequestHelper = PullRequestHelper{
+		pullRequestID:            pullRequestID,
+		pullRequestRepositoryURI: pullRequestURI,
+		pullRequestBranch:        pullRequestBranch,
+	}
+
+	helper.cloneDepth = cloneDepth
+}
+
+// ConfigureCheckoutWithPullRequestID ...
+func (helper *Helper) ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth string) {
+	helper.checkoutParam = "pull/" + pullRequestID
+	helper.pullRequestHelper = PullRequestHelper{
+		pullRequestID:          pullRequestID,
+		pullRequestMergeBranch: pullRequestMergeBranch,
+	}
+
+	helper.cloneDepth = cloneDepth
+}
+
+// ConfigureCheckoutWithParams ...
+func (helper *Helper) ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth string) {
+	if commitHash != "" {
 		helper.checkoutParam = commitHash
 	} else if tag != "" {
 		helper.checkoutParam = tag
@@ -152,6 +200,7 @@ func runCommandInDir(cmdSlice []string, dir string) error {
 	return runCommandInDirWithEnvs(cmdSlice, dir, []string{})
 }
 
+// IsOriginPresented ...
 func (helper Helper) IsOriginPresented() bool {
 	return helper.originPresent
 }
@@ -173,12 +222,24 @@ func (helper Helper) RemoteList() (string, error) {
 
 // RemoteAdd ...
 func (helper Helper) RemoteAdd() error {
-	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass("remote", "add", "origin", helper.remoteURI)
+	return helper.RemoteAddWithParams(helper.remoteName, helper.remoteURI)
+}
+
+// RemoteAddWithParams ...
+func (helper Helper) RemoteAddWithParams(remoteName, remoteURI string) error {
+	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass("remote", "add", remoteName, remoteURI)
 
 	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
 }
 
-// Clean
+// RemoteRemove ...
+func (helper Helper) RemoteRemove(remoteName string) error {
+	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass("remote", "rm", remoteName)
+
+	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
+}
+
+// Clean ...
 func (helper Helper) Clean() error {
 	cmdSlice := createGitCmdSlice("reset", "--hard", "HEAD")
 	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
@@ -206,8 +267,8 @@ func (helper Helper) Clean() error {
 // Fetch ...
 func (helper Helper) Fetch() error {
 	params := []string{"fetch"}
-	if helper.pullRequestID != "" {
-		params = append(params, "origin", "pull/"+helper.pullRequestID+"/merge:"+helper.checkoutParam)
+	if helper.pullRequestHelper.pullRequestID != "" && helper.pullRequestHelper.pullRequestMergeBranch != "" {
+		params = append(params, helper.remoteName, helper.pullRequestHelper.pullRequestMergeBranch+":"+helper.checkoutParam)
 	}
 	if helper.cloneDepth != "" {
 		params = append(params, "--depth="+helper.cloneDepth)
@@ -221,8 +282,8 @@ func (helper Helper) Fetch() error {
 // FetchTags ...
 func (helper Helper) FetchTags() error {
 	params := []string{"fetch", "--tags"}
-	if helper.pullRequestID != "" {
-		params = append(params, "origin", "pull/"+helper.pullRequestID+"/merge:"+helper.checkoutParam)
+	if helper.pullRequestHelper.pullRequestID != "" && helper.pullRequestHelper.pullRequestBranch != "" {
+		params = append(params, helper.remoteName, helper.pullRequestHelper.pullRequestBranch+":"+helper.checkoutParam)
 	}
 	if helper.cloneDepth != "" {
 		params = append(params, "--depth="+helper.cloneDepth)
@@ -260,6 +321,81 @@ func (helper Helper) FetchUnshallow() error {
 	cmdSlice, envs := createGitCmdSliceWithGitDontAskpass("fetch", "--unshallow")
 
 	return runCommandInDirWithEnvs(cmdSlice, helper.destinationDir, append(os.Environ(), envs...))
+}
+
+// ShouldMergePullRequest ...
+func (helper Helper) ShouldMergePullRequest() bool {
+	return (helper.pullRequestHelper.pullRequestRepositoryURI != "" && helper.pullRequestHelper.pullRequestBranch != "")
+}
+
+// MergePullRequestWithDiff ...
+func (helper Helper) MergePullRequestWithDiff(buildURL, buildAPIToken string) error {
+	uri := fmt.Sprintf("%s/diff.json?api_token=%s", buildURL, buildAPIToken)
+	response, err := http.Get(uri)
+	if err != nil {
+		return err
+	}
+
+	if response.StatusCode != 200 {
+		return errors.New("Diff is not available")
+	}
+
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+
+	diffFileName := fmt.Sprintf("%s.diff", helper.pullRequestHelper.pullRequestID)
+	diffFile, err := ioutil.TempFile("", diffFileName)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(diffFile.Name())
+	if _, err := diffFile.Write(body); err != nil {
+		return err
+	}
+	if err := diffFile.Close(); err != nil {
+		return err
+	}
+
+	cmdSlice := createGitCmdSlice("apply", diffFile.Name())
+	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// MergePullRequest ...
+func (helper Helper) MergePullRequest() error {
+	if helper.remoteURI == helper.pullRequestHelper.pullRequestRepositoryURI {
+		helper.pullRequestHelper.pullRequestRemoteName = helper.remoteName
+	} else {
+		helper.pullRequestHelper.pullRequestRemoteName = "upstream"
+
+		remotes, err := helper.RemoteList()
+		if err != nil {
+			return err
+		}
+
+		if strings.Contains(remotes, helper.pullRequestHelper.pullRequestRemoteName+"\t") {
+			helper.RemoteRemove(helper.pullRequestHelper.pullRequestRemoteName)
+		}
+		helper.RemoteAddWithParams(helper.pullRequestHelper.pullRequestRemoteName, helper.pullRequestHelper.pullRequestRepositoryURI)
+	}
+
+	cmdSlice := createGitCmdSlice("fetch", helper.pullRequestHelper.pullRequestRemoteName, helper.pullRequestHelper.pullRequestBranch)
+	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
+		return err
+	}
+
+	cmdSlice = createGitCmdSlice("merge", helper.pullRequestHelper.pullRequestRemoteName+"/"+helper.pullRequestHelper.pullRequestBranch)
+	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // SubmoduleUpdate ...
