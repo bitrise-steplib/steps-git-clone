@@ -106,19 +106,18 @@ func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullReque
 		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth)
 	} else {
 		if pullRequestID != "" && pullRequestURI != "" && branchDest != "" {
+			helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, helper.remoteURI, branchDest, cloneDepth)
+
 			// try to get diff file
 			diffPath, err := helper.savePullRequestDiff(buildURL, buildAPIToken)
-
 			if err == nil {
 				// if we are able to get the diff file,
 				// we should checkout the destination branch
-				helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, helper.remoteURI, branchDest, cloneDepth)
 				helper.ConfigureCheckoutWithParams("", "", branchDest, cloneDepth)
 				helper.pullRequestHelper.pullRequestDiffPath = diffPath
 			} else {
 				// if not diff file is available, we should
 				// checkout the PR's commit hash
-				helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, helper.remoteURI, branchDest, cloneDepth)
 				helper.ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth)
 				helper.remoteURI = pullRequestURI
 			}
