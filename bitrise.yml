@@ -117,6 +117,9 @@ workflows:
         - tag: ""
         - branch: "master"
         - pull_request_id: ""
+        - pull_request_merge_branch: ""
+        - pull_request_repository_url: ""
+        - branch_dest: ""
         - clone_depth: ""
     - script:
         inputs:
@@ -150,6 +153,9 @@ workflows:
         - tag: ""
         - branch: ""
         - pull_request_id: ""
+        - pull_request_merge_branch: ""
+        - pull_request_repository_url: ""
+        - branch_dest: ""
         - clone_depth: ""
     - script:
         inputs:
@@ -183,6 +189,9 @@ workflows:
         - tag: ""
         - branch: ""
         - pull_request_id: ""
+        - pull_request_merge_branch: ""
+        - pull_request_repository_url: ""
+        - branch_dest: ""
         - clone_depth: ""
     - script:
         inputs:
@@ -216,6 +225,9 @@ workflows:
         - commit: ""
         - branch: ""
         - pull_request_id: ""
+        - pull_request_merge_branch: ""
+        - pull_request_repository_url: ""
+        - branch_dest: ""
         - clone_depth: ""
     - script:
         inputs:
@@ -249,6 +261,9 @@ workflows:
         - commit: ""
         - tag: ""
         - pull_request_id: ""
+        - pull_request_merge_branch: ""
+        - pull_request_repository_url: ""
+        - branch_dest: ""
         - clone_depth: ""
     - script:
         inputs:
@@ -279,6 +294,9 @@ workflows:
         inputs:
         - clone_into_dir: $CLONE_INTO_DIR
         - pull_request_id: 4
+        - pull_request_merge_branch: "pull/4/merge"
+        - pull_request_repository_url: ""
+        - branch_dest: ""
         - commit: ""
         - tag: ""
         - branch: ""
@@ -316,6 +334,9 @@ workflows:
         - tag: ""
         - branch: ""
         - pull_request_id: ""
+        - pull_request_merge_branch: ""
+        - pull_request_repository_url: ""
+        - branch_dest: ""
     - script:
         inputs:
         - content: |-
