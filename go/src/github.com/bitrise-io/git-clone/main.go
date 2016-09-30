@@ -67,7 +67,7 @@ func main() {
 		log.Fail("Failed to create git helper, error: %s", err)
 	}
 
-	git.ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestMergeBranch, commit, tag, branch, branchDest, cloneDepth)
+	git.ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestMergeBranch, commit, tag, branch, branchDest, cloneDepth, buildURL, buildAPIToken)
 
 	if err := git.Init(); err != nil {
 		log.Fail("Failed, error: %s", err)
@@ -149,20 +149,13 @@ func main() {
 					log.Warn("Retrying...")
 				}
 
-				gitDiffErr := git.MergePullRequestWithDiff(buildURL, buildAPIToken)
-				if gitDiffErr != nil {
-
-					// Diff failed, proceed with normal merge
-					gitMergeErr := git.MergePullRequest()
-					if gitMergeErr != nil {
-						log.Warn("%d attempt failed:", attempt)
-						fmt.Println(gitMergeErr.Error())
-					}
-
-					return gitMergeErr
+				gitMergeErr := git.MergePullRequest()
+				if gitMergeErr != nil {
+					log.Warn("%d attempt failed:", attempt)
+					fmt.Println(gitMergeErr.Error())
 				}
 
-				return nil
+				return gitMergeErr
 			}); err != nil {
 				log.Fail("Failed, error: %s", err)
 			}

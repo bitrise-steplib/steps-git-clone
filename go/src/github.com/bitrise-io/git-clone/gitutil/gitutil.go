@@ -28,6 +28,7 @@ type PullRequestHelper struct {
 	pullRequestRemoteName    string
 	pullRequestBranch        string
 	pullRequestMergeBranch   string
+	pullRequestDiffPath      string
 }
 
 // Helper ...
@@ -100,14 +101,27 @@ func NewHelper(destinationDir, remoteURI string, resetRepository bool) (Helper, 
 }
 
 // ConfigureCheckout ...
-func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth string) {
+func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, buildURL, buildAPIToken string) {
 	if pullRequestID != "" && pullRequestMergeBranch != "" {
 		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth)
 	} else {
 		if pullRequestID != "" && pullRequestURI != "" && branchDest != "" {
-			helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, helper.remoteURI, branchDest, cloneDepth)
-			helper.ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth)
-			helper.remoteURI = pullRequestURI
+			// try to get diff file
+			diffPath, err := helper.savePullRequestDiff(buildURL, buildAPIToken)
+
+			if err == nil {
+				// if we are able to get the diff file,
+				// we should checkout the destination branch
+				helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, helper.remoteURI, branchDest, cloneDepth)
+				helper.ConfigureCheckoutWithParams("", "", branchDest, cloneDepth)
+				helper.pullRequestHelper.pullRequestDiffPath = diffPath
+			} else {
+				// if not diff file is available, we should
+				// checkout the PR's commit hash
+				helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, helper.remoteURI, branchDest, cloneDepth)
+				helper.ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth)
+				helper.remoteURI = pullRequestURI
+			}
 		} else {
 			helper.ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth)
 		}
@@ -328,47 +342,53 @@ func (helper Helper) ShouldMergePullRequest() bool {
 	return (helper.pullRequestHelper.pullRequestRepositoryURI != "" && helper.pullRequestHelper.pullRequestBranch != "")
 }
 
-// MergePullRequestWithDiff ...
-func (helper Helper) MergePullRequestWithDiff(buildURL, buildAPIToken string) error {
-	uri := fmt.Sprintf("%s/diff.json?api_token=%s", buildURL, buildAPIToken)
+// savePullRequestDiff ...
+func (helper Helper) savePullRequestDiff(buildURL, buildAPIToken string) (string, error) {
+	uri := fmt.Sprintf("%s/diff.txt?api_token=%s", buildURL, buildAPIToken)
 	response, err := http.Get(uri)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if response.StatusCode != 200 {
-		return errors.New("Diff is not available")
+		return "", errors.New("Diff is not available")
 	}
 
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	diffFileName := fmt.Sprintf("%s.diff", helper.pullRequestHelper.pullRequestID)
 	diffFile, err := ioutil.TempFile("", diffFileName)
 	if err != nil {
-		return err
+		return "", err
 	}
-	defer os.Remove(diffFile.Name())
+
 	if _, err := diffFile.Write(body); err != nil {
-		return err
+		return "", err
 	}
 	if err := diffFile.Close(); err != nil {
-		return err
+		return "", err
 	}
 
-	cmdSlice := createGitCmdSlice("apply", diffFile.Name())
-	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
-		return err
-	}
-
-	return nil
+	return diffFile.Name(), nil
 }
 
 // MergePullRequest ...
 func (helper Helper) MergePullRequest() error {
+	// Applying diff if available
+	if helper.pullRequestHelper.pullRequestDiffPath != "" {
+		cmdSlice := createGitCmdSlice("apply", helper.pullRequestHelper.pullRequestDiffPath)
+		if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	// Normal merge
 	if helper.remoteURI == helper.pullRequestHelper.pullRequestRepositoryURI {
 		helper.pullRequestHelper.pullRequestRemoteName = helper.remoteName
 	} else {
