@@ -1,6 +1,13 @@
-## Changelog (Current version: 3.3.4)
+## Changelog (Current version: 3.4.0)
 
 -----------------
+
+### 3.4.0 (2016 Sep 30)
+
+* [2bfa508] prepare for 3.4.0
+* [85042cb] generic pull request support (#21)
+* [992e9a2] Merge pull request #20 from bitrise-io/feature/pull-support
+* [708c097] pull support
 
 ### 3.3.4 (2016 Aug 24)
 
@@ -195,4 +202,4 @@
 
 -----------------
 
-Updated: 2016 Aug 24
+Updated: 2016 Sep 30
