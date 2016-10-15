@@ -47,6 +47,9 @@ inputs:
   - pull_request_repository_url: "$BITRISEIO_PULL_REQUEST_REPOSITORY_URL"
     opts:
       title: "Pull request git URL"
+  - pull_request_head_branch: "$BITRISEIO_PULL_REQUEST_HEAD_BRANCH"
+    opts:
+      title: "Pull request's head branch"
   - pull_request_merge_branch: "$BITRISEIO_PULL_REQUEST_MERGE_BRANCH"
     opts:
       title: "Merged pull request branch"

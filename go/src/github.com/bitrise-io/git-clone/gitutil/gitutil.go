@@ -27,6 +27,7 @@ type PullRequestHelper struct {
 	pullRequestRepositoryURI string
 	pullRequestRemoteName    string
 	pullRequestBranch        string
+	pullRequestHeadBranch    string
 	pullRequestMergeBranch   string
 	pullRequestDiffPath      string
 }
@@ -101,9 +102,12 @@ func NewHelper(destinationDir, remoteURI string, resetRepository bool) (Helper, 
 }
 
 // ConfigureCheckout ...
-func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, buildURL, buildAPIToken string) {
-	if pullRequestID != "" && pullRequestMergeBranch != "" {
-		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth)
+func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestHeadBranch, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, buildURL, buildAPIToken string) {
+	if pullRequestID != "" && (pullRequestMergeBranch != "" || pullRequestHeadBranch != "") {
+		// Provided by:
+		// * GitHub
+		// * GitLab
+		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestHeadBranch, pullRequestMergeBranch, branchDest, cloneDepth)
 	} else {
 		if pullRequestID != "" && pullRequestURI != "" && branchDest != "" {
 			helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, helper.remoteURI, branchDest, cloneDepth)
@@ -111,13 +115,15 @@ func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullReque
 			// try to get diff file
 			diffPath, err := helper.savePullRequestDiff(buildURL, buildAPIToken)
 			if err == nil {
+				// Provided by:
+				// * Bitbucket
+
 				// if we are able to get the diff file,
 				// we should checkout the destination branch
 				helper.ConfigureCheckoutWithParams("", "", branchDest, cloneDepth)
 				helper.pullRequestHelper.pullRequestDiffPath = diffPath
 			} else {
-				// if not diff file is available, we should
-				// checkout the PR's commit hash
+				// Default Pull Request way
 				helper.ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth)
 				helper.remoteURI = pullRequestURI
 			}
@@ -139,11 +145,13 @@ func (helper *Helper) ConfigureCheckoutWithPullRequestURI(pullRequestID, pullReq
 }
 
 // ConfigureCheckoutWithPullRequestID ...
-func (helper *Helper) ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth string) {
+func (helper *Helper) ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestHeadBranch, pullRequestMergeBranch, pullRequestBranch, cloneDepth string) {
 	helper.checkoutParam = "pull/" + pullRequestID
 	helper.pullRequestHelper = PullRequestHelper{
 		pullRequestID:          pullRequestID,
+		pullRequestHeadBranch:  pullRequestHeadBranch,
 		pullRequestMergeBranch: pullRequestMergeBranch,
+		pullRequestBranch:      pullRequestBranch,
 	}
 
 	helper.cloneDepth = cloneDepth
@@ -282,6 +290,8 @@ func (helper Helper) Fetch() error {
 	params := []string{"fetch"}
 	if helper.pullRequestHelper.pullRequestID != "" && helper.pullRequestHelper.pullRequestMergeBranch != "" {
 		params = append(params, helper.remoteName, helper.pullRequestHelper.pullRequestMergeBranch+":"+helper.checkoutParam)
+	} else if helper.pullRequestHelper.pullRequestID != "" && helper.pullRequestHelper.pullRequestHeadBranch != "" {
+		params = append(params, helper.remoteName, helper.pullRequestHelper.pullRequestHeadBranch+":"+helper.checkoutParam)
 	}
 	if helper.cloneDepth != "" {
 		params = append(params, "--depth="+helper.cloneDepth)
@@ -338,7 +348,8 @@ func (helper Helper) FetchUnshallow() error {
 
 // ShouldMergePullRequest ...
 func (helper Helper) ShouldMergePullRequest() bool {
-	return (helper.pullRequestHelper.pullRequestRepositoryURI != "" && helper.pullRequestHelper.pullRequestBranch != "")
+	return (helper.pullRequestHelper.pullRequestRepositoryURI != "" && helper.pullRequestHelper.pullRequestBranch != "") ||
+		(helper.pullRequestHelper.pullRequestMergeBranch == "" && helper.pullRequestHelper.pullRequestHeadBranch != "" && helper.pullRequestHelper.pullRequestBranch != "")
 }
 
 // savePullRequestDiff ...
@@ -388,7 +399,7 @@ func (helper Helper) MergePullRequest() error {
 	}
 
 	// Normal merge
-	if helper.remoteURI == helper.pullRequestHelper.pullRequestRepositoryURI {
+	if helper.pullRequestHelper.pullRequestRepositoryURI == "" || helper.remoteURI == helper.pullRequestHelper.pullRequestRepositoryURI {
 		helper.pullRequestHelper.pullRequestRemoteName = helper.remoteName
 	} else {
 		helper.pullRequestHelper.pullRequestRemoteName = "upstream"

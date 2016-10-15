@@ -38,7 +38,7 @@ func Done(format string, v ...interface{}) {
 }
 
 // Configs ...
-func Configs(repositoryURL, cloneIntoDir, commit, tag, branch, branchDest, pullRequestURI, pullRequestBranch, pullRequestID, buildURL, buildAPIToken, cloneDepth string, resetRepository bool) {
+func Configs(repositoryURL, cloneIntoDir, commit, tag, branch, branchDest, pullRequestURI, pullRequestBranch, pullRequestHeadBranch, pullRequestID, buildURL, buildAPIToken, cloneDepth string, resetRepository bool) {
 	Info("Configs:")
 
 	Details("repository_url: %s", repositoryURL)
@@ -49,6 +49,7 @@ func Configs(repositoryURL, cloneIntoDir, commit, tag, branch, branchDest, pullR
 	Details("branch_dest: %s", branchDest)
 	Details("pull_request_repository_url: %s", pullRequestURI)
 	Details("pull_request_merge_branch: %s", pullRequestBranch)
+	Details("pull_request_head_branch: %s", pullRequestHeadBranch)
 	Details("pull_request_id: %s", pullRequestID)
 	Details("clone_depth: %s", cloneDepth)
 	Details("reset_repository: %t", resetRepository)
