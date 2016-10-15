@@ -49,12 +49,13 @@ func main() {
 	pullRequestID := os.Getenv("pull_request_id")
 	pullRequestURI := os.Getenv("pull_request_repository_url")
 	pullRequestMergeBranch := os.Getenv("pull_request_merge_branch")
+	pullRequestHeadBranch := os.Getenv("pull_request_head_branch")
 	cloneDepth := os.Getenv("clone_depth")
 	resetRepository := os.Getenv("reset_repository") == "Yes"
 	buildURL := os.Getenv("build_url")
 	buildAPIToken := os.Getenv("build_api_token")
 
-	log.Configs(repositoryURL, cloneIntoDir, commit, tag, branch, branchDest, pullRequestURI, pullRequestMergeBranch, pullRequestID, buildURL, buildAPIToken, cloneDepth, resetRepository)
+	log.Configs(repositoryURL, cloneIntoDir, commit, tag, branch, branchDest, pullRequestURI, pullRequestMergeBranch, pullRequestHeadBranch, pullRequestID, buildURL, buildAPIToken, cloneDepth, resetRepository)
 
 	validateRequiredInput("repository_url", repositoryURL)
 	validateRequiredInput("clone_into_dir", cloneIntoDir)
@@ -67,7 +68,7 @@ func main() {
 		log.Fail("Failed to create git helper, error: %s", err)
 	}
 
-	git.ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestMergeBranch, commit, tag, branch, branchDest, cloneDepth, buildURL, buildAPIToken)
+	git.ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestHeadBranch, pullRequestMergeBranch, commit, tag, branch, branchDest, cloneDepth, buildURL, buildAPIToken)
 
 	if err := git.Init(); err != nil {
 		log.Fail("Failed, error: %s", err)
