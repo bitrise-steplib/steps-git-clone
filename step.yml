@@ -18,8 +18,16 @@ type_tags:
 is_requires_admin_user: false
 is_always_run: false
 is_skippable: false
-dependencies: []
 run_if: .IsCI
+deps:
+  brew:
+  - name: go
+  apt_get:
+  - name: golang
+    bin_name: go
+toolkit:
+  go:
+    package_name: github.com/bitrise-io/steps-git-clone
 inputs:
   - repository_url: "$GIT_REPOSITORY_URL"
     opts:
