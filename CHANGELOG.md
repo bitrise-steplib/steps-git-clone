@@ -1,6 +1,11 @@
-## Changelog (Current version: 3.4.0)
+## Changelog (Current version: 3.4.1)
 
 -----------------
+
+### 3.4.1 (2016 Nov 02)
+
+* [56be9a8] prepare for 3.4.1
+* [8212229] go-toolkit (#26)
 
 ### 3.4.0 (2016 Sep 30)
 
@@ -202,4 +207,4 @@
 
 -----------------
 
-Updated: 2016 Sep 30
+Updated: 2016 Nov 02
