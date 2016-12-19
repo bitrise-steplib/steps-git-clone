@@ -13,3 +13,6 @@ added to your `.bitrise.secrets.yml` file!*
 ## Requirements
 
 * `Go`: at least `1.5.x` (because of Go vendoring support)
+
+
+some changes...
