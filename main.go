@@ -183,7 +183,11 @@ func main() {
 					fmt.Println(fetchErr.Error())
 				}
 			}
-			return git.Checkout()
+			checkoutErr := git.Checkout()
+			if checkoutErr != nil {
+				log.Error("Checkout failed, error: %s", checkoutErr)
+			}
+			return checkoutErr
 		}); err != nil {
 			if !git.ShouldTryFetchUnshallow() {
 				log.Error("Failed, error: %s", err)
