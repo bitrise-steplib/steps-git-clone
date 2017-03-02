@@ -174,7 +174,21 @@ func main() {
 			}
 		}
 
-		if err := git.Checkout(); err != nil {
+		if err := retry.Times(1).Wait(waitTime).Try(func(attempt uint) error {
+			if attempt > 0 {
+				log.Warn("Retry with fetching tags...")
+				fetchErr := git.FetchTags()
+				if fetchErr != nil {
+					log.Warn("Fetch tags attempt failed")
+					fmt.Println(fetchErr.Error())
+				}
+			}
+			checkoutErr := git.Checkout()
+			if checkoutErr != nil {
+				log.Error("Checkout failed, error: %s", checkoutErr)
+			}
+			return checkoutErr
+		}); err != nil {
 			if !git.ShouldTryFetchUnshallow() {
 				log.Error("Failed, error: %s", err)
 				os.Exit(1)
