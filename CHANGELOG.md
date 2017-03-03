@@ -1,6 +1,11 @@
-## Changelog (Current version: 3.4.1)
+## Changelog (Current version: 3.4.2)
 
 -----------------
+
+### 3.4.2 (2017 Mar 03)
+
+* [a99e493] Prepare for 3.4.2
+* [8f1fbec] Retry checkout on fail with feching tags (#29)
 
 ### 3.4.1 (2016 Nov 02)
 
@@ -207,4 +212,4 @@
 
 -----------------
 
-Updated: 2016 Nov 02
+Updated: 2017 Mar 03
