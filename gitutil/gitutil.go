@@ -13,6 +13,7 @@ import (
 
 	"github.com/bitrise-io/go-utils/cmdex"
 	"github.com/bitrise-io/go-utils/errorutil"
+	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 )
@@ -116,7 +117,9 @@ func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullReque
 				helper.ConfigureCheckoutWithParams("", "", branchDest, cloneDepth)
 
 				if exists, err := pathutil.IsPathExists(diffPath); err == nil && exists {
-					helper.pullRequestHelper.pullRequestDiffPath = diffPath
+					if diffContent, err := fileutil.ReadStringFromFile(diffPath); err == nil && diffContent != "" {
+						helper.pullRequestHelper.pullRequestDiffPath = diffPath
+					}
 				}
 			} else {
 				// if not diff file is available, we should
