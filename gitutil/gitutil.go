@@ -114,7 +114,10 @@ func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullReque
 				// if we are able to get the diff file,
 				// we should checkout the destination branch
 				helper.ConfigureCheckoutWithParams("", "", branchDest, cloneDepth)
-				helper.pullRequestHelper.pullRequestDiffPath = diffPath
+
+				if exists, err := pathutil.IsPathExists(diffPath); err == nil && exists {
+					helper.pullRequestHelper.pullRequestDiffPath = diffPath
+				}
 			} else {
 				// if not diff file is available, we should
 				// checkout the PR's commit hash
