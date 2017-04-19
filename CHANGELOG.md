@@ -1,6 +1,11 @@
-## Changelog (Current version: 3.4.2)
+## Changelog (Current version: 3.4.3)
 
 -----------------
+
+### 3.4.3 (2017 Apr 19)
+
+* [1b7fce6] Prepare for 3.4.3
+* [c45a51c] #30 fixed, check if diff file is existing and has content (#31)
 
 ### 3.4.2 (2017 Mar 03)
 
@@ -212,4 +217,4 @@
 
 -----------------
 
-Updated: 2017 Mar 03
+Updated: 2017 Apr 19
