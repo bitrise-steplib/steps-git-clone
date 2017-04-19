@@ -83,7 +83,7 @@ workflows:
     - path::./:
         run_if: true
         inputs:
-        - repository_url: git@gitlab.com:godrei/sample-apps-android-sdk22.git
+        - repository_url: git@gitlab.com:bitrise/git-clone-test.git
         - clone_into_dir: $CLONE_INTO_DIR
         - commit: ""
         - tag: ""
