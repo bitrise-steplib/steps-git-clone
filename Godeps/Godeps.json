@@ -1,39 +1,43 @@
 {
 	"ImportPath": "github.com/bitrise-io/steps-git-clone",
 	"GoVersion": "go1.7",
-	"GodepVersion": "v74",
+	"GodepVersion": "v79",
 	"Packages": [
 		"./..."
 	],
 	"Deps": [
 		{
-			"ImportPath": "github.com/bitrise-io/go-utils/cmdex",
-			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
+			"ImportPath": "github.com/bitrise-io/go-utils/colorstring",
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
 		},
 		{
-			"ImportPath": "github.com/bitrise-io/go-utils/colorstring",
-			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
+			"ImportPath": "github.com/bitrise-io/go-utils/command",
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/errorutil",
-			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
+		},
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/fileutil",
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/log",
-			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/pathutil",
-			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/retry",
-			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
+			"Rev": "c8163959178ae89a3829ce02e485eef6b2befd22"
 		},
 		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
-			"Comment": "v1.0.0-3-g6d21280",
-			"Rev": "6d212800a42e8ab5c146b8ace3490ee17e5225f9"
+			"Comment": "v1.1.0",
+			"Rev": "346938d642f2ec3594ed81d874461961cd0faa76"
 		},
 		{
 			"ImportPath": "github.com/pmezard/go-difflib/difflib",
@@ -42,13 +46,13 @@
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",
-			"Comment": "v1.1.4-4-g976c720",
-			"Rev": "976c720a22c8eb4eb6a0b4348ad85ad12491a506"
+			"Comment": "v1.1.4-27-g4d4bfba",
+			"Rev": "4d4bfba8f1d1027c4fdbe371823030df51419987"
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/require",
-			"Comment": "v1.1.4-4-g976c720",
-			"Rev": "976c720a22c8eb4eb6a0b4348ad85ad12491a506"
+			"Comment": "v1.1.4-27-g4d4bfba",
+			"Rev": "4d4bfba8f1d1027c4fdbe371823030df51419987"
 		}
 	]
 }

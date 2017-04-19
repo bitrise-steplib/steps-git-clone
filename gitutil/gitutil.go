@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
@@ -170,20 +170,20 @@ func (helper *Helper) ConfigureCheckoutWithParams(commitHash, tag, branch, clone
 }
 
 func runCommandInDirWithEnvsAndOutput(cmdSlice []string, dir string, envs []string) (string, string, error) {
-	cmd, err := cmdex.NewCommandFromSlice(cmdSlice)
+	cmd, err := command.NewFromSlice(cmdSlice)
 	if err != nil {
 		return "", "", err
 	}
 
 	if len(envs) > 0 {
-		cmd.SetEnvs(envs)
+		cmd.SetEnvs(envs...)
 	}
 
 	if dir != "" {
 		cmd.SetDir(dir)
 	}
 
-	log.Detail("=> %s", cmdex.PrintableCommandArgs(false, cmdSlice))
+	log.Printf("=> %s", command.PrintableCommandArgs(false, cmdSlice))
 
 	var errBuffer bytes.Buffer
 	errWriter := bufio.NewWriter(&errBuffer)
@@ -361,7 +361,7 @@ func (helper Helper) savePullRequestDiff(buildURL, buildAPIToken string) (string
 
 	defer func() {
 		if err := response.Body.Close(); err != nil {
-			log.Error("Failed to close response body, error: %s", err)
+			log.Errorf("Failed to close response body, error: %s", err)
 		}
 	}()
 	body, err := ioutil.ReadAll(response.Body)
@@ -439,7 +439,7 @@ func (helper Helper) SubmoduleUpdate() error {
 }
 
 func runLogCommand(cmdSlice []string, dir string) (string, error) {
-	out, err := cmdex.NewCommand(cmdSlice[0], cmdSlice[1:]...).SetDir(dir).RunAndReturnTrimmedCombinedOutput()
+	out, err := command.New(cmdSlice[0], cmdSlice[1:]...).SetDir(dir).RunAndReturnTrimmedCombinedOutput()
 	if err != nil {
 		return "", err
 	}
