@@ -1,6 +1,11 @@
-## Changelog (Current version: 3.4.3)
+## Changelog (Current version: 3.4.4)
 
 -----------------
+
+### 3.4.4 (2017 Jun 09)
+
+* [0431d2d] prepare for 3.4.4
+* [471f851] input grouping and reordering (#33)
 
 ### 3.4.3 (2017 Apr 19)
 
@@ -217,4 +222,4 @@
 
 -----------------
 
-Updated: 2017 Apr 19
+Updated: 2017 Jun 09
