@@ -32,8 +32,9 @@ type ConfigsModel struct {
 	PullRequestMergeBranch string
 	ResetRepository        string
 
-	BuildURL      string
-	BuildAPIToken string
+	BuildURL         string
+	BuildAPIToken    string
+	UpdateSubmodules string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
@@ -51,8 +52,9 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		PullRequestMergeBranch: os.Getenv("pull_request_merge_branch"),
 		ResetRepository:        os.Getenv("reset_repository"),
 
-		BuildURL:      os.Getenv("build_url"),
-		BuildAPIToken: os.Getenv("build_api_token"),
+		BuildURL:         os.Getenv("build_url"),
+		BuildAPIToken:    os.Getenv("build_api_token"),
+		UpdateSubmodules: os.Getenv("update_submodules"),
 	}
 }
 
@@ -60,6 +62,7 @@ func (configs ConfigsModel) print() {
 	log.Infof("Git Clone Configs:")
 	log.Printf("- CloneIntoDir: %s", configs.CloneIntoDir)
 	log.Printf("- RepositoryURL: %s", configs.RepositoryURL)
+	log.Printf("- UpdateSubmodules: %s", configs.UpdateSubmodules)
 
 	log.Infof("Git Checkout Configs:")
 	log.Printf("- Commit: %s", configs.Commit)
@@ -144,7 +147,7 @@ func main() {
 
 		fetchErr := git.Fetch()
 		if fetchErr != nil {
-			log.Warnf("%d attempt failed:", attempt)
+			log.Warnf("Attempt %d failed:", attempt+1)
 			fmt.Println(fetchErr.Error())
 		}
 
@@ -163,7 +166,7 @@ func main() {
 
 				fetchErr := git.FetchTags()
 				if fetchErr != nil {
-					log.Warnf("Attempt %d failed:", attempt + 1)
+					log.Warnf("Attempt %d failed:", attempt+1)
 					fmt.Println(fetchErr.Error())
 				}
 
@@ -204,7 +207,7 @@ func main() {
 
 				fetchShallowErr := git.FetchUnshallow()
 				if fetchShallowErr != nil {
-					log.Warnf("Attempt %d failed:", attempt + 1)
+					log.Warnf("Attempt %d failed:", attempt+1)
 					fmt.Println(fetchShallowErr.Error())
 				}
 
@@ -228,7 +231,7 @@ func main() {
 
 				gitMergeErr := git.MergePullRequest()
 				if gitMergeErr != nil {
-					log.Warnf("Attempt %d failed:", attempt + 1)
+					log.Warnf("Attempt %d failed:", attempt+1)
 					fmt.Println(gitMergeErr.Error())
 				}
 
@@ -239,21 +242,23 @@ func main() {
 			}
 		}
 
-		if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
-			if attempt > 0 {
-				log.Warnf("Retrying...")
-			}
+		if configs.UpdateSubmodules != "no" {
+			if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
+				if attempt > 0 {
+					log.Warnf("Retrying...")
+				}
 
-			submoduleErr := git.SubmoduleUpdate()
-			if submoduleErr != nil {
-				log.Warnf("Attempt %d failed:", attempt + 1)
-				fmt.Println(submoduleErr.Error())
-			}
+				submoduleErr := git.SubmoduleUpdate()
+				if submoduleErr != nil {
+					log.Warnf("Attempt %d failed:", attempt+1)
+					fmt.Println(submoduleErr.Error())
+				}
 
-			return submoduleErr
-		}); err != nil {
-			log.Errorf("Failed, error: %s", err)
-			os.Exit(1)
+				return submoduleErr
+			}); err != nil {
+				log.Errorf("Failed, error: %s", err)
+				os.Exit(1)
+			}
 		}
 
 		log.Infof("Exporting git logs")

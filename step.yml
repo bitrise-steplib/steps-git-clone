@@ -97,6 +97,17 @@ inputs:
       description: |-
         The build's API Token for the build on Bitrise.io
       is_dont_change_value: true
+  - update_submodules: "yes"
+    opts:
+      category: Debug
+      title: Update the registered submodules?
+      summary: |-
+        Update the registered submodules?
+      description: |-
+        Update the registered submodules?
+      value_options:
+      - "yes"
+      - "no"
 outputs:
   - GIT_CLONE_COMMIT_HASH:
     opts:
