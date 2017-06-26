@@ -1,6 +1,12 @@
-## Changelog (Current version: 3.4.4)
+## Changelog (Current version: 3.5.0)
 
 -----------------
+
+### 3.5.0 (2017 Jun 26)
+
+* [b61dce6] prepare for 3.5.0
+* [9512c7b] opt out submodule update (#37)
+* [c02e445] Failed attempts count base changed to 1 (#36)
 
 ### 3.4.4 (2017 Jun 09)
 
@@ -222,4 +228,4 @@
 
 -----------------
 
-Updated: 2017 Jun 09
+Updated: 2017 Jun 26
