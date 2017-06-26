@@ -163,7 +163,7 @@ func main() {
 
 				fetchErr := git.FetchTags()
 				if fetchErr != nil {
-					log.Warnf("%d attempt failed:", attempt)
+					log.Warnf("Attempt %d failed:", attempt + 1)
 					fmt.Println(fetchErr.Error())
 				}
 
@@ -204,7 +204,7 @@ func main() {
 
 				fetchShallowErr := git.FetchUnshallow()
 				if fetchShallowErr != nil {
-					log.Warnf("%d attempt failed:", attempt)
+					log.Warnf("Attempt %d failed:", attempt + 1)
 					fmt.Println(fetchShallowErr.Error())
 				}
 
@@ -228,7 +228,7 @@ func main() {
 
 				gitMergeErr := git.MergePullRequest()
 				if gitMergeErr != nil {
-					log.Warnf("%d attempt failed:", attempt)
+					log.Warnf("Attempt %d failed:", attempt + 1)
 					fmt.Println(gitMergeErr.Error())
 				}
 
@@ -246,7 +246,7 @@ func main() {
 
 			submoduleErr := git.SubmoduleUpdate()
 			if submoduleErr != nil {
-				log.Warnf("%d attempt failed:", attempt)
+				log.Warnf("Attempt %d failed:", attempt + 1)
 				fmt.Println(submoduleErr.Error())
 			}
 
