@@ -153,6 +153,9 @@ func main() {
 
 		return fetchErr
 	}); err != nil {
+		if configs.PullRequestID != "" && configs.PullRequestMergeBranch != "" {
+			log.Warnf("Failed to fetch pull request, this happens most likely because the pull request is closed or has conflict.")
+		}
 		log.Errorf("Failed, error: %s", err)
 		os.Exit(1)
 	}
