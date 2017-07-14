@@ -1,6 +1,11 @@
-## Changelog (Current version: 3.5.0)
+## Changelog (Current version: 3.5.1)
 
 -----------------
+
+### 3.5.1 (2017 Jul 14)
+
+* [ef05e6e] prepare for 3.5.1
+* [3806197] better error message if pr fetch failed (#39)
 
 ### 3.5.0 (2017 Jun 26)
 
@@ -228,4 +233,4 @@
 
 -----------------
 
-Updated: 2017 Jun 26
+Updated: 2017 Jul 14
