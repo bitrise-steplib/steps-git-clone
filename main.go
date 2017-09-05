@@ -227,12 +227,16 @@ func main() {
 		}
 
 		if git.ShouldMergePullRequest() {
-			if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
+			if err := retry.Times(3).Wait(waitTime).Try(func(attempt uint) error {
 				if attempt > 0 {
 					log.Warnf("Retrying...")
 				}
 
-				gitMergeErr := git.MergePullRequest()
+				// the merge will be run max 4 times
+				// if 2. run fails, try to run normal merge instead of using the diff file
+				// if diff file does not exist, this flag has no effect to the merge
+				allowApplyDiffFile := (attempt < 2)
+				gitMergeErr := git.MergePullRequest(allowApplyDiffFile)
 				if gitMergeErr != nil {
 					log.Warnf("Attempt %d failed:", attempt+1)
 					fmt.Println(gitMergeErr.Error())
