@@ -10,12 +10,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-io/go-utils/retry"
 )
 
 // ---------------------
@@ -110,8 +112,14 @@ func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullReque
 			helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, helper.remoteURI, branchDest, cloneDepth)
 
 			// try to get diff file
-			diffPath, err := helper.savePullRequestDiff(buildURL, buildAPIToken)
-			if err == nil {
+			diffPath := ""
+			if err := retry.Times(2).Wait(5 * time.Second).Try(func(attempt uint) error {
+				pth, diffErr := helper.savePullRequestDiff(buildURL, buildAPIToken)
+				if diffErr == nil {
+					diffPath = pth
+				}
+				return diffErr
+			}); err == nil {
 				// if we are able to get the diff file,
 				// we should checkout the destination branch
 				helper.ConfigureCheckoutWithParams("", "", branchDest, cloneDepth)
@@ -386,9 +394,9 @@ func (helper Helper) savePullRequestDiff(buildURL, buildAPIToken string) (string
 }
 
 // MergePullRequest ...
-func (helper Helper) MergePullRequest() error {
+func (helper Helper) MergePullRequest(allowApplyDiffFile bool) error {
 	// Applying diff if available
-	if helper.pullRequestHelper.pullRequestDiffPath != "" {
+	if helper.pullRequestHelper.pullRequestDiffPath != "" && allowApplyDiffFile {
 		cmdSlice := createGitCmdSlice("apply", helper.pullRequestHelper.pullRequestDiffPath)
 		if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
 			return err
