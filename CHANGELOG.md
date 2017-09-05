@@ -1,6 +1,11 @@
-## Changelog (Current version: 3.5.1)
+## Changelog (Current version: 3.5.2)
 
 -----------------
+
+### 3.5.2 (2017 Sep 05)
+
+* [5dbc84d] prepare for 3.5.2
+* [e85ffe7] retry merge using diff file and fallback to normal merge (#40)
 
 ### 3.5.1 (2017 Jul 14)
 
@@ -233,4 +238,4 @@
 
 -----------------
 
-Updated: 2017 Jul 14
+Updated: 2017 Sep 05
