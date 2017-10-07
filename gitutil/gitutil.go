@@ -472,6 +472,12 @@ func (helper Helper) LogCommitMessageBody() (string, error) {
 	return runLogCommand(cmdSlice, helper.destinationDir)
 }
 
+// LogCommitCount ...
+func (helper Helper) LogCommitCount() (string, error) {
+	cmdSlice := createGitRevLitCmdSlice("--count", "HEAD")
+	return runLogCommand(cmdSlice, helper.destinationDir)
+}
+
 // LogAuthorName ...
 func (helper Helper) LogAuthorName() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%an"`)
@@ -510,6 +516,10 @@ func createGitCmdSliceWithGitDontAskpass(params ...string) ([]string, []string) 
 
 func createGitLogCmdSlice(params ...string) []string {
 	return append([]string{"git", "log", "-1"}, params...)
+}
+
+func createGitRevLitCmdSlice(params ...string) []string {
+	return append([]string{"git", "rev-list"}, params...)
 }
 
 func properReturn(err error, out string) error {

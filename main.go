@@ -309,6 +309,19 @@ func main() {
 			}
 		}
 
+		if commitCount, err := git.LogCommitCount(); err != nil {
+			log.Errorf("Git rev-list failed, error: %s", err)
+			os.Exit(1)
+		} else {
+			log.Printf("=> GIT_CLONE_COMMIT_COUNT")
+			log.Printf("   value: %s", commitCount)
+			fmt.Println()
+
+			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", commitCount); err != nil {
+				log.Warnf("envman export failed, error: %s", err)
+			}
+		}
+
 		if commitAuthorName, err := git.LogAuthorName(); err != nil {
 			log.Errorf("Git log failed, error: %s", err)
 			os.Exit(1)

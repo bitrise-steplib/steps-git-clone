@@ -118,6 +118,9 @@ outputs:
   - GIT_CLONE_COMMIT_MESSAGE_BODY:
     opts:
       title: "Cloned git commit's message body"
+  - GIT_CLONE_COMMIT_COUNT:
+    opts:
+      title: "Cloned git commit counts"
   - GIT_CLONE_COMMIT_AUTHOR_NAME:
     opts:
       title: "Cloned git commit's author name"
