@@ -64,6 +64,13 @@ inputs:
     opts:
       category: Clone Config
       title: "Merged pull request branch"
+  - patch_cached: "No"
+    opts:
+      category: Clone Config
+      title: "Append --cached when applying patches"
+      value_options:
+      - "No"
+      - "Yes"
   - reset_repository: "No"
     opts:
       category: Debug
