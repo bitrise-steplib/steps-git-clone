@@ -103,6 +103,7 @@ func TestConfigureCheckoutWithParams(t *testing.T) {
 		require.Equal(t, "https://github.com/bitrise-io/steps-git-clone.git", helper.pullRequestHelper.pullRequestRepositoryURI)
 		require.Equal(t, "awesome-branch", helper.pullRequestHelper.pullRequestBranch)
 		require.Equal(t, "", helper.cloneDepth)
+		require.Equal(t, "",helper.pullRequestHelper.PullRequestPatchArgs)
 	}
 
 	t.Log("it configures with commitHash")
