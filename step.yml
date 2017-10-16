@@ -64,13 +64,14 @@ inputs:
     opts:
       category: Clone Config
       title: "Merged pull request branch"
-  - patch_cached: "No"
+  - patch_args: "$BITRISEIO_PULL_REQUEST_PATCH_ARGS"
     opts:
       category: Clone Config
-      title: "Append --cached when applying patches"
-      value_options:
-      - "No"
-      - "Yes"
+      title: Patch arguments
+      summary: |-
+        Append arguments to command when applying patches
+
+        Example `--cached` would become `git apply --cached <patch>`
   - reset_repository: "No"
     opts:
       category: Debug
