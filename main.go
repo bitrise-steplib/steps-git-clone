@@ -31,6 +31,7 @@ type ConfigsModel struct {
 	BranchDest             string
 	PullRequestMergeBranch string
 	ResetRepository        string
+	PatchCached		string
 
 	BuildURL         string
 	BuildAPIToken    string
@@ -51,6 +52,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		BranchDest:             os.Getenv("branch_dest"),
 		PullRequestMergeBranch: os.Getenv("pull_request_merge_branch"),
 		ResetRepository:        os.Getenv("reset_repository"),
+		PatchCached: 			os.Getenv("patch_cached"),
 
 		BuildURL:         os.Getenv("build_url"),
 		BuildAPIToken:    os.Getenv("build_api_token"),
@@ -76,6 +78,7 @@ func (configs ConfigsModel) print() {
 	log.Printf("- BranchDest: %s", configs.BranchDest)
 	log.Printf("- PullRequestMergeBranch: %s", configs.PullRequestMergeBranch)
 	log.Printf("- ResetRepository: %s", configs.ResetRepository)
+	log.Printf("- PatchCached: %s", configs.PatchCached)
 
 	log.Infof("Bitrise Build Configs:")
 	log.Printf("- BuildURL: %s", configs.BuildURL)
@@ -126,7 +129,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	git.ConfigureCheckout(configs.PullRequestID, configs.PullRequestURI, configs.PullRequestMergeBranch, configs.Commit, configs.Tag, configs.Branch, configs.BranchDest, configs.CloneDepth, configs.BuildURL, configs.BuildAPIToken)
+	git.ConfigureCheckout(configs.PullRequestID, configs.PullRequestURI, configs.PullRequestMergeBranch, configs.Commit, configs.Tag, configs.Branch, configs.BranchDest, configs.CloneDepth, configs.BuildURL, configs.BuildAPIToken, configs.PatchCached =="yes")
 
 	if err := git.Init(); err != nil {
 		log.Errorf("Failed, error: %s", err)
