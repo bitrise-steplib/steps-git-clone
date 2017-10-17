@@ -32,7 +32,7 @@ type PullRequestHelper struct {
 	pullRequestBranch        string
 	pullRequestMergeBranch   string
 	pullRequestDiffPath      string
-	PullRequestPatchArgs     string
+	PullRequestPatchArgs     []string
 }
 
 // Helper ...
@@ -148,11 +148,11 @@ func (helper *Helper) ConfigureCheckoutWithPullRequestURI(pullRequestID, pullReq
 		pullRequestID:            pullRequestID,
 		pullRequestRepositoryURI: pullRequestURI,
 		pullRequestBranch:        pullRequestBranch,
-		PullRequestPatchArgs:     "",
+		PullRequestPatchArgs:     []string{},
 	}
 
 	if patchArgs != ""{
-		helper.pullRequestHelper.PullRequestPatchArgs = patchArgs
+		helper.pullRequestHelper.PullRequestPatchArgs = strings.Split(patchArgs," ")
 	}
 
 	helper.cloneDepth = cloneDepth
@@ -164,11 +164,11 @@ func (helper *Helper) ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequ
 	helper.pullRequestHelper = PullRequestHelper{
 		pullRequestID:          pullRequestID,
 		pullRequestMergeBranch: pullRequestMergeBranch,
-		PullRequestPatchArgs:   "",
+		PullRequestPatchArgs:   []string{},
 	}
 
 	if patchArgs != ""{
-		helper.pullRequestHelper.PullRequestPatchArgs = patchArgs
+		helper.pullRequestHelper.PullRequestPatchArgs = strings.Split(patchArgs," ")
 	}
 
 	helper.cloneDepth = cloneDepth
@@ -408,7 +408,7 @@ func (helper Helper) savePullRequestDiff(buildURL, buildAPIToken string) (string
 func (helper Helper) MergePullRequest(allowApplyDiffFile bool) error {
 	// Applying diff if available
 	if helper.pullRequestHelper.pullRequestDiffPath != "" && allowApplyDiffFile {
-		cmdSlice := createGitCmdSlice("apply", helper.pullRequestHelper.PullRequestPatchArgs,helper.pullRequestHelper.pullRequestDiffPath)
+		cmdSlice := createGitCmdSlice("apply", strings.Join(helper.pullRequestHelper.PullRequestPatchArgs," "),helper.pullRequestHelper.pullRequestDiffPath)
 		if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
 			return err
 		}
