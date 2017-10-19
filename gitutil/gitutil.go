@@ -32,6 +32,7 @@ type PullRequestHelper struct {
 	pullRequestBranch        string
 	pullRequestMergeBranch   string
 	pullRequestDiffPath      string
+	PullRequestPatchArgs     []string
 }
 
 // Helper ...
@@ -104,12 +105,12 @@ func NewHelper(destinationDir, remoteURI string, resetRepository bool) (Helper, 
 }
 
 // ConfigureCheckout ...
-func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, buildURL, buildAPIToken string) {
+func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, buildURL, buildAPIToken string, patchArgs string,) {
 	if pullRequestID != "" && pullRequestMergeBranch != "" {
-		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth)
+		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth, patchArgs)
 	} else {
 		if pullRequestID != "" && pullRequestURI != "" && branchDest != "" {
-			helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, helper.remoteURI, branchDest, cloneDepth)
+			helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, helper.remoteURI, branchDest, cloneDepth, patchArgs)
 
 			// try to get diff file
 			diffPath := ""
@@ -142,22 +143,32 @@ func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullReque
 }
 
 // ConfigureCheckoutWithPullRequestURI ...
-func (helper *Helper) ConfigureCheckoutWithPullRequestURI(pullRequestID, pullRequestURI, pullRequestBranch, cloneDepth string) {
+func (helper *Helper) ConfigureCheckoutWithPullRequestURI(pullRequestID, pullRequestURI, pullRequestBranch, cloneDepth string, patchArgs string,) {
 	helper.pullRequestHelper = PullRequestHelper{
 		pullRequestID:            pullRequestID,
 		pullRequestRepositoryURI: pullRequestURI,
 		pullRequestBranch:        pullRequestBranch,
+		PullRequestPatchArgs:     []string{},
+	}
+
+	if patchArgs != ""{
+		helper.pullRequestHelper.PullRequestPatchArgs = strings.Split(patchArgs," ")
 	}
 
 	helper.cloneDepth = cloneDepth
 }
 
 // ConfigureCheckoutWithPullRequestID ...
-func (helper *Helper) ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth string) {
+func (helper *Helper) ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth string, patchArgs string,) {
 	helper.checkoutParam = "pull/" + pullRequestID
 	helper.pullRequestHelper = PullRequestHelper{
 		pullRequestID:          pullRequestID,
 		pullRequestMergeBranch: pullRequestMergeBranch,
+		PullRequestPatchArgs:   []string{},
+	}
+
+	if patchArgs != ""{
+		helper.pullRequestHelper.PullRequestPatchArgs = strings.Split(patchArgs," ")
 	}
 
 	helper.cloneDepth = cloneDepth
@@ -397,7 +408,11 @@ func (helper Helper) savePullRequestDiff(buildURL, buildAPIToken string) (string
 func (helper Helper) MergePullRequest(allowApplyDiffFile bool) error {
 	// Applying diff if available
 	if helper.pullRequestHelper.pullRequestDiffPath != "" && allowApplyDiffFile {
-		cmdSlice := createGitCmdSlice("apply", helper.pullRequestHelper.pullRequestDiffPath)
+		cmdParams :=[]string{"apply"}
+		cmdParams = append( cmdParams, helper.pullRequestHelper.PullRequestPatchArgs...)
+		cmdParams = append( cmdParams, helper.pullRequestHelper.pullRequestDiffPath )
+		cmdSlice := createGitCmdSlice(cmdParams...)
+		//cmdSlice := createGitCmdSlice("apply", helper.pullRequestHelper.PullRequestPatchArgs...,helper.pullRequestHelper.pullRequestDiffPath)
 		if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
 			return errors.WithStack(err)
 		}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/stretchr/testify/require"
+	"strings"
 )
 
 func TestProperReturn(t *testing.T) {
@@ -71,10 +72,24 @@ func TestConfigureCheckoutWithParams(t *testing.T) {
 		cloneDepth := ""
 
 		helper := Helper{}
-		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth)
+		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth, "")
 		require.Equal(t, "1", helper.pullRequestHelper.pullRequestID)
 		require.Equal(t, "pull/1", helper.checkoutParam)
 		require.Equal(t, "", helper.cloneDepth)
+	}
+	t.Log("it sets pullRequestID + patch arguments")
+	{
+		pullRequestID := "1"
+		pullRequestMergeBranch := "pull/1/merge"
+		cloneDepth := ""
+		patchArgs := "--cached --index"
+
+		helper := Helper{}
+		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth, patchArgs)
+		require.Equal(t, "1", helper.pullRequestHelper.pullRequestID)
+		require.Equal(t, "pull/1", helper.checkoutParam)
+		require.Equal(t, "", helper.cloneDepth)
+		require.Equal(t, "--cached --index", strings.Join(helper.pullRequestHelper.PullRequestPatchArgs," "))
 	}
 
 	t.Log("it sets pullRequestRepositoryURI and pullRequestBranch")
@@ -85,10 +100,11 @@ func TestConfigureCheckoutWithParams(t *testing.T) {
 		cloneDepth := ""
 
 		helper := Helper{}
-		helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, pullRequestRepositoryURI, pullRequestBranch, cloneDepth)
+		helper.ConfigureCheckoutWithPullRequestURI(pullRequestID, pullRequestRepositoryURI, pullRequestBranch, cloneDepth, "")
 		require.Equal(t, "https://github.com/bitrise-io/steps-git-clone.git", helper.pullRequestHelper.pullRequestRepositoryURI)
 		require.Equal(t, "awesome-branch", helper.pullRequestHelper.pullRequestBranch)
 		require.Equal(t, "", helper.cloneDepth)
+		require.Equal(t, "",strings.Join(helper.pullRequestHelper.PullRequestPatchArgs, " "))
 	}
 
 	t.Log("it configures with commitHash")
@@ -155,7 +171,7 @@ func TestConfigureCheckoutWithParams(t *testing.T) {
 		cloneDepth := "1"
 
 		helper := Helper{}
-		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, "", "")
+		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, "", "", "")
 		require.Equal(t, "1", helper.pullRequestHelper.pullRequestID)
 		require.Equal(t, "", helper.pullRequestHelper.pullRequestRepositoryURI)
 		require.Equal(t, "", helper.pullRequestHelper.pullRequestBranch)
@@ -175,12 +191,56 @@ func TestConfigureCheckoutWithParams(t *testing.T) {
 		cloneDepth := "1"
 
 		helper := Helper{}
-		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, "", "")
+		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, "", "", "")
 		require.Equal(t, "1", helper.pullRequestHelper.pullRequestID)
 		require.Equal(t, "https://github.com/bitrise-io/steps-git-clone.git", helper.remoteURI)
 		require.Equal(t, "master", helper.pullRequestHelper.pullRequestBranch)
 		require.Equal(t, "670f2fe2ab44f8563c6784317a80bc07fad54634", helper.checkoutParam)
 		require.Equal(t, "1", helper.cloneDepth)
+	}
+
+	t.Log("it configures checkout with order of params - pullRequestID > pullRequest > commitHash > tag > branch + patch arguments")
+	{
+		pullRequestID := "1"
+		pullRequestRepositoryURI := "https://github.com/bitrise-io/steps-git-clone.git"
+		pullRequestMergeBranch := "pull/1/merge"
+		commitHash := "670f2fe2ab44f8563c6784317a80bc07fad54634"
+		tag := "0.9.2"
+		branch := "master"
+		branchDest := "feature/awesome-branch"
+		cloneDepth := "1"
+		patchArgs:= "--cached"
+
+		helper := Helper{}
+		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, "", "", patchArgs)
+		require.Equal(t, "1", helper.pullRequestHelper.pullRequestID)
+		require.Equal(t, "", helper.pullRequestHelper.pullRequestRepositoryURI)
+		require.Equal(t, "", helper.pullRequestHelper.pullRequestBranch)
+		require.Equal(t, "pull/1", helper.checkoutParam)
+		require.Equal(t, "1", helper.cloneDepth)
+		require.Equal(t, "--cached", strings.Join(helper.pullRequestHelper.PullRequestPatchArgs," "))
+	}
+
+	t.Log("it configures checkout with order of params - pullRequestID > pullRequest > commitHash > tag > branch + patch arguments")
+	{
+		pullRequestID := "1"
+		pullRequestRepositoryURI := "https://github.com/bitrise-io/steps-git-clone.git"
+		pullRequestMergeBranch := ""
+		commitHash := "670f2fe2ab44f8563c6784317a80bc07fad54634"
+		tag := "0.9.2"
+		branch := "feature/awesome-branch"
+		branchDest := "master"
+		cloneDepth := "1"
+		patchArgs := "--cached"
+
+		helper := Helper{}
+		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, "", "", patchArgs)
+		require.Equal(t, "1", helper.pullRequestHelper.pullRequestID)
+		require.Equal(t, "https://github.com/bitrise-io/steps-git-clone.git", helper.remoteURI)
+		require.Equal(t, "master", helper.pullRequestHelper.pullRequestBranch)
+		require.Equal(t, "670f2fe2ab44f8563c6784317a80bc07fad54634", helper.checkoutParam)
+		require.Equal(t, "1", helper.cloneDepth)
+		require.Equal(t, []string{"--cached"}, helper.pullRequestHelper.PullRequestPatchArgs)
 	}
 
 	t.Log("it configures checkout with order of params - pullRequestID > commitHash > tag > branch")
@@ -195,7 +255,7 @@ func TestConfigureCheckoutWithParams(t *testing.T) {
 		cloneDepth := "1"
 
 		helper := Helper{}
-		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, "", "")
+		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, "", "", "")
 		require.Equal(t, "", helper.pullRequestHelper.pullRequestID)
 		require.Equal(t, "", helper.pullRequestHelper.pullRequestRepositoryURI)
 		require.Equal(t, "", helper.pullRequestHelper.pullRequestBranch)
@@ -215,7 +275,7 @@ func TestConfigureCheckoutWithParams(t *testing.T) {
 		cloneDepth := "1"
 
 		helper := Helper{}
-		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, "", "")
+		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, "", "", "")
 		require.Equal(t, "", helper.pullRequestHelper.pullRequestID)
 		require.Equal(t, "", helper.pullRequestHelper.pullRequestRepositoryURI)
 		require.Equal(t, "", helper.pullRequestHelper.pullRequestBranch)
@@ -235,7 +295,7 @@ func TestConfigureCheckoutWithParams(t *testing.T) {
 		cloneDepth := "1"
 
 		helper := Helper{}
-		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, "", "")
+		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, "", "", "")
 		require.Equal(t, "", helper.pullRequestHelper.pullRequestID)
 		require.Equal(t, "", helper.pullRequestHelper.pullRequestRepositoryURI)
 		require.Equal(t, "", helper.pullRequestHelper.pullRequestBranch)
