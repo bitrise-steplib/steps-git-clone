@@ -3,7 +3,6 @@ package gitutil
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -18,6 +17,7 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/retry"
+	"github.com/pkg/errors"
 )
 
 // ---------------------
@@ -220,7 +220,7 @@ func runCommandInDirWithEnvsAndOutput(cmdSlice []string, dir string, envs []stri
 
 func runCommandInDirWithEnvs(cmdSlice []string, dir string, envs []string) error {
 	_, _, err := runCommandInDirWithEnvsAndOutput(cmdSlice, dir, envs)
-	return err
+	return errors.WithStack(err)
 }
 
 func runCommandInDir(cmdSlice []string, dir string) error {
@@ -270,22 +270,22 @@ func (helper Helper) RemoteRemove(remoteName string) error {
 func (helper Helper) Clean() error {
 	cmdSlice := createGitCmdSlice("reset", "--hard", "HEAD")
 	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	cmdSlice = createGitCmdSlice("clean", "-xdf")
 	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	cmdSlice = createGitCmdSlice("submodule", "foreach", "git", "reset", "--hard", "HEAD")
 	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	cmdSlice = createGitCmdSlice("submodule", "foreach", "git", "clean", "-xdf")
 	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -399,7 +399,7 @@ func (helper Helper) MergePullRequest(allowApplyDiffFile bool) error {
 	if helper.pullRequestHelper.pullRequestDiffPath != "" && allowApplyDiffFile {
 		cmdSlice := createGitCmdSlice("apply", helper.pullRequestHelper.pullRequestDiffPath)
 		if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		return nil
@@ -413,27 +413,27 @@ func (helper Helper) MergePullRequest(allowApplyDiffFile bool) error {
 
 		remotes, err := helper.RemoteList()
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		if strings.Contains(remotes, helper.pullRequestHelper.pullRequestRemoteName+"\t") {
 			if err := helper.RemoteRemove(helper.pullRequestHelper.pullRequestRemoteName); err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 		}
 		if err := helper.RemoteAddWithParams(helper.pullRequestHelper.pullRequestRemoteName, helper.pullRequestHelper.pullRequestRepositoryURI); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
 	cmdSlice := createGitCmdSlice("fetch", helper.pullRequestHelper.pullRequestRemoteName, helper.pullRequestHelper.pullRequestBranch)
 	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	cmdSlice = createGitCmdSlice("merge", helper.pullRequestHelper.pullRequestRemoteName+"/"+helper.pullRequestHelper.pullRequestBranch)
 	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -520,5 +520,5 @@ func properReturn(err error, out string) error {
 	if errorutil.IsExitStatusError(err) && out != "" {
 		return errors.New(out)
 	}
-	return err
+	return errors.WithStack(err)
 }
