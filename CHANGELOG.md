@@ -1,6 +1,14 @@
-## Changelog (Current version: 3.5.2)
+## Changelog (Current version: 3.5.3)
 
 -----------------
+
+### 3.5.3 (2017 Oct 31)
+
+* [9270c24] Prepare for version 3.5.3
+* [a6de821] v3.5.2
+* [690894a] Update (#44)
+* [b0ab664] Add commit count output (#41)
+* [e3cbce9] fixing go lint issue "redundant if" (#43)
 
 ### 3.5.2 (2017 Oct 31)
 
