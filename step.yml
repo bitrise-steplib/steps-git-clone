@@ -121,6 +121,10 @@ outputs:
   - GIT_CLONE_COMMIT_COUNT:
     opts:
       title: "Cloned git commit counts"
+      description: |-
+        Count will only work properly if no `--depth` option is set.
+
+        If `--depth` is set then the history truncated to the specified number of commits. Count will **not** fail but will be the clone depth.
   - GIT_CLONE_COMMIT_AUTHOR_NAME:
     opts:
       title: "Cloned git commit's author name"
