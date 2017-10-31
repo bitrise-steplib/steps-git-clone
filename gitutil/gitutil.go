@@ -397,7 +397,7 @@ func (helper Helper) savePullRequestDiff(buildURL, buildAPIToken string) (string
 func (helper Helper) MergePullRequest(allowApplyDiffFile bool) error {
 	// Applying diff if available
 	if helper.pullRequestHelper.pullRequestDiffPath != "" && allowApplyDiffFile {
-		cmdSlice := createGitCmdSlice("apply", helper.pullRequestHelper.pullRequestDiffPath)
+		cmdSlice := createGitCmdSlice("apply", "--index", helper.pullRequestHelper.pullRequestDiffPath)
 		if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
 			return errors.WithStack(err)
 		}
