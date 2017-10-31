@@ -2,6 +2,12 @@
 
 -----------------
 
+### 3.5.2 (2017 Oct 31)
+
+* [690894a] Update (#44)
+* [b0ab664] Add commit count output (#41)
+* [e3cbce9] fixing go lint issue "redundant if" (#43)
+
 ### 3.5.2 (2017 Sep 05)
 
 * [5dbc84d] prepare for 3.5.2
@@ -238,4 +244,4 @@
 
 -----------------
 
-Updated: 2017 Sep 05
+Updated: 2017 Oct 31
