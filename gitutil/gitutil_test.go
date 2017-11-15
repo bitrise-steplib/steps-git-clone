@@ -247,7 +247,7 @@ func TestConfigureCheckoutWithParams(t *testing.T) {
 func TestNewHelper(t *testing.T) {
 	t.Log("it fails if destinationDir empty")
 	{
-		helper, err := NewHelper("", "https://github.com/bitrise-samples/git-clone-test.git", false)
+		helper, err := NewHelper("", "https://github.com/bitrise-samples/git-clone-test.git", false, false)
 		require.Error(t, err)
 		require.Equal(t, "", helper.destinationDir)
 		require.Equal(t, "", helper.remoteURI)
@@ -255,7 +255,7 @@ func TestNewHelper(t *testing.T) {
 
 	t.Log("it fails if remote URI empty")
 	{
-		helper, err := NewHelper("./", "", false)
+		helper, err := NewHelper("./", "", false, false)
 		require.Error(t, err)
 		require.Equal(t, "", helper.destinationDir)
 		require.Equal(t, "", helper.remoteURI)
@@ -263,7 +263,7 @@ func TestNewHelper(t *testing.T) {
 
 	t.Log("it fails if remote URI empty")
 	{
-		helper, err := NewHelper("./", "", false)
+		helper, err := NewHelper("./", "", false, false)
 		require.Error(t, err)
 		require.Equal(t, "", helper.destinationDir)
 		require.Equal(t, "", helper.remoteURI)
@@ -279,7 +279,7 @@ func TestNewHelper(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, false, exist)
 
-		helper, err := NewHelper(destinationDir, "https://github.com/bitrise-samples/git-clone-test.git", false)
+		helper, err := NewHelper(destinationDir, "https://github.com/bitrise-samples/git-clone-test.git", false, false)
 		require.NoError(t, err)
 		require.Equal(t, destinationDir, helper.destinationDir)
 		require.Equal(t, "https://github.com/bitrise-samples/git-clone-test.git", helper.remoteURI)

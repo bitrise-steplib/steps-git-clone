@@ -35,6 +35,7 @@ type ConfigsModel struct {
 	BuildURL         string
 	BuildAPIToken    string
 	UpdateSubmodules string
+	ManualMerge      string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
@@ -51,6 +52,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		BranchDest:             os.Getenv("branch_dest"),
 		PullRequestMergeBranch: os.Getenv("pull_request_merge_branch"),
 		ResetRepository:        os.Getenv("reset_repository"),
+		ManualMerge:            os.Getenv("manual_merge"),
 
 		BuildURL:         os.Getenv("build_url"),
 		BuildAPIToken:    os.Getenv("build_api_token"),
@@ -76,6 +78,7 @@ func (configs ConfigsModel) print() {
 	log.Printf("- BranchDest: %s", configs.BranchDest)
 	log.Printf("- PullRequestMergeBranch: %s", configs.PullRequestMergeBranch)
 	log.Printf("- ResetRepository: %s", configs.ResetRepository)
+	log.Printf("- ManualMerge: %s", configs.ManualMerge)
 
 	log.Infof("Bitrise Build Configs:")
 	log.Printf("- BuildURL: %s", configs.BuildURL)
@@ -120,7 +123,7 @@ func main() {
 	// git
 	log.Infof("Git clone repository")
 
-	git, err := gitutil.NewHelper(configs.CloneIntoDir, configs.RepositoryURL, configs.ResetRepository == "Yes")
+	git, err := gitutil.NewHelper(configs.CloneIntoDir, configs.RepositoryURL, configs.ResetRepository == "Yes", configs.ManualMerge == "yes")
 	if err != nil {
 		log.Errorf("Failed to create git helper, error: %s", err)
 		os.Exit(1)

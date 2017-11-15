@@ -108,6 +108,17 @@ inputs:
       value_options:
       - "yes"
       - "no"
+  - manual_merge: "yes"
+    opts:
+      category: Clone config
+      title: Manual merge
+      summary: |-
+        Use manual merge not the PR branch provided by GitHub
+      description: |-
+        Use manual merge not the PR branch provided by GitHub
+      value_options:
+      - "yes"
+      - "no"
 outputs:
   - GIT_CLONE_COMMIT_HASH:
     opts:
