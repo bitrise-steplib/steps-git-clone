@@ -112,10 +112,11 @@ inputs:
     opts:
       category: Clone config
       title: Manual merge
-      summary: |-
-        Use manual merge not the PR branch provided by GitHub
+      summary:  Prefer to do a manual `git merge` by default.
       description: |-
-        Use manual merge not the PR branch provided by GitHub
+        Prefer to do a manual `git merge` by default. Use *GitHub* PR branch and *Bitbucket* diff file only as a fallback if manual merge is failed.
+
+        When the PR is from a private repository, set this to `"no"`.
       value_options:
       - "yes"
       - "no"
