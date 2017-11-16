@@ -1,6 +1,11 @@
-## Changelog (Current version: 3.6.1)
+## Changelog (Current version: 3.6.2)
 
 -----------------
+
+### 3.6.2 (2017 Nov 16)
+
+* [25f753d] RELEASE_VERSION: 3.6.2
+* [46003b8] change default of manual_merge to no for now (#49)
 
 ### 3.6.1 (2017 Nov 16)
 
