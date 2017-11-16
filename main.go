@@ -149,7 +149,7 @@ func main() {
 		}
 		log.Errorf("Failed, error: %s", err)
 
-		if git.ManualMerge {
+		if git.ManualMerge && configs.PullRequestID != "" && configs.PullRequestMergeBranch != "" {
 			log.Warnf("Failed to fetch repository (%s), set manual_merge to 'no'", configs.PullRequestURI)
 			fmt.Println()
 
