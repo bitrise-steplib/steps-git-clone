@@ -129,12 +129,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	git.ConfigureCheckout(configs.PullRequestID, configs.PullRequestURI, configs.PullRequestMergeBranch, configs.Commit, configs.Tag, configs.Branch, configs.BranchDest, configs.CloneDepth, configs.BuildURL, configs.BuildAPIToken)
-
 	if err := git.Init(); err != nil {
 		log.Errorf("Failed, error: %s", err)
 		os.Exit(1)
 	}
+
+	git.ConfigureCheckout(configs.PullRequestID, configs.PullRequestURI, configs.PullRequestMergeBranch, configs.Commit, configs.Tag, configs.Branch, configs.BranchDest, configs.CloneDepth, configs.BuildURL, configs.BuildAPIToken)
 
 	if !git.IsOriginPresented() {
 		if err := git.RemoteAdd(); err != nil {
@@ -143,24 +143,37 @@ func main() {
 		}
 	}
 
-	if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
-		if attempt > 0 {
-			log.Warnf("Retrying...")
-		}
-
-		fetchErr := git.Fetch()
-		if fetchErr != nil {
-			log.Warnf("Attempt %d failed:", attempt+1)
-			fmt.Println(fetchErr.Error())
-		}
-
-		return fetchErr
-	}); err != nil {
+	if err := fetchWithRetry(git); err != nil {
 		if configs.PullRequestID != "" && configs.PullRequestMergeBranch != "" {
 			log.Warnf("Failed to fetch pull request, this happens most likely because the pull request is closed or has conflict.")
 		}
 		log.Errorf("Failed, error: %s", err)
-		os.Exit(1)
+
+		if git.ManualMerge {
+			log.Warnf("Failed to fetch repository (%s), set manual_merge to 'no'", configs.PullRequestURI)
+			fmt.Println()
+
+			git.ManualMerge = false
+			if err := git.RemoteRemove("origin"); err != nil {
+				log.Errorf("Failed, error: %s", err)
+				os.Exit(1)
+			}
+
+			git.ConfigureCheckout(configs.PullRequestID, configs.PullRequestURI, configs.PullRequestMergeBranch, configs.Commit, configs.Tag, configs.Branch, configs.BranchDest, configs.CloneDepth, configs.BuildURL, configs.BuildAPIToken)
+			git.SetRemoteURI(configs.RepositoryURL)
+			if !git.IsOriginPresented() {
+				if err := git.RemoteAdd(); err != nil {
+					log.Errorf("Failed, error: %s", err)
+					os.Exit(1)
+				}
+			}
+			if err := fetchWithRetry(git); err != nil {
+				log.Errorf("Failed, error: %s", err)
+				os.Exit(1)
+			}
+		} else {
+			os.Exit(1)
+		}
 	}
 
 	if git.ShouldCheckout() {
@@ -379,4 +392,20 @@ func main() {
 	}
 
 	log.Donef("Success")
+}
+
+func fetchWithRetry(git gitutil.Helper) error {
+	return retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
+		if attempt > 0 {
+			log.Warnf("Retrying...")
+		}
+
+		fetchErr := git.Fetch()
+		if fetchErr != nil {
+			log.Warnf("Attempt %d failed:", attempt+1)
+			fmt.Println(fetchErr.Error())
+		}
+
+		return fetchErr
+	})
 }
