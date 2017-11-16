@@ -114,8 +114,7 @@ inputs:
       title: Manual merge
       summary:  Prefer to do a manual `git merge` by default.
       description: |-
-        Prefer to do a manual `git merge` by default. Use *GitHub* PR branch and *Bitbucket* diff file only as a fallback if manual merge is failed.
-
+        Prefer to do a manual `git merge` by default.
         When the PR is from a private repository, set this to `"no"`.
       value_options:
       - "yes"
