@@ -1,6 +1,11 @@
-## Changelog (Current version: 3.6.0)
+## Changelog (Current version: 3.6.1)
 
 -----------------
+
+### 3.6.1 (2017 Nov 16)
+
+* [a3a711a] Bump version to 3.6.1
+* [c3dd93e] Don't manual merge if can't fetch repo, use fallback (#48)
 
 ### 3.6.0 (2017 Nov 16)
 
