@@ -110,7 +110,7 @@ inputs:
       - "no"
   - manual_merge: "no"
     opts:
-      category: Clone config
+      category: Clone Config
       title: Manual merge
       summary:  Prefer to do a manual `git merge` by default.
       description: |-
