@@ -108,7 +108,7 @@ inputs:
       value_options:
       - "yes"
       - "no"
-  - manual_merge: "yes"
+  - manual_merge: "no"
     opts:
       category: Clone config
       title: Manual merge
