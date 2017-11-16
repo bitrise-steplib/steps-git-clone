@@ -45,7 +45,7 @@ type Helper struct {
 	pullRequestHelper PullRequestHelper
 	cloneDepth        string
 	originPresent     bool
-	manualMerge       bool
+	ManualMerge       bool
 }
 
 // NewHelper ...
@@ -68,7 +68,7 @@ func NewHelper(destinationDir, remoteURI string, resetRepository, manualMerge bo
 		destinationDir: fullDestinationDir,
 		remoteURI:      remoteURI,
 		remoteName:     "origin",
-		manualMerge:    manualMerge,
+		ManualMerge:    manualMerge,
 	}
 
 	// Check if .git exist
@@ -107,7 +107,7 @@ func NewHelper(destinationDir, remoteURI string, resetRepository, manualMerge bo
 
 // ConfigureCheckout ...
 func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, buildURL, buildAPIToken string) {
-	if !helper.manualMerge && pullRequestID != "" && pullRequestMergeBranch != "" {
+	if !helper.ManualMerge && pullRequestID != "" && pullRequestMergeBranch != "" {
 		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth)
 	} else {
 		if pullRequestID != "" && pullRequestURI != "" && branchDest != "" {
@@ -502,6 +502,11 @@ func (helper Helper) LogCommiterName() (string, error) {
 func (helper Helper) LogCommiterEmail() (string, error) {
 	cmdSlice := createGitLogCmdSlice(`--format="%ce"`)
 	return runLogCommand(cmdSlice, helper.destinationDir)
+}
+
+// SetRemoteURI ...
+func (helper *Helper) SetRemoteURI(remote string) {
+	helper.remoteURI = remote
 }
 
 // ---------------------
