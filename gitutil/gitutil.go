@@ -45,10 +45,11 @@ type Helper struct {
 	pullRequestHelper PullRequestHelper
 	cloneDepth        string
 	originPresent     bool
+	manualMerge       bool
 }
 
 // NewHelper ...
-func NewHelper(destinationDir, remoteURI string, resetRepository bool) (Helper, error) {
+func NewHelper(destinationDir, remoteURI string, resetRepository, manualMerge bool) (Helper, error) {
 	if destinationDir == "" {
 		return Helper{}, errors.New("destination dir path is empty")
 	}
@@ -67,6 +68,7 @@ func NewHelper(destinationDir, remoteURI string, resetRepository bool) (Helper, 
 		destinationDir: fullDestinationDir,
 		remoteURI:      remoteURI,
 		remoteName:     "origin",
+		manualMerge:    manualMerge,
 	}
 
 	// Check if .git exist
@@ -105,7 +107,7 @@ func NewHelper(destinationDir, remoteURI string, resetRepository bool) (Helper, 
 
 // ConfigureCheckout ...
 func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, buildURL, buildAPIToken string) {
-	if pullRequestID != "" && pullRequestMergeBranch != "" {
+	if !helper.manualMerge && pullRequestID != "" && pullRequestMergeBranch != "" {
 		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth)
 	} else {
 		if pullRequestID != "" && pullRequestURI != "" && branchDest != "" {
