@@ -1,6 +1,11 @@
-## Changelog (Current version: 3.5.3)
+## Changelog (Current version: 3.6.0)
 
 -----------------
+
+### 3.6.0 (2017 Nov 16)
+
+* [45161f2] Bump version to 3.6.0
+* [4f9f5e1] Add new input: manual_merge (#45)
 
 ### 3.5.3 (2017 Oct 31)
 
@@ -252,4 +257,4 @@
 
 -----------------
 
-Updated: 2017 Oct 31
+Updated: 2017 Nov 16
