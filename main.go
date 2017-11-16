@@ -161,11 +161,9 @@ func main() {
 
 			git.ConfigureCheckout(configs.PullRequestID, configs.PullRequestURI, configs.PullRequestMergeBranch, configs.Commit, configs.Tag, configs.Branch, configs.BranchDest, configs.CloneDepth, configs.BuildURL, configs.BuildAPIToken)
 			git.SetRemoteURI(configs.RepositoryURL)
-			if !git.IsOriginPresented() {
-				if err := git.RemoteAdd(); err != nil {
-					log.Errorf("Failed, error: %s", err)
-					os.Exit(1)
-				}
+			if err := git.RemoteAdd(); err != nil {
+				log.Errorf("Failed, error: %s", err)
+				os.Exit(1)
 			}
 			if err := fetchWithRetry(git); err != nil {
 				log.Errorf("Failed, error: %s", err)
@@ -400,12 +398,12 @@ func fetchWithRetry(git gitutil.Helper) error {
 			log.Warnf("Retrying...")
 		}
 
-		fetchErr := git.Fetch()
-		if fetchErr != nil {
+		err := git.Fetch()
+		if err != nil {
 			log.Warnf("Attempt %d failed:", attempt+1)
-			fmt.Println(fetchErr.Error())
+			fmt.Println(err.Error())
 		}
 
-		return fetchErr
+		return err
 	})
 }
