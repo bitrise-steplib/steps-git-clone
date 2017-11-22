@@ -179,7 +179,7 @@ func TestConfigureCheckoutWithParams(t *testing.T) {
 		require.Equal(t, "1", helper.pullRequestHelper.pullRequestID)
 		require.Equal(t, "https://github.com/bitrise-io/steps-git-clone.git", helper.remoteURI)
 		require.Equal(t, "master", helper.pullRequestHelper.pullRequestBranch)
-		require.Equal(t, "670f2fe2ab44f8563c6784317a80bc07fad54634", helper.checkoutParam)
+		require.Equal(t, "0.9.2", helper.checkoutParam)
 		require.Equal(t, "1", helper.cloneDepth)
 	}
 
