@@ -46,6 +46,7 @@ type Helper struct {
 	cloneDepth        string
 	originPresent     bool
 	ManualMerge       bool
+	commit            string
 }
 
 // NewHelper ...
@@ -107,6 +108,7 @@ func NewHelper(destinationDir, remoteURI string, resetRepository, manualMerge bo
 
 // ConfigureCheckout ...
 func (helper *Helper) ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestMergeBranch, commitHash, tag, branch, branchDest, cloneDepth, buildURL, buildAPIToken string) {
+	helper.commit = commitHash
 	if !helper.ManualMerge && pullRequestID != "" && pullRequestMergeBranch != "" {
 		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequestMergeBranch, cloneDepth)
 	} else {
@@ -167,7 +169,7 @@ func (helper *Helper) ConfigureCheckoutWithPullRequestID(pullRequestID, pullRequ
 
 // ConfigureCheckoutWithParams ...
 func (helper *Helper) ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth string) {
-	if commitHash != "" {
+	if commitHash != "" && helper.pullRequestHelper.pullRequestID == "" {
 		helper.checkoutParam = commitHash
 	} else if tag != "" {
 		helper.checkoutParam = tag
@@ -428,12 +430,7 @@ func (helper Helper) MergePullRequest(allowApplyDiffFile bool) error {
 		}
 	}
 
-	cmdSlice := createGitCmdSlice("fetch", helper.pullRequestHelper.pullRequestRemoteName, helper.pullRequestHelper.pullRequestBranch)
-	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
-		return errors.WithStack(err)
-	}
-
-	cmdSlice = createGitCmdSlice("merge", helper.pullRequestHelper.pullRequestRemoteName+"/"+helper.pullRequestHelper.pullRequestBranch)
+	cmdSlice := createGitCmdSlice("merge", helper.commit)
 	if err := runCommandInDir(cmdSlice, helper.destinationDir); err != nil {
 		return errors.WithStack(err)
 	}
