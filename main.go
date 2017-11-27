@@ -130,7 +130,6 @@ func run(c *command.Model) error {
 }
 
 func runWithOutput(c *command.Model) (string, error) {
-	//log.Infof(c.PrintableCommandArgs())
 	return c.RunAndReturnTrimmedCombinedOutput()
 }
 
