@@ -2,14 +2,14 @@
 
 
 [[projects]]
-  branch = "revision"
+  branch = "master"
   name = "github.com/bitrise-io/go-utils"
   packages = ["colorstring","command","command/git","errorutil","log","pathutil","retry"]
-  revision = "541b0a8fb6ee4caac06d45c4b1105d37b4bcadd6"
+  revision = "aa1f44e4c0f8a3a0e7f108640760fbff74eac652"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1a9a4a1fe5f076004217d09462ce0127adcb3c4f55c409a887edf4d38c850032"
+  inputs-digest = "4071654017af925ca3e22cf82eb00096d7f6cf70472db4a67d8fd7a257605a8b"
   solver-name = "gps-cdcl"
   solver-version = 1

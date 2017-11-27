@@ -1,6 +1,6 @@
 [[constraint]]
   name = "github.com/bitrise-io/go-utils"
-  branch = "revision"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/pkg/errors"
