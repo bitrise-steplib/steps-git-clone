@@ -206,7 +206,7 @@ func getDiffFile() (string, error) {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Warnf("git-clone-step: failed to close response body, error: %s", err)
+			log.Warnf("Failed to close response body, error: %s", err)
 		}
 	}()
 
@@ -262,27 +262,27 @@ func printLog(format, env string) error {
 func main() {
 	originPresent, err := isOriginPresent(configs.CloneIntoDir, configs.RepositoryURL)
 	if err != nil {
-		fail("git-clone-step: can't check if origin is presented, error: %v", err)
+		fail("Can't check if origin is presented, error: %v", err)
 	}
 
 	if originPresent && configs.ResetRepository == "yes" {
 		if err := resetRepo(); err != nil {
-			fail("git-clone-step: can't reset repository, error: %v", err)
+			fail("Can't reset repository, error: %v", err)
 		}
 	}
 
 	// Create directory if not exist
 	if err := os.MkdirAll(configs.CloneIntoDir, 0755); err != nil {
-		fail("git-clone-step: can't create directory (%s), error: %v", configs.CloneIntoDir, err)
+		fail("Can't create directory (%s), error: %v", configs.CloneIntoDir, err)
 	}
 
 	if err := run(Git.Init()); err != nil {
-		fail("git-clone-step: can't init repository, error: %v", err)
+		fail("Can't init repository, error: %v", err)
 	}
 
 	if !originPresent {
 		if err := run(Git.RemoteAdd("origin", configs.RepositoryURL)); err != nil {
-			fail("git-clone-step: can't add remote repository (%s), error: %v", configs.RepositoryURL, err)
+			fail("Can't add remote repository (%s), error: %v", configs.RepositoryURL, err)
 		}
 	}
 
@@ -292,38 +292,38 @@ func main() {
 		}
 		return Git.Fetch()
 	}); err != nil {
-		fail("git-clone-step: fetch failed, error: %v", err)
+		fail("Fetch failed, error: %v", err)
 	}
 
 	if isPR() {
 		if configs.ManualMerge == "yes" {
 			if err := run(Git.Checkout(configs.BranchDest)); err != nil {
-				fail("git-clone-step: checkout failed (%s), error: %v", configs.BranchDest, err)
+				fail("Checkout failed (%s), error: %v", configs.BranchDest, err)
 			}
 			if err := run(Git.Merge(configs.Commit)); err != nil {
-				log.Errorf("git-clone-step: merge failed (%s), error: %v", configs.Commit, err)
+				log.Errorf("Merge failed (%s), error: %v", configs.Commit, err)
 				if configs.PullRequestMergeBranch != "" {
 					log.Warnf("Using Pull Request branch...")
 					if err := runWithRetry(func() *command.Model {
 						return Git.Fetch("origin", configs.PullRequestMergeBranch+":"+
 							strings.TrimSuffix(configs.PullRequestMergeBranch, "/merge"))
 					}); err != nil {
-						fail("git-clone-step: fetch Pull Request branch failed (%s), error: %v",
+						fail("Fetch Pull Request branch failed (%s), error: %v",
 							configs.PullRequestMergeBranch, err)
 					}
 
 					arg := strings.TrimSuffix(configs.PullRequestMergeBranch, "/merge")
 					if err := run(Git.Checkout(arg)); err != nil {
-						fail("git-clone-step: checkout failed (%s), error: %v", configs.BranchDest, err)
+						fail("Checkout failed (%s), error: %v", configs.BranchDest, err)
 					}
 				} else {
 					log.Warnf("Applying patch...")
 					patch, err := getDiffFile()
 					if err != nil {
-						fail("git-clone-step: can't download diff file, error: %v", err)
+						fail("Can't download diff file, error: %v", err)
 					}
 					if err := run(Git.Apply(patch)); err != nil {
-						fail("git-clone-step: can't apply patch (%s), error: %v", patch, err)
+						fail("Can't apply patch (%s), error: %v", patch, err)
 					}
 				}
 			}
@@ -332,47 +332,47 @@ func main() {
 				log.Warnf("Using Pull Request branch...")
 				branch := strings.TrimSuffix(configs.PullRequestMergeBranch, "/merge")
 				if err := run(Git.Fetch("origin", configs.PullRequestMergeBranch+":"+branch)); err != nil {
-					fail("git-clone-step: fetch Pull Request branch failed (%s), error: %v",
+					fail("Fetch Pull Request branch failed (%s), error: %v",
 						configs.PullRequestMergeBranch, err)
 				}
 				if err := run(Git.Checkout(branch)); err != nil {
-					fail("git-clone-step: checkout failed (%s), error: %v", configs.BranchDest, err)
+					fail("Checkout failed (%s), error: %v", configs.BranchDest, err)
 				}
 			} else {
 				if err := run(Git.Checkout(configs.BranchDest)); err != nil {
-					fail("git-clone-step: checkout failed (%s), error: %v", configs.BranchDest, err)
+					fail("Checkout failed (%s), error: %v", configs.BranchDest, err)
 				}
 				log.Warnf("Applying patch...")
 				patch, err := getDiffFile()
 				if err != nil {
-					fail("git-clone-step: can't download diff file, error: %v", err)
+					fail("Can't download diff file, error: %v", err)
 				}
 				if err := run(Git.Apply(patch)); err != nil {
-					fail("git-clone-step: can't apply patch (%s), error: %v", patch, err)
+					fail("Can't apply patch (%s), error: %v", patch, err)
 				}
 			}
 		}
 	} else if checkoutArg != "" {
 		if err := run(Git.Checkout(checkoutArg)); err != nil {
 			if configs.CloneDepth == "" {
-				fail("git-clone-step: checkout failed (%s), error: %v", checkoutArg, err)
+				fail("Checkout failed (%s), error: %v", checkoutArg, err)
 			}
-			log.Warnf("git-clone-step: checkout failed, error: %v\nUnshallow...", err)
+			log.Warnf("Checkout failed, error: %v\nUnshallow...", err)
 
 			if err := runWithRetry(func() *command.Model {
 				return Git.Fetch("--unshallow")
 			}); err != nil {
-				fail("git-clone-step: fetch failed, error: %v", err)
+				fail("Fetch failed, error: %v", err)
 			}
 			if err := run(Git.Checkout(checkoutArg)); err != nil {
-				fail("git-clone-step: checkout failed (%s), error: %v", checkoutArg, err)
+				fail("Checkout failed (%s), error: %v", checkoutArg, err)
 			}
 		}
 	}
 
 	if configs.UpdateSubmodules == "yes" {
 		if err := run(Git.SubmoduleUpdate()); err != nil {
-			fail("git-clone-step: submodule update failed, error: %v", err)
+			fail("Submodule update failed, error: %v", err)
 		}
 	}
 
@@ -389,18 +389,18 @@ func main() {
 			`"%ce"`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
 		} {
 			if err := printLog(format, env); err != nil {
-				fail("git-clone-step: git log failed, error: %v", err)
+				fail("Git log failed, error: %v", err)
 			}
 		}
 
 		count, err := runWithOutput(Git.RevList("HEAD", "--count"))
 		if err != nil {
-			fail("git-clone-step: git rev-list command failed, error: %v", err)
+			fail("Git rev-list command failed, error: %v", err)
 		}
 
 		log.Printf("=> %s\n   value: %s\n", "GIT_CLONE_COMMIT_COUNT", count)
 		if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", count); err != nil {
-			fail("envman export failed, error: %v", err)
+			fail("Envman export failed, error: %v", err)
 		}
 	}
 
