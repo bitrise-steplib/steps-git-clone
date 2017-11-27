@@ -178,11 +178,7 @@ func resetRepo() error {
 		return err
 	}
 
-	if err := run(Git.SubmoduleForeach(Git.Clean("-x", "-d", "-f"))); err != nil {
-		return err
-	}
-
-	return nil
+	return run(Git.SubmoduleForeach(Git.Clean("-x", "-d", "-f")))
 }
 
 func isPR() bool {
