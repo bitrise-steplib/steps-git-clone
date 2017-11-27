@@ -215,7 +215,7 @@ func getDiffFile() (string, error) {
 		return "", err
 	}
 
-	diffFile, err := ioutil.TempFile("", configs.PullRequestID+".diff")
+	diffFile, err := ioutil.TempFile("", fmt.Sprintf("%s.diff", configs.PullRequestID))
 	if err != nil {
 		return "", err
 	}
@@ -235,8 +235,8 @@ func runWithRetry(f func() *command.Model) error {
 		if attempt > 0 {
 			log.Warnf("Retrying...")
 		}
+
 		err := run(f())
-		//err := run(cmd)
 		if err != nil {
 			log.Warnf("Attempt %d failed:", attempt+1)
 			fmt.Println(err.Error())
