@@ -376,7 +376,7 @@ workflows:
             #!/bin/bash
             set -ex
 
-            go test ./...
+            go test $(go list ./... | grep -v vendor)
 
   _install-test-tools:
     steps:
