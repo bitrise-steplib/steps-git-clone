@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command"
@@ -25,7 +24,6 @@ const (
 var (
 	configs     ConfigsModel
 	Git         *git.Git
-	depth       int
 	checkoutArg string
 )
 
@@ -117,15 +115,6 @@ func (configs ConfigsModel) validate() error {
 	if configs.RepositoryURL == "" {
 		return errors.New("no RepositoryURL parameter specified")
 	}
-	if configs.CloneDepth == "" {
-		configs.CloneDepth = "0"
-	}
-	d, err := strconv.Atoi(configs.CloneDepth)
-	if err != nil {
-		fail("git-clone-step: can't convert clone depth (%s) to int, error: %v", configs.CloneDepth, err)
-	}
-	depth = d
-
 	return nil
 }
 
@@ -303,7 +292,10 @@ func main() {
 	}
 
 	if err := runWithRetry(func() *command.Model {
-		return Git.Fetch(depth)
+		if configs.CloneDepth != "" {
+			return Git.Fetch("--depth=" + configs.CloneDepth)
+		}
+		return Git.Fetch()
 	}); err != nil {
 		fail("git-clone-step: fetch failed, error: %v", err)
 	}
@@ -318,7 +310,8 @@ func main() {
 				if configs.PullRequestMergeBranch != "" {
 					log.Warnf("Using Pull Request branch...")
 					if err := runWithRetry(func() *command.Model {
-						return Git.FetchPR(configs.PullRequestMergeBranch)
+						return Git.Fetch("origin", configs.PullRequestMergeBranch+":"+
+							strings.TrimSuffix(configs.PullRequestMergeBranch, "/merge"))
 					}); err != nil {
 						fail("git-clone-step: fetch Pull Request branch failed (%s), error: %v",
 							configs.PullRequestMergeBranch, err)
@@ -342,12 +335,12 @@ func main() {
 		} else {
 			if configs.PullRequestMergeBranch != "" {
 				log.Warnf("Using Pull Request branch...")
-				if err := run(Git.FetchPR(configs.PullRequestMergeBranch)); err != nil {
+				branch := strings.TrimSuffix(configs.PullRequestMergeBranch, "/merge")
+				if err := run(Git.Fetch("origin", configs.PullRequestMergeBranch+":"+branch)); err != nil {
 					fail("git-clone-step: fetch Pull Request branch failed (%s), error: %v",
 						configs.PullRequestMergeBranch, err)
 				}
-				arg := strings.TrimSuffix(configs.PullRequestMergeBranch, "/merge")
-				if err := run(Git.Checkout(arg)); err != nil {
+				if err := run(Git.Checkout(branch)); err != nil {
 					fail("git-clone-step: checkout failed (%s), error: %v", configs.BranchDest, err)
 				}
 			} else {
@@ -366,13 +359,13 @@ func main() {
 		}
 	} else if checkoutArg != "" {
 		if err := run(Git.Checkout(checkoutArg)); err != nil {
-			if depth == 0 {
+			if configs.CloneDepth == "" {
 				fail("git-clone-step: checkout failed (%s), error: %v", checkoutArg, err)
 			}
 			log.Warnf("git-clone-step: checkout failed, error: %v\nUnshallow...", err)
 
 			if err := runWithRetry(func() *command.Model {
-				return Git.Fetch(0, "--unshallow")
+				return Git.Fetch("--unshallow")
 			}); err != nil {
 				fail("git-clone-step: fetch failed, error: %v", err)
 			}

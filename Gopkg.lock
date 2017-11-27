@@ -5,29 +5,11 @@
   branch = "revision"
   name = "github.com/bitrise-io/go-utils"
   packages = ["colorstring","command","command/git","errorutil","log","pathutil","retry"]
-  revision = "eb9968d00dcf5ed0ee3ebeb7dd5f028d9c07a799"
-
-[[projects]]
-  name = "github.com/davecgh/go-spew"
-  packages = ["spew"]
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
-
-[[projects]]
-  name = "github.com/pmezard/go-difflib"
-  packages = ["difflib"]
-  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
-  version = "v1.0.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/stretchr/testify"
-  packages = ["assert","require"]
-  revision = "2aa2c176b9dab406a6970f6a55f513e8a8c8b18f"
+  revision = "541b0a8fb6ee4caac06d45c4b1105d37b4bcadd6"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6a2d563771f3724df9344acd46ae9d06f1e0d8ce78fbe843b076cb49459b6493"
+  inputs-digest = "1a9a4a1fe5f076004217d09462ce0127adcb3c4f55c409a887edf4d38c850032"
   solver-name = "gps-cdcl"
   solver-version = 1
