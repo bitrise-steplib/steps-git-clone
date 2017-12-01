@@ -31,7 +31,7 @@ func initConfig() error {
 	}
 	fmt.Println()
 	Git = git.New(configs.CloneIntoDir)
-	checkoutArg = setCheckoutArg()
+	checkoutArg = getCheckoutArg()
 	return nil
 }
 
@@ -101,11 +101,15 @@ func main() {
 	if isPR() {
 		if configs.ManualMerge == "yes" {
 			if err := manualMerge(true); err != nil {
-				fail("Failed, error: %v", err)
+				if err := autoMerge(false); err != nil {
+					fail("Failed, error: %v", err)
+				}
 			}
 		} else {
 			if err := autoMerge(true); err != nil {
-				fail("Failed, error: %v", err)
+				if err := manualMerge(false); err != nil {
+					fail("Failed, error: %v", err)
+				}
 			}
 		}
 	} else if checkoutArg != "" {

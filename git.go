@@ -59,7 +59,7 @@ func isPR() bool {
 	return configs.PullRequestURI != "" || configs.PullRequestID != "" || configs.PullRequestMergeBranch != ""
 }
 
-func setCheckoutArg() string {
+func getCheckoutArg() string {
 	arg := ""
 	if configs.Commit != "" {
 		arg = configs.Commit
