@@ -44,7 +44,7 @@ func resetRepo() error {
 		return err
 	}
 
-	if err := run(Git.Clean("-x", "-d", "f")); err != nil {
+	if err := run(Git.Clean("-x", "-d", "-f")); err != nil {
 		return err
 	}
 
@@ -130,7 +130,24 @@ func runWithRetry(f func() *command.Model) error {
 	})
 }
 
-func autoMerge(fallback bool) error {
+func isFork() bool {
+	return configs.RepositoryURL != configs.PullRequestURI
+}
+
+func isPrivate() bool {
+	return strings.HasPrefix(configs.RepositoryURL, "git")
+}
+
+func autoMerge() error {
+	if err := runWithRetry(func() *command.Model {
+		if configs.CloneDepth != "" {
+			return Git.Fetch("--depth=" + configs.CloneDepth)
+		}
+		return Git.Fetch()
+	}); err != nil {
+		fmt.Errorf("Fetch failed, error: %v", err)
+	}
+
 	if configs.PullRequestMergeBranch != "" {
 		if err := runWithRetry(func() *command.Model {
 			return Git.Fetch("origin", configs.PullRequestMergeBranch+":"+
@@ -151,30 +168,73 @@ func autoMerge(fallback bool) error {
 		if err := run(Git.Apply(patch)); err != nil {
 			return fmt.Errorf("can't apply patch (%s), error: %v", patch, err)
 		}
-	} else if fallback {
-		log.Warnf("There is no Pull Request branch and can't download diff file, fallback to manual merge.")
-		if err := manualMerge(false); err != nil {
-			return fmt.Errorf("manual merge failed, error: %v", err)
-		}
 	} else {
 		return fmt.Errorf("there is no Pull Request branch and can't download diff file")
 	}
 	return nil
 }
 
-func manualMerge(fallback bool) error {
+func manualMerge() error {
+	if err := runWithRetry(func() *command.Model {
+		if configs.CloneDepth != "" {
+			return Git.Fetch("--depth=" + configs.CloneDepth)
+		}
+		return Git.Fetch()
+	}); err != nil {
+		fmt.Errorf("Fetch failed, error: %v", err)
+	}
+
 	if err := run(Git.Checkout(configs.BranchDest)); err != nil {
 		return fmt.Errorf("checkout failed (%s), error: %v", configs.BranchDest, err)
 	}
 
-	if err := run(Git.Merge(configs.Commit)); err != nil {
-		if fallback {
-			log.Warnf("Merge failed (%s), error: %v\nFallback to auto merge...", configs.Commit, err)
-			if err := autoMerge(false); err != nil {
-				return fmt.Errorf("auto merge failed, error: %v", err)
-			}
-		} else {
+	if isFork() {
+		if err := run(Git.RemoteAdd("upstream", configs.PullRequestURI)); err != nil {
+			return fmt.Errorf("couldn't add remote (%s), error: %v", configs.PullRequestURI, err)
+		}
+
+		if err := runWithRetry(func() *command.Model {
+			return Git.Fetch("upstream", configs.Branch)
+		}); err != nil {
+			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
+				configs.Branch, err)
+		}
+
+		if err := run(Git.Merge("upstream/" + configs.Branch)); err != nil {
+			return fmt.Errorf("merge failed (upstream/%s), error: %v", configs.Branch, err)
+		}
+	} else {
+		if err := run(Git.Merge(configs.Commit)); err != nil {
 			return fmt.Errorf("merge failed (%s), error: %v", configs.Commit, err)
+		}
+	}
+
+	return nil
+}
+
+func checkout(arg string) error {
+	if err := runWithRetry(func() *command.Model {
+		if configs.CloneDepth != "" {
+			return Git.Fetch("--depth=" + configs.CloneDepth)
+		}
+		return Git.Fetch()
+	}); err != nil {
+		fmt.Errorf("Fetch failed, error: %v", err)
+	}
+
+	if err := run(Git.Checkout(arg)); err != nil {
+		if configs.CloneDepth == "" {
+			return fmt.Errorf("checkout failed (%s), error: %v", checkoutArg, err)
+		}
+		log.Warnf("Checkout failed, error: %v\nUnshallow...", err)
+
+		if err := runWithRetry(func() *command.Model {
+			return Git.Fetch("--unshallow")
+		}); err != nil {
+			return fmt.Errorf("fetch failed, error: %v", err)
+		}
+		if err := run(Git.Checkout(checkoutArg)); err != nil {
+			return fmt.Errorf("checkout failed (%s), error: %v", checkoutArg, err)
 		}
 	}
 

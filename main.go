@@ -89,45 +89,21 @@ func main() {
 		}
 	}
 
-	if err := runWithRetry(func() *command.Model {
-		if configs.CloneDepth != "" {
-			return Git.Fetch("--depth=" + configs.CloneDepth)
-		}
-		return Git.Fetch()
-	}); err != nil {
-		fail("Fetch failed, error: %v", err)
-	}
-
 	if isPR() {
-		if configs.ManualMerge == "yes" {
-			if err := manualMerge(true); err != nil {
-				if err := autoMerge(false); err != nil {
-					fail("Failed, error: %v", err)
-				}
+		if configs.ManualMerge != "yes" || isPrivate() {
+			if err := autoMerge(); err != nil {
+				fail("Failed, error: %v", err)
 			}
 		} else {
-			if err := autoMerge(true); err != nil {
-				if err := manualMerge(false); err != nil {
-					fail("Failed, error: %v", err)
-				}
+			if err := manualMerge(); err != nil {
+				fail("Failed, error: %v", err)
 			}
 		}
 	} else if checkoutArg != "" {
-		if err := run(Git.Checkout(checkoutArg)); err != nil {
-			if configs.CloneDepth == "" {
-				fail("Checkout failed (%s), error: %v", checkoutArg, err)
-			}
-			log.Warnf("Checkout failed, error: %v\nUnshallow...", err)
-
-			if err := runWithRetry(func() *command.Model {
-				return Git.Fetch("--unshallow")
-			}); err != nil {
-				fail("Fetch failed, error: %v", err)
-			}
-			if err := run(Git.Checkout(checkoutArg)); err != nil {
-				fail("Checkout failed (%s), error: %v", checkoutArg, err)
-			}
+		if err := checkout(checkoutArg); err != nil {
+			fail("Failed, error: %v", err)
 		}
+
 	}
 
 	if configs.UpdateSubmodules == "yes" {
