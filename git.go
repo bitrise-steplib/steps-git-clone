@@ -56,23 +56,23 @@ func resetRepo() error {
 }
 
 func isPR() bool {
-	return configs.PullRequestURI != "" || configs.PullRequestID != "" || configs.PullRequestMergeBranch != ""
+	return config.PRRepositoryCloneURL != "" || config.PRID != "" || config.PRMergeBranch != ""
 }
 
 func getCheckoutArg() string {
 	arg := ""
-	if configs.Commit != "" {
-		arg = configs.Commit
-	} else if configs.Tag != "" {
-		arg = configs.Tag
-	} else if configs.Branch != "" {
-		arg = configs.Branch
+	if config.Commit != "" {
+		arg = config.Commit
+	} else if config.Tag != "" {
+		arg = config.Tag
+	} else if config.Branch != "" {
+		arg = config.Branch
 	}
 	return arg
 }
 
 func getDiffFile() (string, error) {
-	url := fmt.Sprintf("%s/diff.txt?api_token=%s", configs.BuildURL, configs.BuildAPIToken)
+	url := fmt.Sprintf("%s/diff.txt?api_token=%s", config.BuildURL, config.BuildAPIToken)
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
@@ -90,7 +90,7 @@ func getDiffFile() (string, error) {
 		return "", err
 	}
 
-	diffFile, err := ioutil.TempFile("", fmt.Sprintf("%s.diff", configs.PullRequestID))
+	diffFile, err := ioutil.TempFile("", fmt.Sprintf("%s.diff", config.PRID))
 	if err != nil {
 		return "", err
 	}
@@ -111,6 +111,7 @@ func run(c *command.Model) error {
 }
 
 func runForOutput(c *command.Model) (string, error) {
+	// log.Infof(c.PrintableCommandArgs())
 	return c.RunAndReturnTrimmedCombinedOutput()
 }
 
@@ -131,39 +132,40 @@ func runWithRetry(f func() *command.Model) error {
 }
 
 func isFork() bool {
-	return configs.RepositoryURL != configs.PullRequestURI
+	return config.PRRepositoryCloneURL != "" &&
+		config.RepositoryURL != config.PRRepositoryCloneURL
 }
 
 func isPrivate() bool {
-	return strings.HasPrefix(configs.RepositoryURL, "git")
+	return strings.HasPrefix(config.PRRepositoryCloneURL, "git")
 }
 
 func autoMerge() error {
 	if err := runWithRetry(func() *command.Model {
-		if configs.CloneDepth != "" {
-			return Git.Fetch("--depth=" + configs.CloneDepth)
+		if config.CloneDepth != "" {
+			return Git.Fetch("--depth=" + config.CloneDepth)
 		}
 		return Git.Fetch()
 	}); err != nil {
-		fmt.Errorf("Fetch failed, error: %v", err)
+		return fmt.Errorf("Fetch failed, error: %v", err)
 	}
 
-	if configs.PullRequestMergeBranch != "" {
+	if config.PRMergeBranch != "" {
 		if err := runWithRetry(func() *command.Model {
-			return Git.Fetch("origin", configs.PullRequestMergeBranch+":"+
-				strings.TrimSuffix(configs.PullRequestMergeBranch, "/merge"))
+			return Git.Fetch("origin", config.PRMergeBranch+":"+
+				strings.TrimSuffix(config.PRMergeBranch, "/merge"))
 		}); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
-				configs.PullRequestMergeBranch, err)
+				config.PRMergeBranch, err)
 		}
 
-		arg := strings.TrimSuffix(configs.PullRequestMergeBranch, "/merge")
+		arg := strings.TrimSuffix(config.PRMergeBranch, "/merge")
 		if err := run(Git.Checkout(arg)); err != nil {
-			return fmt.Errorf("checkout failed (%s), error: %v", configs.BranchDest, err)
+			return fmt.Errorf("checkout failed (%s), error: %v", config.BranchDest, err)
 		}
 	} else if patch, err := getDiffFile(); err == nil {
-		if err := run(Git.Checkout(configs.BranchDest)); err != nil {
-			return fmt.Errorf("checkout failed (%s), error: %v", configs.BranchDest, err)
+		if err := run(Git.Checkout(config.BranchDest)); err != nil {
+			return fmt.Errorf("checkout failed (%s), error: %v", config.BranchDest, err)
 		}
 		if err := run(Git.Apply(patch)); err != nil {
 			return fmt.Errorf("can't apply patch (%s), error: %v", patch, err)
@@ -176,36 +178,36 @@ func autoMerge() error {
 
 func manualMerge() error {
 	if err := runWithRetry(func() *command.Model {
-		if configs.CloneDepth != "" {
-			return Git.Fetch("--depth=" + configs.CloneDepth)
+		if config.CloneDepth != "" {
+			return Git.Fetch("--depth=" + config.CloneDepth)
 		}
 		return Git.Fetch()
 	}); err != nil {
-		fmt.Errorf("Fetch failed, error: %v", err)
+		return fmt.Errorf("Fetch failed, error: %v", err)
 	}
 
-	if err := run(Git.Checkout(configs.BranchDest)); err != nil {
-		return fmt.Errorf("checkout failed (%s), error: %v", configs.BranchDest, err)
+	if err := run(Git.Checkout(config.BranchDest)); err != nil {
+		return fmt.Errorf("checkout failed (%s), error: %v", config.BranchDest, err)
 	}
 
 	if isFork() {
-		if err := run(Git.RemoteAdd("upstream", configs.PullRequestURI)); err != nil {
-			return fmt.Errorf("couldn't add remote (%s), error: %v", configs.PullRequestURI, err)
+		if err := run(Git.RemoteAdd("upstream", config.PRRepositoryCloneURL)); err != nil {
+			return fmt.Errorf("couldn't add remote (%s), error: %v", config.PRRepositoryCloneURL, err)
 		}
 
 		if err := runWithRetry(func() *command.Model {
-			return Git.Fetch("upstream", configs.Branch)
+			return Git.Fetch("upstream", config.Branch)
 		}); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
-				configs.Branch, err)
+				config.Branch, err)
 		}
 
-		if err := run(Git.Merge("upstream/" + configs.Branch)); err != nil {
-			return fmt.Errorf("merge failed (upstream/%s), error: %v", configs.Branch, err)
+		if err := run(Git.Merge("upstream/" + config.Branch)); err != nil {
+			return fmt.Errorf("merge failed (upstream/%s), error: %v", config.Branch, err)
 		}
 	} else {
-		if err := run(Git.Merge(configs.Commit)); err != nil {
-			return fmt.Errorf("merge failed (%s), error: %v", configs.Commit, err)
+		if err := run(Git.Merge(config.Commit)); err != nil {
+			return fmt.Errorf("merge failed (%s), error: %v", config.Commit, err)
 		}
 	}
 
@@ -214,16 +216,16 @@ func manualMerge() error {
 
 func checkout(arg string) error {
 	if err := runWithRetry(func() *command.Model {
-		if configs.CloneDepth != "" {
-			return Git.Fetch("--depth=" + configs.CloneDepth)
+		if config.CloneDepth != "" {
+			return Git.Fetch("--depth=" + config.CloneDepth)
 		}
 		return Git.Fetch()
 	}); err != nil {
-		fmt.Errorf("Fetch failed, error: %v", err)
+		return fmt.Errorf("Fetch failed, error: %v", err)
 	}
 
 	if err := run(Git.Checkout(arg)); err != nil {
-		if configs.CloneDepth == "" {
+		if config.CloneDepth == "" {
 			return fmt.Errorf("checkout failed (%s), error: %v", checkoutArg, err)
 		}
 		log.Warnf("Checkout failed, error: %v\nUnshallow...", err)

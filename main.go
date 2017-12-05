@@ -15,29 +15,24 @@ const (
 	waitTime   = 5 // seconds
 )
 
-// vars ...
 var (
-	configs     ConfigsModel
+	config Config
+	// Git ...
 	Git         *git.Git
 	checkoutArg string
 )
 
 func initConfig() error {
-	configs = createConfigsModelFromEnvs()
+	config = newConfig()
 	fmt.Println()
-	configs.print()
-	if err := configs.validate(); err != nil {
+	config.print()
+	if err := config.validate(); err != nil {
 		return fmt.Errorf("issue with input: %v", err)
 	}
 	fmt.Println()
-	Git = git.New(configs.CloneIntoDir)
+	Git = git.New(config.CloneIntoDir)
 	checkoutArg = getCheckoutArg()
 	return nil
-}
-
-func fail(format string, v ...interface{}) {
-	log.Errorf(format, v...)
-	os.Exit(1)
 }
 
 func printLog(format, env string) error {
@@ -59,56 +54,56 @@ func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
 	return cmd.Run()
 }
 
-func main() {
+func mainE() error {
 	if err := initConfig(); err != nil {
-		fail("Failed, error: %v", err)
+		return fmt.Errorf("Failed, error: %v", err)
 	}
 
-	originPresent, err := isOriginPresent(configs.CloneIntoDir, configs.RepositoryURL)
+	originPresent, err := isOriginPresent(config.CloneIntoDir, config.RepositoryURL)
 	if err != nil {
-		fail("Can't check if origin is presented, error: %v", err)
+		return fmt.Errorf("Can't check if origin is presented, error: %v", err)
 	}
 
-	if originPresent && configs.ResetRepository == "yes" {
+	if originPresent && config.ResetRepository() {
 		if err := resetRepo(); err != nil {
-			fail("Can't reset repository, error: %v", err)
+			return fmt.Errorf("Can't reset repository, error: %v", err)
 		}
 	}
 
-	if err := os.MkdirAll(configs.CloneIntoDir, 0755); err != nil {
-		fail("Can't create directory (%s), error: %v", configs.CloneIntoDir, err)
+	if err := os.MkdirAll(config.CloneIntoDir, 0700); err != nil {
+		return fmt.Errorf("Can't create directory (%s), error: %v", config.CloneIntoDir, err)
 	}
 
 	if err := run(Git.Init()); err != nil {
-		fail("Can't init repository, error: %v", err)
+		return fmt.Errorf("Can't init repository, error: %v", err)
 	}
 
 	if !originPresent {
-		if err := run(Git.RemoteAdd("origin", configs.RepositoryURL)); err != nil {
-			fail("Can't add remote repository (%s), error: %v", configs.RepositoryURL, err)
+		if err := run(Git.RemoteAdd("origin", config.RepositoryURL)); err != nil {
+			return fmt.Errorf("Can't add remote repository (%s), error: %v", config.RepositoryURL, err)
 		}
 	}
 
 	if isPR() {
-		if configs.ManualMerge != "yes" || isPrivate() {
+		if !config.ManualMerge() || isPrivate() {
 			if err := autoMerge(); err != nil {
-				fail("Failed, error: %v", err)
+				return fmt.Errorf("Failed, error: %v", err)
 			}
 		} else {
 			if err := manualMerge(); err != nil {
-				fail("Failed, error: %v", err)
+				return fmt.Errorf("Failed, error: %v", err)
 			}
 		}
 	} else if checkoutArg != "" {
 		if err := checkout(checkoutArg); err != nil {
-			fail("Failed, error: %v", err)
+			return fmt.Errorf("Failed, error: %v", err)
 		}
 
 	}
 
-	if configs.UpdateSubmodules == "yes" {
+	if config.UpdateSubmodules() {
 		if err := run(Git.SubmoduleUpdate()); err != nil {
-			fail("Submodule update failed, error: %v", err)
+			return fmt.Errorf("Submodule update failed, error: %v", err)
 		}
 	}
 
@@ -125,20 +120,28 @@ func main() {
 			`"%ce"`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
 		} {
 			if err := printLog(format, env); err != nil {
-				fail("Git log failed, error: %v", err)
+				return fmt.Errorf("Git log failed, error: %v", err)
 			}
 		}
 
 		count, err := runForOutput(Git.RevList("HEAD", "--count"))
 		if err != nil {
-			fail("Git rev-list command failed, error: %v", err)
+			return fmt.Errorf("Git rev-list command failed, error: %v", err)
 		}
 
 		log.Printf("=> %s\n   value: %s\n", "GIT_CLONE_COMMIT_COUNT", count)
 		if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", count); err != nil {
-			fail("Envman export failed, error: %v", err)
+			return fmt.Errorf("Envman export failed, error: %v", err)
 		}
 	}
 
-	log.Donef("Success")
+	return nil
+}
+
+func main() {
+	if err := mainE(); err != nil {
+		log.Errorf("ERROR: %+v", err)
+		os.Exit(1)
+	}
+	log.Donef("\nSuccess")
 }
