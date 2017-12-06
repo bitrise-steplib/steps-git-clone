@@ -15,27 +15,10 @@ const (
 	waitTime   = 5 // seconds
 )
 
-var (
-	config Config
-	// Git ...
-	Git         *git.Git
-	checkoutArg string
-)
+// Git ...
+var Git *git.Git
 
-func initConfig() error {
-	config = newConfig()
-	fmt.Println()
-	config.print()
-	if err := config.validate(); err != nil {
-		return fmt.Errorf("issue with input: %v", err)
-	}
-	fmt.Println()
-	Git = git.New(config.CloneIntoDir)
-	checkoutArg = getCheckoutArg()
-	return nil
-}
-
-func printLog(format, env string) error {
+func printLogAndExportEnv(format, env string) error {
 	l, err := runForOutput(Git.Log(format))
 	if err != nil {
 		return err
@@ -55,22 +38,30 @@ func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
 }
 
 func mainE() error {
-	if err := initConfig(); err != nil {
-		return fmt.Errorf("Failed, error: %v", err)
+	config, errs := newConfig()
+	if len(errs) > 0 {
+		text := ""
+		for _, err := range errs {
+			text += err.Error() + "\n"
+		}
+		return fmt.Errorf("Invalid inputs:\n%s", text)
 	}
+	config.print()
+	Git = git.New(config.CloneIntoDir)
+	checkoutArg := getCheckoutArg(config.Commit, config.Tag, config.Branch)
 
 	originPresent, err := isOriginPresent(config.CloneIntoDir, config.RepositoryURL)
 	if err != nil {
 		return fmt.Errorf("Can't check if origin is presented, error: %v", err)
 	}
 
-	if originPresent && config.ResetRepository() {
+	if originPresent && config.ResetRepository {
 		if err := resetRepo(); err != nil {
 			return fmt.Errorf("Can't reset repository, error: %v", err)
 		}
 	}
 
-	if err := os.MkdirAll(config.CloneIntoDir, 0700); err != nil {
+	if err := os.MkdirAll(config.CloneIntoDir, 0755); err != nil {
 		return fmt.Errorf("Can't create directory (%s), error: %v", config.CloneIntoDir, err)
 	}
 
@@ -84,24 +75,25 @@ func mainE() error {
 		}
 	}
 
-	if isPR() {
-		if !config.ManualMerge() || isPrivate() {
-			if err := autoMerge(); err != nil {
+	if isPR(config.PRRepositoryCloneURL, config.PRMergeBranch, config.PRID) {
+		if !config.ManualMerge || isPrivate(config.PRRepositoryCloneURL) {
+			if err := autoMerge(config.PRMergeBranch, config.BranchDest, config.BuildURL,
+				config.BuildAPIToken, config.CloneDepth, config.PRID); err != nil {
 				return fmt.Errorf("Failed, error: %v", err)
 			}
 		} else {
-			if err := manualMerge(); err != nil {
+			if err := manualMerge(config.RepositoryURL, config.PRRepositoryCloneURL, config.Branch,
+				config.Commit, config.BranchDest, config.CloneDepth); err != nil {
 				return fmt.Errorf("Failed, error: %v", err)
 			}
 		}
 	} else if checkoutArg != "" {
-		if err := checkout(checkoutArg); err != nil {
+		if err := checkout(checkoutArg, config.CloneDepth); err != nil {
 			return fmt.Errorf("Failed, error: %v", err)
 		}
-
 	}
 
-	if config.UpdateSubmodules() {
+	if config.UpdateSubmodules {
 		if err := run(Git.SubmoduleUpdate()); err != nil {
 			return fmt.Errorf("Submodule update failed, error: %v", err)
 		}
@@ -119,7 +111,7 @@ func mainE() error {
 			`"%cn"`: "GIT_CLONE_COMMIT_COMMITER_NAME",
 			`"%ce"`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
 		} {
-			if err := printLog(format, env); err != nil {
+			if err := printLogAndExportEnv(format, env); err != nil {
 				return fmt.Errorf("Git log failed, error: %v", err)
 			}
 		}

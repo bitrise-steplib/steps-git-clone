@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command"
@@ -55,29 +56,27 @@ func resetRepo() error {
 	return run(Git.SubmoduleForeach(Git.Clean("-x", "-d", "-f")))
 }
 
-func isPR() bool {
-	return config.PRRepositoryCloneURL != "" || config.PRID != "" || config.PRMergeBranch != ""
+func isPR(prRepoURL, prMergeBranch string, prID int) bool {
+	return prRepoURL != "" || prID != 0 || prMergeBranch != ""
 }
 
-func getCheckoutArg() string {
+func getCheckoutArg(commit, tag, branch string) string {
 	arg := ""
-	if config.Commit != "" {
-		arg = config.Commit
-	} else if config.Tag != "" {
-		arg = config.Tag
-	} else if config.Branch != "" {
-		arg = config.Branch
+	if commit != "" {
+		arg = commit
+	} else if tag != "" {
+		arg = tag
+	} else if branch != "" {
+		arg = branch
 	}
 	return arg
 }
 
-func getDiffFile() (string, error) {
-	url := fmt.Sprintf("%s/diff.txt?api_token=%s", config.BuildURL, config.BuildAPIToken)
+func getDiffFile(buildURL, apiToken string, prID int) (string, error) {
+	url := fmt.Sprintf("%s/diff.txt?api_token=%s", buildURL, apiToken)
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
-	} else if resp.StatusCode != 200 {
-		return "", fmt.Errorf("Can't download diff file, HTTP status code: %d", resp.StatusCode)
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
@@ -85,12 +84,16 @@ func getDiffFile() (string, error) {
 		}
 	}()
 
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("Can't download diff file, HTTP status code: %d", resp.StatusCode)
+	}
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
 
-	diffFile, err := ioutil.TempFile("", fmt.Sprintf("%s.diff", config.PRID))
+	diffFile, err := ioutil.TempFile("", fmt.Sprintf("%d.diff", prID))
 	if err != nil {
 		return "", err
 	}
@@ -111,7 +114,6 @@ func run(c *command.Model) error {
 }
 
 func runForOutput(c *command.Model) (string, error) {
-	// log.Infof(c.PrintableCommandArgs())
 	return c.RunAndReturnTrimmedCombinedOutput()
 }
 
@@ -131,41 +133,40 @@ func runWithRetry(f func() *command.Model) error {
 	})
 }
 
-func isFork() bool {
-	return config.PRRepositoryCloneURL != "" &&
-		config.RepositoryURL != config.PRRepositoryCloneURL
+func isFork(repoURL, prRepoURL string) bool {
+	return prRepoURL != "" && repoURL != prRepoURL
 }
 
-func isPrivate() bool {
-	return strings.HasPrefix(config.PRRepositoryCloneURL, "git")
+func isPrivate(repoURL string) bool {
+	return strings.HasPrefix(repoURL, "git")
 }
 
-func autoMerge() error {
+func autoMerge(mergeBranch, branchDest, buildURL, apiToken string, depth, id int) error {
 	if err := runWithRetry(func() *command.Model {
-		if config.CloneDepth != "" {
-			return Git.Fetch("--depth=" + config.CloneDepth)
+		if depth != 0 {
+			return Git.Fetch("--depth=" + strconv.Itoa(depth))
 		}
 		return Git.Fetch()
 	}); err != nil {
 		return fmt.Errorf("Fetch failed, error: %v", err)
 	}
 
-	if config.PRMergeBranch != "" {
+	if mergeBranch != "" {
 		if err := runWithRetry(func() *command.Model {
-			return Git.Fetch("origin", config.PRMergeBranch+":"+
-				strings.TrimSuffix(config.PRMergeBranch, "/merge"))
+			return Git.Fetch("origin", mergeBranch+":"+
+				strings.TrimSuffix(mergeBranch, "/merge"))
 		}); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
-				config.PRMergeBranch, err)
+				mergeBranch, err)
 		}
 
-		arg := strings.TrimSuffix(config.PRMergeBranch, "/merge")
+		arg := strings.TrimSuffix(mergeBranch, "/merge")
 		if err := run(Git.Checkout(arg)); err != nil {
-			return fmt.Errorf("checkout failed (%s), error: %v", config.BranchDest, err)
+			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 		}
-	} else if patch, err := getDiffFile(); err == nil {
-		if err := run(Git.Checkout(config.BranchDest)); err != nil {
-			return fmt.Errorf("checkout failed (%s), error: %v", config.BranchDest, err)
+	} else if patch, err := getDiffFile(buildURL, apiToken, id); err == nil {
+		if err := run(Git.Checkout(branchDest)); err != nil {
+			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 		}
 		if err := run(Git.Apply(patch)); err != nil {
 			return fmt.Errorf("can't apply patch (%s), error: %v", patch, err)
@@ -176,48 +177,48 @@ func autoMerge() error {
 	return nil
 }
 
-func manualMerge() error {
+func manualMerge(repoURL, prRepoURL, branch, commit, branchDest string, depth int) error {
 	if err := runWithRetry(func() *command.Model {
-		if config.CloneDepth != "" {
-			return Git.Fetch("--depth=" + config.CloneDepth)
+		if depth != 0 {
+			return Git.Fetch("--depth=" + strconv.Itoa(depth))
 		}
 		return Git.Fetch()
 	}); err != nil {
 		return fmt.Errorf("Fetch failed, error: %v", err)
 	}
 
-	if err := run(Git.Checkout(config.BranchDest)); err != nil {
-		return fmt.Errorf("checkout failed (%s), error: %v", config.BranchDest, err)
+	if err := run(Git.Checkout(branchDest)); err != nil {
+		return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 	}
 
-	if isFork() {
-		if err := run(Git.RemoteAdd("upstream", config.PRRepositoryCloneURL)); err != nil {
-			return fmt.Errorf("couldn't add remote (%s), error: %v", config.PRRepositoryCloneURL, err)
+	if isFork(repoURL, prRepoURL) {
+		if err := run(Git.RemoteAdd("fork", prRepoURL)); err != nil {
+			return fmt.Errorf("couldn't add remote (%s), error: %v", prRepoURL, err)
 		}
 
 		if err := runWithRetry(func() *command.Model {
-			return Git.Fetch("upstream", config.Branch)
+			return Git.Fetch("fork", branch)
 		}); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
-				config.Branch, err)
+				branch, err)
 		}
 
-		if err := run(Git.Merge("upstream/" + config.Branch)); err != nil {
-			return fmt.Errorf("merge failed (upstream/%s), error: %v", config.Branch, err)
+		if err := run(Git.Merge("fork/" + branch)); err != nil {
+			return fmt.Errorf("merge failed (fork/%s), error: %v", branch, err)
 		}
 	} else {
-		if err := run(Git.Merge(config.Commit)); err != nil {
-			return fmt.Errorf("merge failed (%s), error: %v", config.Commit, err)
+		if err := run(Git.Merge(commit)); err != nil {
+			return fmt.Errorf("merge failed (%s), error: %v", commit, err)
 		}
 	}
 
 	return nil
 }
 
-func checkout(arg string) error {
+func checkout(arg string, depth int) error {
 	if err := runWithRetry(func() *command.Model {
-		if config.CloneDepth != "" {
-			return Git.Fetch("--depth=" + config.CloneDepth)
+		if depth != 0 {
+			return Git.Fetch("--depth=" + strconv.Itoa(depth))
 		}
 		return Git.Fetch()
 	}); err != nil {
@@ -225,8 +226,8 @@ func checkout(arg string) error {
 	}
 
 	if err := run(Git.Checkout(arg)); err != nil {
-		if config.CloneDepth == "" {
-			return fmt.Errorf("checkout failed (%s), error: %v", checkoutArg, err)
+		if depth == 0 {
+			return fmt.Errorf("checkout failed (%s), error: %v", arg, err)
 		}
 		log.Warnf("Checkout failed, error: %v\nUnshallow...", err)
 
@@ -235,8 +236,8 @@ func checkout(arg string) error {
 		}); err != nil {
 			return fmt.Errorf("fetch failed, error: %v", err)
 		}
-		if err := run(Git.Checkout(checkoutArg)); err != nil {
-			return fmt.Errorf("checkout failed (%s), error: %v", checkoutArg, err)
+		if err := run(Git.Checkout(arg)); err != nil {
+			return fmt.Errorf("checkout failed (%s), error: %v", arg, err)
 		}
 	}
 
