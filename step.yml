@@ -64,14 +64,14 @@ inputs:
     opts:
       category: Clone Config
       title: "Merged pull request branch"
-  - reset_repository: "No"
+  - reset_repository: "no"
     opts:
       category: Debug
       summary: Reset repository contents with git reset --hard HEAD and git clean -f after repository updated
       title: Reset repository
       value_options:
-      - "No"
-      - "Yes"
+      - "no"
+      - "yes"
   - clone_depth:
     opts:
       category: Debug

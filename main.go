@@ -1,98 +1,33 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/retry"
-	"github.com/bitrise-io/steps-git-clone/gitutil"
 )
 
 const (
 	retryCount = 2
-	waitTime   = 5 //seconds
+	waitTime   = 5 // seconds
 )
 
-// ConfigsModel ...
-type ConfigsModel struct {
-	CloneIntoDir  string
-	RepositoryURL string
-	Commit        string
-	Tag           string
-	Branch        string
-	CloneDepth    string
+// Git ...
+var Git *git.Git
 
-	PullRequestURI         string
-	PullRequestID          string
-	BranchDest             string
-	PullRequestMergeBranch string
-	ResetRepository        string
-
-	BuildURL         string
-	BuildAPIToken    string
-	UpdateSubmodules string
-	ManualMerge      string
-}
-
-func createConfigsModelFromEnvs() ConfigsModel {
-	return ConfigsModel{
-		CloneIntoDir:  os.Getenv("clone_into_dir"),
-		RepositoryURL: os.Getenv("repository_url"),
-		Commit:        os.Getenv("commit"),
-		Tag:           os.Getenv("tag"),
-		Branch:        os.Getenv("branch"),
-		CloneDepth:    os.Getenv("clone_depth"),
-
-		PullRequestURI:         os.Getenv("pull_request_repository_url"),
-		PullRequestID:          os.Getenv("pull_request_id"),
-		BranchDest:             os.Getenv("branch_dest"),
-		PullRequestMergeBranch: os.Getenv("pull_request_merge_branch"),
-		ResetRepository:        os.Getenv("reset_repository"),
-		ManualMerge:            os.Getenv("manual_merge"),
-
-		BuildURL:         os.Getenv("build_url"),
-		BuildAPIToken:    os.Getenv("build_api_token"),
-		UpdateSubmodules: os.Getenv("update_submodules"),
-	}
-}
-
-func (configs ConfigsModel) print() {
-	log.Infof("Git Clone Configs:")
-	log.Printf("- CloneIntoDir: %s", configs.CloneIntoDir)
-	log.Printf("- RepositoryURL: %s", configs.RepositoryURL)
-	log.Printf("- UpdateSubmodules: %s", configs.UpdateSubmodules)
-
-	log.Infof("Git Checkout Configs:")
-	log.Printf("- Commit: %s", configs.Commit)
-	log.Printf("- Tag: %s", configs.Tag)
-	log.Printf("- Branch: %s", configs.Branch)
-	log.Printf("- CloneDepth: %s", configs.CloneDepth)
-
-	log.Infof("Git Pull Request Configs:")
-	log.Printf("- PullRequestURI: %s", configs.PullRequestURI)
-	log.Printf("- PullRequestID: %s", configs.PullRequestID)
-	log.Printf("- BranchDest: %s", configs.BranchDest)
-	log.Printf("- PullRequestMergeBranch: %s", configs.PullRequestMergeBranch)
-	log.Printf("- ResetRepository: %s", configs.ResetRepository)
-	log.Printf("- ManualMerge: %s", configs.ManualMerge)
-
-	log.Infof("Bitrise Build Configs:")
-	log.Printf("- BuildURL: %s", configs.BuildURL)
-	log.Printf("- BuildAPIToken: %s", configs.BuildAPIToken)
-}
-
-func (configs ConfigsModel) validate() error {
-	if configs.CloneIntoDir == "" {
-		return errors.New("no CloneIntoDir parameter specified")
-	}
-	if configs.RepositoryURL == "" {
-		return errors.New("no RepositoryURL parameter specified")
+func printLogAndExportEnv(format, env string) error {
+	l, err := runForOutput(Git.Log(format))
+	if err != nil {
+		return err
 	}
 
+	log.Printf("=> %s\n   value: %s\n", env, l)
+	if err := exportEnvironmentWithEnvman(env, l); err != nil {
+		return fmt.Errorf("envman export failed, error: %v", err)
+	}
 	return nil
 }
 
@@ -102,308 +37,103 @@ func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
 	return cmd.Run()
 }
 
-// -----------------------
-// --- Main
-// -----------------------
-func main() {
-	//
-	// Validate options
-	configs := createConfigsModelFromEnvs()
-
-	fmt.Println()
-	configs.print()
-
-	if err := configs.validate(); err != nil {
-		log.Errorf("Issue with input: %s", err)
-		os.Exit(1)
+func mainE() error {
+	config, errs := newConfig()
+	if len(errs) > 0 {
+		text := ""
+		for _, err := range errs {
+			text += err.Error() + "\n"
+		}
+		return fmt.Errorf("Invalid inputs:\n%s", text)
 	}
-	fmt.Println()
-	// ---
+	config.print()
+	Git = git.New(config.CloneIntoDir)
+	checkoutArg := getCheckoutArg(config.Commit, config.Tag, config.Branch)
 
-	// git
-	log.Infof("Git clone repository")
-
-	git, err := gitutil.NewHelper(configs.CloneIntoDir, configs.RepositoryURL, configs.ResetRepository == "Yes", configs.ManualMerge == "yes")
+	originPresent, err := isOriginPresent(config.CloneIntoDir, config.RepositoryURL)
 	if err != nil {
-		log.Errorf("Failed to create git helper, error: %s", err)
-		os.Exit(1)
+		return fmt.Errorf("Can't check if origin is presented, error: %v", err)
 	}
 
-	if err := git.Init(); err != nil {
-		log.Errorf("Failed, error: %s", err)
-		os.Exit(1)
-	}
-
-	git.ConfigureCheckout(configs.PullRequestID, configs.PullRequestURI, configs.PullRequestMergeBranch, configs.Commit, configs.Tag, configs.Branch, configs.BranchDest, configs.CloneDepth, configs.BuildURL, configs.BuildAPIToken)
-
-	if !git.IsOriginPresented() {
-		if err := git.RemoteAdd(); err != nil {
-			log.Errorf("Failed, error: %s", err)
-			os.Exit(1)
+	if originPresent && config.ResetRepository {
+		if err := resetRepo(); err != nil {
+			return fmt.Errorf("Can't reset repository, error: %v", err)
 		}
 	}
 
-	if err := fetchWithRetry(git); err != nil {
-		if configs.PullRequestID != "" && configs.PullRequestMergeBranch != "" {
-			log.Warnf("Failed to fetch pull request, this happens most likely because the pull request is closed or has conflict.")
-		}
-		log.Errorf("Failed, error: %s", err)
+	if err := os.MkdirAll(config.CloneIntoDir, 0755); err != nil {
+		return fmt.Errorf("Can't create directory (%s), error: %v", config.CloneIntoDir, err)
+	}
 
-		if git.ManualMerge && configs.PullRequestID != "" && configs.PullRequestMergeBranch != "" {
-			log.Warnf("Failed to fetch repository (%s), set manual_merge to 'no'", configs.PullRequestURI)
-			fmt.Println()
+	if err := run(Git.Init()); err != nil {
+		return fmt.Errorf("Can't init repository, error: %v", err)
+	}
 
-			git.ManualMerge = false
-			if err := git.RemoteRemove("origin"); err != nil {
-				log.Errorf("Failed, error: %s", err)
-				os.Exit(1)
-			}
-
-			git.ConfigureCheckout(configs.PullRequestID, configs.PullRequestURI, configs.PullRequestMergeBranch, configs.Commit, configs.Tag, configs.Branch, configs.BranchDest, configs.CloneDepth, configs.BuildURL, configs.BuildAPIToken)
-			git.SetRemoteURI(configs.RepositoryURL)
-			if err := git.RemoteAdd(); err != nil {
-				log.Errorf("Failed, error: %s", err)
-				os.Exit(1)
-			}
-			if err := fetchWithRetry(git); err != nil {
-				log.Errorf("Failed, error: %s", err)
-				os.Exit(1)
-			}
-		} else {
-			os.Exit(1)
+	if !originPresent {
+		if err := run(Git.RemoteAdd("origin", config.RepositoryURL)); err != nil {
+			return fmt.Errorf("Can't add remote repository (%s), error: %v", config.RepositoryURL, err)
 		}
 	}
 
-	if git.ShouldCheckout() {
-		if git.ShouldCheckoutTag() {
-			if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
-				if attempt > 0 {
-					log.Warnf("Retrying...")
-				}
-
-				fetchErr := git.FetchTags()
-				if fetchErr != nil {
-					log.Warnf("Attempt %d failed:", attempt+1)
-					fmt.Println(fetchErr.Error())
-				}
-
-				return fetchErr
-			}); err != nil {
-				log.Errorf("Failed, error: %s", err)
-				os.Exit(1)
+	if isPR(config.PRRepositoryCloneURL, config.PRMergeBranch, config.PRID) {
+		if !config.ManualMerge || isPrivate(config.PRRepositoryCloneURL) {
+			if err := autoMerge(config.PRMergeBranch, config.BranchDest, config.BuildURL,
+				config.BuildAPIToken, config.CloneDepth, config.PRID); err != nil {
+				return fmt.Errorf("Failed, error: %v", err)
 			}
-		}
-
-		if err := retry.Times(1).Wait(waitTime).Try(func(attempt uint) error {
-			if attempt > 0 {
-				log.Warnf("Retry with fetching tags...")
-				fetchErr := git.FetchTags()
-				if fetchErr != nil {
-					log.Warnf("Fetch tags attempt failed")
-					fmt.Println(fetchErr.Error())
-				}
-			}
-			checkoutErr := git.Checkout()
-			if checkoutErr != nil {
-				log.Errorf("Checkout failed, error: %s", checkoutErr)
-			}
-			return checkoutErr
-		}); err != nil {
-			if !git.ShouldTryFetchUnshallow() {
-				log.Errorf("Failed, error: %s", err)
-				os.Exit(1)
-			}
-
-			log.Warnf("Failed, error: %s", err)
-			log.Warnf("Unshallow...")
-
-			if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
-				if attempt > 0 {
-					log.Warnf("Retrying...")
-				}
-
-				fetchShallowErr := git.FetchUnshallow()
-				if fetchShallowErr != nil {
-					log.Warnf("Attempt %d failed:", attempt+1)
-					fmt.Println(fetchShallowErr.Error())
-				}
-
-				return fetchShallowErr
-			}); err != nil {
-				log.Errorf("Failed, error: %s", err)
-				os.Exit(1)
-			}
-
-			if err := git.Checkout(); err != nil {
-				log.Errorf("Failed, error: %s", err)
-				os.Exit(1)
-			}
-		}
-
-		if git.ShouldMergePullRequest() {
-			if err := retry.Times(3).Wait(waitTime).Try(func(attempt uint) error {
-				if attempt > 0 {
-					log.Warnf("Retrying...")
-				}
-
-				// the merge will be run max 4 times
-				// if 2. run fails, try to run normal merge instead of using the diff file
-				// if diff file does not exist, this flag has no effect to the merge
-				allowApplyDiffFile := (attempt < 2)
-				gitMergeErr := git.MergePullRequest(allowApplyDiffFile)
-				if gitMergeErr != nil {
-					log.Warnf("Attempt %d failed:", attempt+1)
-					fmt.Println(gitMergeErr.Error())
-				}
-
-				return gitMergeErr
-			}); err != nil {
-				log.Errorf("Failed, error: %s", err)
-				os.Exit(1)
-			}
-		}
-
-		if configs.UpdateSubmodules != "no" {
-			if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
-				if attempt > 0 {
-					log.Warnf("Retrying...")
-				}
-
-				submoduleErr := git.SubmoduleUpdate()
-				if submoduleErr != nil {
-					log.Warnf("Attempt %d failed:", attempt+1)
-					fmt.Println(submoduleErr.Error())
-				}
-
-				return submoduleErr
-			}); err != nil {
-				log.Errorf("Failed, error: %s", err)
-				os.Exit(1)
-			}
-		}
-
-		log.Infof("Exporting git logs")
-
-		if commitHash, err := git.LogCommitHash(); err != nil {
-			log.Errorf("Git log failed, error: %s", err)
-			os.Exit(1)
 		} else {
-			log.Printf("=> GIT_CLONE_COMMIT_HASH")
-			log.Printf("   value: %s", commitHash)
-			fmt.Println()
-
-			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_HASH", commitHash); err != nil {
-				log.Warnf("envman export failed, error: %s", err)
+			if err := manualMerge(config.RepositoryURL, config.PRRepositoryCloneURL, config.Branch,
+				config.Commit, config.BranchDest, config.CloneDepth); err != nil {
+				return fmt.Errorf("Failed, error: %v", err)
 			}
 		}
-
-		if commitMessageSubject, err := git.LogCommitMessageSubject(); err != nil {
-			log.Errorf("Git log failed, error: %s", err)
-			os.Exit(1)
-		} else {
-			log.Printf("=> GIT_CLONE_COMMIT_MESSAGE_SUBJECT")
-			log.Printf("   value: %s", commitMessageSubject)
-			fmt.Println()
-
-			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_MESSAGE_SUBJECT", commitMessageSubject); err != nil {
-				log.Warnf("envman export failed, error: %s", err)
-			}
-		}
-
-		if commitMessageBody, err := git.LogCommitMessageBody(); err != nil {
-			log.Errorf("Git log failed, error: %s", err)
-			os.Exit(1)
-		} else {
-			log.Printf("=> GIT_CLONE_COMMIT_MESSAGE_BODY")
-			log.Printf("   value: %s", commitMessageBody)
-			fmt.Println()
-
-			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_MESSAGE_BODY", commitMessageBody); err != nil {
-				log.Warnf("envman export failed, error: %s", err)
-			}
-		}
-
-		if commitCount, err := git.LogCommitCount(); err != nil {
-			log.Errorf("Git rev-list failed, error: %s", err)
-			os.Exit(1)
-		} else {
-			log.Printf("=> GIT_CLONE_COMMIT_COUNT")
-			log.Printf("   value: %s", commitCount)
-			fmt.Println()
-
-			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", commitCount); err != nil {
-				log.Warnf("envman export failed, error: %s", err)
-			}
-		}
-
-		if commitAuthorName, err := git.LogAuthorName(); err != nil {
-			log.Errorf("Git log failed, error: %s", err)
-			os.Exit(1)
-		} else {
-			log.Printf("=> GIT_CLONE_COMMIT_AUTHOR_NAME")
-			log.Printf("   value: %s", commitAuthorName)
-			fmt.Println()
-
-			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_AUTHOR_NAME", commitAuthorName); err != nil {
-				log.Warnf("envman export failed, error: %s", err)
-			}
-		}
-
-		if commitAuthorEmail, err := git.LogAuthorEmail(); err != nil {
-			log.Errorf("Git log failed, error: %s", err)
-			os.Exit(1)
-		} else {
-			log.Printf("=> GIT_CLONE_COMMIT_AUTHOR_EMAIL")
-			log.Printf("   value: %s", commitAuthorEmail)
-			fmt.Println()
-
-			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_AUTHOR_EMAIL", commitAuthorEmail); err != nil {
-				log.Warnf("envman export failed, error: %s", err)
-			}
-		}
-
-		if commitCommiterName, err := git.LogCommiterName(); err != nil {
-			log.Errorf("Git log failed, error: %s", err)
-			os.Exit(1)
-		} else {
-			log.Printf("=> GIT_CLONE_COMMIT_COMMITER_NAME")
-			log.Printf("   value: %s", commitCommiterName)
-			fmt.Println()
-
-			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COMMITER_NAME", commitCommiterName); err != nil {
-				log.Warnf("envman export failed, error: %s", err)
-			}
-		}
-
-		if commitCommiterEmail, err := git.LogCommiterEmail(); err != nil {
-			log.Errorf("Git log failed, error: %s", err)
-			os.Exit(1)
-		} else {
-			log.Printf("=> GIT_CLONE_COMMIT_COMMITER_EMAIL")
-			log.Printf("   value: %s", commitCommiterEmail)
-			fmt.Println()
-
-			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COMMITER_EMAIL", commitCommiterEmail); err != nil {
-				log.Warnf("envman export failed, error: %s", err)
-			}
+	} else if checkoutArg != "" {
+		if err := checkout(checkoutArg, config.CloneDepth); err != nil {
+			return fmt.Errorf("Failed, error: %v", err)
 		}
 	}
 
-	log.Donef("Success")
+	if config.UpdateSubmodules {
+		if err := run(Git.SubmoduleUpdate()); err != nil {
+			return fmt.Errorf("Submodule update failed, error: %v", err)
+		}
+	}
+
+	if checkoutArg != "" {
+		log.Infof("\nExporting git logs\n")
+
+		for format, env := range map[string]string{
+			`"%H"`:  "GIT_CLONE_COMMIT_HASH",
+			`"%s"`:  "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
+			`"%b"`:  "GIT_CLONE_COMMIT_MESSAGE_BODY",
+			`"%an"`: "GIT_CLONE_COMMIT_AUTHOR_NAME",
+			`"%ae"`: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
+			`"%cn"`: "GIT_CLONE_COMMIT_COMMITER_NAME",
+			`"%ce"`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
+		} {
+			if err := printLogAndExportEnv(format, env); err != nil {
+				return fmt.Errorf("Git log failed, error: %v", err)
+			}
+		}
+
+		count, err := runForOutput(Git.RevList("HEAD", "--count"))
+		if err != nil {
+			return fmt.Errorf("Git rev-list command failed, error: %v", err)
+		}
+
+		log.Printf("=> %s\n   value: %s\n", "GIT_CLONE_COMMIT_COUNT", count)
+		if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", count); err != nil {
+			return fmt.Errorf("Envman export failed, error: %v", err)
+		}
+	}
+
+	return nil
 }
 
-func fetchWithRetry(git gitutil.Helper) error {
-	return retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
-		if attempt > 0 {
-			log.Warnf("Retrying...")
-		}
-
-		err := git.Fetch()
-		if err != nil {
-			log.Warnf("Attempt %d failed:", attempt+1)
-			fmt.Println(err.Error())
-		}
-
-		return err
-	})
+func main() {
+	if err := mainE(); err != nil {
+		log.Errorf("ERROR: %+v", err)
+		os.Exit(1)
+	}
+	log.Donef("\nSuccess")
 }
