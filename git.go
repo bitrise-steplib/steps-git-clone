@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -20,24 +21,22 @@ func isOriginPresent(dir, repoURL string) (bool, error) {
 		return false, err
 	}
 
-	if file, err := os.Stat(absDir); os.IsNotExist(err) {
-		return false, nil
-	} else if err != nil {
+	gitDir := filepath.Join(absDir, ".git")
+	if exist, err := pathutil.IsDirExists(gitDir); err != nil {
 		return false, err
-	} else if !file.IsDir() {
-		return false, fmt.Errorf("file (%s) exists, but it's not a directory", dir)
+	} else if exist {
+		remotes, err := runForOutput(Git.RemoteList())
+		if err != nil {
+			return false, err
+		}
+
+		if !strings.Contains(remotes, repoURL) {
+			return false, fmt.Errorf(".git folder exists in the directory (%s), but using a different remote", dir)
+		}
+		return true, nil
 	}
 
-	remotes, err := runForOutput(Git.RemoteList())
-	if err != nil {
-		return false, err
-	}
-
-	if !strings.Contains(remotes, repoURL) {
-		return false, fmt.Errorf(".git folder exists in the directory (%s), but using a different remote", dir)
-	}
-
-	return true, nil
+	return false, nil
 }
 
 func resetRepo() error {

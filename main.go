@@ -16,7 +16,7 @@ const (
 )
 
 // Git ...
-var Git *git.Git
+var Git git.Git
 
 func printLogAndExportEnv(format, env string) error {
 	l, err := runForOutput(Git.Log(format))
@@ -47,7 +47,11 @@ func mainE() error {
 		return fmt.Errorf("Invalid inputs:\n%s", text)
 	}
 	config.print()
-	Git = git.New(config.CloneIntoDir)
+	Git, err := git.New(config.CloneIntoDir)
+	if err != nil {
+		return fmt.Errorf("Can't create Git project, error: %v", err)
+	}
+
 	checkoutArg := getCheckoutArg(config.Commit, config.Tag, config.Branch)
 
 	originPresent, err := isOriginPresent(config.CloneIntoDir, config.RepositoryURL)
@@ -59,10 +63,6 @@ func mainE() error {
 		if err := resetRepo(); err != nil {
 			return fmt.Errorf("Can't reset repository, error: %v", err)
 		}
-	}
-
-	if err := os.MkdirAll(config.CloneIntoDir, 0755); err != nil {
-		return fmt.Errorf("Can't create directory (%s), error: %v", config.CloneIntoDir, err)
 	}
 
 	if err := run(Git.Init()); err != nil {
