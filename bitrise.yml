@@ -35,6 +35,9 @@ workflows:
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
             echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
             echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: repo-dir
 
   ci:
     envs:
@@ -83,6 +86,9 @@ workflows:
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
             echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
             echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
 
   _test_no_checkout:
     before_run:
@@ -112,6 +118,9 @@ workflows:
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
             echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
             echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
 
   _test_checkout_commit:
     before_run:
@@ -141,6 +150,9 @@ workflows:
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
             echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
             echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
 
   _test_checkout_tag:
     before_run:
@@ -170,6 +182,9 @@ workflows:
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
             echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
             echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
 
   _test_checkout_branch:
     before_run:
@@ -199,6 +214,9 @@ workflows:
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
             echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
             echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
 
   _test_checkout_pull_request_id:
     before_run:
@@ -228,6 +246,9 @@ workflows:
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
             echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
             echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
 
   _test_unshallow:
     before_run:
@@ -257,6 +278,9 @@ workflows:
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
             echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
             echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
 
   go-tests:
     before_run:
@@ -306,11 +330,14 @@ workflows:
 
   _create_tmpdir:
     steps:
+    - script:
+        inputs:
+        - content: envman add --key STEP_TMPDIR --value $(mktemp -d -t step-git-clone)
     - change-workdir:
         title: Change directory to a temporary directory
         is_always_run: true
         inputs:
-        - path: $(mktemp -d -t step-git-clone)
+        - path: $STEP_TMPDIR
 
   _install-test-tools:
     steps:
