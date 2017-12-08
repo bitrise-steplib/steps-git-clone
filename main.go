@@ -76,7 +76,7 @@ func mainE() error {
 	}
 
 	if isPR(config.PRRepositoryCloneURL, config.PRMergeBranch, config.PRID) {
-		if !config.ManualMerge || isPrivate(config.PRRepositoryCloneURL) {
+		if !config.ManualMerge || isPrivate(config.PRRepositoryCloneURL) && isFork(config.RepositoryURL, config.PRRepositoryCloneURL) {
 			if err := autoMerge(config.PRMergeBranch, config.BranchDest, config.BuildURL,
 				config.BuildAPIToken, config.CloneDepth, config.PRID); err != nil {
 				return fmt.Errorf("Failed, error: %v", err)
