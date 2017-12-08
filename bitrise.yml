@@ -38,7 +38,7 @@ workflows:
 
   ci:
     envs:
-    - CLONE_INTO_DIR: ./_tmp
+    - CLONE_INTO_DIR: .
     - GIT_REPOSITORY_URL: https://github.com/bitrise-samples/git-clone-test.git
     before_run:
     - go-tests
@@ -306,14 +306,11 @@ workflows:
 
   _create_tmpdir:
     steps:
-    - script:
-        inputs:
-        - content: envman add --key STEP_TMPDIR --value $(mktemp -d -t step-git-clone)
     - change-workdir:
         title: Change directory to a temporary directory
         is_always_run: true
         inputs:
-        - path: ${STEP_TMPDIR}
+        - path: $(mktemp -d -t step-git-clone)
 
   _install-test-tools:
     steps:
