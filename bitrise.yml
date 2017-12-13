@@ -234,6 +234,7 @@ workflows:
         - tag: ""
         - branch: ""
         - clone_depth: ""
+        - manual_merge: "no"
     - script:
         inputs:
         - content: |-

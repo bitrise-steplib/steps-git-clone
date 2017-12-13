@@ -19,14 +19,14 @@ const (
 var Git git.Git
 
 func printLogAndExportEnv(format, env string) error {
-	l, err := runForOutput(Git.Log(format))
+	l, err := output(Git.Log(format))
 	if err != nil {
 		return err
 	}
 
 	log.Printf("=> %s\n   value: %s\n", env, l)
 	if err := exportEnvironmentWithEnvman(env, l); err != nil {
-		return fmt.Errorf("envman export failed, error: %v", err)
+		return fmt.Errorf("envman export, error: %v", err)
 	}
 	return nil
 }
@@ -44,58 +44,68 @@ func mainE() error {
 		for _, err := range errs {
 			text += err.Error() + "\n"
 		}
-		return fmt.Errorf("Invalid inputs:\n%s", text)
+		return fmt.Errorf("invalid inputs:\n%s", text)
 	}
 	config.print()
 	Git, err := git.New(config.CloneIntoDir)
 	if err != nil {
-		return fmt.Errorf("Can't create Git project, error: %v", err)
+		return fmt.Errorf("create Git project, error: %v", err)
 	}
 
 	checkoutArg := getCheckoutArg(config.Commit, config.Tag, config.Branch)
 
 	originPresent, err := isOriginPresent(config.CloneIntoDir, config.RepositoryURL)
 	if err != nil {
-		return fmt.Errorf("Can't check if origin is presented, error: %v", err)
+		return fmt.Errorf("check if origin is presented, error: %v", err)
 	}
 
 	if originPresent && config.ResetRepository {
 		if err := resetRepo(); err != nil {
-			return fmt.Errorf("Can't reset repository, error: %v", err)
+			return fmt.Errorf("reset repository, error: %v", err)
 		}
 	}
 
 	if err := run(Git.Init()); err != nil {
-		return fmt.Errorf("Can't init repository, error: %v", err)
+		return fmt.Errorf("init repository, error: %v", err)
 	}
 
 	if !originPresent {
 		if err := run(Git.RemoteAdd("origin", config.RepositoryURL)); err != nil {
-			return fmt.Errorf("Can't add remote repository (%s), error: %v", config.RepositoryURL, err)
+			return fmt.Errorf("add remote repository (%s), error: %v", config.RepositoryURL, err)
 		}
 	}
 
-	if isPR(config.PRRepositoryCloneURL, config.PRMergeBranch, config.PRID) {
+	isPR := config.PRRepositoryCloneURL != "" ||
+		config.PRMergeBranch != "" ||
+		config.PRID != 0
+
+	if isPR {
 		if !config.ManualMerge || isPrivate(config.PRRepositoryCloneURL) && isFork(config.RepositoryURL, config.PRRepositoryCloneURL) {
 			if err := autoMerge(config.PRMergeBranch, config.BranchDest, config.BuildURL,
 				config.BuildAPIToken, config.CloneDepth, config.PRID); err != nil {
-				return fmt.Errorf("Failed, error: %v", err)
+				return fmt.Errorf("auto merge, error: %v", err)
 			}
 		} else {
 			if err := manualMerge(config.RepositoryURL, config.PRRepositoryCloneURL, config.Branch,
 				config.Commit, config.BranchDest, config.CloneDepth); err != nil {
-				return fmt.Errorf("Failed, error: %v", err)
+				return fmt.Errorf("manual merge, error: %v", err)
 			}
 		}
 	} else if checkoutArg != "" {
 		if err := checkout(checkoutArg, config.CloneDepth); err != nil {
-			return fmt.Errorf("Failed, error: %v", err)
+			return fmt.Errorf("checkout (%s): %v", checkoutArg, err)
 		}
 	}
 
 	if config.UpdateSubmodules {
 		if err := run(Git.SubmoduleUpdate()); err != nil {
-			return fmt.Errorf("Submodule update failed, error: %v", err)
+			return fmt.Errorf("submodule update: %v", err)
+		}
+	}
+
+	if isPR {
+		if err := run(Git.Checkout("--detach")); err != nil {
+			return fmt.Errorf("detach head: %v", err)
 		}
 	}
 
@@ -116,14 +126,14 @@ func mainE() error {
 			}
 		}
 
-		count, err := runForOutput(Git.RevList("HEAD", "--count"))
+		count, err := output(Git.RevList("HEAD", "--count"))
 		if err != nil {
-			return fmt.Errorf("Git rev-list command failed, error: %v", err)
+			return fmt.Errorf("get rev-list, error: %v", err)
 		}
 
 		log.Printf("=> %s\n   value: %s\n", "GIT_CLONE_COMMIT_COUNT", count)
 		if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", count); err != nil {
-			return fmt.Errorf("Envman export failed, error: %v", err)
+			return fmt.Errorf("envman export, error: %v", err)
 		}
 	}
 
@@ -132,7 +142,7 @@ func mainE() error {
 
 func main() {
 	if err := mainE(); err != nil {
-		log.Errorf("ERROR: %+v", err)
+		log.Errorf("ERROR: %v", err)
 		os.Exit(1)
 	}
 	log.Donef("\nSuccess")

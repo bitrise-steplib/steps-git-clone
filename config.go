@@ -30,7 +30,6 @@ type Config struct {
 }
 
 func newConfig() (Config, []error) {
-	errs := []error{}
 	config := Config{
 		Commit: os.Getenv("commit"),
 		Tag:    os.Getenv("tag"),
@@ -44,6 +43,7 @@ func newConfig() (Config, []error) {
 		BuildAPIToken: os.Getenv("build_api_token"),
 	}
 
+	var errs []error
 	// required
 	err := input.ValidateIfNotEmpty(os.Getenv("clone_into_dir"))
 	if err != nil {
