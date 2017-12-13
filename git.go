@@ -25,7 +25,7 @@ func isOriginPresent(dir, repoURL string) (bool, error) {
 	if exist, err := pathutil.IsDirExists(gitDir); err != nil {
 		return false, err
 	} else if exist {
-		remotes, err := runForOutput(Git.RemoteList())
+		remotes, err := output(Git.RemoteList())
 		if err != nil {
 			return false, err
 		}
@@ -53,10 +53,6 @@ func resetRepo() error {
 	}
 
 	return run(Git.SubmoduleForeach(Git.Clean("-x", "-d", "-f")))
-}
-
-func isPR(prRepoURL, prMergeBranch string, prID int) bool {
-	return prRepoURL != "" || prID != 0 || prMergeBranch != ""
 }
 
 func getCheckoutArg(commit, tag, branch string) string {
@@ -112,7 +108,7 @@ func run(c *command.Model) error {
 	return c.SetStdout(os.Stdout).SetStderr(os.Stderr).Run()
 }
 
-func runForOutput(c *command.Model) (string, error) {
+func output(c *command.Model) (string, error) {
 	return c.RunAndReturnTrimmedCombinedOutput()
 }
 
