@@ -1,6 +1,11 @@
-## Changelog (Current version: 4.0.1)
+## Changelog (Current version: 4.0.2)
 
 -----------------
+
+### 4.0.2 (2017 Dec 14)
+
+* [4b2d3b5] Bump version to 4.0.2
+* [ea48721] Fix: Remove Git global variable in favor of local variables (#58)
 
 ### 4.0.1 (2017 Dec 14)
 
