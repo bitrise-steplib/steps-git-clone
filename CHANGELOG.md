@@ -1,6 +1,11 @@
-## Changelog (Current version: 4.0.2)
+## Changelog (Current version: 4.0.3)
 
 -----------------
+
+### 4.0.3 (2017 Dec 14)
+
+* [11a7c0a] Bump version to 4.0.3
+* [1c8e26b] Print commit hash after checkout if PR (#59)
 
 ### 4.0.2 (2017 Dec 14)
 
