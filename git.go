@@ -191,7 +191,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	if err != nil {
 		log.Errorf("log commit hash: %v", err)
 	}
-	fmt.Printf("commit hash: %s\n", commitHash)
+	log.Printf("commit hash: %s", commitHash)
 
 	if isFork(repoURL, prRepoURL) {
 		if err := run(gitCmd.RemoteAdd("fork", prRepoURL)); err != nil {
