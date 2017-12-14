@@ -1,6 +1,15 @@
-## Changelog (Current version: 3.6.2)
+## Changelog (Current version: 4.0.0)
 
 -----------------
+
+### 4.0.0 (2017 Dec 14)
+
+* [c97504e] Bump version to 4.0.0
+* [0294c91] Detach head if PR (#55)
+* [3502a9e] Merge manually if repo if private but not fork (#54)
+* [f15fb7c] Fix/check origin (#53)
+* [090d9b1] Revision (#52)
+* [b365a61] step input category fix for manual_merge (#50)
 
 ### 3.6.2 (2017 Nov 16)
 
@@ -267,4 +276,4 @@
 
 -----------------
 
-Updated: 2017 Nov 16
+Updated: 2017 Dec 14
