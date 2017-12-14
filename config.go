@@ -77,7 +77,7 @@ func newConfig() (Config, []error) {
 	// bools
 	resetRepo := os.Getenv("reset_repository")
 	if resetRepo == "Yes" || resetRepo == "No" {
-		log.Warnf("\nInput values 'Yes' and 'No' for reset_repository are DEPRECATED in favor of 'yes' and 'no', these value options will be removed in Git Clone step version 4.1.0\n")
+		log.Warnf("\nInput values 'Yes' and 'No' for reset_repository input are DEPRECATED in favor of 'yes' and 'no', these value options will be removed in version 4.1.0\n")
 	}
 	err = input.ValidateWithOptions(resetRepo, "yes", "no", "Yes", "No")
 	if err != nil {

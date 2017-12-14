@@ -69,7 +69,8 @@ inputs:
       category: Debug
       summary: Reset repository contents with git reset --hard HEAD and git clean -f after repository updated
       description: |-
-        Input values `Yes` and `No` are DEPRECATED, these value options will be removed in version 4.1.0
+        Input values `Yes` and `No` are DEPRECATED, these value options will be removed in version 4.1.0.
+        Use `yes` and `no` instead.
       title: Reset repository
       value_options:
       - "no"
