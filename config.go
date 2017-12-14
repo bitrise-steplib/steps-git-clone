@@ -75,11 +75,15 @@ func newConfig() (Config, []error) {
 	}
 
 	// bools
-	err = input.ValidateWithOptions(os.Getenv("reset_repository"), "yes", "no")
+	resetRepo := os.Getenv("reset_repository")
+	if resetRepo == "Yes" || resetRepo == "No" {
+		log.Warnf("\nInput values 'Yes' and 'No' for reset_repository input are DEPRECATED in favor of 'yes' and 'no', these value options will be removed in version 4.1.0\n")
+	}
+	err = input.ValidateWithOptions(resetRepo, "yes", "no", "Yes", "No")
 	if err != nil {
 		errs = append(errs, fmt.Errorf("reset_repository: %v", err))
 	} else {
-		config.ResetRepository = os.Getenv("reset_repository") == "yes"
+		config.ResetRepository = resetRepo == "yes" || resetRepo == "Yes"
 	}
 
 	err = input.ValidateWithOptions(os.Getenv("manual_merge"), "yes", "no")
