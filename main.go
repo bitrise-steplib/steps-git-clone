@@ -15,11 +15,8 @@ const (
 	waitTime   = 5 // seconds
 )
 
-// Git ...
-var Git git.Git
-
-func printLogAndExportEnv(format, env string) error {
-	l, err := output(Git.Log(format))
+func printLogAndExportEnv(gitCmd git.Git, format, env string) error {
+	l, err := output(gitCmd.Log(format))
 	if err != nil {
 		return err
 	}
@@ -47,30 +44,30 @@ func mainE() error {
 		return fmt.Errorf("invalid inputs:\n%s", text)
 	}
 	config.print()
-	Git, err := git.New(config.CloneIntoDir)
+	gitCmd, err := git.New(config.CloneIntoDir)
 	if err != nil {
-		return fmt.Errorf("create Git project, error: %v", err)
+		return fmt.Errorf("create gitCmd project, error: %v", err)
 	}
 
 	checkoutArg := getCheckoutArg(config.Commit, config.Tag, config.Branch)
 
-	originPresent, err := isOriginPresent(config.CloneIntoDir, config.RepositoryURL)
+	originPresent, err := isOriginPresent(gitCmd, config.CloneIntoDir, config.RepositoryURL)
 	if err != nil {
 		return fmt.Errorf("check if origin is presented, error: %v", err)
 	}
 
 	if originPresent && config.ResetRepository {
-		if err := resetRepo(); err != nil {
+		if err := resetRepo(gitCmd); err != nil {
 			return fmt.Errorf("reset repository, error: %v", err)
 		}
 	}
 
-	if err := run(Git.Init()); err != nil {
+	if err := run(gitCmd.Init()); err != nil {
 		return fmt.Errorf("init repository, error: %v", err)
 	}
 
 	if !originPresent {
-		if err := run(Git.RemoteAdd("origin", config.RepositoryURL)); err != nil {
+		if err := run(gitCmd.RemoteAdd("origin", config.RepositoryURL)); err != nil {
 			return fmt.Errorf("add remote repository (%s), error: %v", config.RepositoryURL, err)
 		}
 	}
@@ -81,30 +78,30 @@ func mainE() error {
 
 	if isPR {
 		if !config.ManualMerge || isPrivate(config.PRRepositoryCloneURL) && isFork(config.RepositoryURL, config.PRRepositoryCloneURL) {
-			if err := autoMerge(config.PRMergeBranch, config.BranchDest, config.BuildURL,
+			if err := autoMerge(gitCmd, config.PRMergeBranch, config.BranchDest, config.BuildURL,
 				config.BuildAPIToken, config.CloneDepth, config.PRID); err != nil {
 				return fmt.Errorf("auto merge, error: %v", err)
 			}
 		} else {
-			if err := manualMerge(config.RepositoryURL, config.PRRepositoryCloneURL, config.Branch,
+			if err := manualMerge(gitCmd, config.RepositoryURL, config.PRRepositoryCloneURL, config.Branch,
 				config.Commit, config.BranchDest, config.CloneDepth); err != nil {
 				return fmt.Errorf("manual merge, error: %v", err)
 			}
 		}
 	} else if checkoutArg != "" {
-		if err := checkout(checkoutArg, config.CloneDepth); err != nil {
+		if err := checkout(gitCmd, checkoutArg, config.CloneDepth); err != nil {
 			return fmt.Errorf("checkout (%s): %v", checkoutArg, err)
 		}
 	}
 
 	if config.UpdateSubmodules {
-		if err := run(Git.SubmoduleUpdate()); err != nil {
+		if err := run(gitCmd.SubmoduleUpdate()); err != nil {
 			return fmt.Errorf("submodule update: %v", err)
 		}
 	}
 
 	if isPR {
-		if err := run(Git.Checkout("--detach")); err != nil {
+		if err := run(gitCmd.Checkout("--detach")); err != nil {
 			return fmt.Errorf("detach head: %v", err)
 		}
 	}
@@ -121,12 +118,12 @@ func mainE() error {
 			`"%cn"`: "GIT_CLONE_COMMIT_COMMITER_NAME",
 			`"%ce"`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
 		} {
-			if err := printLogAndExportEnv(format, env); err != nil {
-				return fmt.Errorf("Git log failed, error: %v", err)
+			if err := printLogAndExportEnv(gitCmd, format, env); err != nil {
+				return fmt.Errorf("gitCmd log failed, error: %v", err)
 			}
 		}
 
-		count, err := output(Git.RevList("HEAD", "--count"))
+		count, err := output(gitCmd.RevList("HEAD", "--count"))
 		if err != nil {
 			return fmt.Errorf("get rev-list, error: %v", err)
 		}

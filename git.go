@@ -10,12 +10,13 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/retry"
 )
 
-func isOriginPresent(dir, repoURL string) (bool, error) {
+func isOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
 	absDir, err := pathutil.AbsPath(dir)
 	if err != nil {
 		return false, err
@@ -25,7 +26,7 @@ func isOriginPresent(dir, repoURL string) (bool, error) {
 	if exist, err := pathutil.IsDirExists(gitDir); err != nil {
 		return false, err
 	} else if exist {
-		remotes, err := output(Git.RemoteList())
+		remotes, err := output(gitCmd.RemoteList())
 		if err != nil {
 			return false, err
 		}
@@ -39,20 +40,20 @@ func isOriginPresent(dir, repoURL string) (bool, error) {
 	return false, nil
 }
 
-func resetRepo() error {
-	if err := run(Git.Reset("--hard", "HEAD")); err != nil {
+func resetRepo(gitCmd git.Git) error {
+	if err := run(gitCmd.Reset("--hard", "HEAD")); err != nil {
 		return err
 	}
 
-	if err := run(Git.Clean("-x", "-d", "-f")); err != nil {
+	if err := run(gitCmd.Clean("-x", "-d", "-f")); err != nil {
 		return err
 	}
 
-	if err := run(Git.SubmoduleForeach(Git.Reset("--hard", "HEAD"))); err != nil {
+	if err := run(gitCmd.SubmoduleForeach(gitCmd.Reset("--hard", "HEAD"))); err != nil {
 		return err
 	}
 
-	return run(Git.SubmoduleForeach(Git.Clean("-x", "-d", "-f")))
+	return run(gitCmd.SubmoduleForeach(gitCmd.Clean("-x", "-d", "-f")))
 }
 
 func getCheckoutArg(commit, tag, branch string) string {
@@ -136,19 +137,19 @@ func isPrivate(repoURL string) bool {
 	return strings.HasPrefix(repoURL, "git")
 }
 
-func autoMerge(mergeBranch, branchDest, buildURL, apiToken string, depth, id int) error {
+func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken string, depth, id int) error {
 	if err := runWithRetry(func() *command.Model {
 		if depth != 0 {
-			return Git.Fetch("--depth=" + strconv.Itoa(depth))
+			return gitCmd.Fetch("--depth=" + strconv.Itoa(depth))
 		}
-		return Git.Fetch()
+		return gitCmd.Fetch()
 	}); err != nil {
 		return fmt.Errorf("Fetch failed, error: %v", err)
 	}
 
 	if mergeBranch != "" {
 		if err := runWithRetry(func() *command.Model {
-			return Git.Fetch("origin", mergeBranch+":"+
+			return gitCmd.Fetch("origin", mergeBranch+":"+
 				strings.TrimSuffix(mergeBranch, "/merge"))
 		}); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
@@ -156,14 +157,14 @@ func autoMerge(mergeBranch, branchDest, buildURL, apiToken string, depth, id int
 		}
 
 		arg := strings.TrimSuffix(mergeBranch, "/merge")
-		if err := run(Git.Checkout(arg)); err != nil {
+		if err := run(gitCmd.Checkout(arg)); err != nil {
 			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 		}
 	} else if patch, err := getDiffFile(buildURL, apiToken, id); err == nil {
-		if err := run(Git.Checkout(branchDest)); err != nil {
+		if err := run(gitCmd.Checkout(branchDest)); err != nil {
 			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 		}
-		if err := run(Git.Apply(patch)); err != nil {
+		if err := run(gitCmd.Apply(patch)); err != nil {
 			return fmt.Errorf("can't apply patch (%s), error: %v", patch, err)
 		}
 	} else {
@@ -172,37 +173,37 @@ func autoMerge(mergeBranch, branchDest, buildURL, apiToken string, depth, id int
 	return nil
 }
 
-func manualMerge(repoURL, prRepoURL, branch, commit, branchDest string, depth int) error {
+func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest string, depth int) error {
 	if err := runWithRetry(func() *command.Model {
 		if depth != 0 {
-			return Git.Fetch("--depth=" + strconv.Itoa(depth))
+			return gitCmd.Fetch("--depth=" + strconv.Itoa(depth))
 		}
-		return Git.Fetch()
+		return gitCmd.Fetch()
 	}); err != nil {
 		return fmt.Errorf("Fetch failed, error: %v", err)
 	}
 
-	if err := run(Git.Checkout(branchDest)); err != nil {
+	if err := run(gitCmd.Checkout(branchDest)); err != nil {
 		return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 	}
 
 	if isFork(repoURL, prRepoURL) {
-		if err := run(Git.RemoteAdd("fork", prRepoURL)); err != nil {
+		if err := run(gitCmd.RemoteAdd("fork", prRepoURL)); err != nil {
 			return fmt.Errorf("couldn't add remote (%s), error: %v", prRepoURL, err)
 		}
 
 		if err := runWithRetry(func() *command.Model {
-			return Git.Fetch("fork", branch)
+			return gitCmd.Fetch("fork", branch)
 		}); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
 				branch, err)
 		}
 
-		if err := run(Git.Merge("fork/" + branch)); err != nil {
+		if err := run(gitCmd.Merge("fork/" + branch)); err != nil {
 			return fmt.Errorf("merge failed (fork/%s), error: %v", branch, err)
 		}
 	} else {
-		if err := run(Git.Merge(commit)); err != nil {
+		if err := run(gitCmd.Merge(commit)); err != nil {
 			return fmt.Errorf("merge failed (%s), error: %v", commit, err)
 		}
 	}
@@ -210,28 +211,28 @@ func manualMerge(repoURL, prRepoURL, branch, commit, branchDest string, depth in
 	return nil
 }
 
-func checkout(arg string, depth int) error {
+func checkout(gitCmd git.Git, arg string, depth int) error {
 	if err := runWithRetry(func() *command.Model {
 		if depth != 0 {
-			return Git.Fetch("--depth=" + strconv.Itoa(depth))
+			return gitCmd.Fetch("--depth=" + strconv.Itoa(depth))
 		}
-		return Git.Fetch()
+		return gitCmd.Fetch()
 	}); err != nil {
 		return fmt.Errorf("Fetch failed, error: %v", err)
 	}
 
-	if err := run(Git.Checkout(arg)); err != nil {
+	if err := run(gitCmd.Checkout(arg)); err != nil {
 		if depth == 0 {
 			return fmt.Errorf("checkout failed (%s), error: %v", arg, err)
 		}
 		log.Warnf("Checkout failed, error: %v\nUnshallow...", err)
 
 		if err := runWithRetry(func() *command.Model {
-			return Git.Fetch("--unshallow")
+			return gitCmd.Fetch("--unshallow")
 		}); err != nil {
 			return fmt.Errorf("fetch failed, error: %v", err)
 		}
-		if err := run(Git.Checkout(arg)); err != nil {
+		if err := run(gitCmd.Checkout(arg)); err != nil {
 			return fmt.Errorf("checkout failed (%s), error: %v", arg, err)
 		}
 	}
