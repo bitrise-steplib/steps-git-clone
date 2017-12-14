@@ -226,11 +226,6 @@ workflows:
     - script:
         inputs:
         - content: envman add --key STEP_TMPDIR_NEW --value $(mktemp -d -t step-git-clone)
-          #    - change-workdir:
-          #        title: Change directory to a temporary directory
-          #        is_always_run: true
-          #        inputs:
-          #        - path: $STEP_TMPDIR_NEW
     - path::./:
         run_if: true
         inputs:
