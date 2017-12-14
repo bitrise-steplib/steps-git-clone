@@ -187,6 +187,12 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 		return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 	}
 
+	commitHash, err := output(gitCmd.Log("%H"))
+	if err != nil {
+		log.Errorf("log commit hash: %v", err)
+	}
+	log.Printf("commit hash: %s", commitHash)
+
 	if isFork(repoURL, prRepoURL) {
 		if err := run(gitCmd.RemoteAdd("fork", prRepoURL)); err != nil {
 			return fmt.Errorf("couldn't add remote (%s), error: %v", prRepoURL, err)
