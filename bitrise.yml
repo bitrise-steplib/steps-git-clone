@@ -3,7 +3,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-    - RELEASE_VERSION: 4.0.1
+    - RELEASE_VERSION: 4.0.2
     - GIT_REPOSITORY_URL: https://github.com/bitrise-io/steps-git-clone.git
 
 workflows:
