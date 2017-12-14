@@ -75,11 +75,11 @@ func newConfig() (Config, []error) {
 	}
 
 	// bools
-	err = input.ValidateWithOptions(os.Getenv("reset_repository"), "yes", "no")
+	err = input.ValidateWithOptions(os.Getenv("reset_repository"), "Yes", "No")
 	if err != nil {
 		errs = append(errs, fmt.Errorf("reset_repository: %v", err))
 	} else {
-		config.ResetRepository = os.Getenv("reset_repository") == "yes"
+		config.ResetRepository = os.Getenv("reset_repository") == "Yes"
 	}
 
 	err = input.ValidateWithOptions(os.Getenv("manual_merge"), "yes", "no")
