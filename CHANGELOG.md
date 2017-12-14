@@ -1,6 +1,11 @@
-## Changelog (Current version: 4.0.0)
+## Changelog (Current version: 4.0.1)
 
 -----------------
+
+### 4.0.1 (2017 Dec 14)
+
+* [35de2fb] Bump version to 4.0.1
+* [c66fda9] Revert value options for reset_repository (#57)
 
 ### 4.0.0 (2017 Dec 14)
 
