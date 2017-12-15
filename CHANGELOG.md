@@ -1,6 +1,12 @@
-## Changelog (Current version: 4.0.3)
+## Changelog (Current version: 4.0.4)
 
 -----------------
+
+### 4.0.4 (2017 Dec 15)
+
+* [515b1a4] Bump version to 4.0.4
+* [a0c5707] Ignore depth if PR (#61)
+* [96b1d7c] Remove double quotes from exported env vars (#62)
 
 ### 4.0.3 (2017 Dec 14)
 
@@ -291,4 +297,4 @@
 
 -----------------
 
-Updated: 2017 Dec 14
+Updated: 2017 Dec 15
