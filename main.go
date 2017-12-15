@@ -110,13 +110,13 @@ func mainE() error {
 		log.Infof("\nExporting git logs\n")
 
 		for format, env := range map[string]string{
-			`"%H"`:  "GIT_CLONE_COMMIT_HASH",
-			`"%s"`:  "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
-			`"%b"`:  "GIT_CLONE_COMMIT_MESSAGE_BODY",
-			`"%an"`: "GIT_CLONE_COMMIT_AUTHOR_NAME",
-			`"%ae"`: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
-			`"%cn"`: "GIT_CLONE_COMMIT_COMMITER_NAME",
-			`"%ce"`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
+			`%H`:  "GIT_CLONE_COMMIT_HASH",
+			`%s`:  "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
+			`%b`:  "GIT_CLONE_COMMIT_MESSAGE_BODY",
+			`%an`: "GIT_CLONE_COMMIT_AUTHOR_NAME",
+			`%ae`: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
+			`%cn`: "GIT_CLONE_COMMIT_COMMITER_NAME",
+			`%ce`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
 		} {
 			if err := printLogAndExportEnv(gitCmd, format, env); err != nil {
 				return fmt.Errorf("gitCmd log failed, error: %v", err)
