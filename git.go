@@ -137,8 +137,11 @@ func isPrivate(repoURL string) bool {
 	return strings.HasPrefix(repoURL, "git")
 }
 
-func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken string, id int) error {
+func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken string, depth, id int) error {
 	if err := runWithRetry(func() *command.Model {
+		if depth != 0 {
+			return gitCmd.Fetch("--depth=" + strconv.Itoa(depth))
+		}
 		return gitCmd.Fetch()
 	}); err != nil {
 		return fmt.Errorf("Fetch failed, error: %v", err)

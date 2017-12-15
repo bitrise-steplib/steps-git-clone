@@ -79,7 +79,7 @@ func mainE() error {
 	if isPR {
 		if !config.ManualMerge || isPrivate(config.PRRepositoryCloneURL) && isFork(config.RepositoryURL, config.PRRepositoryCloneURL) {
 			if err := autoMerge(gitCmd, config.PRMergeBranch, config.BranchDest, config.BuildURL,
-				config.BuildAPIToken, config.PRID); err != nil {
+				config.BuildAPIToken, config.CloneDepth, config.PRID); err != nil {
 				return fmt.Errorf("auto merge, error: %v", err)
 			}
 		} else {
