@@ -130,7 +130,13 @@ func runWithRetry(f func() *command.Model) error {
 }
 
 func isFork(repoURL, prRepoURL string) bool {
-	return prRepoURL != "" && repoURL != prRepoURL
+	return prRepoURL != "" && getRepo(repoURL) != getRepo(prRepoURL)
+}
+
+func getRepo(url string) string {
+	repo := strings.TrimPrefix(url, "git@")
+	repo = strings.TrimPrefix(repo, "https://")
+	return strings.Replace(repo, ":", "/", 1)
 }
 
 func isPrivate(repoURL string) bool {

@@ -56,6 +56,7 @@ workflows:
     - _test_checkout_different_dir
     - _test_manual_merge_ignore_depth
     - _test_commit_logs
+    - _test_hosted_git_notfork
     steps:
     - activate-ssh-key:
         run_if: true
@@ -392,6 +393,39 @@ workflows:
             check "GIT_CLONE_COMMIT_COMMITER_NAME" "Krisztian Dobmayer"
             check "GIT_CLONE_COMMIT_COMMITER_EMAIL" "krisztian.dobmayer@bitrise.io"
 
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
+
+  _test_hosted_git_notfork:
+    before_run:
+    - _create_tmpdir
+    steps:
+    - path::./:
+        run_if: true
+        inputs:
+        - clone_into_dir: $CLONE_INTO_DIR
+        - repository_url: "git@github.com:bitrise-samples/git-clone-test.git"
+        - pull_request_id: 7
+        - pull_request_merge_branch: "pull/7/merge"
+        - pull_request_repository_url: "https://github.com/bitrise-samples/git-clone-test.git"
+        - branch_dest: "master"
+        - commit: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
+        - tag: ""
+        - branch: "test/commit-messages"
+        - clone_depth: ""
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
     - ensure-clean-git:
         inputs:
         - dir_to_check: $CLONE_INTO_DIR
