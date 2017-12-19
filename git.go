@@ -136,6 +136,7 @@ func isFork(repoURL, prRepoURL string) bool {
 func getRepo(url string) string {
 	repo := strings.TrimPrefix(url, "git@")
 	repo = strings.TrimPrefix(repo, "https://")
+	repo = strings.TrimSuffix(repo, ".git")
 	return strings.Replace(repo, ":", "/", 1)
 }
 
