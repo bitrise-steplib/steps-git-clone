@@ -92,6 +92,11 @@ func mainE() error {
 		if err := checkout(gitCmd, checkoutArg, config.CloneDepth); err != nil {
 			return fmt.Errorf("checkout (%s): %v", checkoutArg, err)
 		}
+		if config.Commit == "" && config.Branch != "" {
+			if err := run(gitCmd.Merge("origin/" + config.Branch)); err != nil {
+				return fmt.Errorf("merge %q: %v", checkoutArg, err)
+			}
+		}
 	}
 
 	if config.UpdateSubmodules {
