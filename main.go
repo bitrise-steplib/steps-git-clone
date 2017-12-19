@@ -95,7 +95,7 @@ func mainE() error {
 		// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
 		if config.Commit == "" && config.Branch != "" {
 			if err := run(gitCmd.Merge("origin/" + config.Branch)); err != nil {
-				return fmt.Errorf("merge %q: %v", checkoutArg, err)
+				return fmt.Errorf("merge %q: %v", config.Branch, err)
 			}
 		}
 	}
