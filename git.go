@@ -183,6 +183,9 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	if err := run(gitCmd.Checkout(branchDest)); err != nil {
 		return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 	}
+	if err := run(gitCmd.Merge("origin/" + branchDest)); err != nil {
+		return fmt.Errorf("merge %q: %v", branchDest, err)
+	}
 
 	commitHash, err := output(gitCmd.Log("%H"))
 	if err != nil {
