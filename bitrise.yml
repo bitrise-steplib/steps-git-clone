@@ -405,7 +405,6 @@ workflows:
         run_if: true
         inputs:
         - clone_into_dir: $CLONE_INTO_DIR
-        - repository_url: "https://github.com/bitrise-samples/git-clone-test.git"
         - pull_request_id: 7
         - pull_request_merge_branch: "pull/7/merge"
         - pull_request_repository_url: "git@github.com:bitrise-samples/git-clone-test.git"
