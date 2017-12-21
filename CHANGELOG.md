@@ -1,6 +1,12 @@
-## Changelog (Current version: 4.0.4)
+## Changelog (Current version: 4.0.5)
 
 -----------------
+
+### 4.0.5 (2017 Dec 21)
+
+* [17771e0] Bump version to 4.0.5
+* [37ce02b] Call git merge if the checkout target is a branch (#64)
+* [97b0986] Parse urls to decide if the repo is a fork (#65)
 
 ### 4.0.4 (2017 Dec 15)
 
@@ -297,4 +303,4 @@
 
 -----------------
 
-Updated: 2017 Dec 15
+Updated: 2017 Dec 21
