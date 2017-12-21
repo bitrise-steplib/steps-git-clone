@@ -92,6 +92,12 @@ func mainE() error {
 		if err := checkout(gitCmd, checkoutArg, config.CloneDepth); err != nil {
 			return fmt.Errorf("checkout (%s): %v", checkoutArg, err)
 		}
+		// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
+		if checkoutArg == config.Branch {
+			if err := run(gitCmd.Merge("origin/" + config.Branch)); err != nil {
+				return fmt.Errorf("merge %q: %v", config.Branch, err)
+			}
+		}
 	}
 
 	if config.UpdateSubmodules {
