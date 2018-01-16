@@ -268,7 +268,7 @@ workflows:
         - pull_request_id: 5
         - pull_request_merge_branch: "pull/5/merge"
         - pull_request_repository_url: ""
-        - branch_dest: ""
+        - branch_dest: "master"
         - commit: ""
         - tag: ""
         - branch: ""

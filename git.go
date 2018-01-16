@@ -155,17 +155,24 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 	}
 
 	if mergeBranch != "" {
+		arg := strings.TrimSuffix(mergeBranch, "/merge")
 		if err := runWithRetry(func() *command.Model {
-			return gitCmd.Fetch("origin", mergeBranch+":"+
-				strings.TrimSuffix(mergeBranch, "/merge"))
+			return gitCmd.Fetch("origin", strings.Replace(mergeBranch, "merge", "head", 1)+":"+arg)
 		}); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
 				mergeBranch, err)
 		}
 
-		arg := strings.TrimSuffix(mergeBranch, "/merge")
-		if err := run(gitCmd.Checkout(arg)); err != nil {
+		if err := run(gitCmd.Checkout(branchDest)); err != nil {
 			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
+		}
+		// First merge is ensure that the branch is up-to-date. Checkout followed
+		// by a merge is basically a pull.
+		if err := run(gitCmd.Merge("origin/" + branchDest)); err != nil {
+			return fmt.Errorf("merge %q: %v", branchDest, err)
+		}
+		if err := run(gitCmd.Merge(arg)); err != nil {
+			return fmt.Errorf("merge %q: %v", arg, err)
 		}
 	} else if patch, err := getDiffFile(buildURL, apiToken, id); err == nil {
 		if err := run(gitCmd.Checkout(branchDest)); err != nil {
