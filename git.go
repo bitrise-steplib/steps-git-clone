@@ -225,12 +225,16 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	return nil
 }
 
-func checkout(gitCmd git.Git, arg string, depth int) error {
+func checkout(gitCmd git.Git, arg string, depth int, isTag bool) error {
 	if err := runWithRetry(func() *command.Model {
+		var opts []string
 		if depth != 0 {
-			return gitCmd.Fetch("--depth=" + strconv.Itoa(depth))
+			opts = append(opts, "--depth="+strconv.Itoa(depth))
 		}
-		return gitCmd.Fetch()
+		if isTag {
+			opts = append(opts, "--tags")
+		}
+		return gitCmd.Fetch(opts...)
 	}); err != nil {
 		return fmt.Errorf("Fetch failed, error: %v", err)
 	}
