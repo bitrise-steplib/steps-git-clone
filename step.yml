@@ -32,6 +32,7 @@ inputs:
     opts:
       title: "Git repository URL"
       is_required: true
+      is_dont_change_value: true
   - clone_into_dir: "$BITRISE_SOURCE_DIR"
     opts:
       title: "Clone destination (local) directory path"
@@ -40,30 +41,37 @@ inputs:
     opts:
       category: Clone Config
       title: "Git Commit to clone"
+      is_dont_change_value: true
   - tag: "$BITRISE_GIT_TAG"
     opts:
       category: Clone Config
       title: "Git Tag to clone"
+      is_dont_change_value: true
   - branch: "$BITRISE_GIT_BRANCH"
     opts:
       category: Clone Config
       title: "Git Branch to clone"
+      is_dont_change_value: true
   - branch_dest: "$BITRISEIO_GIT_BRANCH_DEST"
     opts:
       category: Clone Config
       title: "Destination git Branch. Used for pull requests"
+      is_dont_change_value: true
   - pull_request_id: "$PULL_REQUEST_ID"
     opts:
       category: Clone Config
       title: "Pull request ID on GitHub"
+      is_dont_change_value: true
   - pull_request_repository_url: "$BITRISEIO_PULL_REQUEST_REPOSITORY_URL"
     opts:
       category: Clone Config
       title: "Pull request git URL"
+      is_dont_change_value: true
   - pull_request_merge_branch: "$BITRISEIO_PULL_REQUEST_MERGE_BRANCH"
     opts:
       category: Clone Config
       title: "Merged pull request branch"
+      is_dont_change_value: true
   - reset_repository: "No"
     opts:
       category: Debug
