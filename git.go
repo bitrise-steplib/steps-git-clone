@@ -176,7 +176,18 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 			return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
 		}
 		if err := run(gitCmd.Merge(mergeArg(mergeBranch))); err != nil {
-			return fmt.Errorf("merge %q: %v", mergeArg(mergeBranch), err)
+			if depth == 0 {
+				return fmt.Errorf("merge %q: %v", mergeArg(mergeBranch), err)
+			}
+			log.Warnf("Merge failed, error: %v\nUnshallow...", err)
+			if err := runWithRetry(func() *command.Model {
+				return gitCmd.Fetch("--unshallow")
+			}); err != nil {
+				return fmt.Errorf("fetch failed, error: %v", err)
+			}
+			if err := run(gitCmd.Merge(mergeArg(mergeBranch))); err != nil {
+				return fmt.Errorf("merge %q: %v", mergeArg(mergeBranch), err)
+			}
 		}
 	} else if patch, err := getDiffFile(buildURL, apiToken, id); err == nil {
 		if err := run(gitCmd.Checkout(branchDest)); err != nil {
