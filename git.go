@@ -144,6 +144,17 @@ func isPrivate(repoURL string) bool {
 	return strings.HasPrefix(repoURL, "git")
 }
 
+// fetchArg converts the incoming mergeBranch pull/x/merge to pull/x/head:pull/x
+// where x is the pull request id.
+func fetchArg(mergeBranch string) string {
+	arg := strings.TrimSuffix(mergeBranch, "/merge")
+	return strings.Replace(mergeBranch, "merge", "head", 1) + ":" + arg
+}
+
+func mergeArg(mergeBranch string) string {
+	return strings.TrimSuffix(mergeBranch, "/merge")
+}
+
 func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken string, depth, id int) error {
 	if err := runWithRetry(func() *command.Model {
 		if depth != 0 {
@@ -156,16 +167,16 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 
 	if mergeBranch != "" {
 		if err := runWithRetry(func() *command.Model {
-			return gitCmd.Fetch("origin", mergeBranch+":"+
-				strings.TrimSuffix(mergeBranch, "/merge"))
+			return gitCmd.Fetch("origin", fetchArg(mergeBranch))
 		}); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
 				mergeBranch, err)
 		}
-
-		arg := strings.TrimSuffix(mergeBranch, "/merge")
-		if err := run(gitCmd.Checkout(arg)); err != nil {
-			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
+		if err := pull(gitCmd, branchDest); err != nil {
+			return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
+		}
+		if err := run(gitCmd.Merge(mergeArg(mergeBranch))); err != nil {
+			return fmt.Errorf("merge %q: %v", mergeArg(mergeBranch), err)
 		}
 	} else if patch, err := getDiffFile(buildURL, apiToken, id); err == nil {
 		if err := run(gitCmd.Checkout(branchDest)); err != nil {
@@ -187,14 +198,9 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 		return fmt.Errorf("Fetch failed, error: %v", err)
 	}
 
-	if err := run(gitCmd.Checkout(branchDest)); err != nil {
-		return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
+	if err := pull(gitCmd, branchDest); err != nil {
+		return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
 	}
-	// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
-	if err := run(gitCmd.Merge("origin/" + branchDest)); err != nil {
-		return fmt.Errorf("merge %q: %v", branchDest, err)
-	}
-
 	commitHash, err := output(gitCmd.Log("%H"))
 	if err != nil {
 		log.Errorf("log commit hash: %v", err)
@@ -256,4 +262,12 @@ func checkout(gitCmd git.Git, arg string, depth int, isTag bool) error {
 	}
 
 	return nil
+}
+
+// pull is a 'git fetch' followed by a 'git merge' which is the same as 'git pull'.
+func pull(gitCmd git.Git, branchDest string) error {
+	if err := run(gitCmd.Checkout(branchDest)); err != nil {
+		return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
+	}
+	return run(gitCmd.Merge("origin/" + branchDest))
 }
