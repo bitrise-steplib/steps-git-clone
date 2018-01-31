@@ -1,6 +1,11 @@
-## Changelog (Current version: 4.0.6)
+## Changelog (Current version: 4.0.7)
 
 -----------------
+
+### 4.0.7 (2018 Jan 31)
+
+* [a2b94b2] Bump version to 4.0.7
+* [d329d75] Fix/automerge depth (#71)
 
 ### 4.0.6 (2018 Jan 31)
 
