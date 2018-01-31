@@ -1,6 +1,13 @@
-## Changelog (Current version: 4.0.5)
+## Changelog (Current version: 4.0.6)
 
 -----------------
+
+### 4.0.6 (2018 Jan 31)
+
+* [2c86532] Bump version to 4.0.6
+* [a7f3309] Use pull/x/head branch then merge instead of pull/x/merge (#68)
+* [1f70b75] Set inputs to read-only (#69)
+* [51e2614] fetch tags when cloning a tag (#67)
 
 ### 4.0.5 (2017 Dec 21)
 
@@ -303,4 +310,4 @@
 
 -----------------
 
-Updated: 2017 Dec 21
+Updated: 2018 Jan 31
