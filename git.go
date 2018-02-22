@@ -179,7 +179,10 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 			if depth == 0 {
 				return fmt.Errorf("merge %q: %v", mergeArg(mergeBranch), err)
 			}
-			log.Warnf("Merge failed, error: %v\nUnshallow...", err)
+			log.Warnf("Merge failed, error: %v\nReset repository, then unshallow...", err)
+			if err := resetRepo(gitCmd); err != nil {
+				return fmt.Errorf("reset repository, error: %v", err)
+			}
 			if err := runWithRetry(func() *command.Model {
 				return gitCmd.Fetch("--unshallow")
 			}); err != nil {
@@ -261,7 +264,6 @@ func checkout(gitCmd git.Git, arg string, depth int, isTag bool) error {
 			return fmt.Errorf("checkout failed (%s), error: %v", arg, err)
 		}
 		log.Warnf("Checkout failed, error: %v\nUnshallow...", err)
-
 		if err := runWithRetry(func() *command.Model {
 			return gitCmd.Fetch("--unshallow")
 		}); err != nil {
