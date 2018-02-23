@@ -1,6 +1,11 @@
-## Changelog (Current version: 4.0.7)
+## Changelog (Current version: 4.0.8)
 
 -----------------
+
+### 4.0.8 (2018 Feb 23)
+
+* [3443587] Bump version to 4.0.8
+* [7f02eff] Fix/reset repo (#73)
 
 ### 4.0.7 (2018 Jan 31)
 
@@ -315,4 +320,4 @@
 
 -----------------
 
-Updated: 2018 Jan 31
+Updated: 2018 Feb 23
