@@ -475,9 +475,9 @@ workflows:
         - clone_into_dir: $CLONE_INTO_DIR
         - pull_request_id: 8
         - pull_request_merge_branch: "pull/8/merge"
-        - pull_request_repository_url: ""
+        - pull_request_repository_url: $GIT_REPOSITORY_URL
         - branch_dest: "unrelated-histories/master"
-        - commit: ""
+        - commit: "62af44590c7a2b937726f2c3024a88a129b330b5"
         - tag: ""
         - branch: ""
         - clone_depth: "1"
