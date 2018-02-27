@@ -13,3 +13,17 @@ func TestFetchArg(t *testing.T) {
 		}
 	}
 }
+
+func TestGetRepo(t *testing.T) {
+	expected := "github.com/bitrise-samples/git-clone-test"
+	for _, input := range []string{
+		"https://github.com/bitrise-samples/git-clone-test.git",
+		"git@github.com:bitrise-samples/git-clone-test.git",
+		"ssh://git@github.com:22/bitrise-samples/git-clone-test.git",
+	} {
+		actual := getRepo(input)
+		if actual != expected {
+			t.Errorf("getRepo(%q), expected %q, actual %q", input, expected, actual)
+		}
+	}
+}
