@@ -440,15 +440,15 @@ workflows:
     - path::./:
         run_if: true
         inputs:
-        - repository_url: "ssh://git@github.com:22/bitrise-samples/git-clone-test.git"
+        - repository_url: "ssh://git@gitlab.com:22/bitrise/git-clone-test.git"
         - clone_into_dir: $CLONE_INTO_DIR
-        - pull_request_id: 7
+        - pull_request_id:
         - pull_request_merge_branch:
-        - pull_request_repository_url: "git@github.com:bitrise-samples/git-clone-test.git"
+        - pull_request_repository_url: "git@gitlab.com:bitrise/git-clone-test.git"
         - branch_dest: "master"
-        - commit: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
+        - commit: "842b0922232eeb09c1cf5c526f7cdd67ff0e83f7"
         - tag: ""
-        - branch: "test/commit-messages"
+        - branch: "develop"
         - clone_depth: ""
     - script:
         inputs:
@@ -531,6 +531,7 @@ workflows:
     - ensure-clean-git:
         inputs:
         - dir_to_check: $CLONE_INTO_DIR
+
   go-tests:
     before_run:
     - _install-test-tools
