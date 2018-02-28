@@ -133,6 +133,10 @@ func isFork(repoURL, prRepoURL string) bool {
 	return prRepoURL != "" && getRepo(repoURL) != getRepo(prRepoURL)
 }
 
+// formats:
+// https://hostname/owner/repository.git
+// git@hostname:owner/repository.git
+// ssh://git@hostname:port/owner/repository.git
 func getRepo(url string) string {
 	var host, repo string
 	switch {
