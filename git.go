@@ -133,11 +133,27 @@ func isFork(repoURL, prRepoURL string) bool {
 	return prRepoURL != "" && getRepo(repoURL) != getRepo(prRepoURL)
 }
 
+// formats:
+// https://hostname/owner/repository.git
+// git@hostname:owner/repository.git
+// ssh://git@hostname:port/owner/repository.git
 func getRepo(url string) string {
-	repo := strings.TrimPrefix(url, "git@")
-	repo = strings.TrimPrefix(repo, "https://")
-	repo = strings.TrimSuffix(repo, ".git")
-	return strings.Replace(repo, ":", "/", 1)
+	var host, repo string
+	switch {
+	case strings.HasPrefix(url, "https://"):
+		url = strings.TrimPrefix(url, "https://")
+		idx := strings.Index(url, "/")
+		host, repo = url[:idx], url[idx+1:]
+	case strings.HasPrefix(url, "git@"):
+		url = url[strings.Index(url, "@")+1:]
+		idx := strings.Index(url, ":")
+		host, repo = url[:idx], url[idx+1:]
+	case strings.HasPrefix(url, "ssh://"):
+		url = url[strings.Index(url, "@")+1:]
+		host = url[:strings.Index(url, ":")]
+		repo = url[strings.Index(url, "/")+1:]
+	}
+	return host + "/" + strings.TrimSuffix(repo, ".git")
 }
 
 func isPrivate(repoURL string) bool {

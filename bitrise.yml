@@ -59,6 +59,7 @@ workflows:
     - _test_commit_logs
     - _test_hosted_git_notfork
     - _test_unrelated_histories
+    - _test_hosted_git_ssh_prefix
     steps:
     - activate-ssh-key:
         run_if: true
@@ -432,6 +433,39 @@ workflows:
         inputs:
         - dir_to_check: $CLONE_INTO_DIR
 
+  _test_hosted_git_ssh_prefix:
+    before_run:
+    - _create_tmpdir
+    steps:
+    - path::./:
+        run_if: true
+        inputs:
+        - repository_url: "ssh://git@gitlab.com:22/bitrise/git-clone-test.git"
+        - clone_into_dir: $CLONE_INTO_DIR
+        - pull_request_id:
+        - pull_request_merge_branch:
+        - pull_request_repository_url: "git@gitlab.com:bitrise/git-clone-test.git"
+        - branch_dest: "master"
+        - commit: "842b0922232eeb09c1cf5c526f7cdd67ff0e83f7"
+        - tag: ""
+        - branch: "develop"
+        - clone_depth: ""
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
+
   _test_hosted_git_notfork:
     before_run:
     - _create_tmpdir
@@ -497,6 +531,7 @@ workflows:
     - ensure-clean-git:
         inputs:
         - dir_to_check: $CLONE_INTO_DIR
+
   go-tests:
     before_run:
     - _install-test-tools
