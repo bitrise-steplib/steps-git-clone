@@ -1,6 +1,11 @@
-## Changelog (Current version: 4.0.8)
+## Changelog (Current version: 4.0.9)
 
 -----------------
+
+### 4.0.9 (2018 Mar 02)
+
+* [a2cbf78] Bump version to 4.0.9
+* [89446dd] Detect the same repository if the url starts with ssh:// (#74)
 
 ### 4.0.8 (2018 Feb 23)
 
@@ -320,4 +325,4 @@
 
 -----------------
 
-Updated: 2018 Feb 23
+Updated: 2018 Mar 02
