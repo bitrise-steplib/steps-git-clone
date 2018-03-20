@@ -44,28 +44,26 @@ func resetRepo(gitCmd git.Git) error {
 	if err := run(gitCmd.Reset("--hard", "HEAD")); err != nil {
 		return err
 	}
-
 	if err := run(gitCmd.Clean("-x", "-d", "-f")); err != nil {
 		return err
 	}
-
 	if err := run(gitCmd.SubmoduleForeach(gitCmd.Reset("--hard", "HEAD"))); err != nil {
 		return err
 	}
-
 	return run(gitCmd.SubmoduleForeach(gitCmd.Clean("-x", "-d", "-f")))
 }
 
 func getCheckoutArg(commit, tag, branch string) string {
-	arg := ""
-	if commit != "" {
-		arg = commit
-	} else if tag != "" {
-		arg = tag
-	} else if branch != "" {
-		arg = branch
+	switch {
+	case commit != "":
+		return commit
+	case tag != "":
+		return tag
+	case branch != "":
+		return branch
+	default:
+		return ""
 	}
-	return arg
 }
 
 func getDiffFile(buildURL, apiToken string, prID int) (string, error) {
@@ -114,7 +112,7 @@ func output(c *command.Model) (string, error) {
 }
 
 func runWithRetry(f func() *command.Model) error {
-	return retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
+	return retry.Times(2).Wait(5).Try(func(attempt uint) error {
 		if attempt > 0 {
 			log.Warnf("Retrying...")
 		}
@@ -173,10 +171,12 @@ func mergeArg(mergeBranch string) string {
 
 func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken string, depth, id int) error {
 	if err := runWithRetry(func() *command.Model {
+		var opts []string
 		if depth != 0 {
-			return gitCmd.Fetch("--depth=" + strconv.Itoa(depth))
+			opts = append(opts, "--depth="+strconv.Itoa(depth))
 		}
-		return gitCmd.Fetch()
+		opts = append(opts, "origin", branchDest)
+		return gitCmd.Fetch(opts...)
 	}); err != nil {
 		return fmt.Errorf("Fetch failed, error: %v", err)
 	}
@@ -222,12 +222,9 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 }
 
 func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest string) error {
-	if err := runWithRetry(func() *command.Model {
-		return gitCmd.Fetch()
-	}); err != nil {
-		return fmt.Errorf("Fetch failed, error: %v", err)
+	if err := runWithRetry(func() *command.Model { return gitCmd.Fetch("origin", branchDest) }); err != nil {
+		return fmt.Errorf("fetch failed, error: %v", err)
 	}
-
 	if err := pull(gitCmd, branchDest); err != nil {
 		return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
 	}
@@ -241,18 +238,16 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 		if err := run(gitCmd.RemoteAdd("fork", prRepoURL)); err != nil {
 			return fmt.Errorf("couldn't add remote (%s), error: %v", prRepoURL, err)
 		}
-
-		if err := runWithRetry(func() *command.Model {
-			return gitCmd.Fetch("fork", branch)
-		}); err != nil {
-			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
-				branch, err)
+		if err := runWithRetry(func() *command.Model { return gitCmd.Fetch("fork", branch) }); err != nil {
+			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v", branch, err)
 		}
-
 		if err := run(gitCmd.Merge("fork/" + branch)); err != nil {
 			return fmt.Errorf("merge failed (fork/%s), error: %v", branch, err)
 		}
 	} else {
+		if err := run(gitCmd.Fetch("origin", branch)); err != nil {
+			return fmt.Errorf("fetch failed, error: %v", err)
+		}
 		if err := run(gitCmd.Merge(commit)); err != nil {
 			return fmt.Errorf("merge failed (%s), error: %v", commit, err)
 		}
@@ -261,7 +256,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	return nil
 }
 
-func checkout(gitCmd git.Git, arg string, depth int, isTag bool) error {
+func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) error {
 	if err := runWithRetry(func() *command.Model {
 		var opts []string
 		if depth != 0 {
@@ -269,6 +264,9 @@ func checkout(gitCmd git.Git, arg string, depth int, isTag bool) error {
 		}
 		if isTag {
 			opts = append(opts, "--tags")
+		}
+		if branch == arg {
+			opts = append(opts, "origin", branch)
 		}
 		return gitCmd.Fetch(opts...)
 	}); err != nil {
