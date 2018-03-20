@@ -1,6 +1,11 @@
-## Changelog (Current version: 4.0.9)
+## Changelog (Current version: 4.0.10)
 
 -----------------
+
+### 4.0.10 (2018 Mar 20)
+
+* [553e08a] Bump version to 4.0.10
+* [b6e1ef9] Fetch only the affected branches (#76)
 
 ### 4.0.9 (2018 Mar 02)
 
@@ -325,4 +330,4 @@
 
 -----------------
 
-Updated: 2018 Mar 02
+Updated: 2018 Mar 20
