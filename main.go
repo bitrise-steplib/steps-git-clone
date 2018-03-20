@@ -8,12 +8,28 @@ import (
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-tools/go-steputils/stepconf"
 )
 
-const (
-	retryCount = 2
-	waitTime   = 5 // seconds
-)
+type config struct {
+	RepositoryURL string `env:"repository_url,required"`
+	CloneIntoDir  string `env:"clone_into_dir,required"`
+	Commit        string `env:"commit"`
+	Tag           string `env:"tag"`
+	Branch        string `env:"branch"`
+
+	BranchDest      string `env:"branch_dest"`
+	PRID            int    `env:"pull_request_id"`
+	PRRepositoryURL string `env:"pull_request_repository_url"`
+	PRMergeBranch   string `env:"pull_request_merge_branch"`
+	ResetRepository bool   `env:"reset_repository,opt[Yes,No]"`
+	CloneDepth      int    `env:"clone_depth"`
+
+	BuildURL         string `env:"build_url"`
+	BuildAPIToken    string `env:"build_api_token"`
+	UpdateSubmodules bool   `env:"update_submodules,opt[yes,no]"`
+	ManualMerge      bool   `env:"manual_merge,opt[yes,no]"`
+}
 
 func printLogAndExportEnv(gitCmd git.Git, format, env string) error {
 	l, err := output(gitCmd.Log(format))
@@ -35,72 +51,64 @@ func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
 }
 
 func mainE() error {
-	config, errs := newConfig()
-	if len(errs) > 0 {
-		text := ""
-		for _, err := range errs {
-			text += err.Error() + "\n"
-		}
-		return fmt.Errorf("invalid inputs:\n%s", text)
+	var cfg config
+	if err := stepconf.Parse(&cfg); err != nil {
+		log.Errorf("Error: %s\n", err)
+		os.Exit(1)
 	}
-	config.print()
-	gitCmd, err := git.New(config.CloneIntoDir)
+	stepconf.Print(cfg)
+
+	gitCmd, err := git.New(cfg.CloneIntoDir)
 	if err != nil {
 		return fmt.Errorf("create gitCmd project, error: %v", err)
 	}
+	checkoutArg := getCheckoutArg(cfg.Commit, cfg.Tag, cfg.Branch)
 
-	checkoutArg := getCheckoutArg(config.Commit, config.Tag, config.Branch)
-
-	originPresent, err := isOriginPresent(gitCmd, config.CloneIntoDir, config.RepositoryURL)
+	originPresent, err := isOriginPresent(gitCmd, cfg.CloneIntoDir, cfg.RepositoryURL)
 	if err != nil {
 		return fmt.Errorf("check if origin is presented, error: %v", err)
 	}
 
-	if originPresent && config.ResetRepository {
+	if originPresent && cfg.ResetRepository {
 		if err := resetRepo(gitCmd); err != nil {
 			return fmt.Errorf("reset repository, error: %v", err)
 		}
 	}
-
 	if err := run(gitCmd.Init()); err != nil {
 		return fmt.Errorf("init repository, error: %v", err)
 	}
-
 	if !originPresent {
-		if err := run(gitCmd.RemoteAdd("origin", config.RepositoryURL)); err != nil {
-			return fmt.Errorf("add remote repository (%s), error: %v", config.RepositoryURL, err)
+		if err := run(gitCmd.RemoteAdd("origin", cfg.RepositoryURL)); err != nil {
+			return fmt.Errorf("add remote repository (%s), error: %v", cfg.RepositoryURL, err)
 		}
 	}
 
-	isPR := config.PRRepositoryCloneURL != "" ||
-		config.PRMergeBranch != "" ||
-		config.PRID != 0
-
+	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
 	if isPR {
-		if !config.ManualMerge || isPrivate(config.PRRepositoryCloneURL) && isFork(config.RepositoryURL, config.PRRepositoryCloneURL) {
-			if err := autoMerge(gitCmd, config.PRMergeBranch, config.BranchDest, config.BuildURL,
-				config.BuildAPIToken, config.CloneDepth, config.PRID); err != nil {
+		if !cfg.ManualMerge || isPrivate(cfg.PRRepositoryURL) && isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
+			if err := autoMerge(gitCmd, cfg.PRMergeBranch, cfg.BranchDest, cfg.BuildURL,
+				cfg.BuildAPIToken, cfg.CloneDepth, cfg.PRID); err != nil {
 				return fmt.Errorf("auto merge, error: %v", err)
 			}
 		} else {
-			if err := manualMerge(gitCmd, config.RepositoryURL, config.PRRepositoryCloneURL, config.Branch,
-				config.Commit, config.BranchDest); err != nil {
+			if err := manualMerge(gitCmd, cfg.RepositoryURL, cfg.PRRepositoryURL, cfg.Branch,
+				cfg.Commit, cfg.BranchDest); err != nil {
 				return fmt.Errorf("manual merge, error: %v", err)
 			}
 		}
 	} else if checkoutArg != "" {
-		if err := checkout(gitCmd, checkoutArg, config.CloneDepth, config.Tag != ""); err != nil {
+		if err := checkout(gitCmd, checkoutArg, cfg.Branch, cfg.CloneDepth, cfg.Tag != ""); err != nil {
 			return fmt.Errorf("checkout (%s): %v", checkoutArg, err)
 		}
 		// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
-		if checkoutArg == config.Branch {
-			if err := run(gitCmd.Merge("origin/" + config.Branch)); err != nil {
-				return fmt.Errorf("merge %q: %v", config.Branch, err)
+		if checkoutArg == cfg.Branch {
+			if err := run(gitCmd.Merge("origin/" + cfg.Branch)); err != nil {
+				return fmt.Errorf("merge %q: %v", cfg.Branch, err)
 			}
 		}
 	}
 
-	if config.UpdateSubmodules {
+	if cfg.UpdateSubmodules {
 		if err := run(gitCmd.SubmoduleUpdate()); err != nil {
 			return fmt.Errorf("submodule update: %v", err)
 		}
