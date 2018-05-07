@@ -10,8 +10,6 @@ description: |
 website: https://github.com/bitrise-io/steps-git-clone
 source_code_url: https://github.com/bitrise-io/steps-git-clone
 support_url: https://github.com/bitrise-io/steps-git-clone/issues
-host_os_tags:
-  - osx-10.10
 type_tags:
   - utility
 is_requires_admin_user: false
