@@ -72,6 +72,24 @@ inputs:
       category: Clone Config
       title: "Merged pull request branch"
       is_dont_change_value: true
+  - update_submodules: "yes"
+    opts:
+      category: Clone Config
+      title: Update the registered submodules?
+      summary: |-
+        Update the registered submodules?
+      description: |-
+        Update the registered submodules?
+      value_options:
+      - "yes"
+      - "no"
+  - clone_depth:
+    opts:
+      category: Clone Config
+      title: "Limit fetching to the specified number of commits"
+      description: |-
+        Limit fetching to the specified number of commits.
+        The value should be a decimal number, example: `10`.
   - reset_repository: "No"
     opts:
       category: Debug
@@ -80,13 +98,17 @@ inputs:
       value_options:
       - "No"
       - "Yes"
-  - clone_depth:
+  - manual_merge: "yes"
     opts:
       category: Debug
-      title: "Limit fetching to the specified number of commits"
+      title: Manual merge
+      summary:  Prefer to do a manual `git merge` by default.
       description: |-
-        Limit fetching to the specified number of commits.
-        The value should be a decimal number, example: `10`.
+        Prefer to do a manual `git merge` by default.
+        When the PR is from a private repository, set this to `"no"`.
+      value_options:
+      - "yes"
+      - "no"
   - build_url: "$BITRISE_BUILD_URL"
     opts:
       category: Debug
@@ -105,28 +127,6 @@ inputs:
       description: |-
         The build's API Token for the build on Bitrise.io
       is_dont_change_value: true
-  - update_submodules: "yes"
-    opts:
-      category: Debug
-      title: Update the registered submodules?
-      summary: |-
-        Update the registered submodules?
-      description: |-
-        Update the registered submodules?
-      value_options:
-      - "yes"
-      - "no"
-  - manual_merge: "yes"
-    opts:
-      category: Clone Config
-      title: Manual merge
-      summary:  Prefer to do a manual `git merge` by default.
-      description: |-
-        Prefer to do a manual `git merge` by default.
-        When the PR is from a private repository, set this to `"no"`.
-      value_options:
-      - "yes"
-      - "no"
 outputs:
   - GIT_CLONE_COMMIT_HASH:
     opts:
