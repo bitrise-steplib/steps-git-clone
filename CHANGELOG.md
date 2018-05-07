@@ -1,6 +1,11 @@
-## Changelog (Current version: 4.0.10)
+## Changelog (Current version: 4.0.11)
 
 -----------------
+
+### 4.0.11 (2018 May 07)
+
+* [36fad43] Prepare for 4.0.11
+* [d87d550] Input groupping (#80)
 
 ### 4.0.10 (2018 Mar 20)
 
@@ -330,4 +335,4 @@
 
 -----------------
 
-Updated: 2018 Mar 20
+Updated: 2018 May 07
