@@ -48,8 +48,11 @@ workflows:
     envs:
     - CLONE_INTO_DIR: .
     - GIT_REPOSITORY_URL: https://github.com/bitrise-samples/git-clone-test.git
-    before_run:
-    - go-tests
+    steps:
+    - go-list:
+    - golint:
+    - errcheck:
+    - go-test:
     after_run:
     - _test_submodule
     - _test_no_checkout
