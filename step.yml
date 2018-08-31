@@ -125,6 +125,7 @@ inputs:
       description: |-
         The build's API Token for the build on Bitrise.io
       is_dont_change_value: true
+      is_sensitive: true
 outputs:
   - GIT_CLONE_COMMIT_HASH:
     opts:
