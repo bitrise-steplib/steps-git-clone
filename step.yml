@@ -103,7 +103,7 @@ inputs:
       summary:  Prefer to do a manual `git merge` by default.
       description: |-
         Prefer to do a manual `git merge` by default.
-        When the PR is from a private repository, set this to `"no"`.
+        When the Pull Request is from a GitHub or Bitbucket private fork repository set this to `"no"`.
       value_options:
       - "yes"
       - "no"
