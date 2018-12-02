@@ -33,7 +33,7 @@ envs:
 
 1. Create a new git repository for your step (**don't fork** the *step template*, create a *new* repository)
 2. Copy the [step template](https://github.com/bitrise-steplib/step-template) files into your repository
-3. Fill the `step.sh` with your functionality
+3. Fill the `main.go` with your functionality
 4. Wire out your inputs to `step.yml` (`inputs` section)
 5. Fill out the other parts of the `step.yml` too
 6. Provide test values for the inputs in the `bitrise.yml`
