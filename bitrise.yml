@@ -1,4 +1,4 @@
-format_version: "2"
+format_version: "8"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
@@ -47,7 +47,7 @@ workflows:
   ci:
     envs:
     - CLONE_INTO_DIR: .
-    - GIT_REPOSITORY_URL: https://github.com/bitrise-samples/git-clone-test.git
+    - GIT_REPOSITORY_URL: https://github.com/bitrise-io/git-clone-test.git
     steps:
     - go-list:
     - golint:
@@ -481,11 +481,11 @@ workflows:
     - path::./:
         run_if: true
         inputs:
-        - repository_url: "https://github.com/bitrise-samples/git-clone-test.git"
+        - repository_url: "https://github.com/bitrise-io/git-clone-test.git"
         - clone_into_dir: $CLONE_INTO_DIR
         - pull_request_id: 7
         - pull_request_merge_branch: "pull/7/merge"
-        - pull_request_repository_url: "git@github.com:bitrise-samples/git-clone-test.git"
+        - pull_request_repository_url: "git@github.com:bitrise-io/git-clone-test.git"
         - branch_dest: "master"
         - commit: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
         - tag: ""
