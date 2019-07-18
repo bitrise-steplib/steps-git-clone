@@ -31,14 +31,20 @@ type config struct {
 	ManualMerge      bool   `env:"manual_merge,opt[yes,no]"`
 }
 
+const (
+	maxCommitBodyLenght = 72
+)
+
 func printLogAndExportEnv(gitCmd git.Git, format, env string, trim bool) error {
 	l, err := output(gitCmd.Log(format))
 	if err != nil {
 		return err
 	}
 
-	if trim {
-		l = checkForTrim(l)
+	if trim && len(l) > maxCommitBodyLenght {
+		trimmedValue := l[:maxCommitBodyLenght]
+		log.Printf("Value %s\n trimmed to =>\n%s", l, trimmedValue)
+		l = trimmedValue
 	}
 
 	log.Printf("=> %s\n   value: %s\n", env, l)
@@ -46,17 +52,6 @@ func printLogAndExportEnv(gitCmd git.Git, format, env string, trim bool) error {
 		return fmt.Errorf("envman export, error: %v", err)
 	}
 	return nil
-}
-
-func checkForTrim(value string) string {
-	const maxLength = 72
-	if len(value) > maxLength {
-		valueRune := []rune(value)
-		trimmedValue := string(valueRune[0 : maxLength-1])
-		log.Printf("Value %s\n trimmed to =>\n%s", value, trimmedValue)
-		return trimmedValue
-	}
-	return value
 }
 
 func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
@@ -147,12 +142,7 @@ func mainE() error {
 			`%cn`: "GIT_CLONE_COMMIT_COMMITER_NAME",
 			`%ce`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
 		} {
-			if env == "GIT_CLONE_COMMIT_MESSAGE_BODY" {
-				if err := printLogAndExportEnv(gitCmd, format, env, true); err != nil {
-					return fmt.Errorf("gitCmd log failed, error: %v", err)
-				}
-			}
-			if err := printLogAndExportEnv(gitCmd, format, env, false); err != nil {
+			if err := printLogAndExportEnv(gitCmd, format, env, (env == "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" || env == "GIT_CLONE_COMMIT_MESSAGE_BODY")); err != nil {
 				return fmt.Errorf("gitCmd log failed, error: %v", err)
 			}
 		}
