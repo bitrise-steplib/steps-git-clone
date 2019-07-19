@@ -1,10 +1,9 @@
-format_version: "2"
+format_version: "8"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
     - STEP_ID_IN_STEPLIB: git-clone
-
     - GIT_REPOSITORY_URL: https://github.com/bitrise-io/steps-git-clone.git
 
 workflows:
@@ -47,7 +46,7 @@ workflows:
   ci:
     envs:
     - CLONE_INTO_DIR: .
-    - GIT_REPOSITORY_URL: https://github.com/bitrise-samples/git-clone-test.git
+    - GIT_REPOSITORY_URL: https://github.com/bitrise-io/git-clone-test.git
     steps:
     - go-list:
     - golint:
@@ -68,6 +67,7 @@ workflows:
     - _test_hosted_git_notfork
     - _test_unrelated_histories
     - _test_hosted_git_ssh_prefix
+    - _test_too_long_commit_message
     steps:
     - activate-ssh-key:
         run_if: true
@@ -481,11 +481,11 @@ workflows:
     - path::./:
         run_if: true
         inputs:
-        - repository_url: "https://github.com/bitrise-samples/git-clone-test.git"
+        - repository_url: "https://github.com/bitrise-io/git-clone-test.git"
         - clone_into_dir: $CLONE_INTO_DIR
         - pull_request_id: 7
         - pull_request_merge_branch: "pull/7/merge"
-        - pull_request_repository_url: "git@github.com:bitrise-samples/git-clone-test.git"
+        - pull_request_repository_url: "git@github.com:bitrise-io/git-clone-test.git"
         - branch_dest: "master"
         - commit: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
         - tag: ""
@@ -536,6 +536,46 @@ workflows:
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
             echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
             echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
+
+  _test_too_long_commit_message:
+    before_run:
+    - _create_tmpdir
+    steps:
+    - path::./:
+        run_if: true
+        inputs:
+        - clone_into_dir: $CLONE_INTO_DIR
+        - commit: "57b75df3147fc4b61bd3e7ae1421cddf591dbea5"
+        - branch: ""
+        - tag: ""
+        - pull_request_id: ""
+        - pull_request_merge_branch: ""
+        - pull_request_repository_url: ""
+        - branch_dest: ""
+        - clone_depth: ""
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+            if [ ${#GIT_CLONE_COMMIT_MESSAGE_BODY} -gt "72" ]; then
+              echo "Message body is bigger than 72 chars"
+              exit 1
+            fi
+            if [ ${#GIT_CLONE_COMMIT_MESSAGE_SUBJECT} -gt "72" ]; then
+              echo "Message subject is bigger than 72 chars"
+              exit 1
+            fi
     - ensure-clean-git:
         inputs:
         - dir_to_check: $CLONE_INTO_DIR
