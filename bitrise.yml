@@ -4,7 +4,6 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 app:
   envs:
     - STEP_ID_IN_STEPLIB: git-clone
-
     - GIT_REPOSITORY_URL: https://github.com/bitrise-io/steps-git-clone.git
 
 workflows:
@@ -549,8 +548,8 @@ workflows:
         run_if: true
         inputs:
         - clone_into_dir: $CLONE_INTO_DIR
-        - commit: "ae5f0b027cdabb17d81eeb832c4b9ed4a0e1ae6a"
-        - branch: "TOOL-57"
+        - commit: "57b75df3147fc4b61bd3e7ae1421cddf591dbea5"
+        - branch: ""
         - tag: ""
         - pull_request_id: ""
         - pull_request_merge_branch: ""
