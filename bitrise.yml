@@ -512,8 +512,8 @@ workflows:
         run_if: true
         inputs:
         - clone_into_dir: $CLONE_INTO_DIR
-        - commit: "aa0d9cca3bb9d2527b33d1c50ce8d1b99cadb455"
-        - branch: "TOOL-57"
+        - commit: "2e8cb1e06cda054e6eb861e56761acd52441cd86"
+        - branch: ""
         - tag: ""
         - pull_request_id: ""
         - pull_request_merge_branch: ""
