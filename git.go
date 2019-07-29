@@ -136,7 +136,7 @@ func isFork(repoURL, prRepoURL string) bool {
 // git@hostname:owner/repository.git
 // ssh://git@hostname:port/owner/repository.git
 func getRepo(url string) string {
-	var host, repo, port string
+	var host, repo string
 	switch {
 	case strings.HasPrefix(url, "https://"):
 		url = strings.TrimPrefix(url, "https://")
@@ -150,7 +150,7 @@ func getRepo(url string) string {
 		url = url[strings.Index(url, "@")+1:]
 		if strings.Contains(url, ":") {
 			idxColon, idxSlash := strings.Index(url, ":"), strings.Index(url, "/")
-			host, port, repo = url[:idxColon], url[idxColon+1:idxSlash], url[idxSlash+1:]
+			host, repo = url[:idxColon], url[idxSlash+1:]
 		} else {
 			idx := strings.Index(url, "/")
 			host, repo = url[:idx], url[idx+1:]
