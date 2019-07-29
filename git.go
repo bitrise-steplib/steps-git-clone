@@ -156,10 +156,6 @@ func getRepo(url string) string {
 			host, repo = url[:idx], url[idx+1:]
 		}
 	}
-
-	if port != "" {
-		return host + ":" + port + "/" + strings.TrimSuffix(repo, ".git")
-	}
 	return host + "/" + strings.TrimSuffix(repo, ".git")
 }
 
