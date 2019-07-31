@@ -148,8 +148,13 @@ func getRepo(url string) string {
 		host, repo = url[:idx], url[idx+1:]
 	case strings.HasPrefix(url, "ssh://"):
 		url = url[strings.Index(url, "@")+1:]
-		host = url[:strings.Index(url, ":")]
-		repo = url[strings.Index(url, "/")+1:]
+		if strings.Contains(url, ":") {
+			idxColon, idxSlash := strings.Index(url, ":"), strings.Index(url, "/")
+			host, repo = url[:idxColon], url[idxSlash+1:]
+		} else {
+			idx := strings.Index(url, "/")
+			host, repo = url[:idx], url[idx+1:]
+		}
 	}
 	return host + "/" + strings.TrimSuffix(repo, ".git")
 }
