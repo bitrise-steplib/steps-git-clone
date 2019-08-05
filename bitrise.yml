@@ -46,7 +46,6 @@ workflows:
     - _test_hosted_git_notfork
     - _test_unrelated_histories
     - _test_hosted_git_ssh_prefix
-    - _test_too_long_commit_message
     steps:
     - activate-ssh-key:
         run_if: true
