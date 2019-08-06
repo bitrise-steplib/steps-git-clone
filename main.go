@@ -45,9 +45,9 @@ func printLogAndExportEnv(gitCmd git.Git, format, env string, trimmableVariable 
 	}
 
 	if trimmableVariable && len(l) > maxCommitMessageLength {
-		trimmedValue := l[:maxCommitMessageLength] + trimEnding
-		log.Printf("Value %s trimmed", env)
-		l = trimmedValue
+		tv := l[:maxCommitMessageLength-len(trimEnding)] + trimEnding
+		log.Printf("Value %s  is bigger than maximum env variable size, trimming", env)
+		l = tv
 	}
 
 	log.Printf("=> %s\n   value: %s\n", env, l)
@@ -69,7 +69,7 @@ func initCommitMessageLength() error {
 		return err
 	}
 
-	maxCommitMessageLength = configs.EnvBytesLimitInKB*1024 - len(trimEnding)
+	maxCommitMessageLength = configs.EnvBytesLimitInKB * 1024
 	return nil
 }
 
