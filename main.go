@@ -36,16 +36,14 @@ const (
 	trimEnding = "..."
 )
 
-var maxCommitMessageLength int
-
-func printLogAndExportEnv(gitCmd git.Git, format, env string, trimmableVariable bool) error {
+func printLogAndExportEnv(gitCmd git.Git, format, env string, maxEnvLength int) error {
 	l, err := output(gitCmd.Log(format))
 	if err != nil {
 		return err
 	}
 
-	if trimmableVariable && len(l) > maxCommitMessageLength {
-		tv := l[:maxCommitMessageLength-len(trimEnding)] + trimEnding
+	if (env == "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" || env == "GIT_CLONE_COMMIT_MESSAGE_BODY") && len(l) > maxEnvLength {
+		tv := l[:maxEnvLength-len(trimEnding)] + trimEnding
 		log.Printf("Value %s  is bigger than maximum env variable size, trimming", env)
 		l = tv
 	}
@@ -63,14 +61,13 @@ func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
 	return cmd.Run()
 }
 
-func initCommitMessageLength() error {
+func getMaxEnvLength() (int, error) {
 	configs, err := envman.GetConfigs()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	maxCommitMessageLength = configs.EnvBytesLimitInKB * 1024
-	return nil
+	return configs.EnvBytesLimitInKB * 1024, nil
 }
 
 func mainE() error {
@@ -80,7 +77,8 @@ func mainE() error {
 	}
 	stepconf.Print(cfg)
 
-	if err := initCommitMessageLength(); err != nil {
+	maxEnvLength, err := getMaxEnvLength()
+	if err != nil {
 		failf("failed to set commit message length: %s\n", err)
 	}
 
@@ -158,7 +156,7 @@ func mainE() error {
 			`%cn`: "GIT_CLONE_COMMIT_COMMITER_NAME",
 			`%ce`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
 		} {
-			if err := printLogAndExportEnv(gitCmd, format, env, env == "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" || env == "GIT_CLONE_COMMIT_MESSAGE_BODY"); err != nil {
+			if err := printLogAndExportEnv(gitCmd, format, env, maxEnvLength); err != nil {
 				return fmt.Errorf("gitCmd log failed, error: %v", err)
 			}
 		}
