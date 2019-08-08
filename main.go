@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/bitrise-io/envman/envman"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
@@ -32,19 +33,19 @@ type config struct {
 }
 
 const (
-	maxCommitBodyLenght = 72
+	trimEnding = "..."
 )
 
-func printLogAndExportEnv(gitCmd git.Git, format, env string, trim bool) error {
+func printLogAndExportEnv(gitCmd git.Git, format, env string, maxEnvLength int) error {
 	l, err := output(gitCmd.Log(format))
 	if err != nil {
 		return err
 	}
 
-	if trim && len(l) > maxCommitBodyLenght {
-		trimmedValue := l[:maxCommitBodyLenght]
-		log.Printf("Value %s\n trimmed to =>\n%s", l, trimmedValue)
-		l = trimmedValue
+	if (env == "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" || env == "GIT_CLONE_COMMIT_MESSAGE_BODY") && len(l) > maxEnvLength {
+		tv := l[:maxEnvLength-len(trimEnding)] + trimEnding
+		log.Printf("Value %s  is bigger than maximum env variable size, trimming", env)
+		l = tv
 	}
 
 	log.Printf("=> %s\n   value: %s\n", env, l)
@@ -60,13 +61,26 @@ func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
 	return cmd.Run()
 }
 
+func getMaxEnvLength() (int, error) {
+	configs, err := envman.GetConfigs()
+	if err != nil {
+		return 0, err
+	}
+
+	return configs.EnvBytesLimitInKB * 1024, nil
+}
+
 func mainE() error {
 	var cfg config
 	if err := stepconf.Parse(&cfg); err != nil {
-		log.Errorf("Error: %s\n", err)
-		os.Exit(1)
+		failf("Error: %s\n", err)
 	}
 	stepconf.Print(cfg)
+
+	maxEnvLength, err := getMaxEnvLength()
+	if err != nil {
+		failf("failed to set commit message length: %s\n", err)
+	}
 
 	gitCmd, err := git.New(cfg.CloneIntoDir)
 	if err != nil {
@@ -142,7 +156,7 @@ func mainE() error {
 			`%cn`: "GIT_CLONE_COMMIT_COMMITER_NAME",
 			`%ce`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
 		} {
-			if err := printLogAndExportEnv(gitCmd, format, env, (env == "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" || env == "GIT_CLONE_COMMIT_MESSAGE_BODY")); err != nil {
+			if err := printLogAndExportEnv(gitCmd, format, env, maxEnvLength); err != nil {
 				return fmt.Errorf("gitCmd log failed, error: %v", err)
 			}
 		}
@@ -161,10 +175,14 @@ func mainE() error {
 	return nil
 }
 
+func failf(format string, v ...interface{}) {
+	log.Errorf(format, v...)
+	os.Exit(1)
+}
+
 func main() {
 	if err := mainE(); err != nil {
-		log.Errorf("ERROR: %v", err)
-		os.Exit(1)
+		failf("ERROR: %v", err)
 	}
 	log.Donef("\nSuccess")
 }

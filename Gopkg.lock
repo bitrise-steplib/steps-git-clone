@@ -2,30 +2,89 @@
 
 
 [[projects]]
+  digest = "1:f4639ff348b8537bad01771ac6c4a9c692903a0763e06c1b172f2e861126cad8"
+  name = "github.com/bitrise-io/envman"
+  packages = [
+    "envman",
+    "models",
+  ]
+  pruneopts = ""
+  revision = "94a0544660e8d2d73612f744bbd66d61216a1221"
+  version = "2.2.5"
+
+[[projects]]
   branch = "master"
+  digest = "1:5c76373d03ec69eb5c0ee65437f4a4f1bd12cbb3f1e3aa26a808e447804d9308"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
     "command",
     "command/git",
     "errorutil",
+    "fileutil",
     "log",
     "parseutil",
     "pathutil",
     "pointers",
-    "retry"
+    "retry",
   ]
+  pruneopts = ""
   revision = "b33f6bcef9b50045d7e62364b354584afc3ee329"
 
 [[projects]]
   branch = "master"
+  digest = "1:b6664ef50225193e745121df2c7908a72d2708cc4f9b7133bd2e874716b5d912"
+  name = "github.com/bitrise-io/goinp"
+  packages = ["goinp"]
+  pruneopts = ""
+  revision = "bd18a8681e272db4696c50152b288f722d08b914"
+
+[[projects]]
+  branch = "master"
+  digest = "1:fb6b468055581c11777bbb8ca1fb3640cecf9eb64c74852fc9bd87b0e664716e"
   name = "github.com/bitrise-tools/go-steputils"
   packages = ["stepconf"]
+  pruneopts = ""
   revision = "b0e1079aa921440413a5c56f301246fe8367c072"
+
+[[projects]]
+  branch = "master"
+  digest = "1:086760278d762dbb0e9a26e09b57f04c89178c86467d8d94fae47d64c222f328"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  pruneopts = ""
+  revision = "4def268fd1a49955bfb3dda92fe3db4f924f2285"
+
+[[projects]]
+  branch = "master"
+  digest = "1:6b58a5bc8507df022a1374653c1da87b0a7b34586f5b0b8ab10a38b0c919f624"
+  name = "golang.org/x/sys"
+  packages = [
+    "unix",
+    "windows",
+  ]
+  pruneopts = ""
+  revision = "94b544f455efde7a614f75a3e43a2a65bce93113"
+
+[[projects]]
+  digest = "1:cedccf16b71e86db87a24f8d4c70b0a855872eb967cb906a66b95de56aefbd0d"
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  pruneopts = ""
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
+  version = "v2.2.2"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4c4ec3bda791e16da395415c258a5145bfb536b4662f0e87d066f2569bba80dd"
+  input-imports = [
+    "github.com/bitrise-io/envman/envman",
+    "github.com/bitrise-io/go-utils/command",
+    "github.com/bitrise-io/go-utils/command/git",
+    "github.com/bitrise-io/go-utils/log",
+    "github.com/bitrise-io/go-utils/pathutil",
+    "github.com/bitrise-io/go-utils/retry",
+    "github.com/bitrise-tools/go-steputils/stepconf",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
