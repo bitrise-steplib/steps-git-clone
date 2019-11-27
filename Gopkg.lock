@@ -49,6 +49,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:63e7368fcf6b54804076eaec26fd9cf0c4466166b272393db4b93102e1e962df"
+  name = "github.com/kballard/go-shellquote"
+  packages = ["."]
+  pruneopts = ""
+  revision = "95032a82bc518f77982ea72343cc1ade730072f0"
+
+[[projects]]
+  branch = "master"
   digest = "1:086760278d762dbb0e9a26e09b57f04c89178c86467d8d94fae47d64c222f328"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
@@ -85,6 +93,7 @@
     "github.com/bitrise-io/go-utils/pathutil",
     "github.com/bitrise-io/go-utils/retry",
     "github.com/bitrise-tools/go-steputils/stepconf",
+    "github.com/kballard/go-shellquote",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
