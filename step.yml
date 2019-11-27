@@ -75,6 +75,14 @@ inputs:
       value_options:
       - "yes"
       - "no"
+  - update_submodule_args:
+    opts:
+      category: Clone Config
+      title: Additional arguments for submodule update
+      summary: |-
+        Additional arguments for submodule update
+      description: |-
+        Additional arguments for submodule update
   - clone_depth:
     opts:
       category: Clone Config

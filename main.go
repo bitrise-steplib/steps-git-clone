@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/kballard/go-shellquote"
+
 	"github.com/bitrise-io/envman/envman"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
@@ -26,10 +28,11 @@ type config struct {
 	ResetRepository bool   `env:"reset_repository,opt[Yes,No]"`
 	CloneDepth      int    `env:"clone_depth"`
 
-	BuildURL         string `env:"build_url"`
-	BuildAPIToken    string `env:"build_api_token"`
-	UpdateSubmodules bool   `env:"update_submodules,opt[yes,no]"`
-	ManualMerge      bool   `env:"manual_merge,opt[yes,no]"`
+	BuildURL            string `env:"build_url"`
+	BuildAPIToken       string `env:"build_api_token"`
+	UpdateSubmodules    bool   `env:"update_submodules,opt[yes,no]"`
+	UpdateSubmoduleArgs string `env:"update_submodule_args"`
+	ManualMerge         bool   `env:"manual_merge,opt[yes,no]"`
 }
 
 const (
@@ -133,7 +136,16 @@ func mainE() error {
 	}
 
 	if cfg.UpdateSubmodules {
-		if err := run(gitCmd.SubmoduleUpdate()); err != nil {
+		var flags []string
+
+		if len(cfg.UpdateSubmoduleArgs) > 0 {
+			flags, err = shellquote.Split(cfg.UpdateSubmoduleArgs)
+			if err != nil {
+				return fmt.Errorf("unable to parse submodule additional arguments: %v", err)
+			}
+		}
+
+		if err := run(gitCmd.SubmoduleUpdate(flags...)); err != nil {
 			return fmt.Errorf("submodule update: %v", err)
 		}
 	}
