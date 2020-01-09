@@ -1,7 +1,8 @@
 title: "Git Clone Repository"
-summary: Clones your source code from a remote repository into a clean build machine on Bitrise.
+summary: The Step checks out the defined repository state, optionally updates the repository submodules and exports the achieved git repository state properties.
 description: |
-   It runs `git clone` command to pull source code from a remote repository into the build machine on Bitrise. When triggering a build or starting a build manually, a webhook notifies Bitrise which branch and commit should be cloned for the build and passes it onto the **Git Clone Repository** Step. Once the build has run, the build machine gets rolled back so no source code is stored on Bitrise.
+   The checkout process depends on the checkout properties: the Step either checks out a repository state defined by a git commit or a git tag, or achieves a merged state of a pull / merge request. 
+   Once the desired state is checked out, the Step optionally updates the submodules. In the case of pull / merge request, the Step checks out a detach head and exports the achieved git state properties.
    
    ### Configuring the Step
    
@@ -10,7 +11,7 @@ description: |
    1. You can set the **Update the registered submodules?** option to `yes` to pull the most up-to-date version of the submodule from the submodule's repository.
    2. You can set the number of commits you want the Step to fetch in the **Limit fetching to the specified number of commits** option. Make sure you set a decimal number.
    
-   Other **Clone config** inputs are not editable unless you go to the **bitrise.yml** tab, however, to avoid issues, we suggest you to rather contact our Support team instead.
+   Other **Clone config** inputs are not editable unless you go to the **bitrise.yml** tab, however, to avoid issues, we suggest you to contact our Support team instead.
    
    ### Troubleshooting
    If you have GitHub Enterprise set up, it works slightly differently on [bitrise.io](https://www.bitrise.io) than on [github.com](https://github.com). You have to manually set the git clone URL, register the SSH key and the webhook.
@@ -19,14 +20,14 @@ description: |
     
    ### Useful links
    
-   [How to register a GitHub Enterprise repository](https://discuss.bitrise.io/t/how-to-register-a-github-enterprise-repository/218)
-   [Code security](https://devcenter.bitrise.io/getting-started/code-security/)
+   - [How to register a GitHub Enterprise repository](https://discuss.bitrise.io/t/how-to-register-a-github-enterprise-repository/218)
+   - [Code security](https://devcenter.bitrise.io/getting-started/code-security/)
    
    ### Related Steps
     
-   [Activate SSH key (RSA private key)](https://www.bitrise.io/integrations/steps/activate-ssh-key)
-   [Bitrise.io Cache:Pull](https://www.bitrise.io/integrations/steps/cache-pull)
-   [Bitrise.io Cache:Push](https://www.bitrise.io/integrations/steps/cache-push)
+   - [Activate SSH key (RSA private key)](https://www.bitrise.io/integrations/steps/activate-ssh-key)
+   - [Bitrise.io Cache:Pull](https://www.bitrise.io/integrations/steps/cache-pull)
+   - [Bitrise.io Cache:Push](https://www.bitrise.io/integrations/steps/cache-push)
 
 website: https://github.com/bitrise-io/steps-git-clone
 source_code_url: https://github.com/bitrise-io/steps-git-clone
