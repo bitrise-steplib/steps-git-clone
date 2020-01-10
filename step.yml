@@ -1,7 +1,8 @@
 title: "Git Clone Repository"
 summary: The Step checks out the defined repository state, optionally updates the repository submodules and exports the achieved git repository state properties.
 description: |
-   The checkout process depends on the checkout properties: the Step either checks out a repository state defined by a git commit or a git tag, or achieves a merged state of a pull / merge request. 
+   The checkout process depends on the checkout properties: the Step either checks out a repository state defined by a git commit or a git tag, or achieves a merged state of a pull / merge request.
+   The Step uses two solutions to achieve the merged state of the pull / merge request: auto merge in the case of a merge branch or diff file (provided by the Git service) and manual merge otherwise.
    Once the desired state is checked out, the Step optionally updates the submodules. In the case of pull / merge request, the Step checks out a detach head and exports the achieved git state properties.
    
    ### Configuring the Step
