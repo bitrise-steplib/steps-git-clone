@@ -1,12 +1,35 @@
 title: "Git Clone Repository"
-summary: Clone a repository to the specified path on the VM
+summary: The Step checks out the defined repository state, optionally updates the repository submodules and exports the achieved git repository state properties.
 description: |
-  Clones a repository based on the provided inputs.
+   The checkout process depends on the checkout properties: the Step either checks out a repository state defined by a git commit or a git tag, or achieves a merged state of a pull / merge request.
+   The Step uses two solutions to achieve the merged state of the pull / merge request: auto merge in the case of a merge branch or diff file (provided by the Git service) and manual merge otherwise.
+   Once the desired state is checked out, the Step optionally updates the submodules. In the case of pull / merge request, the Step checks out a detach head and exports the achieved git state properties.
+   
+   ### Configuring the Step
+   
+   1. The **Git repository URL** and the ** Clone destination (local)directory path** fields are required fields and are automatically filled out based on your project settings.
+   Optionally, you can modify the following fields in the **Clone Config** section:
+   1. You can set the **Update the registered submodules?** option to `yes` to pull the most up-to-date version of the submodule from the submodule's repository.
+   2. You can set the number of commits you want the Step to fetch in the **Limit fetching to the specified number of commits** option. Make sure you set a decimal number.
+   
+   Other **Clone config** inputs are not editable unless you go to the **bitrise.yml** tab, however, to avoid issues, we suggest you to contact our Support team instead.
+   
+   ### Troubleshooting
+   If you have GitHub Enterprise set up, it works slightly differently on [bitrise.io](https://www.bitrise.io) than on [github.com](https://github.com). You have to manually set the git clone URL, register the SSH key and the webhook.
+   If you face network issues in the case of self-hosted git servers, we advise you to contact our Support Team to help you out.
+   If you face slow clone speed, set the **Limit fetching to the specified number of commits** to the number of commits you want to clone instead of cloning the whole commit history or you can use the Git LFS solution provided by the git provider.
+    
+   ### Useful links
+   
+   - [How to register a GitHub Enterprise repository](https://discuss.bitrise.io/t/how-to-register-a-github-enterprise-repository/218)
+   - [Code security](https://devcenter.bitrise.io/getting-started/code-security/)
+   
+   ### Related Steps
+    
+   - [Activate SSH key (RSA private key)](https://www.bitrise.io/integrations/steps/activate-ssh-key)
+   - [Bitrise.io Cache:Pull](https://www.bitrise.io/integrations/steps/cache-pull)
+   - [Bitrise.io Cache:Push](https://www.bitrise.io/integrations/steps/cache-push)
 
-  If a `pull_request_id` is provided, then all other git checkout parameters will be ignored.
-  If a git commit is provided, it will ignore the tag and branch parameters.
-  If a tag is provided instead of a git commit, then it will ignore the branch parameter.
-  If no `branch` parameter is provided, then it'll skip the `git checkout`.
 website: https://github.com/bitrise-io/steps-git-clone
 source_code_url: https://github.com/bitrise-io/steps-git-clone
 support_url: https://github.com/bitrise-io/steps-git-clone/issues
