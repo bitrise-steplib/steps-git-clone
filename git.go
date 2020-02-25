@@ -271,7 +271,11 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) error {
 			opts = append(opts, "--tags")
 		}
 		if branch == arg {
-			opts = append(opts, "origin", branch)
+			if isTag {
+				opts = append(opts, "origin", branch)
+			} else {
+				opts = append(opts, "origin", "refs/heads/", branch)
+			}
 		}
 		return gitCmd.Fetch(opts...)
 	}); err != nil {
