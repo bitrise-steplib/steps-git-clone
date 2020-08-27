@@ -196,6 +196,7 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 		if err := pull(gitCmd, branchDest); err != nil {
 			return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
 		}
+		log.Printf("AAA gitCmd.Merge")
 		if err := run(gitCmd.Merge(mergeArg(mergeBranch))); err != nil {
 			if depth == 0 {
 				return fmt.Errorf("merge %q: %v", mergeArg(mergeBranch), err)
@@ -209,6 +210,7 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 			}); err != nil {
 				return fmt.Errorf("fetch failed, error: %v", err)
 			}
+			log.Printf("BBB gitCmd.Merge")
 			if err := run(gitCmd.Merge(mergeArg(mergeBranch))); err != nil {
 				return fmt.Errorf("merge %q: %v", mergeArg(mergeBranch), err)
 			}
@@ -253,6 +255,8 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 		if err := run(gitCmd.Fetch("origin", branch)); err != nil {
 			return fmt.Errorf("fetch failed, error: %v", err)
 		}
+		
+		log.Printf("CCC gitCmd.Merge")
 		if err := run(gitCmd.Merge(commit)); err != nil {
 			return fmt.Errorf("merge failed (%s), error: %v", commit, err)
 		}
@@ -301,5 +305,6 @@ func pull(gitCmd git.Git, branchDest string) error {
 	if err := run(gitCmd.Checkout(branchDest)); err != nil {
 		return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 	}
+	log.Printf("DDD gitCmd.Merge")
 	return run(gitCmd.Merge("origin/" + branchDest))
 }
