@@ -190,20 +190,17 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 
 	if mergeBranch != "" {
 		log.Printf("==> mergeBranch 1")
-		if err := run(gitCmd.Checkout(branchDest)); err != nil {
-			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
-		}
-		
-		log.Printf("==> mergeBranch 1.1")
 		if err := runWithRetry(func() *command.Model {
 			return gitCmd.Fetch("origin", fetchArg(mergeBranch))
 		}); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
 				mergeBranch, err)
 		}
-		//if err := pull(gitCmd, branchDest); err != nil {
-		//	return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
-		//}
+		
+		log.Printf("==> mergeBranch 1.1")
+		if err := pull(gitCmd, branchDest); err != nil {
+			return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
+		}
 		log.Printf("==> mergeBranch 1.2")
 		if err := run(gitCmd.Merge(mergeArg(mergeBranch))); err != nil {
 			log.Printf("==> mergeBranch 1.2.1")
