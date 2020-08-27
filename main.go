@@ -110,19 +110,21 @@ func mainE() error {
 	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
 	if isPR {
 		if !cfg.ManualMerge || isPrivate(cfg.PRRepositoryURL) && isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
-			log.Printf("XXX gitCmd.Merge")
+			log.Printf("YYY autoMerge")
 			if err := autoMerge(gitCmd, cfg.PRMergeBranch, cfg.BranchDest, cfg.BuildURL,
 				cfg.BuildAPIToken, cfg.CloneDepth, cfg.PRID); err != nil {
 				return fmt.Errorf("auto merge, error: %v", err)
 			}
 		} else {
-			log.Printf("YYY gitCmd.Merge")
+			log.Printf("YYY manualMerge")
 			if err := manualMerge(gitCmd, cfg.RepositoryURL, cfg.PRRepositoryURL, cfg.Branch,
 				cfg.Commit, cfg.BranchDest); err != nil {
 				return fmt.Errorf("manual merge, error: %v", err)
 			}
 		}
 	} else if checkoutArg != "" {
+		
+		log.Printf("ZZZ checkout")
 		if err := checkout(gitCmd, checkoutArg, cfg.Branch, cfg.CloneDepth, cfg.Tag != ""); err != nil {
 			return fmt.Errorf("checkout (%s): %v", checkoutArg, err)
 		}
