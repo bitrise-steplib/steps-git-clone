@@ -257,6 +257,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 			return fmt.Errorf("merge failed (fork/%s), error: %v", branch, err)
 		}
 	} else {
+		log.Printf("XXXX")
 		if err := run(gitCmd.Fetch("origin", branch)); err != nil {
 			return fmt.Errorf("fetch failed, error: %v", err)
 		}
