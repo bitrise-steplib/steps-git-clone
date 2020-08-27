@@ -110,11 +110,13 @@ func mainE() error {
 	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
 	if isPR {
 		if !cfg.ManualMerge || isPrivate(cfg.PRRepositoryURL) && isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
+			log.Printf("XXX gitCmd.Merge")
 			if err := autoMerge(gitCmd, cfg.PRMergeBranch, cfg.BranchDest, cfg.BuildURL,
 				cfg.BuildAPIToken, cfg.CloneDepth, cfg.PRID); err != nil {
 				return fmt.Errorf("auto merge, error: %v", err)
 			}
 		} else {
+			log.Printf("YYY gitCmd.Merge")
 			if err := manualMerge(gitCmd, cfg.RepositoryURL, cfg.PRRepositoryURL, cfg.Branch,
 				cfg.Commit, cfg.BranchDest); err != nil {
 				return fmt.Errorf("manual merge, error: %v", err)
@@ -126,6 +128,7 @@ func mainE() error {
 		}
 		// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
 		if checkoutArg == cfg.Branch {
+			log.Printf("ZZZ gitCmd.Merge")
 			if err := run(gitCmd.Merge("origin/" + cfg.Branch)); err != nil {
 				return fmt.Errorf("merge %q: %v", cfg.Branch, err)
 			}
