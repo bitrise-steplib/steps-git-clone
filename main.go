@@ -127,7 +127,8 @@ func mainE() error {
 			return fmt.Errorf("checkout (%s): %v", checkoutArg, err)
 		}
 		// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
-		if checkoutArg == cfg.Branch {
+		log.Printf("ZZZ cfg.AutoMerge")
+		if checkoutArg == cfg.Branch && cfg.AutoMerge{
 			if err := run(gitCmd.Merge("origin/" + cfg.Branch)); err != nil {
 				return fmt.Errorf("merge %q: %v", cfg.Branch, err)
 			}
