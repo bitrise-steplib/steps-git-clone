@@ -232,6 +232,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	if err := runWithRetry(func() *command.Model { return gitCmd.Fetch("origin", branchDest) }); err != nil {
 		return fmt.Errorf("fetch failed, error: %v", err)
 	}
+	log.Printf("EEE pull")
 	if err := pull(gitCmd, branchDest); err != nil {
 		return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
 	}
