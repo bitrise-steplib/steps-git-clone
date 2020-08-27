@@ -237,7 +237,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	if isTag {
 		opts = append(opts, "--tags")
 	}
-	if branch != "" {
+	if branchDest != "" {
 		opts = append(opts, "origin", branchDest)
 	}
 	if err := runWithRetry(func() *command.Model { return gitCmd.Fetch(opts...) }); err != nil {
@@ -269,16 +269,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 			return fmt.Errorf("merge failed (fork/%s), error: %v", branch, err)
 		}
 	} else {
-		opts = []
-		if !fetchTags {
-			opts = append(opts, "--no-tags")
-		}
-		if depth != 0 {
-			opts = append(opts, "--depth="+strconv.Itoa(depth))
-		}
-		if isTag {
-			opts = append(opts, "--tags")
-		}
+		opts = opts[:len(opts) - 1]
 		if branch != "" {
 			opts = append(opts, "origin", branch)
 		}
