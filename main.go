@@ -116,10 +116,10 @@ func mainE() error {
 				cfg.BuildAPIToken, cfg.CloneDepth, cfg.PRID); err != nil {
 				return fmt.Errorf("auto merge, error: %v", err)
 			}
-		} else if cfg.AutoMerge {
+		} else {
 			log.Printf("YYY manualMerge")
 			if err := manualMerge(gitCmd, cfg.RepositoryURL, cfg.PRRepositoryURL, cfg.Branch,
-				cfg.Commit, cfg.BranchDest); err != nil {
+				cfg.Commit, cfg.BranchDest, cfg.AutoMerge); err != nil {
 				return fmt.Errorf("manual merge, error: %v", err)
 			}
 		}
