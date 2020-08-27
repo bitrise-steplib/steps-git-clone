@@ -269,7 +269,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 			return fmt.Errorf("merge failed (fork/%s), error: %v", branch, err)
 		}
 	} else {
-		opts = opts[:len(opts) - 1]
+		opts = opts[:len(opts) - 2]
 		if branch != "" {
 			opts = append(opts, "origin", branch)
 		}
