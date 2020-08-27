@@ -175,7 +175,9 @@ func mergeArg(mergeBranch string) string {
 }
 
 func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken string, depth, id int) error {
+	log.Printf("==> autoMerge 1")
 	if err := runWithRetry(func() *command.Model {
+		log.Printf("==> autoMerge 1.1")
 		var opts []string
 		if depth != 0 {
 			opts = append(opts, "--depth="+strconv.Itoa(depth))
@@ -187,42 +189,48 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 	}
 
 	if mergeBranch != "" {
+		log.Printf("==> mergeBranch 1")
 		if err := runWithRetry(func() *command.Model {
 			return gitCmd.Fetch("origin", fetchArg(mergeBranch))
 		}); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
 				mergeBranch, err)
 		}
-		log.Printf("AAA pull -> checkout")
+		log.Printf("==> mergeBranch 1.1")
 		if err := run(gitCmd.Checkout(branchDest)); err != nil {
 			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 		}
 		//if err := pull(gitCmd, branchDest); err != nil {
 		//	return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
 		//}
-		log.Printf("AAA gitCmd.Merge")
+		log.Printf("==> mergeBranch 1.2")
 		if err := run(gitCmd.Merge(mergeArg(mergeBranch))); err != nil {
+			log.Printf("==> mergeBranch 1.2.1")
 			if depth == 0 {
 				return fmt.Errorf("merge %q: %v", mergeArg(mergeBranch), err)
 			}
 			log.Warnf("Merge failed, error: %v\nReset repository, then unshallow...", err)
+			log.Printf("==> mergeBranch 1.2.2")
 			if err := resetRepo(gitCmd); err != nil {
 				return fmt.Errorf("reset repository, error: %v", err)
 			}
+			log.Printf("==> mergeBranch 1.2.3")
 			if err := runWithRetry(func() *command.Model {
 				return gitCmd.Fetch("--unshallow")
 			}); err != nil {
 				return fmt.Errorf("fetch failed, error: %v", err)
 			}
-			log.Printf("BBB gitCmd.Merge")
+			log.Printf("==> mergeBranch 1.2.4")
 			if err := run(gitCmd.Merge(mergeArg(mergeBranch))); err != nil {
 				return fmt.Errorf("merge %q: %v", mergeArg(mergeBranch), err)
 			}
 		}
 	} else if patch, err := getDiffFile(buildURL, apiToken, id); err == nil {
+		log.Printf("==> !mergeBranch 1")
 		if err := run(gitCmd.Checkout(branchDest)); err != nil {
 			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 		}
+		log.Printf("==> !mergeBranch 2")
 		if err := run(gitCmd.Apply(patch)); err != nil {
 			return fmt.Errorf("can't apply patch (%s), error: %v", patch, err)
 		}
