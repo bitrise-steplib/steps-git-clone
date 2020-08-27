@@ -228,14 +228,16 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 
 func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest string, autoMerge bool, depth int, isTag bool, fetchTags bool, optionsOnBranches bool) error {
 	var opts []string
-	if !fetchTags {
-		opts = append(opts, "--no-tags")
-	}
-	if depth != 0 {
-		opts = append(opts, "--depth="+strconv.Itoa(depth))
-	}
-	if isTag {
-		opts = append(opts, "--tags")
+	if optionsOnBranches {
+		if !fetchTags {
+			opts = append(opts, "--no-tags")
+		}
+		if depth != 0 {
+			opts = append(opts, "--depth="+strconv.Itoa(depth))
+		}
+		if isTag {
+			opts = append(opts, "--tags")
+		}
 	}
 	if branchDest != "" {
 		opts = append(opts, "origin", branchDest)
