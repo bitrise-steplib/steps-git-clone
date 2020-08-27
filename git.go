@@ -274,7 +274,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 		if optionsOnBranches {
 			opts = opts[:len(opts) - 2]
 		} else {
-			opts = [:0]
+			opts = opts[:0]
 		}
 		if branch != "" {
 			opts = append(opts, "origin", branch)
