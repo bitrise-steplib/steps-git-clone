@@ -117,7 +117,7 @@ func mainE() error {
 			}
 		} else {
 			if err := manualMerge(gitCmd, cfg.RepositoryURL, cfg.PRRepositoryURL, cfg.Branch,
-				cfg.Commit, cfg.BranchDest, cfg.AutoMerge); err != nil {
+				cfg.Commit, cfg.BranchDest, cfg.AutoMerge, cfg.CloneDepth, cfg.Tag != ""); err != nil {
 				return fmt.Errorf("manual merge, error: %v", err)
 			}
 		}
