@@ -127,11 +127,10 @@ inputs:
   - auto_merge: "yes"
     opts:
       category: Debug
-      title: Auto merge PRs to master
-      summary:  Merge PRs to master before building
+      title: Merge origin/master
+      summary:  Merge origin/master 
       description: |-
-        Merge PRs to master before building
-        Will fail build if PR cannot be merged
+        Merge origin/master always
       value_options:
       - "yes"
       - "no"
@@ -142,6 +141,16 @@ inputs:
       summary: Adds --no-tags to fetch commands
       description: |-
         Adds --no-tags to fetch commands
+      value_options:
+      - "yes"
+      - "no"
+  - options_on_branches: "no"
+    opts:
+      category: Debug
+      title: Apply Clone Depth and Fetch Tags options to branches
+      summary: Apply Clone Depth and Fetch Tags options to branches
+      description: |-
+        Apply Clone Depth and Fetch Tags options to branches
       value_options:
       - "yes"
       - "no"
