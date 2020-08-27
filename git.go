@@ -269,7 +269,20 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 			return fmt.Errorf("merge failed (fork/%s), error: %v", branch, err)
 		}
 	} else {
-		if err := run(gitCmd.Fetch("origin", branch)); err != nil {
+		opts = []
+		if !fetchTags {
+			opts = append(opts, "--no-tags")
+		}
+		if depth != 0 {
+			opts = append(opts, "--depth="+strconv.Itoa(depth))
+		}
+		if isTag {
+			opts = append(opts, "--tags")
+		}
+		if branch != "" {
+			opts = append(opts, "origin", branch)
+		}
+		if err := run(gitCmd.Fetch(opts...)); err != nil {
 			return fmt.Errorf("fetch failed, error: %v", err)
 		}
 		if err := run(gitCmd.Merge(commit)); err != nil {
