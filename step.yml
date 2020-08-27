@@ -124,6 +124,17 @@ inputs:
       value_options:
       - "yes"
       - "no"
+  - auto_merge: "yes"
+    opts:
+      category: Debug
+      title: Auto merge PRs to master
+      summary:  Merge PRs to master before building
+      description: |-
+        Merge PRs to master before building
+        Will fail build if PR cannot be merged
+      value_options:
+      - "yes"
+      - "no"
   - build_url: "$BITRISE_BUILD_URL"
     opts:
       category: Debug
