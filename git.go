@@ -226,7 +226,7 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 	return nil
 }
 
-func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest string, autoMerge bool, isTag bool, depth int) error {
+func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest string, autoMerge bool, depth int, isTag bool) error {
 	var opts []string
 	if depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(depth))
