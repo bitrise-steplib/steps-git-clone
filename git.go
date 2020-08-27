@@ -226,7 +226,7 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 	return nil
 }
 
-func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest string, autoMerge bool, depth int, isTag bool) error {
+func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest string, autoMerge bool, depth int, isTag bool, fetchTags bool) error {
 	var opts []string
 	if depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(depth))
@@ -236,6 +236,9 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	}
 	if branch != "" {
 		opts = append(opts, "origin", branchDest)
+	}
+	if fetchTags {
+		opts = append(opts, "--no-tags")
 	}
 	if err := runWithRetry(func() *command.Model { return gitCmd.Fetch(opts...) }); err != nil {
 		return fmt.Errorf("fetch failed, error: %v", err)
@@ -277,7 +280,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	return nil
 }
 
-func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) error {
+func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool, fetchTags bool) error {
 	if err := runWithRetry(func() *command.Model {
 		var opts []string
 		if depth != 0 {
@@ -288,6 +291,9 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) error {
 		}
 		if branch != "" {
 			opts = append(opts, "origin", branch)
+		}
+		if fetchTags {
+			opts = append(opts, "--no-tags")
 		}
 		return gitCmd.Fetch(opts...)
 	}); err != nil {
