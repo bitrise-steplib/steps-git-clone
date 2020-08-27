@@ -193,7 +193,6 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
 				mergeBranch, err)
 		}
-		
 		if err := pull(gitCmd, branchDest); err != nil {
 			return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
 		}
@@ -260,7 +259,6 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 		if err := run(gitCmd.Fetch("origin", branch)); err != nil {
 			return fmt.Errorf("fetch failed, error: %v", err)
 		}
-		
 		if err := run(gitCmd.Merge(commit)); err != nil {
 			return fmt.Errorf("merge failed (%s), error: %v", commit, err)
 		}
