@@ -193,9 +193,13 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
 				mergeBranch, err)
 		}
-		if err := pull(gitCmd, branchDest); err != nil {
-			return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
+		log.Printf("AAA pull -> checkout")
+		if err := run(gitCmd.Checkout(branchDest)); err != nil {
+			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
 		}
+		//if err := pull(gitCmd, branchDest); err != nil {
+		//	return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
+		//}
 		log.Printf("AAA gitCmd.Merge")
 		if err := run(gitCmd.Merge(mergeArg(mergeBranch))); err != nil {
 			if depth == 0 {
