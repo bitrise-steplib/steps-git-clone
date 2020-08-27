@@ -238,13 +238,19 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 	return nil
 }
 
-func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest string) error {
+func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest string, autoMerge bool) error {
 	if err := runWithRetry(func() *command.Model { return gitCmd.Fetch("origin", branchDest) }); err != nil {
 		return fmt.Errorf("fetch failed, error: %v", err)
 	}
 	log.Printf("EEE pull")
-	if err := pull(gitCmd, branchDest); err != nil {
-		return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
+	if autoMerge {
+		if err := pull(gitCmd, branchDest); err != nil {
+			return fmt.Errorf("pull failed (%s), error: %v", branchDest, err)
+		}
+	} else {
+		if err := run(gitCmd.Checkout(branchDest)); err != nil {
+			return fmt.Errorf("checkout failed (%s), error: %v", branchDest, err)
+		}
 	}
 	commitHash, err := output(gitCmd.Log("%H"))
 	if err != nil {
