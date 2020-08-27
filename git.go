@@ -237,7 +237,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	if branch != "" {
 		opts = append(opts, "origin", branchDest)
 	}
-	if fetchTags {
+	if !fetchTags {
 		opts = append(opts, "--no-tags")
 	}
 	if err := runWithRetry(func() *command.Model { return gitCmd.Fetch(opts...) }); err != nil {
@@ -292,7 +292,7 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool, fetchTa
 		if branch != "" {
 			opts = append(opts, "origin", branch)
 		}
-		if fetchTags {
+		if !fetchTags {
 			opts = append(opts, "--no-tags")
 		}
 		return gitCmd.Fetch(opts...)
