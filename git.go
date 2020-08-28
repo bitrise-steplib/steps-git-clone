@@ -167,7 +167,7 @@ func isPrivate(repoURL string) bool {
 // where x is the pull request id.
 func fetchArg(mergeBranch string) string {
 	arg := strings.TrimSuffix(mergeBranch, "/merge")
-	return strings.Replace(mergeBranch, "merge", "head", 1) + ":" + arg
+	return strings.Replace("refs/"+mergeBranch, "merge", "head", 1) + ":" + arg
 }
 
 func mergeArg(mergeBranch string) string {
@@ -180,7 +180,7 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 		if depth != 0 {
 			opts = append(opts, "--depth="+strconv.Itoa(depth))
 		}
-		opts = append(opts, "origin", branchDest)
+		opts = append(opts, "origin", "refs/heads/"+branchDest)
 		return gitCmd.Fetch(opts...)
 	}); err != nil {
 		return fmt.Errorf("Fetch failed, error: %v", err)
@@ -240,7 +240,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 		}
 	}
 	if branchDest != "" {
-		opts = append(opts, "origin", branchDest)
+		opts = append(opts, "origin", "refs/heads/"+branchDest)
 	}
 	if err := runWithRetry(func() *command.Model { return gitCmd.Fetch(opts...) }); err != nil {
 		return fmt.Errorf("fetch failed, error: %v", err)
@@ -264,7 +264,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 		if err := run(gitCmd.RemoteAdd("fork", prRepoURL)); err != nil {
 			return fmt.Errorf("couldn't add remote (%s), error: %v", prRepoURL, err)
 		}
-		if err := runWithRetry(func() *command.Model { return gitCmd.Fetch("fork", branch) }); err != nil {
+		if err := runWithRetry(func() *command.Model { return gitCmd.Fetch("fork", "refs/heads/"+branch) }); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v", branch, err)
 		}
 		if err := run(gitCmd.Merge("fork/" + branch)); err != nil {
@@ -277,7 +277,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 			opts = opts[:0]
 		}
 		if branch != "" {
-			opts = append(opts, "origin", branch)
+			opts = append(opts, "origin", "refs/heads/"+branch)
 		}
 		if err := run(gitCmd.Fetch(opts...)); err != nil {
 			return fmt.Errorf("fetch failed, error: %v", err)
@@ -303,7 +303,7 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool, fetchTa
 			opts = append(opts, "--tags")
 		}
 		if branch != "" {
-			opts = append(opts, "origin", branch)
+			opts = append(opts, "origin", "refs/heads/"+branch)
 		}
 		return gitCmd.Fetch(opts...)
 	}); err != nil {
