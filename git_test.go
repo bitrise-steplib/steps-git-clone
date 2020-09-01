@@ -6,8 +6,13 @@ import (
 
 func TestFetchArg(t *testing.T) {
 	for input, expected := range map[string]string{
-		"pull/1/merge":  "pull/1/head:pull/1",
-		"pull/22/merge": "pull/22/head:pull/22",
+		"pull/1/merge":  "refs/pull/1/head:pull/1",
+		"pull/22/merge": "refs/pull/22/head:pull/22",
+		"pull/224/qux/merge": "refs/pull/224/qux/head:pull/224/qux",
+		"pull/22/baz": "refs/heads/pull/22/baz:pull/22/baz",
+		"pull/22/merge/foo": "refs/heads/pull/22/merge/foo:pull/22/merge/foo",
+		"feature/bar": "refs/heads/feature/bar:feature/bar",
+		"feature/qux/baz": "refs/heads/feature/qux/baz:feature/qux/baz",
 	} {
 		actual := fetchArg(input)
 		if actual != expected {
@@ -35,7 +40,7 @@ func Test_getRepo(t *testing.T) {
 		{
 			name: "Long SSH URL with a specific port",
 			url:  "ssh://git@github.com:22/bitrise-samples/git-clone-test.git",
-			want: "github.com:22/bitrise-samples/git-clone-test",
+			want: "github.com/bitrise-samples/git-clone-test",
 		},
 		{
 			name: "Short SSH URL",

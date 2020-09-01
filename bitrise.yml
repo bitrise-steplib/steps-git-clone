@@ -22,6 +22,8 @@ workflows:
     - CLONE_INTO_DIR: .
     - GIT_REPOSITORY_URL: https://github.com/bitrise-io/git-clone-test.git
     steps:
+    - activate-ssh-key:
+        run_if: true
     - go-list:
     - golint:
     - errcheck:
@@ -33,6 +35,7 @@ workflows:
     - _test_checkout_tag
     - _test_checkout_branch
     - _test_checkout_pull_request
+    - _test_checkout_pull_request_standard_branch
     - _test_checkout_pull_request_with_depth
     - _test_unshallow
     - _test_checkout_different_dir
@@ -41,9 +44,6 @@ workflows:
     - _test_hosted_git_notfork
     - _test_unrelated_histories
     - _test_hosted_git_ssh_prefix
-    steps:
-    - activate-ssh-key:
-        run_if: true
 
   _test_submodule:
     before_run:
@@ -273,6 +273,37 @@ workflows:
     - ensure-clean-git:
         inputs:
         - dir_to_check: $CLONE_INTO_DIR
+  _test_checkout_pull_request_standard_branch:
+    before_run:
+      - _create_tmpdir
+    steps:
+      - path::./:
+          run_if: true
+          inputs:
+            - clone_into_dir: $CLONE_INTO_DIR
+            - pull_request_merge_branch: "pr_test"
+            - pull_request_repository_url: ""
+            - branch_dest: "master"
+            - commit: ""
+            - tag: ""
+            - branch: ""
+            - clone_depth: ""
+            - manual_merge: "no"
+      - script:
+          inputs:
+            - content: |-
+                #!/bin/bash
+                echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+                echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+                echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+                echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
+                echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+                echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+                echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+                echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+      - ensure-clean-git:
+          inputs:
+            - dir_to_check: $CLONE_INTO_DIR
 
   _test_checkout_pull_request_with_depth:
     before_run:
