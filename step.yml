@@ -124,6 +124,16 @@ inputs:
       value_options:
       - "yes"
       - "no"
+  - fetch_tags: "yes"
+    opts:
+      category: Debug
+      title: Fetch tags
+      summary: Adds --no-tags to fetch commands
+      description: |-
+        Adds --no-tags to fetch commands
+      value_options:
+      - "yes"
+      - "no"
   - build_url: "$BITRISE_BUILD_URL"
     opts:
       category: Debug
