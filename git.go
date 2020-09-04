@@ -230,8 +230,20 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 	return nil
 }
 
-func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest string) error {
-	if err := runWithRetry(func() *command.Model { return gitCmd.Fetch("origin", "refs/heads/"+branchDest) }); err != nil {
+func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest string, depth int, isTag bool, optionsOnBranches bool) error {
+	var opts []string
+	if optionsOnBranches {
+		if depth != 0 {
+			opts = append(opts, "--depth="+strconv.Itoa(depth))
+		}
+		if isTag {
+			opts = append(opts, "--tags")
+		}
+	}
+	if branchDest != "" {
+		opts = append(opts, "origin", "refs/heads/"+branchDest)
+	}
+	if err := runWithRetry(func() *command.Model { return gitCmd.Fetch(opts...) }); err != nil {
 		return fmt.Errorf("fetch failed, error: %v", err)
 	}
 	if err := pull(gitCmd, branchDest); err != nil {
@@ -254,7 +266,15 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 			return fmt.Errorf("merge failed (fork/%s), error: %v", branch, err)
 		}
 	} else {
-		if err := run(gitCmd.Fetch("origin", "refs/heads/"+branch)); err != nil {
+		if optionsOnBranches {
+			opts = opts[:len(opts) - 2]
+		} else {
+			opts = opts[:0]
+		}
+		if branch != "" {
+			opts = append(opts, "origin", "refs/heads/"+branch)
+		}
+		if err := run(gitCmd.Fetch(opts...)); err != nil {
 			return fmt.Errorf("fetch failed, error: %v", err)
 		}
 		if err := run(gitCmd.Merge(commit)); err != nil {
