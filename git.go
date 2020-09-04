@@ -271,10 +271,17 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 			return fmt.Errorf("merge failed (fork/%s), error: %v", branch, err)
 		}
 	} else {
+		opts = opts[:0]
 		if optionsOnBranches {
-			opts = opts[:len(opts) - 2]
-		} else {
-			opts = opts[:0]
+			if !fetchTags {
+				opts = append(opts, "--no-tags")
+			}
+			if depth != 0 {
+				opts = append(opts, "--depth="+strconv.Itoa(depth))
+			}
+			if isTag {
+				opts = append(opts, "--tags")
+			}
 		}
 		if branch != "" {
 			opts = append(opts, "origin", "refs/heads/"+branch)
