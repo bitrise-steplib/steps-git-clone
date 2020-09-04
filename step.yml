@@ -124,6 +124,16 @@ inputs:
       value_options:
       - "yes"
       - "no"
+  - auto_merge: "yes"
+    opts:
+      category: Debug
+      title: Merge origin/master
+      summary:  Merge origin/master 
+      description: |-
+        Merge origin/master always
+      value_options:
+      - "yes"
+      - "no"
   - build_url: "$BITRISE_BUILD_URL"
     opts:
       category: Debug
