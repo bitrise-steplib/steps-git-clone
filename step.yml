@@ -124,6 +124,16 @@ inputs:
       value_options:
       - "yes"
       - "no"
+  - options_on_branches: "no"
+    opts:
+      category: Debug
+      title: Apply Clone Depth and Fetch Tags options to branches
+      summary: Apply Clone Depth and Fetch Tags options to branches
+      description: |-
+        Apply Clone Depth and Fetch Tags options to branches
+      value_options:
+      - "yes"
+      - "no"
   - build_url: "$BITRISE_BUILD_URL"
     opts:
       category: Debug
