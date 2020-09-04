@@ -30,6 +30,7 @@ type config struct {
 	BuildAPIToken    string `env:"build_api_token"`
 	UpdateSubmodules bool   `env:"update_submodules,opt[yes,no]"`
 	ManualMerge      bool   `env:"manual_merge,opt[yes,no]"`
+	OptionsOnBranches bool 	`env:"options_on_branches,opt[yes,no]"`
 }
 
 const (
@@ -116,12 +117,12 @@ func mainE() error {
 			}
 		} else {
 			if err := manualMerge(gitCmd, cfg.RepositoryURL, cfg.PRRepositoryURL, cfg.Branch,
-				cfg.Commit, cfg.BranchDest); err != nil {
+				cfg.Commit, cfg.BranchDest, cfg.CloneDepth, cfg.Tag != "", cfg.OptionsOnBranches); err != nil {
 				return fmt.Errorf("manual merge, error: %v", err)
 			}
 		}
 	} else if checkoutArg != "" {
-		if err := checkout(gitCmd, checkoutArg, cfg.Branch, cfg.CloneDepth, cfg.Tag != ""); err != nil {
+		if err := checkout(gitCmd, checkoutArg, cfg.Branch, cfg.CloneDepth, cfg.Tag != "", cfg.FetchTags, cfg.OptionsOnBranches); err != nil {
 			return fmt.Errorf("checkout (%s): %v", checkoutArg, err)
 		}
 		// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
