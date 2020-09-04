@@ -267,7 +267,13 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 		}
 	} else {
 		if optionsOnBranches {
-			opts = opts[:len(opts) - 2]
+			opts = opts[:0]
+			if depth != 0 {
+				opts = append(opts, "--depth="+strconv.Itoa(depth))
+			}
+			if isTag {
+				opts = append(opts, "--tags")
+			}
 		} else {
 			opts = opts[:0]
 		}
