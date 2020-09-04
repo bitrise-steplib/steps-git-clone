@@ -265,9 +265,12 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	return nil
 }
 
-func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) error {
+func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool, fetchTags bool) error {
 	if err := runWithRetry(func() *command.Model {
 		var opts []string
+		if !fetchTags {
+			opts = append(opts, "--no-tags")
+		}
 		if depth != 0 {
 			opts = append(opts, "--depth="+strconv.Itoa(depth))
 		}
