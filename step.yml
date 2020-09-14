@@ -124,11 +124,11 @@ inputs:
       value_options:
       - "yes"
       - "no"
-  - auto_merge: "yes"
+  - checkout_merged_state: "yes"
     opts:
       category: Debug
-      title: Merge origin/master
-      summary:  Merge origin/master 
+      title: Checkout merged state
+      summary:  Flag indicating if merged state should be checked out instead of just the source branch.
       description: |-
         Merge origin/master always
       value_options:
