@@ -130,7 +130,7 @@ inputs:
       title: Checkout merged state
       summary:  Flag indicating if merged state should be checked out instead of just the source branch.
       description: |-
-        Merge origin/master always
+        Flag indicating if merged state should be checked out instead of just the source branch.
       value_options:
       - "yes"
       - "no"
