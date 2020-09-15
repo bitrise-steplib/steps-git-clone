@@ -6,6 +6,7 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
+// Data represents a map of properties sent with the analytics events
 type Data map[string]interface{}
 
 // LogError sends analytics log using log.RErrorf by setting the stepID and data/build_slug.
@@ -18,6 +19,7 @@ func LogWarn(tag string, data Data, format string, v ...interface{}) {
 	log.RWarnf("steps-git-clone", tag, data.appendSlug(), format, v...)
 }
 
+// appendSlug tries to append build slug to the analytics data
 func (a Data) appendSlug() Data {
 	result := a
 	slug := os.Getenv("BITRISE_BUILD_SLUG")
@@ -31,6 +33,7 @@ func (a Data) appendSlug() Data {
 	return result
 }
 
+// AppendError appends error object to the analytics data
 func (a Data) AppendError(err error) Data {
 	result := a
 	if result == nil {
@@ -40,6 +43,7 @@ func (a Data) AppendError(err error) Data {
 	return result
 }
 
+// CreateEmptyData initializes an empty data map
 func CreateEmptyData() Data {
 	return map[string]interface{}{}
 }

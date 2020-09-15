@@ -12,13 +12,15 @@ func TestDataBuild(t *testing.T) {
 	{
 		key := "BITRISE_BUILD_SLUG"
 		var value string
+		var err error
 		if value = os.Getenv(key); value != "" {
-			_ = os.Unsetenv(key)
-			defer func() { _ = os.Setenv(key, value) }()
+			err = os.Unsetenv(key)
+			defer func() { err = os.Setenv(key, value) }()
 		} else {
-			defer func() { _ = os.Unsetenv(key) }()
+			defer func() { err = os.Unsetenv(key) }()
 		}
-		_ = os.Setenv(key, "testSlug")
+		err = os.Setenv(key, "testSlug")
+		require.Equal(t, nil, err)
 		data := CreateEmptyData().AppendError(errors.New("testError")).appendSlug()
 		require.Equal(t, "testError", data["error"].(error).Error())
 		require.Equal(t, "testSlug", data["build_slug"])
