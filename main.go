@@ -9,6 +9,7 @@ import (
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/retry"
+	"github.com/bitrise-io/steps-git-clone/analytics"
 	"github.com/bitrise-io/steps-git-clone/gitutil"
 )
 
@@ -108,6 +109,7 @@ func main() {
 	configs.print()
 
 	if err := configs.validate(); err != nil {
+		analytics.LogError("parse_config_failed", analytics.CreateEmptyData().AppendError(err), "Parsing configuration has failed")
 		log.Errorf("Issue with input: %s", err)
 		os.Exit(1)
 	}
@@ -119,6 +121,7 @@ func main() {
 
 	git, err := gitutil.NewHelper(configs.CloneIntoDir, configs.RepositoryURL, configs.ResetRepository == "Yes")
 	if err != nil {
+		analytics.LogError("construct_git_helper_failed", analytics.CreateEmptyData().AppendError(err), "Constructing new git helper has failed")
 		log.Errorf("Failed to create git helper, error: %s", err)
 		os.Exit(1)
 	}
@@ -127,11 +130,13 @@ func main() {
 
 	if err := git.Init(); err != nil {
 		log.Errorf("Failed, error: %s", err)
+		analytics.LogError("init_git_failed", analytics.CreateEmptyData().AppendError(err), "Initializing git has failed")
 		os.Exit(1)
 	}
 
 	if !git.IsOriginPresented() {
 		if err := git.RemoteAdd(); err != nil {
+			analytics.LogError("add_remote_failed", analytics.CreateEmptyData().AppendError(err), "Adding remote to git has failed")
 			log.Errorf("Failed, error: %s", err)
 			os.Exit(1)
 		}
@@ -150,6 +155,7 @@ func main() {
 
 		return fetchErr
 	}); err != nil {
+		analytics.LogError("fetch_failed", analytics.CreateEmptyData().AppendError(err), "Fetching repository has failed")
 		log.Errorf("Failed, error: %s", err)
 		os.Exit(1)
 	}
@@ -169,6 +175,7 @@ func main() {
 
 				return fetchErr
 			}); err != nil {
+				analytics.LogError("fetch_tags_failed", analytics.CreateEmptyData().AppendError(err), "Fetching tags has failed")
 				log.Errorf("Failed, error: %s", err)
 				os.Exit(1)
 			}
@@ -190,10 +197,12 @@ func main() {
 			return checkoutErr
 		}); err != nil {
 			if !git.ShouldTryFetchUnshallow() {
+				analytics.LogError("checkout_failed", analytics.CreateEmptyData().AppendError(err), "Checkout has failed")
 				log.Errorf("Failed, error: %s", err)
 				os.Exit(1)
 			}
 
+			analytics.LogWarn("shallow_checkout_failed", analytics.CreateEmptyData().AppendError(err), "Shallow checkout has failed, trying unshallow")
 			log.Warnf("Failed, error: %s", err)
 			log.Warnf("Unshallow...")
 
@@ -210,11 +219,13 @@ func main() {
 
 				return fetchShallowErr
 			}); err != nil {
+				analytics.LogError("fetch_unshallow_failed", analytics.CreateEmptyData().AppendError(err), "Fetching with unshallow parameter has failed")
 				log.Errorf("Failed, error: %s", err)
 				os.Exit(1)
 			}
 
 			if err := git.Checkout(); err != nil {
+				analytics.LogError("checkout_unshallow_failed", analytics.CreateEmptyData().AppendError(err), "Checkout after unshallow fetch has failed")
 				log.Errorf("Failed, error: %s", err)
 				os.Exit(1)
 			}
@@ -234,6 +245,7 @@ func main() {
 
 				return gitMergeErr
 			}); err != nil {
+				analytics.LogError("merge_failed", analytics.CreateEmptyData().AppendError(err), "Merging pr has failed")
 				log.Errorf("Failed, error: %s", err)
 				os.Exit(1)
 			}
@@ -252,6 +264,7 @@ func main() {
 
 			return submoduleErr
 		}); err != nil {
+			analytics.LogError("update_submodule_failed", analytics.CreateEmptyData().AppendError(err), "Updating submodule has failed")
 			log.Errorf("Failed, error: %s", err)
 			os.Exit(1)
 		}
@@ -259,6 +272,7 @@ func main() {
 		log.Infof("Exporting git logs")
 
 		if commitHash, err := git.LogCommitHash(); err != nil {
+			analytics.LogError("fetch_commit_hash_failed", analytics.CreateEmptyData().AppendError(err), "Obtaining commit hash has failed")
 			log.Errorf("Git log failed, error: %s", err)
 			os.Exit(1)
 		} else {
@@ -267,11 +281,13 @@ func main() {
 			fmt.Println()
 
 			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_HASH", commitHash); err != nil {
+				analytics.LogWarn("export_commit_hash_failed", analytics.CreateEmptyData().AppendError(err), "Exporting commit hash has failed")
 				log.Warnf("envman export failed, error: %s", err)
 			}
 		}
 
 		if commitMessageSubject, err := git.LogCommitMessageSubject(); err != nil {
+			analytics.LogError("fetch_commit_message_subject_failed", analytics.CreateEmptyData().AppendError(err), "Obtaining commit message's subject has failed")
 			log.Errorf("Git log failed, error: %s", err)
 			os.Exit(1)
 		} else {
@@ -280,11 +296,13 @@ func main() {
 			fmt.Println()
 
 			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_MESSAGE_SUBJECT", commitMessageSubject); err != nil {
+				analytics.LogWarn("export_commit_message_subject_failed", analytics.CreateEmptyData().AppendError(err), "Exporting commit message's subject has failed")
 				log.Warnf("envman export failed, error: %s", err)
 			}
 		}
 
 		if commitMessageBody, err := git.LogCommitMessageBody(); err != nil {
+			analytics.LogError("fetch_commit_message_body_failed", analytics.CreateEmptyData().AppendError(err), "Obtaining commit message's body has failed")
 			log.Errorf("Git log failed, error: %s", err)
 			os.Exit(1)
 		} else {
@@ -293,11 +311,13 @@ func main() {
 			fmt.Println()
 
 			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_MESSAGE_BODY", commitMessageBody); err != nil {
+				analytics.LogWarn("export_commit_message_body_failed", analytics.CreateEmptyData().AppendError(err), "Exporting commit message's body has failed")
 				log.Warnf("envman export failed, error: %s", err)
 			}
 		}
 
 		if commitAuthorName, err := git.LogAuthorName(); err != nil {
+			analytics.LogError("fetch_commit_author_name_failed", analytics.CreateEmptyData().AppendError(err), "Obtaining commit author's name has failed")
 			log.Errorf("Git log failed, error: %s", err)
 			os.Exit(1)
 		} else {
@@ -306,11 +326,13 @@ func main() {
 			fmt.Println()
 
 			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_AUTHOR_NAME", commitAuthorName); err != nil {
+				analytics.LogWarn("export_commit_author_name_failed", analytics.CreateEmptyData().AppendError(err), "Exporting commit author's name has failed")
 				log.Warnf("envman export failed, error: %s", err)
 			}
 		}
 
 		if commitAuthorEmail, err := git.LogAuthorEmail(); err != nil {
+			analytics.LogError("fetch_commit_author_email_failed", analytics.CreateEmptyData().AppendError(err), "Obtaining commit author's e-mail has failed")
 			log.Errorf("Git log failed, error: %s", err)
 			os.Exit(1)
 		} else {
@@ -319,11 +341,13 @@ func main() {
 			fmt.Println()
 
 			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_AUTHOR_EMAIL", commitAuthorEmail); err != nil {
+				analytics.LogWarn("export_commit_author_email_failed", analytics.CreateEmptyData().AppendError(err), "Exporting commit author's e-mail has failed")
 				log.Warnf("envman export failed, error: %s", err)
 			}
 		}
 
 		if commitCommiterName, err := git.LogCommiterName(); err != nil {
+			analytics.LogError("fetch_commit_commiter_name_failed", analytics.CreateEmptyData().AppendError(err), "Obtaining commit commiter's name has failed")
 			log.Errorf("Git log failed, error: %s", err)
 			os.Exit(1)
 		} else {
@@ -332,11 +356,13 @@ func main() {
 			fmt.Println()
 
 			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COMMITER_NAME", commitCommiterName); err != nil {
+				analytics.LogWarn("export_commit_commiter_name_failed", analytics.CreateEmptyData().AppendError(err), "Exporting commit commiter's name has failed")
 				log.Warnf("envman export failed, error: %s", err)
 			}
 		}
 
 		if commitCommiterEmail, err := git.LogCommiterEmail(); err != nil {
+			analytics.LogError("fetch_commit_commiter_email_failed", analytics.CreateEmptyData().AppendError(err), "Obtaining commit commiter's email has failed")
 			log.Errorf("Git log failed, error: %s", err)
 			os.Exit(1)
 		} else {
@@ -345,6 +371,7 @@ func main() {
 			fmt.Println()
 
 			if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COMMITER_EMAIL", commitCommiterEmail); err != nil {
+				analytics.LogWarn("export_commit_commiter_email_failed", analytics.CreateEmptyData().AppendError(err), "Exporting commit commiter's email has failed")
 				log.Warnf("envman export failed, error: %s", err)
 			}
 		}
