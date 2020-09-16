@@ -1,0 +1,7 @@
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  revision = "4d4bfba8f1d1027c4fdbe371823030df51419987"
+
+[prune]
+  go-tests = true
+  unused-packages = true
