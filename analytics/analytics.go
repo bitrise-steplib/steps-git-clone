@@ -13,7 +13,7 @@ func buildData(err error) map[string]interface{} {
 	data := map[string]interface{}{}
 	data["source"] = "scanner"
 	if err != nil {
-		data["error"] = err
+		data["error"] = err.Error()
 	}
 	return data
 }
