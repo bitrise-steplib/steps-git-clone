@@ -9,8 +9,8 @@ import (
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/retry"
-	"github.com/bitrise-io/steps-git-clone/analytics"
-	"github.com/bitrise-io/steps-git-clone/gitutil"
+	"github.com/bitrise-steplib/steps-git-clone/analytics"
+	"github.com/bitrise-steplib/steps-git-clone/gitutil"
 )
 
 const (
