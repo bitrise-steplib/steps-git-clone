@@ -4,7 +4,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 app:
   envs:
     - RELEASE_VERSION: 3.4.3
-    - GIT_REPOSITORY_URL: https://github.com/bitrise-io/steps-git-clone.git
+    - GIT_REPOSITORY_URL: https://github.com/bitrise-steplib/steps-git-clone.git
 
 workflows:
   # ----------------------------------------------------------------
@@ -383,7 +383,7 @@ workflows:
       - MY_STEPLIB_REPO_FORK_GIT_URL: $MY_STEPLIB_REPO_FORK_GIT_URL
       - STEP_ID_IN_STEPLIB: git-clone
       - STEP_GIT_VERION_TAG_TO_SHARE: $RELEASE_VERSION
-      - STEP_GIT_CLONE_URL: https://github.com/bitrise-io/steps-git-clone.git
+      - STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-git-clone.git
     description: |-
       If this is the first time you try to share a Step you should
       first call: $ bitrise share
