@@ -21,8 +21,8 @@ func TestDataBuild(t *testing.T) {
 		}
 		err = os.Setenv(key, "testSlug")
 		require.Equal(t, nil, err)
-		data := CreateEmptyData().AppendError(errors.New("testError")).appendSlug()
+		data := buildData(errors.New("testError"))
 		require.Equal(t, "testError", data["error"].(error).Error())
-		require.Equal(t, "testSlug", data["build_slug"])
+		require.Equal(t, "scanner", data["source"])
 	}
 }
