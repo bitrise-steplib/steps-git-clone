@@ -22,7 +22,7 @@ func TestDataBuild(t *testing.T) {
 		err = os.Setenv(key, "testSlug")
 		require.Equal(t, nil, err)
 		data := buildData(errors.New("testError"))
-		require.Equal(t, "testError", data["error"].(error).Error())
+		require.Equal(t, "testError", data["error"])
 		require.Equal(t, "scanner", data["source"])
 	}
 }
