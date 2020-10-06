@@ -70,40 +70,58 @@ func getMaxEnvLength() (int, error) {
 	return configs.EnvBytesLimitInKB * 1024, nil
 }
 
-func mainE() error {
-	var cfg config
-	if err := stepconf.Parse(&cfg); err != nil {
-		failf("Error: %s\n", err)
-	}
-	stepconf.Print(cfg)
-
+func mainE(cfg config) error {
 	maxEnvLength, err := getMaxEnvLength()
 	if err != nil {
-		failf("failed to set commit message length: %s\n", err)
+		return &StepError{
+			Tag:      "get_max_commit_msg_length_failed",
+			ShortMsg: "Getting allowed commit message length failed",
+			Err:      fmt.Errorf("failed to set commit message length: %s\n", err),
+		}
 	}
 
 	gitCmd, err := git.New(cfg.CloneIntoDir)
 	if err != nil {
-		return fmt.Errorf("create gitCmd project, error: %v", err)
+		return &StepError{
+			Tag:      "git_new",
+			ShortMsg: "Creating new git project directory failed",
+			Err:      fmt.Errorf("failed to create git project directory: %v", err),
+		}
 	}
 	checkoutArg := getCheckoutArg(cfg.Commit, cfg.Tag, cfg.Branch)
 
 	originPresent, err := isOriginPresent(gitCmd, cfg.CloneIntoDir, cfg.RepositoryURL)
 	if err != nil {
-		return fmt.Errorf("check if origin is presented, error: %v", err)
+		return &StepError{
+			Tag:      "check_origin_present_failed",
+			ShortMsg: "Checking wether origin is present failed",
+			Err:      fmt.Errorf("checking if origin is present failed: %v", err),
+		}
 	}
 
 	if originPresent && cfg.ResetRepository {
 		if err := resetRepo(gitCmd); err != nil {
-			return fmt.Errorf("reset repository, error: %v", err)
+			return &StepError{
+				Tag:      "reset_repository_failed",
+				ShortMsg: "Resetting repository failed",
+				Err:      fmt.Errorf("reset repository failed: %v", err),
+			}
 		}
 	}
 	if err := run(gitCmd.Init()); err != nil {
-		return fmt.Errorf("init repository, error: %v", err)
+		return &StepError{
+			Tag:      "init_git_failed",
+			ShortMsg: "Initializing git has failed",
+			Err:      fmt.Errorf("initializing repository failed: %v", err),
+		}
 	}
 	if !originPresent {
 		if err := run(gitCmd.RemoteAdd("origin", cfg.RepositoryURL)); err != nil {
-			return fmt.Errorf("add remote repository (%s), error: %v", cfg.RepositoryURL, err)
+			return &StepError{
+				Tag:      "add_remote_failed",
+				ShortMsg: "Adding remote repository failed",
+				Err:      fmt.Errorf("adding remote repository failed (%s): %v", cfg.RepositoryURL, err),
+			}
 		}
 	}
 
@@ -112,35 +130,55 @@ func mainE() error {
 		if !cfg.ManualMerge || isPrivate(cfg.PRRepositoryURL) && isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
 			if err := autoMerge(gitCmd, cfg.PRMergeBranch, cfg.BranchDest, cfg.BuildURL,
 				cfg.BuildAPIToken, cfg.CloneDepth, cfg.PRID); err != nil {
-				return fmt.Errorf("auto merge, error: %v", err)
+				return &StepError{
+					Tag:      "auto_merge_failed",
+					ShortMsg: "Merging pull request failed",
+					Err:      fmt.Errorf("merging PR (automatic) failed: %v", err),
+				}
 			}
 		} else {
 			if err := manualMerge(gitCmd, cfg.RepositoryURL, cfg.PRRepositoryURL, cfg.Branch,
 				cfg.Commit, cfg.BranchDest); err != nil {
-				return fmt.Errorf("manual merge, error: %v", err)
+				return &StepError{
+					Tag:      "manual_merge_failed",
+					ShortMsg: "Merging pull request failed",
+					Err:      fmt.Errorf("merging PR (manual) failed: %v", err),
+				}
 			}
 		}
 	} else if checkoutArg != "" {
 		if err := checkout(gitCmd, checkoutArg, cfg.Branch, cfg.CloneDepth, cfg.Tag != ""); err != nil {
-			return fmt.Errorf("checkout (%s): %v", checkoutArg, err)
+			return err
 		}
 		// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
 		if checkoutArg == cfg.Branch {
 			if err := run(gitCmd.Merge("origin/" + cfg.Branch)); err != nil {
-				return fmt.Errorf("merge %q: %v", cfg.Branch, err)
+				return &StepError{
+					Tag:      "update_branch_failed",
+					ShortMsg: "Updating branch failed",
+					Err:      fmt.Errorf("updating branch (merge) failed %q: %v", cfg.Branch, err),
+				}
 			}
 		}
 	}
 
 	if cfg.UpdateSubmodules {
 		if err := run(gitCmd.SubmoduleUpdate()); err != nil {
-			return fmt.Errorf("submodule update: %v", err)
+			return &StepError{
+				Tag:      "update_submodule_failed",
+				ShortMsg: "Updating submodules has failed",
+				Err:      fmt.Errorf("submodule update: %v", err),
+			}
 		}
 	}
 
 	if isPR {
 		if err := run(gitCmd.Checkout("--detach")); err != nil {
-			return fmt.Errorf("detach head: %v", err)
+			return &StepError{
+				Tag:      "detach_head_failed",
+				ShortMsg: "Detaching head failed",
+				Err:      fmt.Errorf("detach head failed: %v", err),
+			}
 		}
 	}
 
@@ -157,18 +195,30 @@ func mainE() error {
 			`%ce`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
 		} {
 			if err := printLogAndExportEnv(gitCmd, format, env, maxEnvLength); err != nil {
-				return fmt.Errorf("gitCmd log failed, error: %v", err)
+				return &StepError{
+					Tag:      "export_envs_failed",
+					ShortMsg: "Exporting envs failed",
+					Err:      fmt.Errorf("gitCmd log failed: %v", err),
+				}
 			}
 		}
 
 		count, err := output(gitCmd.RevList("HEAD", "--count"))
 		if err != nil {
-			return fmt.Errorf("get rev-list, error: %v", err)
+			return &StepError{
+				Tag:      "count_commits_failed",
+				ShortMsg: "Counting commits failed",
+				Err:      fmt.Errorf("get rev-list failed: %v", err),
+			}
 		}
 
 		log.Printf("=> %s\n   value: %s\n", "GIT_CLONE_COMMIT_COUNT", count)
 		if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", count); err != nil {
-			return fmt.Errorf("envman export, error: %v", err)
+			return &StepError{
+				Tag:      "export_envs_commit_count_failed",
+				ShortMsg: "Exporting commit count env failed",
+				Err:      fmt.Errorf("envman export failed: %v", err),
+			}
 		}
 	}
 
@@ -181,7 +231,13 @@ func failf(format string, v ...interface{}) {
 }
 
 func main() {
-	if err := mainE(); err != nil {
+	var cfg config
+	if err := stepconf.Parse(&cfg); err != nil {
+		failf("Error: %s\n", err)
+	}
+	stepconf.Print(cfg)
+
+	if err := mainE(cfg); err != nil {
 		failf("ERROR: %v", err)
 	}
 	log.Donef("\nSuccess")
