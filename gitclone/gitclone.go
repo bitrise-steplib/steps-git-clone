@@ -76,7 +76,7 @@ func Execute(cfg Config) error {
 		return &StepError{
 			Tag:      "get_max_commit_msg_length_failed",
 			ShortMsg: "Getting allowed commit message length failed",
-			Err:      fmt.Errorf("failed to set commit message length: %s\n", err),
+			Err:      fmt.Errorf("failed to set commit message length: %s", err),
 		}
 	}
 
