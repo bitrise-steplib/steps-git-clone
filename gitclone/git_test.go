@@ -1,4 +1,4 @@
-package main
+package gitclone
 
 import (
 	"testing"
@@ -6,13 +6,13 @@ import (
 
 func TestFetchArg(t *testing.T) {
 	for input, expected := range map[string]string{
-		"pull/1/merge":  "refs/pull/1/head:pull/1",
-		"pull/22/merge": "refs/pull/22/head:pull/22",
+		"pull/1/merge":       "refs/pull/1/head:pull/1",
+		"pull/22/merge":      "refs/pull/22/head:pull/22",
 		"pull/224/qux/merge": "refs/pull/224/qux/head:pull/224/qux",
-		"pull/22/baz": "refs/heads/pull/22/baz:pull/22/baz",
-		"pull/22/merge/foo": "refs/heads/pull/22/merge/foo:pull/22/merge/foo",
-		"feature/bar": "refs/heads/feature/bar:feature/bar",
-		"feature/qux/baz": "refs/heads/feature/qux/baz:feature/qux/baz",
+		"pull/22/baz":        "refs/heads/pull/22/baz:pull/22/baz",
+		"pull/22/merge/foo":  "refs/heads/pull/22/merge/foo:pull/22/merge/foo",
+		"feature/bar":        "refs/heads/feature/bar:feature/bar",
+		"feature/qux/baz":    "refs/heads/feature/qux/baz:feature/qux/baz",
 	} {
 		actual := fetchArg(input)
 		if actual != expected {
