@@ -1,7 +1,5 @@
 package gitclone
 
-import "fmt"
-
 // StepError is an error occuring top level in a step
 type StepError struct {
 	StepID, Tag, ShortMsg string
@@ -19,5 +17,5 @@ func NewStepError(tag string, err error, shortMsg string) *StepError {
 }
 
 func (e *StepError) Error() string {
-	return fmt.Sprintf("%s, %s", e.ShortMsg, e.Err.Error())
+	return e.Err.Error()
 }
