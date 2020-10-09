@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
@@ -265,7 +266,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	return nil
 }
 
-func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *StepError {
+func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.Error {
 	if err := runWithRetry(func() *command.Model {
 		var opts []string
 		if depth != 0 {
@@ -279,7 +280,7 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *StepEr
 		}
 		return gitCmd.Fetch(opts...)
 	}); err != nil {
-		return NewStepError(
+		return newStepError(
 			"fetch_failed",
 			fmt.Errorf("fetch failed, error: %v", err),
 			"Fetching repository has failed",
@@ -288,7 +289,7 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *StepEr
 
 	if err := run(gitCmd.Checkout(arg)); err != nil {
 		if depth == 0 {
-			return NewStepError(
+			return newStepError(
 				"checkout_failed",
 				fmt.Errorf("checkout failed (%s), error: %v", arg, err),
 				"Checkout has failed",
@@ -298,14 +299,14 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *StepEr
 		if err := runWithRetry(func() *command.Model {
 			return gitCmd.Fetch("--unshallow")
 		}); err != nil {
-			return NewStepError(
+			return newStepError(
 				"fetch_unshallow_failed",
 				fmt.Errorf("fetch (unshallow) failed, error: %v", err),
 				"Fetching with unshallow parameter has failed",
 			)
 		}
 		if err := run(gitCmd.Checkout(arg)); err != nil {
-			return NewStepError(
+			return newStepError(
 				"checkout_unshallow_failed",
 				fmt.Errorf("checkout failed (%s), error: %v", arg, err),
 				"Checkout after unshallow fetch has failed",
