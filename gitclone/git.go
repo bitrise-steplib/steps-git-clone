@@ -279,37 +279,37 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *StepEr
 		}
 		return gitCmd.Fetch(opts...)
 	}); err != nil {
-		return &StepError{
-			Tag:      "fetch_failed",
-			ShortMsg: "Fetching repository has failed",
-			Err:      fmt.Errorf("fetch failed, error: %v", err),
-		}
+		return NewStepError(
+			"fetch_failed",
+			fmt.Errorf("fetch failed, error: %v", err),
+			"Fetching repository has failed",
+		)
 	}
 
 	if err := run(gitCmd.Checkout(arg)); err != nil {
 		if depth == 0 {
-			return &StepError{
-				Tag:      "checkout_failed",
-				ShortMsg: "Checkout has failed",
-				Err:      fmt.Errorf("checkout failed (%s), error: %v", arg, err),
-			}
+			return NewStepError(
+				"checkout_failed",
+				fmt.Errorf("checkout failed (%s), error: %v", arg, err),
+				"Checkout has failed",
+			)
 		}
 		log.Warnf("Checkout failed, error: %v\nUnshallow...", err)
 		if err := runWithRetry(func() *command.Model {
 			return gitCmd.Fetch("--unshallow")
 		}); err != nil {
-			return &StepError{
-				Tag:      "fetch_unshallow_failed",
-				ShortMsg: "Fetching with unshallow parameter has failed",
-				Err:      fmt.Errorf("fetch (unshallow) failed, error: %v", err),
-			}
+			return NewStepError(
+				"fetch_unshallow_failed",
+				fmt.Errorf("fetch (unshallow) failed, error: %v", err),
+				"Fetching with unshallow parameter has failed",
+			)
 		}
 		if err := run(gitCmd.Checkout(arg)); err != nil {
-			return &StepError{
-				Tag:      "checkout_unshallow_failed",
-				ShortMsg: "Checkout after unshallow fetch has failed",
-				Err:      fmt.Errorf("checkout failed (%s), error: %v", arg, err),
-			}
+			return NewStepError(
+				"checkout_unshallow_failed",
+				fmt.Errorf("checkout failed (%s), error: %v", arg, err),
+				"Checkout after unshallow fetch has failed",
+			)
 		}
 	}
 
