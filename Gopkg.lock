@@ -14,9 +14,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:caf5b6526ab478df1debb4048cc99489d3954975457c4ba63441f489c9053ea2"
+  digest = "1:ba6694e16cc02ad534ba0e2443323379159c978bbba876b01a7286c326cafeb8"
   name = "github.com/bitrise-io/go-steputils"
-  packages = ["stepconf"]
+  packages = [
+    "stepconf",
+    "tools",
+  ]
   pruneopts = "UT"
   revision = "6d5afa53c7b85b6135e382105116d245b5997ace"
 
@@ -81,6 +84,7 @@
   input-imports = [
     "github.com/bitrise-io/envman/envman",
     "github.com/bitrise-io/go-steputils/stepconf",
+    "github.com/bitrise-io/go-steputils/tools",
     "github.com/bitrise-io/go-utils/command",
     "github.com/bitrise-io/go-utils/command/git",
     "github.com/bitrise-io/go-utils/log",

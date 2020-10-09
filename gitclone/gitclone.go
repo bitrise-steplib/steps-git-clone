@@ -2,10 +2,9 @@ package gitclone
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/bitrise-io/envman/envman"
-	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 )
@@ -48,16 +47,10 @@ func printLogAndExportEnv(gitCmd git.Git, format, env string, maxEnvLength int) 
 	}
 
 	log.Printf("=> %s\n   value: %s\n", env, l)
-	if err := exportEnvironmentWithEnvman(env, l); err != nil {
+	if err := tools.ExportEnvironmentWithEnvman(env, l); err != nil {
 		return fmt.Errorf("envman export, error: %v", err)
 	}
 	return nil
-}
-
-func exportEnvironmentWithEnvman(keyStr, valueStr string) error {
-	cmd := command.New("envman", "add", "--key", keyStr)
-	cmd.SetStdin(strings.NewReader(valueStr))
-	return cmd.Run()
 }
 
 func getMaxEnvLength() (int, error) {
@@ -213,7 +206,7 @@ func Execute(cfg Config) *StepError {
 		}
 
 		log.Printf("=> %s\n   value: %s\n", "GIT_CLONE_COMMIT_COUNT", count)
-		if err := exportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", count); err != nil {
+		if err := tools.ExportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", count); err != nil {
 			return NewStepError(
 				"export_envs_commit_count_failed",
 				fmt.Errorf("envman export failed: %v", err),
