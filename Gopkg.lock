@@ -2,12 +2,12 @@
 
 
 [[projects]]
-  branch = "ACT-625-scanner-custom-errors"
+  branch = "master"
   digest = "1:a0921d22827c79ad21fbe443623132344ac91ebddd4c4717a2429b107046ca4a"
   name = "github.com/bitrise-io/bitrise-init"
   packages = ["step"]
   pruneopts = "UT"
-  revision = "791475392ae083e2c56679b4eb61bdec3e752fa9"
+  revision = "82537a6f1161d7c70e28c592c63b8cde99cf3f72"
 
 [[projects]]
   branch = "master"
@@ -21,15 +21,15 @@
   revision = "919e33f391ee97e87193ae604967f02707a64e37"
 
 [[projects]]
-  branch = "ACT-625-scanner-custom-error"
-  digest = "1:c308a516c0cf52dbcea01d0e77330991fc32caaeca43803b6a6ac76c5a64c599"
+  branch = "master"
+  digest = "1:ba6694e16cc02ad534ba0e2443323379159c978bbba876b01a7286c326cafeb8"
   name = "github.com/bitrise-io/go-steputils"
   packages = [
     "stepconf",
     "tools",
   ]
   pruneopts = "UT"
-  revision = "fc7d4866475c547103935489e341e124f4989f37"
+  revision = "6d5afa53c7b85b6135e382105116d245b5997ace"
 
 [[projects]]
   branch = "master"
