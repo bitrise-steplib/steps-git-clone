@@ -30,9 +30,9 @@ description: |
    - [Bitrise.io Cache:Pull](https://www.bitrise.io/integrations/steps/cache-pull)
    - [Bitrise.io Cache:Push](https://www.bitrise.io/integrations/steps/cache-push)
 
-website: https://github.com/bitrise-io/steps-git-clone
-source_code_url: https://github.com/bitrise-io/steps-git-clone
-support_url: https://github.com/bitrise-io/steps-git-clone/issues
+website: https://github.com/bitrise-steplib/steps-git-clone
+source_code_url: https://github.com/bitrise-steplib/steps-git-clone
+support_url: https://github.com/bitrise-steplib/steps-git-clone/issues
 type_tags:
   - utility
 is_requires_admin_user: false
@@ -41,7 +41,7 @@ is_skippable: false
 run_if: .IsCI
 toolkit:
   go:
-    package_name: github.com/bitrise-io/steps-git-clone
+    package_name: github.com/bitrise-steplib/steps-git-clone
 inputs:
   - repository_url: "$GIT_REPOSITORY_URL"
     opts:
