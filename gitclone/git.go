@@ -266,6 +266,18 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	return nil
 }
 
+func listBranches(gitCmd git.Git) ([]string, error) {
+	if err := run(gitCmd.Fetch()); err != nil {
+		return nil, err
+	}
+	branches, err := gitCmd.Branch("-r").RunAndReturnTrimmedCombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	return strings.Split(branches, " "), nil
+}
+
 func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.Error {
 	if err := runWithRetry(func() *command.Model {
 		var opts []string
@@ -280,6 +292,19 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.E
 		}
 		return gitCmd.Fetch(opts...)
 	}); err != nil {
+		if branch != "" {
+			branches, branchesErr := listBranches(gitCmd)
+			if branchesErr == nil {
+				return newStepErrorWithRecommendations(
+					"fetch_failed",
+					fmt.Errorf("fetch failed, error: %v", err),
+					"Fetching repository has failed",
+					step.Recommendation{
+						"BranchRecommendation": branches,
+					},
+				)
+			}
+		}
 		return newStepError(
 			"fetch_failed",
 			fmt.Errorf("fetch failed, error: %v", err),
