@@ -278,6 +278,16 @@ func listBranches(gitCmd git.Git) ([]string, error) {
 	return strings.Split(branches, " "), nil
 }
 
+// Contains tells whether slice contains val.
+func Contains(slice []string, val string) bool {
+    for _, item := range slice {
+        if item == val {
+            return true
+        }
+    }
+    return false
+}
+
 func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.Error {
 	if err := runWithRetry(func() *command.Model {
 		var opts []string
@@ -295,14 +305,17 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.E
 		if branch != "" {
 			branches, branchesErr := listBranches(gitCmd)
 			if branchesErr == nil {
-				return newStepErrorWithRecommendations(
-					"fetch_failed",
-					fmt.Errorf("fetch failed, error: %v", err),
-					"Fetching repository has failed",
-					step.Recommendation{
-						"BranchRecommendation": branches,
-					},
-				)
+				contains := Contains(branches, branch)
+				if !contains {
+					return newStepErrorWithRecommendations(
+						"fetch_failed",
+						fmt.Errorf("fetch failed: invalid branch selected: %s, available branches: %s: %v", branch, strings.Join(branches, ", "), err),
+						"Fetching repository has failed",
+						step.Recommendation{
+							"BranchRecommendation": branches,
+						},
+					)
+				}
 			}
 		}
 		return newStepError(
