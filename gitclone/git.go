@@ -267,16 +267,26 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	return nil
 }
 
+func parseListBranchesOutput(output string) []string {
+	split := strings.Split(output, "\n")
+	var branches []string
+	for _, branch := range split {
+		branch = strings.Trim(branch, " ")
+		branches = append(branches, branch)
+	}
+	return branches
+}
+
 func listBranches(gitCmd git.Git) ([]string, error) {
 	if err := run(gitCmd.Fetch()); err != nil {
 		return nil, err
 	}
-	branches, err := gitCmd.Branch("-r").RunAndReturnTrimmedCombinedOutput()
+	out, err := gitCmd.Branch("-r").RunAndReturnTrimmedCombinedOutput()
 	if err != nil {
 		return nil, err
 	}
 
-	return strings.Split(branches, " "), nil
+	return parseListBranchesOutput(out), nil
 }
 
 func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.Error {

@@ -1,6 +1,7 @@
 package gitclone
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -52,6 +53,38 @@ func Test_getRepo(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getRepo(tt.url); got != tt.want {
 				t.Errorf("getRepo() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_parseListBranchesOutput(t *testing.T) {
+	tests := []struct {
+		name string
+		args string
+		want []string
+	}{
+		{
+			name: "single branch",
+			args: "master",
+			want: []string{"master"},
+		},
+		{
+			name: "multiple branches",
+			args: `origin/bitrise-bot-1
+  origin/bitrise-bot-2
+  origin/bitrise-bot-3`,
+			want: []string{
+				"origin/bitrise-bot-1",
+				"origin/bitrise-bot-2",
+				"origin/bitrise-bot-3"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseListBranchesOutput(tt.args)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseListBranchesOutput() = %v, want %v", got, tt.want)
 			}
 		})
 	}
