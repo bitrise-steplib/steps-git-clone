@@ -295,7 +295,7 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.E
 	}); err != nil {
 		if branch != "" {
 			branches, branchesErr := listBranches(gitCmd)
-			if branchesErr == nil && sliceutil.IsStringInSlice(branch, branches) {
+			if branchesErr == nil && !sliceutil.IsStringInSlice(branch, branches) {
 				return newStepErrorWithRecommendations(
 					"fetch_failed",
 					fmt.Errorf("fetch failed: invalid branch selected: %s, available branches: %s: %v", branch, strings.Join(branches, ", "), err),
