@@ -16,6 +16,7 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/retry"
+	"github.com/bitrise-io/go-utils/sliceutil"
 )
 
 func isOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
@@ -266,6 +267,28 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	return nil
 }
 
+func parseListBranchesOutput(output string) []string {
+	split := strings.Split(output, "\n")
+	var branches []string
+	for _, branch := range split {
+		branch = strings.Trim(branch, " ")
+		branches = append(branches, branch)
+	}
+	return branches
+}
+
+func listBranches(gitCmd git.Git) ([]string, error) {
+	if err := run(gitCmd.Fetch()); err != nil {
+		return nil, err
+	}
+	out, err := gitCmd.Branch("-r").RunAndReturnTrimmedCombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	return parseListBranchesOutput(out), nil
+}
+
 func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.Error {
 	if err := runWithRetry(func() *command.Model {
 		var opts []string
@@ -280,6 +303,19 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.E
 		}
 		return gitCmd.Fetch(opts...)
 	}); err != nil {
+		if branch != "" {
+			branches, branchesErr := listBranches(gitCmd)
+			if branchesErr == nil && !sliceutil.IsStringInSlice(branch, branches) {
+				return newStepErrorWithRecommendations(
+					"fetch_failed",
+					fmt.Errorf("fetch failed: invalid branch selected: %s, available branches: %s: %v", branch, strings.Join(branches, ", "), err),
+					"Fetching repository has failed",
+					step.Recommendation{
+						"BranchRecommendation": branches,
+					},
+				)
+			}
+		}
 		return newStepError(
 			"fetch_failed",
 			fmt.Errorf("fetch failed, error: %v", err),

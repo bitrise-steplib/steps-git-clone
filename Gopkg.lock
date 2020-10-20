@@ -3,11 +3,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a0921d22827c79ad21fbe443623132344ac91ebddd4c4717a2429b107046ca4a"
+  digest = "1:a0459feb3fd004baba94a39946c947565818583196ad122f6c07df5abe796bb2"
   name = "github.com/bitrise-io/bitrise-init"
   packages = ["step"]
   pruneopts = "UT"
-  revision = "82537a6f1161d7c70e28c592c63b8cde99cf3f72"
+  revision = "f6de811405dbad793749fa61d70ad2637e2252e7"
 
 [[projects]]
   branch = "master"
@@ -29,11 +29,11 @@
     "tools",
   ]
   pruneopts = "UT"
-  revision = "6d5afa53c7b85b6135e382105116d245b5997ace"
+  revision = "03ae3a6ded35c5e8aed0058ec270e3494d242d17"
 
 [[projects]]
   branch = "master"
-  digest = "1:2857c2a684df7cb8afca579504a5b8fe747f3a2567276c6c27500a3c0a26bb62"
+  digest = "1:33ce84942ca6015614595fc6bf9a7e579dc815306c33c300735f80333c4d1d64"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
@@ -46,9 +46,10 @@
     "pathutil",
     "pointers",
     "retry",
+    "sliceutil",
   ]
   pruneopts = "UT"
-  revision = "0c47c16813a4209321c9d0dba2e75867d6901ff2"
+  revision = "6cc2aa4d248adef509996ac484bffd38856ddf80"
 
 [[projects]]
   branch = "master"
@@ -64,11 +65,11 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "7f63de1d35b0f77fa2b9faea3e7deb402a2383c8"
+  revision = "9e8e0b390897c84cad53ebe9ed2d1d331a5394d9"
 
 [[projects]]
   branch = "master"
-  digest = "1:0f8c7660821796ffd401a177c2b65dc460d9ea72616e367b65e86e059fb4f130"
+  digest = "1:16da094ce218b90ace8c775d3b163060f1cc912f37fa2e3bc6380b5eb0da69fc"
   name = "golang.org/x/sys"
   packages = [
     "internal/unsafeheader",
@@ -76,7 +77,7 @@
     "windows",
   ]
   pruneopts = "UT"
-  revision = "ac719f4daadf9a497a732e2461f70b8720a0287c"
+  revision = "eeed37f84f13f52d35e095e8023ba65671ff86a1"
 
 [[projects]]
   digest = "1:d7f1bd887dc650737a421b872ca883059580e9f8314d601f88025df4f4802dce"
@@ -99,6 +100,7 @@
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-io/go-utils/pathutil",
     "github.com/bitrise-io/go-utils/retry",
+    "github.com/bitrise-io/go-utils/sliceutil",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
