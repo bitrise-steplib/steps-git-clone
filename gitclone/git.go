@@ -113,7 +113,7 @@ func run(c *command.Model) error {
 	log.Infof("%s", c.PrintableCommandArgs())
 	var buffer bytes.Buffer
 
-	err := c.SetStdout(os.Stdout).SetStderr(io.MultiWriter(os.Stdout, &buffer)).Run()
+	err := c.SetStdout(os.Stdout).SetStderr(io.MultiWriter(os.Stderr, &buffer)).Run()
 	if err != nil {
 		if errorutil.IsExitStatusError(err) {
 			return errors.New(strings.TrimSpace(buffer.String()))
