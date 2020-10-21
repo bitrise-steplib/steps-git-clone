@@ -29,6 +29,7 @@ workflows:
     - errcheck:
     - go-test:
     after_run:
+    - _test_error
     - _test_submodule
     - _test_no_checkout
     - _test_checkout_commit
@@ -77,6 +78,53 @@ workflows:
     - ensure-clean-git:
         inputs:
         - dir_to_check: $CLONE_INTO_DIR
+
+  error_test:
+    envs:
+    - CLONE_INTO_DIR: .
+    - GIT_REPOSITORY_URL: https://github.com/bitrise-io/git-clone-test.git
+    before_run:
+    - _create_tmpdir
+    steps:
+    - path::./:
+        run_if: true
+        inputs:
+        - clone_into_dir: $CLONE_INTO_DIR
+        - commit: ""
+        - tag: ""
+        - branch: "fake"
+        - pull_request_id: ""
+        - pull_request_merge_branch: ""
+        - pull_request_repository_url: ""
+        - branch_dest: ""
+        - clone_depth: ""
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $CLONE_INTO_DIR
+
+  _test_error:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #/bin/env bash
+            set -x
+            bitrise run error_test
+            if [ $? == 0 ]; then
+              exit 1
+            fi
 
   _test_no_checkout:
     before_run:

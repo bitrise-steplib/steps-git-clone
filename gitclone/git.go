@@ -126,7 +126,6 @@ func run(c *command.Model) error {
 }
 
 func output(c *command.Model) (string, error) {
-	fmt.Println()
 	log.Infof("$ %s &> out", c.PrintableCommandArgs())
 
 	out, err := c.RunAndReturnTrimmedCombinedOutput()
