@@ -1,7 +1,10 @@
 package gitclone
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -13,6 +16,7 @@ import (
 	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/retry"
@@ -106,12 +110,30 @@ func getDiffFile(buildURL, apiToken string, prID int) (string, error) {
 }
 
 func run(c *command.Model) error {
-	log.Infof(c.PrintableCommandArgs())
-	return c.SetStdout(os.Stdout).SetStderr(os.Stderr).Run()
+	fmt.Println()
+	log.Infof("$ %s", c.PrintableCommandArgs())
+	var buffer bytes.Buffer
+
+	err := c.SetStdout(os.Stdout).SetStderr(io.MultiWriter(os.Stderr, &buffer)).Run()
+	if err != nil {
+		if errorutil.IsExitStatusError(err) {
+			return errors.New(strings.TrimSpace(buffer.String()))
+		}
+		return err
+	}
+
+	return nil
 }
 
 func output(c *command.Model) (string, error) {
-	return c.RunAndReturnTrimmedCombinedOutput()
+	log.Infof("$ %s &> out", c.PrintableCommandArgs())
+
+	out, err := c.RunAndReturnTrimmedCombinedOutput()
+	if err != nil && errorutil.IsExitStatusError(err) {
+		return out, errors.New(out)
+	}
+
+	return out, err
 }
 
 func runWithRetry(f func() *command.Model) error {
@@ -281,7 +303,7 @@ func listBranches(gitCmd git.Git) ([]string, error) {
 	if err := run(gitCmd.Fetch()); err != nil {
 		return nil, err
 	}
-	out, err := gitCmd.Branch("-r").RunAndReturnTrimmedCombinedOutput()
+	out, err := output(gitCmd.Branch("-r"))
 	if err != nil {
 		return nil, err
 	}
