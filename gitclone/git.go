@@ -110,11 +110,10 @@ func getDiffFile(buildURL, apiToken string, prID int) (string, error) {
 }
 
 func run(c *command.Model) error {
-	log.Infof(c.PrintableCommandArgs())
+	log.Infof("%s", c.PrintableCommandArgs())
 	var buffer bytes.Buffer
-	outWriter := io.MultiWriter(os.Stdout, &buffer)
 
-	err := c.SetStdout(os.Stdout).SetStderr(outWriter).Run()
+	err := c.SetStdout(os.Stdout).SetStderr(io.MultiWriter(os.Stdout, &buffer)).Run()
 	if err != nil {
 		if errorutil.IsExitStatusError(err) {
 			return errors.New(strings.TrimSpace(buffer.String()))
@@ -126,7 +125,7 @@ func run(c *command.Model) error {
 }
 
 func output(c *command.Model) (string, error) {
-	log.Infof(c.PrintableCommandArgs())
+	log.Infof("%s", c.PrintableCommandArgs())
 
 	out, err := c.RunAndReturnTrimmedCombinedOutput()
 	if err != nil && errorutil.IsExitStatusError(err) {
