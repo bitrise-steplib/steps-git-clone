@@ -114,19 +114,26 @@ func run(c *command.Model) error {
 	var buffer bytes.Buffer
 	outWriter := io.MultiWriter(os.Stdout, &buffer)
 
-	err := c.SetStdout(outWriter).SetStderr(outWriter).Run()
+	err := c.SetStdout(os.Stdout).SetStderr(outWriter).Run()
 	if err != nil {
 		if errorutil.IsExitStatusError(err) {
-			return errors.New(buffer.String())
+			return errors.New(strings.TrimSpace(buffer.String()))
 		}
-		return fmt.Errorf("command execution failed, %s", err)
+		return err
 	}
 
 	return nil
 }
 
 func output(c *command.Model) (string, error) {
-	return c.RunAndReturnTrimmedCombinedOutput()
+	log.Infof(c.PrintableCommandArgs())
+
+	out, err := c.RunAndReturnTrimmedCombinedOutput()
+	if err != nil && errorutil.IsExitStatusError(err) {
+		return out, errors.New(out)
+	}
+
+	return out, err
 }
 
 func runWithRetry(f func() *command.Model) error {
@@ -296,7 +303,7 @@ func listBranches(gitCmd git.Git) ([]string, error) {
 	if err := run(gitCmd.Fetch()); err != nil {
 		return nil, err
 	}
-	out, err := gitCmd.Branch("-r").RunAndReturnTrimmedCombinedOutput()
+	out, err := output(gitCmd.Branch("-r"))
 	if err != nil {
 		return nil, err
 	}
