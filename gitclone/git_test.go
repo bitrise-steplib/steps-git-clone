@@ -62,22 +62,29 @@ func Test_parseListBranchesOutput(t *testing.T) {
 	tests := []struct {
 		name string
 		args string
-		want []string
+		want map[string][]string
 	}{
 		{
 			name: "single branch",
-			args: "master",
-			want: []string{"master"},
+			args: "upstream/master",
+			want: map[string][]string{
+				"upstream": {
+					"master",
+				},
+			},
 		},
 		{
 			name: "multiple branches",
-			args: `origin/bitrise-bot-1
-  origin/bitrise-bot-2
-  origin/bitrise-bot-3`,
-			want: []string{
-				"origin/bitrise-bot-1",
-				"origin/bitrise-bot-2",
-				"origin/bitrise-bot-3"},
+			args: `upstream/bitrise-bot-1
+  upstream/bitrise-bot-2
+  upstream/bitrise-bot-3`,
+			want: map[string][]string{
+				"upstream": {
+					"bitrise-bot-1",
+					"bitrise-bot-2",
+					"bitrise-bot-3",
+				},
+			},
 		},
 	}
 	for _, tt := range tests {

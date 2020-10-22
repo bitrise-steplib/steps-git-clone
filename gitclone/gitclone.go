@@ -32,7 +32,8 @@ type Config struct {
 }
 
 const (
-	trimEnding = "..."
+	trimEnding        = "..."
+	defaultRemoteName = "origin"
 )
 
 func printLogAndExportEnv(gitCmd git.Git, format, env string, maxEnvLength int) error {
@@ -110,7 +111,7 @@ func Execute(cfg Config) *step.Error {
 		)
 	}
 	if !originPresent {
-		if err := run(gitCmd.RemoteAdd("origin", cfg.RepositoryURL)); err != nil {
+		if err := run(gitCmd.RemoteAdd(defaultRemoteName, cfg.RepositoryURL)); err != nil {
 			return newStepError(
 				"add_remote_failed",
 				fmt.Errorf("adding remote repository failed (%s): %v", cfg.RepositoryURL, err),
