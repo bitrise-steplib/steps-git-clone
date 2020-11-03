@@ -7,29 +7,91 @@ import (
 	"github.com/bitrise-io/bitrise-init/step"
 )
 
-func mapRecommendation(tag string, err error) step.Recommendation {
-	switch tag {
-	case "checkout_failed":
-		detail := checkotFailedGenericDetail(err)
-		return newDetailedErrorRecommendation(detail)
-	case "fetch_failed":
-		switch {
-		case regexp.MustCompile(`Permission denied (.+)\.`).MatchString(err.Error()):
-			detail := fetchFailedPermissionDeniedDetail()
-			return newDetailedErrorRecommendation(detail)
-		case regexp.MustCompile(`fatal: repository '(.+)' not found`).MatchString(err.Error()):
-			matches := regexp.MustCompile(`fatal: repository '(.+)' not found`).FindStringSubmatch(err.Error())
-			if len(matches) < 2 {
-				break
-			}
-			repoURL := matches[1]
+// DetailBuilder ...
+type DetailBuilder = func(...string) Detail
 
-			detail := fetchFailedNotGitRepository(repoURL)
-			return newDetailedErrorRecommendation(detail)
-		default:
-			detail := fetchFailedGenericDetail(err)
-			return newDetailedErrorRecommendation(detail)
+// PatternErrorMatcher ...
+type PatternErrorMatcher struct {
+	defaultHandler DetailBuilder
+	handlers       map[string]DetailBuilder
+}
+
+func newPatternErrorMatcher(defaultHandler DetailBuilder, handlers map[string]DetailBuilder) *PatternErrorMatcher {
+	m := PatternErrorMatcher{
+		handlers:       handlers,
+		defaultHandler: defaultHandler,
+	}
+
+	return &m
+}
+
+// Run ...
+func (m *PatternErrorMatcher) Run(msg string) step.Recommendation {
+	for pattern, handler := range m.handlers {
+		re := regexp.MustCompile(pattern)
+		if re.MatchString(msg) {
+			matches := re.FindStringSubmatch((msg))
+
+			if len(matches) > 1 {
+				matches = matches[1:]
+			}
+
+			if matches != nil {
+				detail := handler(matches...)
+				return newDetailedErrorRecommendation(detail)
+			}
 		}
+	}
+
+	detail := m.defaultHandler(msg)
+	return newDetailedErrorRecommendation(detail)
+}
+
+func newCheckoutFailedPatternErrorMatcher() *PatternErrorMatcher {
+	return newPatternErrorMatcher(
+		checkoutFailedGenericDetail,
+		map[string]DetailBuilder{},
+	)
+}
+
+func newFetchFailedPatternErrorMatcher() *PatternErrorMatcher {
+	return newPatternErrorMatcher(
+		fetchFailedGenericDetail,
+		map[string]DetailBuilder{
+			`Permission denied (.+)\.`:                                                               fetchFailedSSHAccessError,
+			`fatal: repository '(.+)' not found`:                                                     fetchFailedCouldNotFindGitRepository,
+			`fatal: '(.+)' does not appear to be a git repository`:                                   fetchFailedCouldNotFindGitRepository,
+			`fatal: (.+)/info/refs not valid: is this a git repository?`:                             fetchFailedCouldNotFindGitRepository,
+			`remote: HTTP Basic: Access denied[\n]*fatal: Authentication failed for '(.+)'`:          fetchFailedHTTPAccessError,
+			`remote: Invalid username or password\(\.\)[\n]*fatal: Authentication failed for '(.+)'`: fetchFailedHTTPAccessError,
+			`Unauthorized`:                          fetchFailedHTTPAccessError,
+			`Forbidden`:                             fetchFailedHTTPAccessError,
+			`remote: Unauthorized LoginAndPassword`: fetchFailedHTTPAccessError,
+			// `fatal: unable to access '(.+)': Failed to connect to .+ port \d+: Connection timed out
+			// `fatal: unable to access '(.+)': The requested URL returned error: 400`
+			// `fatal: unable to access '(.+)': The requested URL returned error: 403`
+			`fatal: unable to access '(.+)': (Failed|The requested URL returned error: \d+)`: fetchFailedHTTPAccessError,
+			// `ssh: connect to host (.+) port \d+: Connection timed out`
+			// `ssh: connect to host (.+) port \d+: Connection refused`
+			// `ssh: connect to host (.+) port \d+: Network is unreachable`
+			`ssh: connect to host (.+) port \d+:`:                                fetchFailedCouldConnectError,
+			`ssh: Could not resolve hostname (.+): Name or service not known`:    fetchFailedCouldConnectError,
+			`fatal: unable to access '.+': Could not resolve host: (\S+)`:        fetchFailedCouldConnectError,
+			`ERROR: The \x60(.+)' organization has enabled or enforced SAML SSO`: fetchFailedSamlSSOError,
+		})
+}
+
+func mapRecommendation(tag string, err error) step.Recommendation {
+	msg := err.Error()
+	switch tag {
+	case checkoutFailedTag:
+		matcher := newCheckoutFailedPatternErrorMatcher()
+		return matcher.Run(msg)
+	case updateSubmodelFailedTag: // update_submodule_failed could have the same errors as fetch
+		fallthrough
+	case fetchFailedTag:
+		fetchFailedMatcher := newFetchFailedPatternErrorMatcher()
+		return fetchFailedMatcher.Run(msg)
 	}
 	return nil
 }
@@ -52,31 +114,56 @@ func newDetailedErrorRecommendation(detail Detail) step.Recommendation {
 	}
 }
 
-func checkotFailedGenericDetail(err error) Detail {
+func checkoutFailedGenericDetail(params ...string) Detail {
+	err := params[0]
 	return Detail{
 		Title:       "We couldn’t checkout your branch.",
 		Description: fmt.Sprintf("Our auto-configurator returned the following error:\n%s", err),
 	}
 }
 
-func fetchFailedGenericDetail(err error) Detail {
+func fetchFailedGenericDetail(params ...string) Detail {
+	err := params[0]
 	return Detail{
 		Title:       "We couldn’t fetch your repository.",
-		Description: fmt.Sprintf("Our auto-configurator returned the following error: %s", err),
+		Description: fmt.Sprintf("Our auto-configurator returned the following error:\n%s", err),
 	}
 }
 
-func fetchFailedPermissionDeniedDetail() Detail {
+func fetchFailedSSHAccessError(params ...string) Detail {
 	return Detail{
 		Title:       "We couldn’t access your repository.",
 		Description: "Please abort the process, double-check your SSH key and try again.",
 	}
 }
 
-func fetchFailedNotGitRepository(repoURL string) Detail {
+func fetchFailedCouldNotFindGitRepository(params ...string) Detail {
+	repoURL := params[0]
 	return Detail{
-		Title:       fmt.Sprintf("We couldn’t find a git repository at %s", repoURL),
+		Title:       fmt.Sprintf("We couldn’t find a git repository at '%s'.", repoURL),
 		Description: "Please abort the process, double-check your repository URL and try again.",
+	}
+}
+
+func fetchFailedHTTPAccessError(params ...string) Detail {
+	return Detail{
+		Title:       "We couldn’t access your repository.",
+		Description: "Please abort the process and try again, by providing the repository with SSH URL.",
+	}
+}
+
+func fetchFailedCouldConnectError(params ...string) Detail {
+	host := params[0]
+	return Detail{
+		Title:       fmt.Sprintf("We couldn’t connect to '%s'.", host),
+		Description: "Please abort the process, double-check your repository URL and try again.",
+	}
+}
+
+func fetchFailedSamlSSOError(params ...string) Detail {
+	return Detail{
+		Title:       "To access this repository, you need to use SAML SSO.",
+		Description: `Please abort the process, update your SSH settings and try again. You can find out more about <a target="_blank" href="https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/authorizing-an-ssh-key-for-use-with-saml-single-sign-on">using SAML SSO in the Github docs</a>.`,
 	}
 }
 
