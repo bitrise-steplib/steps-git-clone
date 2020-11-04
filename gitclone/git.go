@@ -26,6 +26,7 @@ import (
 const (
 	checkoutFailedTag = "checkout_failed"
 	fetchFailedTag    = "fetch_failed"
+	branchRecKey      = "BranchRecommendation"
 )
 
 func isOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
@@ -348,7 +349,8 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.E
 					fmt.Errorf("fetch failed: invalid branch selected: %s, available branches: %s: %v", branch, strings.Join(branches, ", "), err),
 					"Fetching repository has failed",
 					step.Recommendation{
-						"BranchRecommendation": branches,
+						branchRecKey:        branches,
+						detailedErrorRecKey: newFetchFailedInvalidBranchDetailedError(branch),
 					},
 				)
 			}
