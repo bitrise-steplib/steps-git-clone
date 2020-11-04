@@ -36,7 +36,7 @@ func newStepErrorWithRecommendations(tag string, err error, shortMsg string, rec
 func newCheckoutFailedPatternErrorMatcher() *PatternErrorMatcher {
 	return newPatternErrorMatcher(
 		newCheckoutFailedGenericDetailedError,
-		map[string]DetailedErrorBuilder{},
+		nil,
 	)
 }
 
