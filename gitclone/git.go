@@ -21,6 +21,7 @@ import (
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/retry"
 	"github.com/bitrise-io/go-utils/sliceutil"
+	"github.com/bitrise-steplib/steps-git-clone/errormapper"
 )
 
 const (
@@ -349,8 +350,8 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.E
 					fmt.Errorf("fetch failed: invalid branch selected: %s, available branches: %s: %v", branch, strings.Join(branches, ", "), err),
 					"Fetching repository has failed",
 					step.Recommendation{
-						branchRecKey:        branches,
-						detailedErrorRecKey: newFetchFailedInvalidBranchDetailedError(branch),
+						branchRecKey:                    branches,
+						errormapper.DetailedErrorRecKey: newFetchFailedInvalidBranchDetailedError(branch),
 					},
 				)
 			}

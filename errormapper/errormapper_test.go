@@ -1,4 +1,4 @@
-package gitclone
+package errormapper
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ func Test_newDetailedErrorRecommendation(t *testing.T) {
 				},
 			},
 			want: step.Recommendation{
-				detailedErrorRecKey: DetailedError{
+				DetailedErrorRecKey: DetailedError{
 					Title:       "TestTitle",
 					Description: "TestDesciption",
 				},
@@ -35,7 +35,7 @@ func Test_newDetailedErrorRecommendation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := newDetailedErrorRecommendation(tt.args.detailedError); !reflect.DeepEqual(got, tt.want) {
+			if got := NewDetailedErrorRecommendation(tt.args.detailedError); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("newDetailedErrorRecommendation() = %v, want %v", got, tt.want)
 			}
 		})
@@ -58,7 +58,7 @@ func Test_getParamAt(t *testing.T) {
 				index:  0,
 				params: nil,
 			},
-			want: unknownParam,
+			want: UnknownParam,
 		},
 		{
 			name: "getParamsAt(0, [])",
@@ -66,7 +66,7 @@ func Test_getParamAt(t *testing.T) {
 				index:  0,
 				params: []string{},
 			},
-			want: unknownParam,
+			want: UnknownParam,
 		},
 		{
 			name: "getParamsAt(-1, ['1', '2', '3', '4', '5'])",
@@ -74,7 +74,7 @@ func Test_getParamAt(t *testing.T) {
 				index:  -1,
 				params: []string{"1", "2", "3", "4", "5"},
 			},
-			want: unknownParam,
+			want: UnknownParam,
 		},
 		{
 			name: "getParamsAt(5, ['1', '2', '3', '4', '5'])",
@@ -82,7 +82,7 @@ func Test_getParamAt(t *testing.T) {
 				index:  5,
 				params: []string{"1", "2", "3", "4", "5"},
 			},
-			want: unknownParam,
+			want: UnknownParam,
 		},
 		{
 			name: "getParamsAt(0, ['1', '2', '3', '4', '5'])",
@@ -111,7 +111,7 @@ func Test_getParamAt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getParamAt(tt.args.index, tt.args.params); got != tt.want {
+			if got := GetParamAt(tt.args.index, tt.args.params); got != tt.want {
 				t.Errorf("getParamAt() = %v, want %v", got, tt.want)
 			}
 		})
@@ -147,7 +147,7 @@ func TestPatternErrorMatcher_Run(t *testing.T) {
 				msg: "Test",
 			},
 			want: step.Recommendation{
-				detailedErrorRecKey: DetailedError{
+				DetailedErrorRecKey: DetailedError{
 					Title:       "T",
 					Description: "D",
 				},
@@ -175,7 +175,7 @@ func TestPatternErrorMatcher_Run(t *testing.T) {
 				msg: "Test",
 			},
 			want: step.Recommendation{
-				detailedErrorRecKey: DetailedError{
+				DetailedErrorRecKey: DetailedError{
 					Title:       "PatternTitle",
 					Description: "PatternDesc",
 				},
@@ -192,7 +192,7 @@ func TestPatternErrorMatcher_Run(t *testing.T) {
 				},
 				patternToBuilder: map[string]DetailedErrorBuilder{
 					"Test (.+)!": func(params ...string) DetailedError {
-						p := getParamAt(0, params)
+						p := GetParamAt(0, params)
 						return DetailedError{
 							Title:       "PatternTitle",
 							Description: fmt.Sprintf("PatternDesc: '%s'", p),
@@ -204,7 +204,7 @@ func TestPatternErrorMatcher_Run(t *testing.T) {
 				msg: "Test WithPatternParam!",
 			},
 			want: step.Recommendation{
-				detailedErrorRecKey: DetailedError{
+				DetailedErrorRecKey: DetailedError{
 					Title:       "PatternTitle",
 					Description: "PatternDesc: 'WithPatternParam'",
 				},
@@ -214,8 +214,8 @@ func TestPatternErrorMatcher_Run(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &PatternErrorMatcher{
-				defaultBuilder:   tt.fields.defaultBuilder,
-				patternToBuilder: tt.fields.patternToBuilder,
+				DefaultBuilder:   tt.fields.defaultBuilder,
+				PatternToBuilder: tt.fields.patternToBuilder,
 			}
 			if got := m.Run(tt.args.msg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("PatternErrorMatcher.Run() = %v, want %v", got, tt.want)

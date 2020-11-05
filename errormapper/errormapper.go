@@ -1,4 +1,4 @@
-package gitclone
+package errormapper
 
 import (
 	"regexp"
@@ -7,8 +7,10 @@ import (
 )
 
 const (
-	unknownParam        = "::unknown::"
-	detailedErrorRecKey = "DetailedError"
+	// UnknownParam ...
+	UnknownParam = "::unknown::"
+	// DetailedErrorRecKey ...
+	DetailedErrorRecKey = "DetailedError"
 )
 
 // DetailedError ...
@@ -17,17 +19,19 @@ type DetailedError struct {
 	Description string
 }
 
-func newDetailedErrorRecommendation(detailedError DetailedError) step.Recommendation {
+// NewDetailedErrorRecommendation ...
+func NewDetailedErrorRecommendation(detailedError DetailedError) step.Recommendation {
 	return step.Recommendation{
-		detailedErrorRecKey: detailedError,
+		DetailedErrorRecKey: detailedError,
 	}
 }
 
 // DetailedErrorBuilder ...
 type DetailedErrorBuilder = func(...string) DetailedError
 
-func getParamAt(index int, params []string) string {
-	res := unknownParam
+//GetParamAt ...
+func GetParamAt(index int, params []string) string {
+	res := UnknownParam
 	if index >= 0 && len(params) > index {
 		res = params[index]
 	}
@@ -39,22 +43,13 @@ type PatternToDetailedErrorBuilder map[string]DetailedErrorBuilder
 
 // PatternErrorMatcher ...
 type PatternErrorMatcher struct {
-	defaultBuilder   DetailedErrorBuilder
-	patternToBuilder PatternToDetailedErrorBuilder
-}
-
-func newPatternErrorMatcher(defaultBuilder DetailedErrorBuilder, patternToBuilder PatternToDetailedErrorBuilder) *PatternErrorMatcher {
-	m := PatternErrorMatcher{
-		defaultBuilder:   defaultBuilder,
-		patternToBuilder: patternToBuilder,
-	}
-
-	return &m
+	DefaultBuilder   DetailedErrorBuilder
+	PatternToBuilder PatternToDetailedErrorBuilder
 }
 
 // Run ...
 func (m *PatternErrorMatcher) Run(msg string) step.Recommendation {
-	for pattern, builder := range m.patternToBuilder {
+	for pattern, builder := range m.PatternToBuilder {
 		re := regexp.MustCompile(pattern)
 		if re.MatchString(msg) {
 			// [search_string, match1, match2, ...]
@@ -64,10 +59,10 @@ func (m *PatternErrorMatcher) Run(msg string) step.Recommendation {
 			// [search_string, match1, ...] -> [match1, ...]
 			params := matches[1:]
 			detail := builder(params...)
-			return newDetailedErrorRecommendation(detail)
+			return NewDetailedErrorRecommendation(detail)
 		}
 	}
 
-	detail := m.defaultBuilder(msg)
-	return newDetailedErrorRecommendation(detail)
+	detail := m.DefaultBuilder(msg)
+	return NewDetailedErrorRecommendation(detail)
 }

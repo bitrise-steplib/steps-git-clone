@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bitrise-io/bitrise-init/step"
+	"github.com/bitrise-steplib/steps-git-clone/errormapper"
 )
 
 func mapRecommendation(tag, errMsg string) step.Recommendation {
@@ -33,17 +34,17 @@ func newStepErrorWithRecommendations(tag string, err error, shortMsg string, rec
 	return step.NewErrorWithRecommendations("git-clone", tag, err, shortMsg, recommendations)
 }
 
-func newCheckoutFailedPatternErrorMatcher() *PatternErrorMatcher {
-	return newPatternErrorMatcher(
-		newCheckoutFailedGenericDetailedError,
-		nil,
-	)
+func newCheckoutFailedPatternErrorMatcher() *errormapper.PatternErrorMatcher {
+	return &errormapper.PatternErrorMatcher{
+		DefaultBuilder:   newCheckoutFailedGenericDetailedError,
+		PatternToBuilder: nil,
+	}
 }
 
-func newFetchFailedPatternErrorMatcher() *PatternErrorMatcher {
-	return newPatternErrorMatcher(
-		newFetchFailedGenericDetailedError,
-		map[string]DetailedErrorBuilder{
+func newFetchFailedPatternErrorMatcher() *errormapper.PatternErrorMatcher {
+	return &errormapper.PatternErrorMatcher{
+		DefaultBuilder: newFetchFailedGenericDetailedError,
+		PatternToBuilder: errormapper.PatternToDetailedErrorBuilder{
 			`Permission denied \((.+)\)`:                                                             newFetchFailedSSHAccessErrorDetailedError,
 			`fatal: repository '(.+)' not found`:                                                     newFetchFailedCouldNotFindGitRepoDetailedError,
 			`fatal: '(.+)' does not appear to be a git repository`:                                   newFetchFailedCouldNotFindGitRepoDetailedError,
@@ -64,65 +65,66 @@ func newFetchFailedPatternErrorMatcher() *PatternErrorMatcher {
 			`ssh: Could not resolve hostname (.+): Name or service not known`:    newFetchFailedCouldConnectErrorDetailedError,
 			`fatal: unable to access '.+': Could not resolve host: (\S+)`:        newFetchFailedCouldConnectErrorDetailedError,
 			`ERROR: The \x60(.+)' organization has enabled or enforced SAML SSO`: newFetchFailedSamlSSOEnforcedDetailedError,
-		})
+		},
+	}
 }
 
-func newCheckoutFailedGenericDetailedError(params ...string) DetailedError {
-	err := getParamAt(0, params)
-	return DetailedError{
+func newCheckoutFailedGenericDetailedError(params ...string) errormapper.DetailedError {
+	err := errormapper.GetParamAt(0, params)
+	return errormapper.DetailedError{
 		Title:       "We couldn’t checkout your branch.",
 		Description: fmt.Sprintf("Our auto-configurator returned the following error:\n%s", err),
 	}
 }
 
-func newFetchFailedGenericDetailedError(params ...string) DetailedError {
-	err := getParamAt(0, params)
-	return DetailedError{
+func newFetchFailedGenericDetailedError(params ...string) errormapper.DetailedError {
+	err := errormapper.GetParamAt(0, params)
+	return errormapper.DetailedError{
 		Title:       "We couldn’t fetch your repository.",
 		Description: fmt.Sprintf("Our auto-configurator returned the following error:\n%s", err),
 	}
 }
 
-func newFetchFailedSSHAccessErrorDetailedError(params ...string) DetailedError {
-	return DetailedError{
+func newFetchFailedSSHAccessErrorDetailedError(params ...string) errormapper.DetailedError {
+	return errormapper.DetailedError{
 		Title:       "We couldn’t access your repository.",
 		Description: "Please abort the process, double-check your SSH key and try again.",
 	}
 }
 
-func newFetchFailedCouldNotFindGitRepoDetailedError(params ...string) DetailedError {
-	repoURL := getParamAt(0, params)
-	return DetailedError{
+func newFetchFailedCouldNotFindGitRepoDetailedError(params ...string) errormapper.DetailedError {
+	repoURL := errormapper.GetParamAt(0, params)
+	return errormapper.DetailedError{
 		Title:       fmt.Sprintf("We couldn’t find a git repository at '%s'.", repoURL),
 		Description: "Please abort the process, double-check your repository URL and try again.",
 	}
 }
 
-func newFetchFailedHTTPAccessErrorDetailedError(params ...string) DetailedError {
-	return DetailedError{
+func newFetchFailedHTTPAccessErrorDetailedError(params ...string) errormapper.DetailedError {
+	return errormapper.DetailedError{
 		Title:       "We couldn’t access your repository.",
 		Description: "Please abort the process and try again, by providing the repository with SSH URL.",
 	}
 }
 
-func newFetchFailedCouldConnectErrorDetailedError(params ...string) DetailedError {
-	host := getParamAt(0, params)
-	return DetailedError{
+func newFetchFailedCouldConnectErrorDetailedError(params ...string) errormapper.DetailedError {
+	host := errormapper.GetParamAt(0, params)
+	return errormapper.DetailedError{
 		Title:       fmt.Sprintf("We couldn’t connect to '%s'.", host),
 		Description: "Please abort the process, double-check your repository URL and try again.",
 	}
 }
 
-func newFetchFailedSamlSSOEnforcedDetailedError(params ...string) DetailedError {
-	return DetailedError{
+func newFetchFailedSamlSSOEnforcedDetailedError(params ...string) errormapper.DetailedError {
+	return errormapper.DetailedError{
 		Title:       "To access this repository, you need to use SAML SSO.",
 		Description: `Please abort the process, update your SSH settings and try again. You can find out more about <a target="_blank" href="https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/authorizing-an-ssh-key-for-use-with-saml-single-sign-on">using SAML SSO in the Github docs</a>.`,
 	}
 }
 
-func newFetchFailedInvalidBranchDetailedError(params ...string) DetailedError {
-	branch := getParamAt(0, params)
-	return DetailedError{
+func newFetchFailedInvalidBranchDetailedError(params ...string) errormapper.DetailedError {
+	branch := errormapper.GetParamAt(0, params)
+	return errormapper.DetailedError{
 		Title:       fmt.Sprintf("We couldn't find the branch '%s'.", branch),
 		Description: "Please choose another branch and try again.",
 	}
