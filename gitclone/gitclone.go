@@ -32,8 +32,9 @@ type Config struct {
 }
 
 const (
-	trimEnding        = "..."
-	defaultRemoteName = "origin"
+	trimEnding              = "..."
+	defaultRemoteName       = "origin"
+	updateSubmodelFailedTag = "update_submodule_failed"
 )
 
 func printLogAndExportEnv(gitCmd git.Git, format, env string, maxEnvLength int) error {
@@ -160,7 +161,7 @@ func Execute(cfg Config) *step.Error {
 	if cfg.UpdateSubmodules {
 		if err := run(gitCmd.SubmoduleUpdate()); err != nil {
 			return newStepError(
-				"update_submodule_failed",
+				updateSubmodelFailedTag,
 				fmt.Errorf("submodule update: %v", err),
 				"Updating submodules has failed",
 			)
