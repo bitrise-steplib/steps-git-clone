@@ -5,11 +5,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/bitrise-io/bitrise-init/errormapper"
 	"github.com/bitrise-io/bitrise-init/step"
-	"github.com/bitrise-steplib/steps-git-clone/errormapper"
 )
-
-var mapRecommendationMock func(tag, errMsg string) step.Recommendation
 
 func Test_mapRecommendation(t *testing.T) {
 	type args struct {

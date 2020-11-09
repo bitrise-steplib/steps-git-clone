@@ -3,8 +3,8 @@ package gitclone
 import (
 	"fmt"
 
+	"github.com/bitrise-io/bitrise-init/errormapper"
 	"github.com/bitrise-io/bitrise-init/step"
-	"github.com/bitrise-steplib/steps-git-clone/errormapper"
 )
 
 func mapRecommendation(tag, errMsg string) step.Recommendation {
@@ -85,7 +85,7 @@ func newFetchFailedGenericDetailedError(params ...string) errormapper.DetailedEr
 	}
 }
 
-func newFetchFailedSSHAccessErrorDetailedError(params ...string) errormapper.DetailedError {
+func newFetchFailedSSHAccessErrorDetailedError(...string) errormapper.DetailedError {
 	return errormapper.DetailedError{
 		Title:       "We couldn’t access your repository.",
 		Description: "Please abort the process, double-check your SSH key and try again.",
@@ -100,7 +100,7 @@ func newFetchFailedCouldNotFindGitRepoDetailedError(params ...string) errormappe
 	}
 }
 
-func newFetchFailedHTTPAccessErrorDetailedError(params ...string) errormapper.DetailedError {
+func newFetchFailedHTTPAccessErrorDetailedError(...string) errormapper.DetailedError {
 	return errormapper.DetailedError{
 		Title:       "We couldn’t access your repository.",
 		Description: "Please abort the process and try again, by providing the repository with SSH URL.",
@@ -115,7 +115,7 @@ func newFetchFailedCouldConnectErrorDetailedError(params ...string) errormapper.
 	}
 }
 
-func newFetchFailedSamlSSOEnforcedDetailedError(params ...string) errormapper.DetailedError {
+func newFetchFailedSamlSSOEnforcedDetailedError(...string) errormapper.DetailedError {
 	return errormapper.DetailedError{
 		Title:       "To access this repository, you need to use SAML SSO.",
 		Description: `Please abort the process, update your SSH settings and try again. You can find out more about <a target="_blank" href="https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/authorizing-an-ssh-key-for-use-with-saml-single-sign-on">using SAML SSO in the Github docs</a>.`,

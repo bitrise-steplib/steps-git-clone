@@ -3,11 +3,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a0459feb3fd004baba94a39946c947565818583196ad122f6c07df5abe796bb2"
+  digest = "1:d5f275bbb8c47042361fa47b7f628137a93d0abdef56786584a064aaaa9bd771"
   name = "github.com/bitrise-io/bitrise-init"
-  packages = ["step"]
+  packages = [
+    "errormapper",
+    "step",
+  ]
   pruneopts = "UT"
-  revision = "f6de811405dbad793749fa61d70ad2637e2252e7"
+  revision = "31fd00edb66aeab944734b9806357b81961f1288"
 
 [[projects]]
   branch = "master"
@@ -91,12 +94,14 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/bitrise-io/bitrise-init/errormapper",
     "github.com/bitrise-io/bitrise-init/step",
     "github.com/bitrise-io/envman/envman",
     "github.com/bitrise-io/go-steputils/stepconf",
     "github.com/bitrise-io/go-steputils/tools",
     "github.com/bitrise-io/go-utils/command",
     "github.com/bitrise-io/go-utils/command/git",
+    "github.com/bitrise-io/go-utils/errorutil",
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-io/go-utils/pathutil",
     "github.com/bitrise-io/go-utils/retry",

@@ -53,7 +53,7 @@ func (m *PatternErrorMatcher) Run(msg string) step.Recommendation {
 		re := regexp.MustCompile(pattern)
 		if re.MatchString(msg) {
 			// [search_string, match1, match2, ...]
-			matches := re.FindStringSubmatch((msg))
+			matches := re.FindStringSubmatch(msg)
 			// Drop the first item, which is always the search_string itself
 			// [search_string] -> []
 			// [search_string, match1, ...] -> [match1, ...]
