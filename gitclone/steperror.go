@@ -7,7 +7,7 @@ import (
 	"github.com/bitrise-io/bitrise-init/step"
 )
 
-func mapRecommendation(tag, errMsg string) step.Recommendation {
+func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
 	switch tag {
 	case checkoutFailedTag:
 		matcher := newCheckoutFailedPatternErrorMatcher()
@@ -15,16 +15,16 @@ func mapRecommendation(tag, errMsg string) step.Recommendation {
 	case updateSubmodelFailedTag: // update_submodule_failed could have the same errors as fetch
 		fallthrough
 	case fetchFailedTag:
-		fetchFailedMatcher := newFetchFailedPatternErrorMatcher()
-		return fetchFailedMatcher.Run(errMsg)
+		matcher := newFetchFailedPatternErrorMatcher()
+		return matcher.Run(errMsg)
 	}
 	return nil
 }
 
 func newStepError(tag string, err error, shortMsg string) *step.Error {
-	recommendation := mapRecommendation(tag, err.Error())
-	if recommendation != nil {
-		return step.NewErrorWithRecommendations("git-clone", tag, err, shortMsg, recommendation)
+	recommendations := mapDetailedErrorRecommendation(tag, err.Error())
+	if recommendations != nil {
+		return step.NewErrorWithRecommendations("git-clone", tag, err, shortMsg, recommendations)
 	}
 
 	return step.NewError("git-clone", tag, err, shortMsg)

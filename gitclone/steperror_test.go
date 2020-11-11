@@ -9,7 +9,7 @@ import (
 	"github.com/bitrise-io/bitrise-init/step"
 )
 
-func Test_mapRecommendation(t *testing.T) {
+func Test_mapDetailedErrorRecommendation(t *testing.T) {
 	type args struct {
 		tag    string
 		errMsg string
@@ -252,7 +252,7 @@ func Test_mapRecommendation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := mapRecommendation(tt.args.tag, tt.args.errMsg); !reflect.DeepEqual(got, tt.want) {
+			if got := mapDetailedErrorRecommendation(tt.args.tag, tt.args.errMsg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("mapRecommendation() = %v, want %v", got, tt.want)
 			}
 		})
