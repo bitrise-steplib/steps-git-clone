@@ -7,6 +7,10 @@ import (
 	"github.com/bitrise-io/bitrise-init/step"
 )
 
+const (
+	branchRecKey = "BranchRecommendation"
+)
+
 func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
 	switch tag {
 	case checkoutFailedTag:
