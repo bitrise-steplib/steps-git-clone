@@ -12,14 +12,16 @@ const (
 )
 
 func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
+	var matcher *errormapper.PatternErrorMatcher
 	switch tag {
 	case checkoutFailedTag:
-		matcher := newCheckoutFailedPatternErrorMatcher()
-		return matcher.Run(errMsg)
-	case updateSubmodelFailedTag: // update_submodule_failed could have the same errors as fetch
-		fallthrough
+		matcher = newCheckoutFailedPatternErrorMatcher()
+	case updateSubmodelFailedTag:
+		matcher = newUpdateSubmoduleFailedErrorMatcher(errMsg)
 	case fetchFailedTag:
-		matcher := newFetchFailedPatternErrorMatcher()
+		matcher = newFetchFailedPatternErrorMatcher()
+	}
+	if matcher != nil {
 		return matcher.Run(errMsg)
 	}
 	return nil
@@ -48,6 +50,42 @@ func newStepErrorWithBranchRecommendations(tag string, err error, shortMsg, curr
 	}
 
 	return mappedError
+}
+
+func newUpdateSubmoduleFailedErrorMatcher(errMsg string) *errormapper.PatternErrorMatcher {
+	return &errormapper.PatternErrorMatcher{
+		DefaultBuilder: newUpdateSubmoduleFailedGenericDetailedError,
+		PatternToBuilder: errormapper.PatternToDetailedErrorBuilder{
+			`ERROR: Repository not found`:                         newUpdateSubmoduleFailedAuthenticationDetailedErrorBuilder(errMsg),
+			`Invalid username or password`:                        newUpdateSubmoduleFailedAuthenticationDetailedErrorBuilder(errMsg),
+			`Permission denied`:                                   newUpdateSubmoduleFailedAuthenticationDetailedErrorBuilder(errMsg),
+			`HTTP Basic: Access denied`:                           newUpdateSubmoduleFailedAuthenticationDetailedErrorBuilder(errMsg),
+			`Unauthorized`:                                        newUpdateSubmoduleFailedAuthenticationDetailedErrorBuilder(errMsg),
+			`The project you were looking for could not be found`: newUpdateSubmoduleFailedAuthenticationDetailedErrorBuilder(errMsg),
+			`Unauthorized LoginAndPassword\(.+\)`:                 newUpdateSubmoduleFailedAuthenticationDetailedErrorBuilder(errMsg),
+		},
+	}
+}
+
+func newUpdateSubmoduleFailedGenericDetailedError(params ...string) errormapper.DetailedError {
+	err := errormapper.GetParamAt(0, params)
+	return errormapper.DetailedError{
+		Title: "We couldn’t update your submodules.",
+		Description: fmt.Sprintf(`You can continue adding your app, but your builds will fail unless you fix the issue later.
+Our auto-configurator returned the following error:
+%s`, err),
+	}
+}
+
+func newUpdateSubmoduleFailedAuthenticationDetailedErrorBuilder(errorMsg string) errormapper.DetailedErrorBuilder {
+	return func(params ...string) errormapper.DetailedError {
+		return errormapper.DetailedError{
+			Title: "We couldn’t access one or more of your Git submodules.",
+			Description: fmt.Sprintf(`You can try accessing your submodules <a target="_blank" href="https://devcenter.bitrise.io/faq/adding-projects-with-submodules/">using an SSH key</a>. You can continue adding your app, but your builds will fail unless you fix this issue later.
+Our auto-configurator returned the following error:
+%s`, errorMsg),
+		}
+	}
 }
 
 func newCheckoutFailedPatternErrorMatcher() *errormapper.PatternErrorMatcher {
