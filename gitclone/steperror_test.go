@@ -11,14 +11,14 @@ import (
 )
 
 func Test_mapRecommendation_submodule_update(t *testing.T) {
-	wantGenericDeatiledError := errormapper.DetailedError{
+	wantGenericDetailedError := errormapper.DetailedError{
 		Title: "We couldn’t update your submodules.",
 		Description: `You can continue adding your app, but your builds will fail unless you fix the issue later.
 Our auto-configurator returned the following error:
 fatal: no submodule mapping found in .gitmodules for path 'web'`,
 	}
 
-	wantAuthenticationDeatiledError := func(errorMsg string) errormapper.DetailedError {
+	wantAuthenticationDetailedError := func(errorMsg string) errormapper.DetailedError {
 		return errormapper.DetailedError{
 			Title: "We couldn’t access one or more of your Git submodules.",
 			Description: fmt.Sprintf(`You can try accessing your submodules <a target="_blank" href="https://devcenter.bitrise.io/faq/adding-projects-with-submodules/">using an SSH key</a>. You can continue adding your app, but your builds will fail unless you fix this issue later.
@@ -35,49 +35,49 @@ Our auto-configurator returned the following error:
 		{
 			name:   "update_submodule_failed generic (fatal: no submodule mapping found in .gitmodules for path 'web') error mapping",
 			errMsg: "fatal: no submodule mapping found in .gitmodules for path 'web'",
-			want:   errormapper.NewDetailedErrorRecommendation(wantGenericDeatiledError),
+			want:   errormapper.NewDetailedErrorRecommendation(wantGenericDetailedError),
 		},
 		{
 			name:   "update_submodule_failed (ERROR: Repository not found.) error mapping",
 			errMsg: "ERROR: Repository not found.",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDeatiledError("ERROR: Repository not found.")),
+			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("ERROR: Repository not found.")),
 		},
 		{
 			name:   "update_submodule_failed (remote: Invalid username or password(.)) error mapping",
 			errMsg: "remote: Invalid username or password(.)",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDeatiledError("remote: Invalid username or password(.)")),
+			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("remote: Invalid username or password(.)")),
 		},
 		{
 			name:   "update_submodule_failed (Permission denied (publickey).) error mapping",
 			errMsg: "Permission denied (publickey).",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDeatiledError("Permission denied (publickey).")),
+			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("Permission denied (publickey).")),
 		},
 		{
 			name: "update_submodule_failed (remote: HTTP Basic: Access denied) error mapping",
 			errMsg: `remote: HTTP Basic: Access denied
 fatal: Authentication failed for 'https://bitrise-io.git/'`,
-			want: errormapper.NewDetailedErrorRecommendation(wantAuthenticationDeatiledError(`remote: HTTP Basic: Access denied
+			want: errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError(`remote: HTTP Basic: Access denied
 fatal: Authentication failed for 'https://bitrise-io.git/'`)),
 		},
 		{
 			name:   "update_submodule_failed (Permission denied, please try again.) error mapping",
 			errMsg: "Permission denied, please try again.",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDeatiledError("Permission denied, please try again.")),
+			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("Permission denied, please try again.")),
 		},
 		{
 			name:   "update_submodule_failed (Unauthorized) error mapping",
 			errMsg: "Unauthorized",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDeatiledError("Unauthorized")),
+			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("Unauthorized")),
 		},
 		{
 			name:   "update_submodule_failed (remote: The project you were looking for could not be found.) error mapping",
 			errMsg: "remote: The project you were looking for could not be found.",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDeatiledError("remote: The project you were looking for could not be found.")),
+			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("remote: The project you were looking for could not be found.")),
 		},
 		{
 			name:   "update_submodule_failed (remote: Unauthorized LoginAndPassword(Username for 'https/***): User not found) error mapping",
 			errMsg: "remote: Unauthorized LoginAndPassword(Username for 'https/***): User not found",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDeatiledError("remote: Unauthorized LoginAndPassword(Username for 'https/***): User not found")),
+			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("remote: Unauthorized LoginAndPassword(Username for 'https/***): User not found")),
 		},
 	}
 	for _, tt := range tests {
