@@ -7,7 +7,11 @@ import (
 	"github.com/bitrise-io/bitrise-init/step"
 )
 
-func mapRecommendation(tag, errMsg string) step.Recommendation {
+const (
+	branchRecKey = "BranchRecommendation"
+)
+
+func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
 	switch tag {
 	case checkoutFailedTag:
 		matcher := newCheckoutFailedPatternErrorMatcher()
@@ -15,29 +19,43 @@ func mapRecommendation(tag, errMsg string) step.Recommendation {
 	case updateSubmodelFailedTag: // update_submodule_failed could have the same errors as fetch
 		fallthrough
 	case fetchFailedTag:
-		fetchFailedMatcher := newFetchFailedPatternErrorMatcher()
-		return fetchFailedMatcher.Run(errMsg)
+		matcher := newFetchFailedPatternErrorMatcher()
+		return matcher.Run(errMsg)
 	}
 	return nil
 }
 
 func newStepError(tag string, err error, shortMsg string) *step.Error {
-	recommendation := mapRecommendation(tag, err.Error())
-	if recommendation != nil {
-		return step.NewErrorWithRecommendations("git-clone", tag, err, shortMsg, recommendation)
+	recommendations := mapDetailedErrorRecommendation(tag, err.Error())
+	if recommendations != nil {
+		return step.NewErrorWithRecommendations("git-clone", tag, err, shortMsg, recommendations)
 	}
 
 	return step.NewError("git-clone", tag, err, shortMsg)
 }
 
-func newStepErrorWithRecommendations(tag string, err error, shortMsg string, recommendations step.Recommendation) *step.Error {
-	return step.NewErrorWithRecommendations("git-clone", tag, err, shortMsg, recommendations)
+func newStepErrorWithBranchRecommendations(tag string, err error, shortMsg, currentBranch string, availableBranches []string) *step.Error {
+	// First: Map the error messages
+	mappedError := newStepError(tag, err, shortMsg)
+
+	// Second: Extend recommendation with available branches, if has any
+	if len(availableBranches) > 0 {
+		rec := mappedError.Recommendations
+		if rec == nil {
+			rec = step.Recommendation{}
+		}
+		rec[branchRecKey] = availableBranches
+	}
+
+	return mappedError
 }
 
 func newCheckoutFailedPatternErrorMatcher() *errormapper.PatternErrorMatcher {
 	return &errormapper.PatternErrorMatcher{
-		DefaultBuilder:   newCheckoutFailedGenericDetailedError,
-		PatternToBuilder: nil,
+		DefaultBuilder: newCheckoutFailedGenericDetailedError,
+		PatternToBuilder: errormapper.PatternToDetailedErrorBuilder{
+			`pathspec '(.+)' did not match any file\(s\) known to git`: newInvalidBranchDetailedError,
+		},
 	}
 }
 
@@ -122,7 +140,7 @@ func newFetchFailedSamlSSOEnforcedDetailedError(...string) errormapper.DetailedE
 	}
 }
 
-func newFetchFailedInvalidBranchDetailedError(params ...string) errormapper.DetailedError {
+func newInvalidBranchDetailedError(params ...string) errormapper.DetailedError {
 	branch := errormapper.GetParamAt(0, params)
 	return errormapper.DetailedError{
 		Title:       fmt.Sprintf("We couldn't find the branch '%s'.", branch),

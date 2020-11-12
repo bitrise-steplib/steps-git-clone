@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bitrise-io/bitrise-init/errormapper"
 	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
@@ -27,7 +26,6 @@ import (
 const (
 	checkoutFailedTag = "checkout_failed"
 	fetchFailedTag    = "fetch_failed"
-	branchRecKey      = "BranchRecommendation"
 )
 
 func isOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
@@ -296,6 +294,22 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 	return nil
 }
 
+type getAvailableBranches func() (map[string][]string, error)
+
+func listBranches(gitCmd git.Git) getAvailableBranches {
+	return func() (map[string][]string, error) {
+		if err := run(gitCmd.Fetch()); err != nil {
+			return nil, err
+		}
+		out, err := output(gitCmd.Branch("-r"))
+		if err != nil {
+			return nil, err
+		}
+
+		return parseListBranchesOutput(out), nil
+	}
+}
+
 func parseListBranchesOutput(output string) map[string][]string {
 	lines := strings.Split(output, "\n")
 	branchesByRemote := map[string][]string{}
@@ -315,16 +329,29 @@ func parseListBranchesOutput(output string) map[string][]string {
 	return branchesByRemote
 }
 
-func listBranches(gitCmd git.Git) (map[string][]string, error) {
-	if err := run(gitCmd.Fetch()); err != nil {
-		return nil, err
-	}
-	out, err := output(gitCmd.Branch("-r"))
-	if err != nil {
-		return nil, err
+func handleCheckoutError(callback getAvailableBranches, tag string, err error, shortMsg string, branch string) *step.Error {
+	// We were checking out a branch (not tag or commit)
+	if branch != "" {
+		branchesByRemote, branchesErr := callback()
+		branches := branchesByRemote[defaultRemoteName]
+		// There was no error grabbing the available branches
+		// And the current branch is not present in the list
+		if branchesErr == nil && !sliceutil.IsStringInSlice(branch, branches) {
+			return newStepErrorWithBranchRecommendations(
+				tag,
+				err,
+				shortMsg,
+				branch,
+				branches,
+			)
+		}
 	}
 
-	return parseListBranchesOutput(out), nil
+	return newStepError(
+		tag,
+		err,
+		shortMsg,
+	)
 }
 
 func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.Error {
@@ -341,34 +368,23 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.E
 		}
 		return gitCmd.Fetch(opts...)
 	}); err != nil {
-		if branch != "" {
-			branchesByRemote, branchesErr := listBranches(gitCmd)
-			branches := branchesByRemote[defaultRemoteName]
-			if branchesErr == nil && !sliceutil.IsStringInSlice(branch, branches) {
-				return newStepErrorWithRecommendations(
-					fetchFailedTag,
-					fmt.Errorf("fetch failed: invalid branch selected: %s, available branches: %s: %v", branch, strings.Join(branches, ", "), err),
-					"Fetching repository has failed",
-					step.Recommendation{
-						branchRecKey:                    branches,
-						errormapper.DetailedErrorRecKey: newFetchFailedInvalidBranchDetailedError(branch),
-					},
-				)
-			}
-		}
-		return newStepError(
+		return handleCheckoutError(
+			listBranches(gitCmd),
 			fetchFailedTag,
 			fmt.Errorf("fetch failed, error: %v", err),
 			"Fetching repository has failed",
+			branch,
 		)
 	}
 
 	if err := run(gitCmd.Checkout(arg)); err != nil {
 		if depth == 0 {
-			return newStepError(
+			return handleCheckoutError(
+				listBranches(gitCmd),
 				checkoutFailedTag,
 				fmt.Errorf("checkout failed (%s), error: %v", arg, err),
 				"Checkout has failed",
+				branch,
 			)
 		}
 		log.Warnf("Checkout failed, error: %v\nUnshallow...", err)

@@ -9,7 +9,7 @@ import (
 	"github.com/bitrise-io/bitrise-init/step"
 )
 
-func Test_mapRecommendation(t *testing.T) {
+func Test_mapDetailedErrorRecommendation(t *testing.T) {
 	type args struct {
 		tag    string
 		errMsg string
@@ -23,11 +23,22 @@ func Test_mapRecommendation(t *testing.T) {
 			name: "checkout_failed generic error mapping",
 			args: args{
 				tag:    checkoutFailedTag,
-				errMsg: "error: pathspec 'master' did not match any file(s) known to git.",
+				errMsg: "error: fatal: /master: '/master' is outside repository",
 			},
 			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
 				Title:       "We couldn’t checkout your branch.",
-				Description: "Our auto-configurator returned the following error:\nerror: pathspec 'master' did not match any file(s) known to git.",
+				Description: "Our auto-configurator returned the following error:\nerror: fatal: /master: '/master' is outside repository",
+			}),
+		},
+		{
+			name: "checkout_failed invalid banch error mapping",
+			args: args{
+				tag:    checkoutFailedTag,
+				errMsg: "error: pathspec 'master' did not match any file(s) known to git.",
+			},
+			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+				Title:       "We couldn't find the branch 'master'.",
+				Description: "Please choose another branch and try again.",
 			}),
 		},
 		{
@@ -252,7 +263,7 @@ func Test_mapRecommendation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := mapRecommendation(tt.args.tag, tt.args.errMsg); !reflect.DeepEqual(got, tt.want) {
+			if got := mapDetailedErrorRecommendation(tt.args.tag, tt.args.errMsg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("mapRecommendation() = %v, want %v", got, tt.want)
 			}
 		})
@@ -312,12 +323,13 @@ func Test_newStepError(t *testing.T) {
 	}
 }
 
-func Test_newStepErrorWithRecommendations(t *testing.T) {
+func Test_newStepErrorWithBranchRecommendations(t *testing.T) {
 	type args struct {
-		tag             string
-		err             error
-		shortMsg        string
-		recommendations step.Recommendation
+		tag               string
+		err               error
+		shortMsg          string
+		currentBranch     string
+		availableBranches []string
 	}
 	tests := []struct {
 		name string
@@ -325,30 +337,55 @@ func Test_newStepErrorWithRecommendations(t *testing.T) {
 		want *step.Error
 	}{
 		{
-			name: "newStepErrorWithRecommendations",
+			name: "newStepErrorWithBranchRecommendations without available branches",
 			args: args{
-				tag:      "test_tag",
-				err:      errors.New("fatal error"),
-				shortMsg: "unknown error",
-				recommendations: step.Recommendation{
-					"Test": "Passed",
-				},
+				tag:               "checkout_failed",
+				err:               errors.New("Generic error"),
+				shortMsg:          "Checkout has failed",
+				currentBranch:     "feature1",
+				availableBranches: nil,
 			},
 			want: &step.Error{
 				StepID:   "git-clone",
-				Tag:      "test_tag",
-				Err:      errors.New("fatal error"),
-				ShortMsg: "unknown error",
+				Tag:      "checkout_failed",
+				Err:      errors.New("Generic error"),
+				ShortMsg: "Checkout has failed",
 				Recommendations: step.Recommendation{
-					"Test": "Passed",
+					errormapper.DetailedErrorRecKey: errormapper.DetailedError{
+						Title:       "We couldn’t checkout your branch.",
+						Description: "Our auto-configurator returned the following error:\nGeneric error",
+					},
+				},
+			},
+		},
+		{
+			name: "newStepErrorWithBranchRecommendations with available branches",
+			args: args{
+				tag:               "checkout_failed",
+				err:               errors.New("pathspec 'feature1' did not match any file(s) known to git"),
+				shortMsg:          "Checkout has failed",
+				currentBranch:     "feature1",
+				availableBranches: []string{"master", "develop", "hotfix"},
+			},
+			want: &step.Error{
+				StepID:   "git-clone",
+				Tag:      "checkout_failed",
+				Err:      errors.New("pathspec 'feature1' did not match any file(s) known to git"),
+				ShortMsg: "Checkout has failed",
+				Recommendations: step.Recommendation{
+					branchRecKey: []string{"master", "develop", "hotfix"},
+					errormapper.DetailedErrorRecKey: errormapper.DetailedError{
+						Title:       "We couldn't find the branch 'feature1'.",
+						Description: "Please choose another branch and try again.",
+					},
 				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := newStepErrorWithRecommendations(tt.args.tag, tt.args.err, tt.args.shortMsg, tt.args.recommendations); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("newStepErrorWithRecommendations() = %v, want %v", got, tt.want)
+			if got := newStepErrorWithBranchRecommendations(tt.args.tag, tt.args.err, tt.args.shortMsg, tt.args.currentBranch, tt.args.availableBranches); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("newStepErrorWithBranchRecommendations() = %v,want %v", got, tt.want)
 			}
 		})
 	}
