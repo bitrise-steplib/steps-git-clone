@@ -26,8 +26,14 @@ func NewDetailedErrorRecommendation(detailedError DetailedError) step.Recommenda
 	}
 }
 
+// DefaultDetailedErrorBuilder ...
+type DefaultDetailedErrorBuilder = func(errorMsg string) DetailedError
+
 // DetailedErrorBuilder ...
-type DetailedErrorBuilder = func(...string) DetailedError
+type DetailedErrorBuilder = func(errorMsg string, params ...string) DetailedError
+
+// PatternToDetailedErrorBuilder ...
+type PatternToDetailedErrorBuilder map[string]DetailedErrorBuilder
 
 // GetParamAt ...
 func GetParamAt(index int, params []string) string {
@@ -38,12 +44,9 @@ func GetParamAt(index int, params []string) string {
 	return res
 }
 
-// PatternToDetailedErrorBuilder ...
-type PatternToDetailedErrorBuilder map[string]DetailedErrorBuilder
-
 // PatternErrorMatcher ...
 type PatternErrorMatcher struct {
-	DefaultBuilder   DetailedErrorBuilder
+	DefaultBuilder   DefaultDetailedErrorBuilder
 	PatternToBuilder PatternToDetailedErrorBuilder
 }
 
@@ -58,7 +61,7 @@ func (m *PatternErrorMatcher) Run(msg string) step.Recommendation {
 			// [search_string] -> []
 			// [search_string, match1, ...] -> [match1, ...]
 			params := matches[1:]
-			detail := builder(params...)
+			detail := builder(msg, params...)
 			return NewDetailedErrorRecommendation(detail)
 		}
 	}
