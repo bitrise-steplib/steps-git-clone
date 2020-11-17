@@ -17,7 +17,7 @@ func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
 	case checkoutFailedTag:
 		matcher = newCheckoutFailedPatternErrorMatcher()
 	case updateSubmodelFailedTag:
-		matcher = newUpdateSubmoduleFailedErrorMatcher(errMsg)
+		matcher = newUpdateSubmoduleFailedErrorMatcher()
 	case fetchFailedTag:
 		matcher = newFetchFailedPatternErrorMatcher()
 	}
@@ -52,7 +52,7 @@ func newStepErrorWithBranchRecommendations(tag string, err error, shortMsg, curr
 	return mappedError
 }
 
-func newUpdateSubmoduleFailedErrorMatcher(errMsg string) *errormapper.PatternErrorMatcher {
+func newUpdateSubmoduleFailedErrorMatcher() *errormapper.PatternErrorMatcher {
 	return &errormapper.PatternErrorMatcher{
 		DefaultBuilder: newUpdateSubmoduleFailedGenericDetailedError,
 		PatternToBuilder: errormapper.PatternToDetailedErrorBuilder{
