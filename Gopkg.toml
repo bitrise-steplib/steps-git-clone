@@ -12,7 +12,7 @@
   name = "github.com/bitrise-io/go-utils"
 
 [[constraint]]
-  branch = "ACT-908"
+  branch = "master"
   name = "github.com/bitrise-io/bitrise-init"
 
 [prune]

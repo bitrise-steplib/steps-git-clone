@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  branch = "ACT-908"
+  branch = "master"
   digest = "1:1590e5e9a0c52fcd38ff17c8af57f7f19337404caef6911034d9d3bbd4d669a9"
   name = "github.com/bitrise-io/bitrise-init"
   packages = [
@@ -10,7 +10,7 @@
     "step",
   ]
   pruneopts = "UT"
-  revision = "ce11295491d18884685e9f92b37a2437aeed4f97"
+  revision = "a984f01dd477db0ad1d5686e20a23b6048f17678"
 
 [[projects]]
   branch = "master"
@@ -64,23 +64,32 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:46f1ac16fda9d3832eea5a9bf4222aebe4d1ac629ec6773d6767c70275097fa3"
+  digest = "1:c9d0c7346c55bc13efdb3dbf13938e909d22a7a7bf115af69a79e25553513bd0"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "0c6587e931a935f573efb6988c8470cd8c0a58de"
+  revision = "4be66e5b658251a93e17d931a68d9c0ecba9f83a"
 
 [[projects]]
   branch = "master"
-  digest = "1:98d7f363e1dda8a09defb3f05be187d6b64aa921e916374006939db149eb280f"
+  digest = "1:c441ac9641a8534a4e99ebc49b39267dd0bef9ea64ff62f6e91ac29e5749a230"
   name = "golang.org/x/sys"
   packages = [
     "internal/unsafeheader",
+    "plan9",
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "12cec1faf1ba925d7b0a3a355d32aa819eac98ba"
+  revision = "cc9327a14d48c2941d21731354f4e1eabfd239f7"
+
+[[projects]]
+  branch = "master"
+  digest = "1:ab958a0b94ae1e6bf0323bad5e159d1efb08c7f7cbd76bb52472ac05c860c2f7"
+  name = "golang.org/x/term"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d7a72108b828bad153e6ec11c4ac4793f792ee6f"
 
 [[projects]]
   digest = "1:d7f1bd887dc650737a421b872ca883059580e9f8314d601f88025df4f4802dce"
