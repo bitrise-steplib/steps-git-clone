@@ -363,7 +363,7 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.E
 		if isTag {
 			opts = append(opts, "--tags")
 		}
-		if branch != "" {
+		if branch == arg || (branch != "" && isTag) {
 			opts = append(opts, defaultRemoteName, "refs/heads/"+branch)
 		}
 		return gitCmd.Fetch(opts...)
