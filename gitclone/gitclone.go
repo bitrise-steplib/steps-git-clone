@@ -147,7 +147,7 @@ func Execute(cfg Config) *step.Error {
 			return err
 		}
 		// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
-		if checkoutArg == cfg.Branch {
+		if checkoutArg == cfg.Branch && cfg.Tag == "" && cfg.Commit == "" {
 			if err := run(gitCmd.Merge("origin/" + cfg.Branch)); err != nil {
 				return newStepError(
 					"update_branch_failed",

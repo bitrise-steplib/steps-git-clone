@@ -47,6 +47,7 @@ workflows:
     - _test_checkout_commit_with_other_branch
     - _test_checkout_tag
     - _test_checkout_tag_with_other_branch
+    - _test_checkout_tag_with_equally_named_branch
     - _test_checkout_branch
     - _test_checkout_pull_request
     - _test_checkout_pull_request_standard_branch
@@ -236,6 +237,31 @@ workflows:
             - tag: 0.9.2
             - commit: ""
             - branch: "carthage"
+            - pull_request_id: ""
+            - pull_request_merge_branch: ""
+            - pull_request_repository_url: ""
+            - branch_dest: ""
+            - clone_depth: ""
+      - script:
+          inputs:
+            - content: |-
+                #!/bin/bash
+                eval "$EVAL_SCRIPT"
+      - ensure-clean-git:
+          inputs:
+            - dir_to_check: $CLONE_INTO_DIR
+
+  _test_checkout_tag_with_equally_named_branch:
+    before_run:
+      - _create_tmpdir
+    steps:
+      - path::./:
+          run_if: true
+          inputs:
+            - clone_into_dir: $CLONE_INTO_DIR
+            - tag: pr_test
+            - commit: ""
+            - branch: "pr_test"
             - pull_request_id: ""
             - pull_request_merge_branch: ""
             - pull_request_repository_url: ""
