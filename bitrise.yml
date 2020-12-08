@@ -259,9 +259,9 @@ workflows:
           run_if: true
           inputs:
             - clone_into_dir: $CLONE_INTO_DIR
-            - tag: pr_test
+            - tag: pr_test_new
             - commit: ""
-            - branch: "pr_test"
+            - branch: "pr_test_new"
             - pull_request_id: ""
             - pull_request_merge_branch: ""
             - pull_request_repository_url: ""
