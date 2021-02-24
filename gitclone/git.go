@@ -28,6 +28,65 @@ const (
 	fetchFailedTag    = "fetch_failed"
 )
 
+var runner CmdRunner = DefaultRunner{}
+
+// CmdRunner ...
+type CmdRunner interface {
+	Output(c *command.Model) (string, error)
+	Run(c *command.Model) error
+	RunWithRetry(c *command.Model) error
+}
+
+// DefaultRunner ...
+type DefaultRunner struct {
+}
+
+// Output ...
+func (r DefaultRunner) Output(c *command.Model) (string, error) {
+	log.Infof("$ %s &> out", c.PrintableCommandArgs())
+
+	out, err := c.RunAndReturnTrimmedCombinedOutput()
+	if err != nil && errorutil.IsExitStatusError(err) {
+		return out, errors.New(out)
+	}
+
+	return out, err
+}
+
+// Run ...
+func (r DefaultRunner) Run(c *command.Model) error {
+	fmt.Println()
+	log.Infof("$ %s", c.PrintableCommandArgs())
+	var buffer bytes.Buffer
+
+	err := c.SetStdout(os.Stdout).SetStderr(io.MultiWriter(os.Stderr, &buffer)).Run()
+	if err != nil {
+		if errorutil.IsExitStatusError(err) {
+			return errors.New(strings.TrimSpace(buffer.String()))
+		}
+		return err
+	}
+
+	return nil
+}
+
+// RunWithRetry ...
+func (r DefaultRunner) RunWithRetry(c *command.Model) error {
+	return retry.Times(2).Wait(5).Try(func(attempt uint) error {
+		if attempt > 0 {
+			log.Warnf("Retrying...")
+		}
+
+		err := run(c)
+		if err != nil {
+			log.Warnf("Attempt %d failed:", attempt+1)
+			fmt.Println(err.Error())
+		}
+
+		return err
+	})
+}
+
 func isOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
 	absDir, err := pathutil.AbsPath(dir)
 	if err != nil {
@@ -115,46 +174,15 @@ func getDiffFile(buildURL, apiToken string, prID int) (string, error) {
 }
 
 func run(c *command.Model) error {
-	fmt.Println()
-	log.Infof("$ %s", c.PrintableCommandArgs())
-	var buffer bytes.Buffer
-
-	err := c.SetStdout(os.Stdout).SetStderr(io.MultiWriter(os.Stderr, &buffer)).Run()
-	if err != nil {
-		if errorutil.IsExitStatusError(err) {
-			return errors.New(strings.TrimSpace(buffer.String()))
-		}
-		return err
-	}
-
-	return nil
+	return runner.Run(c)
 }
 
 func output(c *command.Model) (string, error) {
-	log.Infof("$ %s &> out", c.PrintableCommandArgs())
-
-	out, err := c.RunAndReturnTrimmedCombinedOutput()
-	if err != nil && errorutil.IsExitStatusError(err) {
-		return out, errors.New(out)
-	}
-
-	return out, err
+	return runner.Output(c)
 }
 
-func runWithRetry(f func() *command.Model) error {
-	return retry.Times(2).Wait(5).Try(func(attempt uint) error {
-		if attempt > 0 {
-			log.Warnf("Retrying...")
-		}
-
-		err := run(f())
-		if err != nil {
-			log.Warnf("Attempt %d failed:", attempt+1)
-			fmt.Println(err.Error())
-		}
-
-		return err
-	})
+func runWithRetry(c *command.Model) error {
+	return runner.RunWithRetry(c)
 }
 
 func isFork(repoURL, prRepoURL string) bool {
@@ -208,21 +236,18 @@ func mergeArg(mergeBranch string) string {
 }
 
 func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken string, depth, id int) error {
-	if err := runWithRetry(func() *command.Model {
-		var opts []string
-		if depth != 0 {
-			opts = append(opts, "--depth="+strconv.Itoa(depth))
-		}
-		opts = append(opts, defaultRemoteName, "refs/heads/"+branchDest)
-		return gitCmd.Fetch(opts...)
-	}); err != nil {
+	var opts []string
+	if depth != 0 {
+		opts = append(opts, "--depth="+strconv.Itoa(depth))
+	}
+	opts = append(opts, defaultRemoteName, "refs/heads/"+branchDest)
+
+	if err := runWithRetry(gitCmd.Fetch(opts...)); err != nil {
 		return fmt.Errorf("Fetch failed, error: %v", err)
 	}
 
 	if mergeBranch != "" {
-		if err := runWithRetry(func() *command.Model {
-			return gitCmd.Fetch(defaultRemoteName, fetchArg(mergeBranch))
-		}); err != nil {
+		if err := runWithRetry(gitCmd.Fetch(defaultRemoteName, fetchArg(mergeBranch))); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v",
 				mergeBranch, err)
 		}
@@ -237,9 +262,7 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 			if err := resetRepo(gitCmd); err != nil {
 				return fmt.Errorf("reset repository, error: %v", err)
 			}
-			if err := runWithRetry(func() *command.Model {
-				return gitCmd.Fetch("--unshallow")
-			}); err != nil {
+			if err := runWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
 				return fmt.Errorf("fetch failed, error: %v", err)
 			}
 			if err := run(gitCmd.Merge(mergeArg(mergeBranch))); err != nil {
@@ -260,7 +283,7 @@ func autoMerge(gitCmd git.Git, mergeBranch, branchDest, buildURL, apiToken strin
 }
 
 func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest string) error {
-	if err := runWithRetry(func() *command.Model { return gitCmd.Fetch(defaultRemoteName, "refs/heads/"+branchDest) }); err != nil {
+	if err := runWithRetry(gitCmd.Fetch(defaultRemoteName, "refs/heads/"+branchDest)); err != nil {
 		return fmt.Errorf("fetch failed, error: %v", err)
 	}
 	if err := pull(gitCmd, branchDest); err != nil {
@@ -276,7 +299,7 @@ func manualMerge(gitCmd git.Git, repoURL, prRepoURL, branch, commit, branchDest 
 		if err := run(gitCmd.RemoteAdd("fork", prRepoURL)); err != nil {
 			return fmt.Errorf("couldn't add remote (%s), error: %v", prRepoURL, err)
 		}
-		if err := runWithRetry(func() *command.Model { return gitCmd.Fetch("fork", "refs/heads/"+branch) }); err != nil {
+		if err := runWithRetry(gitCmd.Fetch("fork", "refs/heads/"+branch)); err != nil {
 			return fmt.Errorf("fetch Pull Request branch failed (%s), error: %v", branch, err)
 		}
 		if err := run(gitCmd.Merge("fork/" + branch)); err != nil {
@@ -355,19 +378,18 @@ func handleCheckoutError(callback getAvailableBranches, tag string, err error, s
 }
 
 func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.Error {
-	if err := runWithRetry(func() *command.Model {
-		var opts []string
-		if depth != 0 {
-			opts = append(opts, "--depth="+strconv.Itoa(depth))
-		}
-		if isTag {
-			opts = append(opts, "--tags")
-		}
-		if branch == arg || (branch != "" && isTag) {
-			opts = append(opts, defaultRemoteName, "refs/heads/"+branch)
-		}
-		return gitCmd.Fetch(opts...)
-	}); err != nil {
+	var opts []string
+	if depth != 0 {
+		opts = append(opts, "--depth="+strconv.Itoa(depth))
+	}
+	if isTag {
+		opts = append(opts, "--tags")
+	}
+	if branch == arg || (branch != "" && isTag) {
+		opts = append(opts, defaultRemoteName, "refs/heads/"+branch)
+	}
+
+	if err := runWithRetry(gitCmd.Fetch(opts...)); err != nil {
 		return handleCheckoutError(
 			listBranches(gitCmd),
 			fetchFailedTag,
@@ -388,9 +410,7 @@ func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.E
 			)
 		}
 		log.Warnf("Checkout failed, error: %v\nUnshallow...", err)
-		if err := runWithRetry(func() *command.Model {
-			return gitCmd.Fetch("--unshallow")
-		}); err != nil {
+		if err := runWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
 			return newStepError(
 				"fetch_unshallow_failed",
 				fmt.Errorf("fetch (unshallow) failed, error: %v", err),
