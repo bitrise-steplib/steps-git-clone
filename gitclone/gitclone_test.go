@@ -7,7 +7,6 @@ import (
 	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_checkoutState(t *testing.T) {
@@ -35,9 +34,11 @@ func Test_checkoutState(t *testing.T) {
 			mockRunner := &MockRunner{}
 			runner = mockRunner
 			if got := checkoutState(git.Git{}, tt.cfg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Execute() = %v, want %v", got, tt.want)
+				t.Errorf("checkoutState().err = %v, want %v", got, tt.want)
 			}
-			require.Equal(t, tt.wantCmds, mockRunner.Cmds())
+			if !reflect.DeepEqual(mockRunner.Cmds(), tt.wantCmds) {
+				t.Errorf("checkoutState().cmds =\n%v, want\n%v", mockRunner.Cmds(), tt.wantCmds)
+			}
 		})
 	}
 }
