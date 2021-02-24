@@ -187,42 +187,45 @@ func Execute(cfg Config) *step.Error {
 		}
 	}
 
-	log.Infof("\nExporting git logs\n")
+	checkoutArg := getCheckoutArg(cfg.Commit, cfg.Tag, cfg.Branch)
+	if checkoutArg != "" {
+		log.Infof("\nExporting git logs\n")
 
-	for format, env := range map[string]string{
-		`%H`:  "GIT_CLONE_COMMIT_HASH",
-		`%s`:  "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
-		`%b`:  "GIT_CLONE_COMMIT_MESSAGE_BODY",
-		`%an`: "GIT_CLONE_COMMIT_AUTHOR_NAME",
-		`%ae`: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
-		`%cn`: "GIT_CLONE_COMMIT_COMMITER_NAME",
-		`%ce`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
-	} {
-		if err := printLogAndExportEnv(gitCmd, format, env, maxEnvLength); err != nil {
+		for format, env := range map[string]string{
+			`%H`:  "GIT_CLONE_COMMIT_HASH",
+			`%s`:  "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
+			`%b`:  "GIT_CLONE_COMMIT_MESSAGE_BODY",
+			`%an`: "GIT_CLONE_COMMIT_AUTHOR_NAME",
+			`%ae`: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
+			`%cn`: "GIT_CLONE_COMMIT_COMMITER_NAME",
+			`%ce`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
+		} {
+			if err := printLogAndExportEnv(gitCmd, format, env, maxEnvLength); err != nil {
+				return newStepError(
+					"export_envs_failed",
+					fmt.Errorf("gitCmd log failed: %v", err),
+					"Exporting envs failed",
+				)
+			}
+		}
+
+		count, err := output(gitCmd.RevList("HEAD", "--count"))
+		if err != nil {
 			return newStepError(
-				"export_envs_failed",
-				fmt.Errorf("gitCmd log failed: %v", err),
-				"Exporting envs failed",
+				"count_commits_failed",
+				fmt.Errorf("get rev-list failed: %v", err),
+				"Counting commits failed",
 			)
 		}
-	}
 
-	count, err := output(gitCmd.RevList("HEAD", "--count"))
-	if err != nil {
-		return newStepError(
-			"count_commits_failed",
-			fmt.Errorf("get rev-list failed: %v", err),
-			"Counting commits failed",
-		)
-	}
-
-	log.Printf("=> %s\n   value: %s\n", "GIT_CLONE_COMMIT_COUNT", count)
-	if err := tools.ExportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", count); err != nil {
-		return newStepError(
-			"export_envs_commit_count_failed",
-			fmt.Errorf("envman export failed: %v", err),
-			"Exporting commit count env failed",
-		)
+		log.Printf("=> %s\n   value: %s\n", "GIT_CLONE_COMMIT_COUNT", count)
+		if err := tools.ExportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", count); err != nil {
+			return newStepError(
+				"export_envs_commit_count_failed",
+				fmt.Errorf("envman export failed: %v", err),
+				"Exporting commit count env failed",
+			)
+		}
 	}
 
 	return nil
