@@ -25,8 +25,7 @@ var testCases = [...]struct {
 	{
 		name: "Checkout commit",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Commit:        "76a934a",
+			Commit: "76a934a",
 		},
 		wantErr: nil,
 		wantCmds: []string{
@@ -37,9 +36,8 @@ var testCases = [...]struct {
 	{
 		name: "Checkout commit, branch specified",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Commit:        "76a934ae",
-			Branch:        "hcnarb",
+			Commit: "76a934ae",
+			Branch: "hcnarb",
 		},
 		wantErr: nil,
 		wantCmds: []string{
@@ -50,8 +48,7 @@ var testCases = [...]struct {
 	{
 		name: "Checkout commit with retry",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Commit:        "76a934ae",
+			Commit: "76a934ae",
 		},
 		cmdOutputs: map[string]commandOutput{
 			`git "fetch"`: {failForCalls: 1},
@@ -66,8 +63,7 @@ var testCases = [...]struct {
 	{
 		name: "Checkout branch",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Branch:        "hcnarb",
+			Branch: "hcnarb",
 		},
 		wantErr: nil,
 		wantCmds: []string{
@@ -79,8 +75,7 @@ var testCases = [...]struct {
 	{
 		name: "Checkout tag",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Tag:           "gat",
+			Tag: "gat",
 		},
 		wantErr: nil,
 		wantCmds: []string{
@@ -91,9 +86,8 @@ var testCases = [...]struct {
 	{
 		name: "Checkout tag, branch specifed",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Tag:           "gat",
-			Branch:        "hcnarb",
+			Tag:    "gat",
+			Branch: "hcnarb",
 		},
 		wantErr: nil,
 		wantCmds: []string{
@@ -104,9 +98,8 @@ var testCases = [...]struct {
 	{
 		name: "Checkout tag, branch specifed has same name as tag",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Tag:           "gat",
-			Branch:        "gat",
+			Tag:    "gat",
+			Branch: "gat",
 		},
 		wantErr: nil,
 		wantCmds: []string{
@@ -117,10 +110,9 @@ var testCases = [...]struct {
 	{
 		name: "UNSUPPORTED Checkout commit, tag, branch specifed",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Commit:        "76a934ae",
-			Tag:           "gat",
-			Branch:        "hcnarb",
+			Commit: "76a934ae",
+			Tag:    "gat",
+			Branch: "hcnarb",
 		},
 		wantErr: nil,
 		wantCmds: []string{
@@ -131,9 +123,8 @@ var testCases = [...]struct {
 	{
 		name: "UNSUPPORTED Checkout commit, tag specifed",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Commit:        "76a934ae",
-			Tag:           "gat",
+			Commit: "76a934ae",
+			Tag:    "gat",
 		},
 		wantErr: nil,
 		wantCmds: []string{
@@ -146,7 +137,6 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - manual merge: branch and commit (ignore depth)",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
 			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
@@ -191,7 +181,6 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - manual merge: BranchDest missing (UNSUPPORTED)",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
 			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
@@ -236,7 +225,6 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - auto merge - merge branch (GitHub format)",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
 			BranchDest:    "master",
 			PRMergeBranch: "pull/5/merge",
 		},
@@ -253,7 +241,6 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - auto merge - merge branch (standard branch format)",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
 			BranchDest:    "master",
 			PRMergeBranch: "pr_test",
 		},
@@ -268,7 +255,7 @@ var testCases = [...]struct {
 		},
 	},
 	{
-		name: "PR - fork - auto merge - merge branch: private forkoverrides manual merge flag",
+		name: "PR - fork - auto merge - merge branch: private fork overrides manual merge flag",
 		cfg: Config{
 			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
 			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
@@ -313,8 +300,7 @@ var testCases = [...]struct {
 	{
 		name: "Checkout nonexistent branch",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Branch:        "fake",
+			Branch: "fake",
 		},
 		cmdOutputs: map[string]commandOutput{
 			`git "fetch" "origin" "refs/heads/fake"`: {failForCalls: always},
@@ -361,7 +347,6 @@ var testCases = [...]struct {
 	{
 		name: "Checkout PR - auto merge - merge branch, with depth (unshallow needed)",
 		cfg: Config{
-			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
 			BranchDest:    "master",
 			PRMergeBranch: "pull/5/merge",
 			CloneDepth:    1,
