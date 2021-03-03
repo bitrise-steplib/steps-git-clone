@@ -105,6 +105,16 @@ func checkoutState(gitCmd git.Git, cfg Config) *step.Error {
 		}
 	}
 
+	if cfg.UpdateSubmodules {
+		if err := run(gitCmd.SubmoduleUpdate()); err != nil {
+			return newStepError(
+				updateSubmodelFailedTag,
+				fmt.Errorf("submodule update: %v", err),
+				"Updating submodules has failed",
+			)
+		}
+	}
+
 	if isPR {
 		if err := run(gitCmd.Checkout("--detach")); err != nil {
 			return newStepError(
@@ -175,16 +185,6 @@ func Execute(cfg Config) *step.Error {
 
 	if err := checkoutState(gitCmd, cfg); err != nil {
 		return err
-	}
-
-	if cfg.UpdateSubmodules {
-		if err := run(gitCmd.SubmoduleUpdate()); err != nil {
-			return newStepError(
-				updateSubmodelFailedTag,
-				fmt.Errorf("submodule update: %v", err),
-				"Updating submodules has failed",
-			)
-		}
 	}
 
 	checkoutArg := getCheckoutArg(cfg.Commit, cfg.Tag, cfg.Branch)
