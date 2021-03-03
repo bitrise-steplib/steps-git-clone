@@ -10,7 +10,7 @@ import (
 )
 
 func choose(cfg Config) checkoutMethod {
-	fetchTraits := fetchTraits{
+	defaultFetchTraits := fetchTraits{
 		Depth: cfg.CloneDepth,
 		Tags:  cfg.Tag != "",
 	}
@@ -26,14 +26,25 @@ func choose(cfg Config) checkoutMethod {
 			return checkoutCommit{
 				Commit: cfg.Commit,
 				// Branch: cfg.Branch,
-				FetchTraits:            fetchTraits,
+				FetchTraits:            defaultFetchTraits,
+				ShouldUpdateSubmodules: cfg.UpdateSubmodules,
+			}
+		}
+		if cfg.Tag != "" {
+			return checkoutTag{
+				Tag:    cfg.Tag,
+				Branch: cfg.Branch,
+				FetchTraits: fetchTraits{
+					Depth: cfg.CloneDepth,
+					Tags:  true,
+				},
 				ShouldUpdateSubmodules: cfg.UpdateSubmodules,
 			}
 		}
 		if cfg.Tag == "" && cfg.Branch != "" {
 			return checkoutBranch{
 				Branch:                 cfg.Branch,
-				FetchTraits:            fetchTraits,
+				FetchTraits:            defaultFetchTraits,
 				ShouldUpdateSubmodules: cfg.UpdateSubmodules,
 			}
 		}
@@ -97,7 +108,7 @@ type checkoutCommit struct {
 
 func (c checkoutCommit) Validate() error {
 	if strings.TrimSpace(c.Commit) == "" {
-		return errors.New("precondition unsatisfied, no commit hash specified")
+		return errors.New("precondition not satisfied, no commit hash specified")
 	}
 
 	return nil
@@ -129,7 +140,7 @@ type checkoutBranch struct {
 
 func (c checkoutBranch) Validate() error {
 	if strings.TrimSpace(c.Branch) == "" {
-		return errors.New("precondition unsatisfied, no branch specified")
+		return errors.New("precondition not satisfied, no branch specified")
 	}
 
 	return nil
@@ -153,5 +164,35 @@ func (c checkoutBranch) Do(gitCmd git.Git) *step.Error {
 	}
 
 	return nil
+}
 
+//
+// checkoutTag
+type checkoutTag struct {
+	Tag, Branch            string
+	FetchTraits            fetchTraits
+	ShouldUpdateSubmodules bool
+}
+
+func (c checkoutTag) Validate() error {
+	if strings.TrimSpace(c.Tag) == "" {
+		return errors.New("precondition not satisifed, no tag specified")
+	}
+
+	return nil
+}
+
+func (c checkoutTag) Do(gitCmd git.Git) *step.Error {
+	branchRef := fmt.Sprintf("%s/%s", bracnhPrefix, c.Branch)
+	if err := fetch(gitCmd, c.FetchTraits, newFetchRef(branchRef), func(fetchRetry fetchRetry) *step.Error {
+		return checkoutOnly(gitCmd, checkoutArg{Arg: c.Tag}, fetchRetry)
+	}); err != nil {
+		return err
+	}
+
+	if c.ShouldUpdateSubmodules {
+		return updateSubmodules(gitCmd)
+	}
+
+	return nil
 }
