@@ -183,7 +183,7 @@ func Execute(cfg Config) *step.Error {
 		}
 	}
 
-	if err := checkoutState(gitCmd, cfg); err != nil {
+	if err := checkoutStateStrangler(gitCmd, cfg); err != nil {
 		return err
 	}
 

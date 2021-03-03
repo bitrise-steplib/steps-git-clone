@@ -3,12 +3,12 @@ package gitclone
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/stretchr/testify/require"
 )
 
 const always = 9999
@@ -22,6 +22,22 @@ var testCases = [...]struct {
 	wantCmds   []string
 }{
 	// ** Simple checkout cases (using commit, tag and branch) **
+	{
+		name:     "No checkout args",
+		cfg:      Config{},
+		wantErr:  nil,
+		wantCmds: nil,
+	},
+	{
+		name: "No checkout args, update submodules",
+		cfg: Config{
+			UpdateSubmodules: true,
+		},
+		wantErr: nil,
+		wantCmds: []string{
+			`git "submodule" "update" "--init" "--recursive"`,
+		},
+	},
 	{
 		name: "Checkout commit",
 		cfg: Config{
@@ -157,6 +173,27 @@ var testCases = [...]struct {
 		},
 	},
 	{
+		name: "PR - no fork - manual merge: branch, no commit (ignore depth) UNSUPPORTED?",
+		cfg: Config{
+			Branch:        "test/commit-messages",
+			PRMergeBranch: "pull/7/merge",
+			BranchDest:    "master",
+			PRID:          7,
+			CloneDepth:    1,
+			ManualMerge:   true,
+		},
+		wantErr: nil,
+		wantCmds: []string{
+			`git "fetch" "origin" "refs/heads/master"`,
+			`git "checkout" "master"`,     // Already on 'master'
+			`git "merge" "origin/master"`, // Already up to date.
+			`git "log" "-1" "--format=%H"`,
+			`git "fetch" "origin" "refs/heads/test/commit-messages"`,
+			`git "merge" ""`,
+			`git "checkout" "--detach"`,
+		},
+	},
+	{
 		name: "PR - fork - manual merge",
 		cfg: Config{
 			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
@@ -277,7 +314,7 @@ var testCases = [...]struct {
 		},
 	},
 	{
-		name: "PR - fork - auto merge: private forkoverrides manual merge flag, Fails",
+		name: "PR - fork - auto merge: private fork overrides manual merge flag, Fails",
 		cfg: Config{
 			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
 			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
@@ -379,13 +416,15 @@ func Test_checkoutState(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRunner := newMockRunner(tt.cmdOutputs)
 			runner = mockRunner
-			got := checkoutState(git.Git{}, tt.cfg)
-			if !reflect.DeepEqual(got, tt.wantErr) {
-				t.Errorf("checkoutState().err = (%#v), want %#v", got, tt.wantErr)
-			}
-			if !reflect.DeepEqual(mockRunner.Cmds(), tt.wantCmds) {
-				t.Errorf("checkoutState().cmds =\n%v, want\n%v", mockRunner.Cmds(), tt.wantCmds)
-			}
+			got := checkoutStateStrangler(git.Git{}, tt.cfg)
+			// if !reflect.DeepEqual(got, tt.wantErr) {
+			// 	t.Errorf("checkoutState().err = (%#v), want %#v", got, tt.wantErr)
+			// }
+			// if !reflect.DeepEqual(mockRunner.Cmds(), tt.wantCmds) {
+			// 	t.Errorf("checkoutState().cmds =\n%v, want\n%v", mockRunner.Cmds(), tt.wantCmds)
+			// }
+			require.Equal(t, tt.wantErr, got)
+			require.Equal(t, tt.wantCmds, mockRunner.Cmds())
 		})
 	}
 }
