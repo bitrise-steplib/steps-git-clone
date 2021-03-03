@@ -26,32 +26,32 @@ var testCases = [...]struct {
 		name: "Checkout commit",
 		cfg: Config{
 			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Commit:        "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+			Commit:        "76a934a",
 		},
 		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch"`,
-			`git "checkout" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"`,
+			`git "checkout" "76a934a"`,
 		},
 	},
 	{
 		name: "Checkout commit, branch specified",
 		cfg: Config{
 			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Commit:        "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+			Commit:        "76a934ae",
 			Branch:        "hcnarb",
 		},
 		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch"`,
-			`git "checkout" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"`,
+			`git "checkout" "76a934ae"`,
 		},
 	},
 	{
 		name: "Checkout commit with retry",
 		cfg: Config{
 			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Commit:        "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+			Commit:        "76a934ae",
 		},
 		cmdOutputs: map[string]commandOutput{
 			`git "fetch"`: {failForCalls: 1},
@@ -60,7 +60,7 @@ var testCases = [...]struct {
 		wantCmds: []string{
 			`git "fetch"`,
 			`git "fetch"`,
-			`git "checkout" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"`,
+			`git "checkout" "76a934ae"`,
 		},
 	},
 	{
@@ -118,27 +118,27 @@ var testCases = [...]struct {
 		name: "UNSUPPORTED Checkout commit, tag, branch specifed",
 		cfg: Config{
 			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Commit:        "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+			Commit:        "76a934ae",
 			Tag:           "gat",
 			Branch:        "hcnarb",
 		},
 		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "--tags" "origin" "refs/heads/hcnarb"`,
-			`git "checkout" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"`,
+			`git "checkout" "76a934ae"`,
 		},
 	},
 	{
 		name: "UNSUPPORTED Checkout commit, tag specifed",
 		cfg: Config{
 			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Commit:        "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+			Commit:        "76a934ae",
 			Tag:           "gat",
 		},
 		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "--tags"`,
-			`git "checkout" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"`,
+			`git "checkout" "76a934ae"`,
 		},
 	},
 
@@ -147,7 +147,7 @@ var testCases = [...]struct {
 		name: "PR - no fork - manual merge: branch and commit (ignore depth)",
 		cfg: Config{
 			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Commit:        "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
 			BranchDest:    "master",
@@ -162,7 +162,7 @@ var testCases = [...]struct {
 			`git "merge" "origin/master"`, // Already up to date.
 			`git "log" "-1" "--format=%H"`,
 			`git "fetch" "origin" "refs/heads/test/commit-messages"`,
-			`git "merge" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"`,
+			`git "merge" "76a934ae"`,
 			`git "checkout" "--detach"`,
 		},
 	},
@@ -173,7 +173,7 @@ var testCases = [...]struct {
 			PRRepositoryURL: "https://github.com/bitrise-io/other-repo.git",
 			Branch:          "test/commit-messages",
 			BranchDest:      "master",
-			Commit:          "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+			Commit:          "76a934ae",
 			ManualMerge:     true,
 		},
 		wantErr: nil,
@@ -192,7 +192,7 @@ var testCases = [...]struct {
 		name: "PR - no fork - manual merge: BranchDest missing (UNSUPPORTED)",
 		cfg: Config{
 			RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
-			Commit:        "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
 			PRID:          7,
@@ -217,7 +217,7 @@ var testCases = [...]struct {
 			BranchDest:      "master",
 			PRMergeBranch:   "pull/7/merge",
 			PRID:            7,
-			Commit:          "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+			Commit:          "76a934ae",
 			ManualMerge:     true,
 		},
 		wantErr: nil,
@@ -227,7 +227,7 @@ var testCases = [...]struct {
 			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
 			`git "fetch" "origin" "refs/heads/test/commit-messages"`,
-			`git "merge" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"`,
+			`git "merge" "76a934ae"`,
 			`git "checkout" "--detach"`,
 		},
 	},
@@ -276,7 +276,7 @@ var testCases = [...]struct {
 			BranchDest:      "master",
 			PRMergeBranch:   "pull/7/merge",
 			PRID:            7,
-			Commit:          "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+			Commit:          "76a934ae",
 			ManualMerge:     true,
 		},
 		wantErr: nil,
@@ -296,7 +296,7 @@ var testCases = [...]struct {
 			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 			Branch:          "test/commit-messages",
 			BranchDest:      "master",
-			Commit:          "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+			Commit:          "76a934ae",
 			ManualMerge:     true,
 		},
 		wantErr: newStepError(
