@@ -132,7 +132,7 @@ var testCases = [...]struct {
 		},
 		wantErr: nil,
 		wantCmds: []string{
-			`git "fetch" "--tags" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--tags"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},

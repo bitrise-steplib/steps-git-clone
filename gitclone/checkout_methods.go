@@ -79,12 +79,11 @@ func (c checkoutCommit) Validate() error {
 }
 
 func (c checkoutCommit) Do(gitCmd git.Git) *step.Error {
-	checkoutCallback := func(fetchRetry fetchRetry) *step.Error {
-		return checkoutOnly(gitCmd, checkoutArg{Arg: c.Commit}, fetchRetry)
-	}
-
+	// Fetch then checkout
 	// No branch specified for fetch
-	if err := fetch(gitCmd, c.FetchTraits, nil, checkoutCallback); err != nil {
+	if err := fetch(gitCmd, c.FetchTraits, nil, func(fetchRetry fetchRetry) *step.Error {
+		return checkoutOnly(gitCmd, checkoutArg{Arg: c.Commit}, fetchRetry)
+	}); err != nil {
 		return err
 	}
 
