@@ -38,7 +38,7 @@ const (
 )
 
 func printLogAndExportEnv(gitCmd git.Git, format, env string, maxEnvLength int) error {
-	l, err := output(gitCmd.Log(format))
+	l, err := runner.RunForOutput(gitCmd.Log(format))
 	if err != nil {
 		return err
 	}
@@ -65,61 +65,8 @@ func getMaxEnvLength() (int, error) {
 	return configs.EnvBytesLimitInKB * 1024, nil
 }
 
-// Execute is the entry point of the git clone process
-func Execute(cfg Config) *step.Error {
-	maxEnvLength, err := getMaxEnvLength()
-	if err != nil {
-		return newStepError(
-			"get_max_commit_msg_length_failed",
-			fmt.Errorf("failed to set commit message length: %s", err),
-			"Getting allowed commit message length failed",
-		)
-	}
-
-	gitCmd, err := git.New(cfg.CloneIntoDir)
-	if err != nil {
-		return newStepError(
-			"git_new",
-			fmt.Errorf("failed to create git project directory: %v", err),
-			"Creating new git project directory failed",
-		)
-	}
+func checkoutState(gitCmd git.Git, cfg Config) *step.Error {
 	checkoutArg := getCheckoutArg(cfg.Commit, cfg.Tag, cfg.Branch)
-
-	originPresent, err := isOriginPresent(gitCmd, cfg.CloneIntoDir, cfg.RepositoryURL)
-	if err != nil {
-		return newStepError(
-			"check_origin_present_failed",
-			fmt.Errorf("checking if origin is present failed: %v", err),
-			"Checking wether origin is present failed",
-		)
-	}
-
-	if originPresent && cfg.ResetRepository {
-		if err := resetRepo(gitCmd); err != nil {
-			return newStepError(
-				"reset_repository_failed",
-				fmt.Errorf("reset repository failed: %v", err),
-				"Resetting repository failed",
-			)
-		}
-	}
-	if err := run(gitCmd.Init()); err != nil {
-		return newStepError(
-			"init_git_failed",
-			fmt.Errorf("initializing repository failed: %v", err),
-			"Initializing git has failed",
-		)
-	}
-	if !originPresent {
-		if err := run(gitCmd.RemoteAdd(defaultRemoteName, cfg.RepositoryURL)); err != nil {
-			return newStepError(
-				"add_remote_failed",
-				fmt.Errorf("adding remote repository failed (%s): %v", cfg.RepositoryURL, err),
-				"Adding remote repository failed",
-			)
-		}
-	}
 
 	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
 	if isPR {
@@ -148,7 +95,7 @@ func Execute(cfg Config) *step.Error {
 		}
 		// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
 		if checkoutArg == cfg.Branch && cfg.Tag == "" && cfg.Commit == "" {
-			if err := run(gitCmd.Merge("origin/" + cfg.Branch)); err != nil {
+			if err := runner.Run(gitCmd.Merge("origin/" + cfg.Branch)); err != nil {
 				return newStepError(
 					"update_branch_failed",
 					fmt.Errorf("updating branch (merge) failed %q: %v", cfg.Branch, err),
@@ -159,7 +106,7 @@ func Execute(cfg Config) *step.Error {
 	}
 
 	if cfg.UpdateSubmodules {
-		if err := run(gitCmd.SubmoduleUpdate()); err != nil {
+		if err := runner.Run(gitCmd.SubmoduleUpdate()); err != nil {
 			return newStepError(
 				updateSubmodelFailedTag,
 				fmt.Errorf("submodule update: %v", err),
@@ -169,7 +116,7 @@ func Execute(cfg Config) *step.Error {
 	}
 
 	if isPR {
-		if err := run(gitCmd.Checkout("--detach")); err != nil {
+		if err := runner.Run(gitCmd.Checkout("--detach")); err != nil {
 			return newStepError(
 				"detach_head_failed",
 				fmt.Errorf("detach head failed: %v", err),
@@ -178,6 +125,69 @@ func Execute(cfg Config) *step.Error {
 		}
 	}
 
+	return nil
+}
+
+// Execute is the entry point of the git clone process
+func Execute(cfg Config) *step.Error {
+	maxEnvLength, err := getMaxEnvLength()
+	if err != nil {
+		return newStepError(
+			"get_max_commit_msg_length_failed",
+			fmt.Errorf("failed to set commit message length: %s", err),
+			"Getting allowed commit message length failed",
+		)
+	}
+
+	gitCmd, err := git.New(cfg.CloneIntoDir)
+	if err != nil {
+		return newStepError(
+			"git_new",
+			fmt.Errorf("failed to create git project directory: %v", err),
+			"Creating new git project directory failed",
+		)
+	}
+
+	originPresent, err := isOriginPresent(gitCmd, cfg.CloneIntoDir, cfg.RepositoryURL)
+	if err != nil {
+		return newStepError(
+			"check_origin_present_failed",
+			fmt.Errorf("checking if origin is present failed: %v", err),
+			"Checking wether origin is present failed",
+		)
+	}
+
+	if originPresent && cfg.ResetRepository {
+		if err := resetRepo(gitCmd); err != nil {
+			return newStepError(
+				"reset_repository_failed",
+				fmt.Errorf("reset repository failed: %v", err),
+				"Resetting repository failed",
+			)
+		}
+	}
+	if err := runner.Run(gitCmd.Init()); err != nil {
+		return newStepError(
+			"init_git_failed",
+			fmt.Errorf("initializing repository failed: %v", err),
+			"Initializing git has failed",
+		)
+	}
+	if !originPresent {
+		if err := runner.Run(gitCmd.RemoteAdd(defaultRemoteName, cfg.RepositoryURL)); err != nil {
+			return newStepError(
+				"add_remote_failed",
+				fmt.Errorf("adding remote repository failed (%s): %v", cfg.RepositoryURL, err),
+				"Adding remote repository failed",
+			)
+		}
+	}
+
+	if err := checkoutState(gitCmd, cfg); err != nil {
+		return err
+	}
+
+	checkoutArg := getCheckoutArg(cfg.Commit, cfg.Tag, cfg.Branch)
 	if checkoutArg != "" {
 		log.Infof("\nExporting git logs\n")
 
@@ -199,7 +209,7 @@ func Execute(cfg Config) *step.Error {
 			}
 		}
 
-		count, err := output(gitCmd.RevList("HEAD", "--count"))
+		count, err := runner.RunForOutput(gitCmd.RevList("HEAD", "--count"))
 		if err != nil {
 			return newStepError(
 				"count_commits_failed",
