@@ -42,7 +42,7 @@ func (c checkoutPRManualMerge) Do(gitCmd git.Git) *step.Error {
 	if err := checkoutOnly(gitCmd, checkoutArg{Arg: c.BranchDest}, fetchRetry{}); err != nil {
 		return err
 	}
-	if err := merge(gitCmd, c.BranchDest); err != nil {
+	if err := mergeBranch(gitCmd, c.BranchDest); err != nil {
 		return nil
 	}
 

@@ -133,7 +133,7 @@ func checkoutOnly(gitCmd git.Git, arg checkoutArg, fetchRetry fetchRetry) *step.
 	return nil
 }
 
-func merge(gitCmd git.Git, branch string) *step.Error {
+func mergeBranch(gitCmd git.Git, branch string) *step.Error {
 	if err := runner.Run(gitCmd.Merge("origin/" + branch)); err != nil {
 		return newStepError(
 			"update_branch_failed",

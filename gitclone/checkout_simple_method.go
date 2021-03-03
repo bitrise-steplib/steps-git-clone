@@ -88,7 +88,7 @@ func (c checkoutBranch) Do(gitCmd git.Git) *step.Error {
 	}
 
 	// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
-	if err := merge(gitCmd, c.Branch); err != nil {
+	if err := mergeBranch(gitCmd, c.Branch); err != nil {
 		return err
 	}
 
