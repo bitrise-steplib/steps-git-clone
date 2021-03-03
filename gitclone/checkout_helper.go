@@ -21,13 +21,13 @@ func (t fetchTraits) IsFullDepth() bool {
 	return t.Depth == 0
 }
 
-const bracnhPrefix = "refs/heads"
+const branchRefPrefix = "refs/heads/"
 
 type fetchRef struct {
 	Remote, Ref string
 }
 
-func newFetchRef(ref string) *fetchRef {
+func newOriginFetchRef(ref string) *fetchRef {
 	return &fetchRef{
 		Remote: defaultRemoteName,
 		Ref:    ref,
@@ -64,15 +64,15 @@ func fetch(gitCmd git.Git, traits fetchTraits, ref *fetchRef, callback func(fetc
 
 	// Not neccessarily a branch, can be tag too
 	branch := ""
-	if ref != nil && strings.HasPrefix(ref.Ref, bracnhPrefix) {
-		branch = strings.TrimPrefix(ref.Ref, bracnhPrefix)
+	if ref != nil && strings.HasPrefix(ref.Ref, branchRefPrefix) {
+		branch = strings.TrimPrefix(ref.Ref, branchRefPrefix)
 	}
 
 	if err := runner.RunWithRetry(gitCmd.Fetch(opts...)); err != nil {
 		return handleCheckoutError(
 			listBranches(gitCmd),
 			fetchFailedTag,
-			fmt.Errorf("fetch failed, error: %v", err),
+			fmt.Errorf("fetch failed: %v", err),
 			"Fetching repository has failed",
 			branch,
 		)
@@ -91,7 +91,7 @@ func fetch(gitCmd git.Git, traits fetchTraits, ref *fetchRef, callback func(fetc
 		if err := runner.RunWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
 			return newStepError(
 				"fetch_unshallow_failed",
-				fmt.Errorf("fetch (unshallow) failed, error: %v", err),
+				fmt.Errorf("fetch (unshallow) failed: %v", err),
 				"Fetching with unshallow parameter has failed",
 			)
 		}
@@ -112,7 +112,7 @@ func checkoutOnly(gitCmd git.Git, arg checkoutArg, fetchRetry fetchRetry) *step.
 		if fetchRetry.didUnshallow {
 			return newStepError(
 				"checkout_unshallow_failed",
-				fmt.Errorf("checkout failed (%s), error: %v", arg.Arg, err),
+				fmt.Errorf("checkout failed (%s): %v", arg.Arg, err),
 				"Checkout after unshallow fetch has failed",
 			)
 		}
@@ -124,7 +124,7 @@ func checkoutOnly(gitCmd git.Git, arg checkoutArg, fetchRetry fetchRetry) *step.
 		return handleCheckoutError(
 			listBranches(gitCmd),
 			checkoutFailedTag,
-			fmt.Errorf("checkout failed (%s), error: %v", arg.Arg, err),
+			fmt.Errorf("checkout failed (%s): %v", arg.Arg, err),
 			"Checkout has failed",
 			branch,
 		)
@@ -139,6 +139,30 @@ func merge(gitCmd git.Git, branch string) *step.Error {
 			"update_branch_failed",
 			fmt.Errorf("updating branch (merge) failed %q: %v", branch, err),
 			"Updating branch failed",
+		)
+	}
+
+	return nil
+}
+
+func mergeCommit(gitCmd git.Git, commit string) *step.Error {
+	if err := runner.Run(gitCmd.Merge(commit)); err != nil {
+		return newStepError(
+			"merge_failed",
+			fmt.Errorf("merge failed %q: %v", commit, err),
+			"Merge branch failed",
+		)
+	}
+
+	return nil
+}
+
+func detachHead(gitCmd git.Git) *step.Error {
+	if err := runner.Run(gitCmd.Checkout("--detach")); err != nil {
+		return newStepError(
+			"detach_head_failed",
+			fmt.Errorf("detaching head failed: %v", err),
+			"Detaching head failed",
 		)
 	}
 

@@ -128,6 +128,92 @@ func checkoutState(gitCmd git.Git, cfg Config) *step.Error {
 	return nil
 }
 
+func choose(cfg Config) checkoutMethod {
+	defaultFetchTraits := fetchTraits{
+		Depth: cfg.CloneDepth,
+		Tags:  cfg.Tag != "",
+	}
+
+	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
+	if !isPR {
+		if cfg.Commit != "" {
+			return checkoutCommit{
+				Commit:                 cfg.Commit,
+				FetchTraits:            defaultFetchTraits,
+				ShouldUpdateSubmodules: cfg.UpdateSubmodules,
+			}
+		}
+
+		if cfg.Tag != "" {
+			var branch *string
+			if cfg.Branch != "" {
+				branch = &cfg.Branch
+			}
+
+			return checkoutTag{
+				Tag:    cfg.Tag,
+				Branch: branch,
+				FetchTraits: fetchTraits{
+					Depth: cfg.CloneDepth,
+					Tags:  true,
+				},
+				ShouldUpdateSubmodules: cfg.UpdateSubmodules,
+			}
+		}
+
+		if cfg.Branch != "" {
+			return checkoutBranch{
+				Branch:                 cfg.Branch,
+				FetchTraits:            defaultFetchTraits,
+				ShouldUpdateSubmodules: cfg.UpdateSubmodules,
+			}
+		}
+
+		return checkoutNone{
+			ShouldUpdateSubmodules: cfg.UpdateSubmodules,
+		}
+	}
+	// PR
+	isPrivateFork := isPrivate(cfg.PRRepositoryURL) && isFork(cfg.RepositoryURL, cfg.PRRepositoryURL)
+	if !cfg.ManualMerge || isPrivateFork {
+		// Auto merge
+		return nil
+	}
+
+	if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
+		return nil
+	}
+
+	return checkoutPRManualMerge{
+		Branch:                 cfg.Branch,
+		BranchDest:             cfg.BranchDest,
+		Commit:                 cfg.Commit,
+		ShouldUpdateSubmodules: cfg.UpdateSubmodules,
+	}
+}
+
+func checkoutStateStrangler(gitCmd git.Git, cfg Config) *step.Error {
+	checkoutMethod := choose(cfg)
+	if checkoutMethod != nil {
+		if err := checkoutMethod.Validate(); err != nil {
+			return newStepError(
+				"checkout_method_select",
+				fmt.Errorf("Checkout method can not be used (%T): %v", checkoutMethod, err),
+				"Internal error",
+			)
+		}
+		if err := checkoutMethod.Do(gitCmd); err != nil {
+			return err
+		}
+	} else {
+		if err := checkoutState(gitCmd, cfg); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Execute is the entry point of the git clone process
 func Execute(cfg Config) *step.Error {
 	maxEnvLength, err := getMaxEnvLength()

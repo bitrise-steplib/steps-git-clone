@@ -173,27 +173,6 @@ var testCases = [...]struct {
 		},
 	},
 	{
-		name: "PR - no fork - manual merge: branch, no commit (ignore depth) UNSUPPORTED?",
-		cfg: Config{
-			Branch:        "test/commit-messages",
-			PRMergeBranch: "pull/7/merge",
-			BranchDest:    "master",
-			PRID:          7,
-			CloneDepth:    1,
-			ManualMerge:   true,
-		},
-		wantErr: nil,
-		wantCmds: []string{
-			`git "fetch" "origin" "refs/heads/master"`,
-			`git "checkout" "master"`,     // Already on 'master'
-			`git "merge" "origin/master"`, // Already up to date.
-			`git "log" "-1" "--format=%H"`,
-			`git "fetch" "origin" "refs/heads/test/commit-messages"`,
-			`git "merge" ""`,
-			`git "checkout" "--detach"`,
-		},
-	},
-	{
 		name: "PR - fork - manual merge",
 		cfg: Config{
 			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
@@ -212,25 +191,6 @@ var testCases = [...]struct {
 			`git "remote" "add" "fork" "https://github.com/bitrise-io/other-repo.git"`,
 			`git "fetch" "fork" "refs/heads/test/commit-messages"`,
 			`git "merge" "fork/test/commit-messages"`,
-			`git "checkout" "--detach"`,
-		},
-	},
-	{
-		name: "PR - no fork - manual merge: BranchDest missing (UNSUPPORTED)",
-		cfg: Config{
-			Commit:        "76a934ae",
-			Branch:        "test/commit-messages",
-			PRMergeBranch: "pull/7/merge",
-			PRID:          7,
-			CloneDepth:    1,
-		},
-		wantErr: nil,
-		wantCmds: []string{
-			`git "fetch" "--depth=1" "origin" "refs/heads/"`,
-			`git "fetch" "origin" "refs/pull/7/head:pull/7"`,
-			`git "checkout" ""`,
-			`git "merge" "origin/"`,
-			`git "merge" "pull/7"`,
 			`git "checkout" "--detach"`,
 		},
 	},
@@ -358,6 +318,25 @@ var testCases = [...]struct {
 			[]string{"master"},
 		),
 	},
+	{
+		name: "PR - no fork - auto merge: BranchDest missing (UNSUPPORTED)",
+		cfg: Config{
+			Commit:        "76a934ae",
+			Branch:        "test/commit-messages",
+			PRMergeBranch: "pull/7/merge",
+			PRID:          7,
+			CloneDepth:    1,
+		},
+		wantErr: nil,
+		wantCmds: []string{
+			`git "fetch" "--depth=1" "origin" "refs/heads/"`,
+			`git "fetch" "origin" "refs/pull/7/head:pull/7"`,
+			`git "checkout" ""`,
+			`git "merge" "origin/"`,
+			`git "merge" "pull/7"`,
+			`git "checkout" "--detach"`,
+		},
+	},
 
 	// ** CloneDepth specified, Unshallow needed **
 	{
@@ -380,6 +359,21 @@ var testCases = [...]struct {
 			`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
 			`git "submodule" "update" "--init" "--recursive"`,
 		},
+	},
+	{
+		name: "PR - no fork - manual merge: branch, no commit (ignore depth) UNSUPPORTED?",
+		cfg: Config{
+			Branch:        "test/commit-messages",
+			PRMergeBranch: "pull/7/merge",
+			BranchDest:    "master",
+			ManualMerge:   true,
+		},
+		wantErr: newStepError(
+			"checkout_method_select",
+			fmt.Errorf("Checkout method can not be used (gitclone.checkoutPRManualMerge): %v", "no source commit hash specified"),
+			"Internal error",
+		),
+		wantCmds: nil,
 	},
 	{
 		name: "Checkout PR - auto merge - merge branch, with depth (unshallow needed)",
