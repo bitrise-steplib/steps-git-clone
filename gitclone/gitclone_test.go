@@ -3,12 +3,12 @@ package gitclone
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/stretchr/testify/require"
 )
 
 const always = 9999
@@ -63,7 +63,27 @@ func Test_checkoutState(t *testing.T) {
 				`git "checkout" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"`,
 			},
 		},
-		// Commit with unshallow
+		{
+			name: "Checkout commit, unshallow needed",
+			cfg: Config{
+				Commit:           "cfba2b01332e31cb1568dbf3f22edce063118bae",
+				CloneDepth:       1,
+				UpdateSubmodules: true,
+			},
+			cmdOutputs: map[string]commandOutput{
+				`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`: {failForCalls: 1},
+			},
+			want: nil,
+			wantCmds: []string{
+				`git "fetch" "--depth=1"`,
+				`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
+				// fatal: reference is not a tree: cfba2b01332e31cb1568dbf3f22edce063118bae
+				// Checkout failed, error: fatal: reference is not a tree: cfba2b01332e31cb1568dbf3f22edce063118bae
+				`git "fetch" "--unshallow"`,
+				`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
+				`git "submodule" "update" "--init" "--recursive"`,
+			},
+		},
 		{
 			name: "Checkout branch",
 			cfg: Config{
@@ -141,6 +161,33 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
+			name: "UNSUPPORTED Checkout commit, tag, branch specifed",
+			cfg: Config{
+				RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
+				Commit:        "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+				Tag:           "gat",
+				Branch:        "hcnarb",
+			},
+			want: nil,
+			wantCmds: []string{
+				`git "fetch" "--tags" "origin" "refs/heads/hcnarb"`,
+				`git "checkout" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"`,
+			},
+		},
+		{
+			name: "UNSUPPORTED Checkout commit, tag specifed",
+			cfg: Config{
+				RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
+				Commit:        "76a934ae80f12bb9b504bbc86f64a1d310e5db64",
+				Tag:           "gat",
+			},
+			want: nil,
+			wantCmds: []string{
+				`git "fetch" "--tags"`,
+				`git "checkout" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"`,
+			},
+		},
+		{
 			name: "Checkout PR - auto merge - merge branch (GitHub format)",
 			cfg: Config{
 				RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
@@ -158,7 +205,7 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
-			name: "Checkout PR - auto merge -merge branch (standard branch format)",
+			name: "Checkout PR - auto merge - merge branch (standard branch format)",
 			cfg: Config{
 				RepositoryURL: "https://github.com/bitrise-io/steps-git-clone.git",
 				BranchDest:    "master",
@@ -338,14 +385,14 @@ func Test_checkoutState(t *testing.T) {
 			mockRunner := newMockRunner(tt.cmdOutputs)
 			runner = mockRunner
 			got := checkoutState(git.Git{}, tt.cfg)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("checkoutState().err = (%#v), want %#v", got, tt.want)
-			}
-			// require.Equal(t, tt.want, got)
-			if !reflect.DeepEqual(mockRunner.Cmds(), tt.wantCmds) {
-				t.Errorf("checkoutState().cmds =\n%v, want\n%v", mockRunner.Cmds(), tt.wantCmds)
-			}
-			// require.Equal(t, tt.wantCmds, mockRunner.Cmds())
+			// if !reflect.DeepEqual(got, tt.want) {
+			// 	t.Errorf("checkoutState().err = (%#v), want %#v", got, tt.want)
+			// }
+			require.Equal(t, tt.want, got)
+			// if !reflect.DeepEqual(mockRunner.Cmds(), tt.wantCmds) {
+			// 	t.Errorf("checkoutState().cmds =\n%v, want\n%v", mockRunner.Cmds(), tt.wantCmds)
+			// }
+			require.Equal(t, tt.wantCmds, mockRunner.Cmds())
 		})
 	}
 }
@@ -368,7 +415,7 @@ func (r *MockRunner) Cmds() []string {
 	return r.cmds
 }
 
-func (r *MockRunner) Output(c *command.Model) (string, error) {
+func (r *MockRunner) RunForOutput(c *command.Model) (string, error) {
 	commandID := c.PrintableCommandArgs()
 
 	count := 0
@@ -394,7 +441,7 @@ func (r *MockRunner) Output(c *command.Model) (string, error) {
 }
 
 func (r *MockRunner) Run(c *command.Model) error {
-	_, err := r.Output(c)
+	_, err := r.RunForOutput(c)
 	return err
 }
 
