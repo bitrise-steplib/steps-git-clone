@@ -87,7 +87,7 @@ func fetch(gitCmd git.Git, traits fetchTraits, ref *fetchRef, callback func(fetc
 			return err
 		}
 
-		log.Warnf("Failed, error: %v\nUnshallow...", err)
+		log.Warnf("Checkout failed, error: %v\nUnshallow...", err)
 		if err := runner.RunWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
 			return newStepError(
 				"fetch_unshallow_failed",
@@ -127,6 +127,18 @@ func checkoutOnly(gitCmd git.Git, arg checkoutArg, fetchRetry fetchRetry) *step.
 			fmt.Errorf("checkout failed (%s), error: %v", arg.Arg, err),
 			"Checkout has failed",
 			branch,
+		)
+	}
+
+	return nil
+}
+
+func merge(gitCmd git.Git, branch string) *step.Error {
+	if err := runner.Run(gitCmd.Merge("origin/" + branch)); err != nil {
+		return newStepError(
+			"update_branch_failed",
+			fmt.Errorf("updating branch (merge) failed %q: %v", branch, err),
+			"Updating branch failed",
 		)
 	}
 
