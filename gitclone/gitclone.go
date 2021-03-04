@@ -127,103 +127,8 @@ func checkoutState(gitCmd git.Git, cfg Config) error {
 	return nil
 }
 
-func choose(cfg Config) (checkoutStrategy, error) {
-	defaultFetchTraits := fetchTraits{
-		Depth: cfg.CloneDepth,
-		Tags:  cfg.Tag != "",
-	}
-
-	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
-	if !isPR {
-		if cfg.Commit != "" {
-			return checkoutCommit{
-				Commit:                 cfg.Commit,
-				FetchTraits:            defaultFetchTraits,
-				ShouldUpdateSubmodules: cfg.UpdateSubmodules,
-			}, nil
-		}
-
-		if cfg.Tag != "" {
-			var branch *string
-			if cfg.Branch != "" {
-				branch = &cfg.Branch
-			}
-
-			return checkoutTag{
-				Tag:    cfg.Tag,
-				Branch: branch,
-				FetchTraits: fetchTraits{
-					Depth: cfg.CloneDepth,
-					Tags:  true,
-				},
-				ShouldUpdateSubmodules: cfg.UpdateSubmodules,
-			}, nil
-		}
-
-		if cfg.Branch != "" {
-			return checkoutBranch{
-				Branch:                 cfg.Branch,
-				FetchTraits:            defaultFetchTraits,
-				ShouldUpdateSubmodules: cfg.UpdateSubmodules,
-			}, nil
-		}
-
-		return checkoutNone{
-			ShouldUpdateSubmodules: cfg.UpdateSubmodules,
-		}, nil
-	}
-
-	// ** PR **
-	isPrivateFork := isPrivate(cfg.PRRepositoryURL) && isFork(cfg.RepositoryURL, cfg.PRRepositoryURL)
-	if !cfg.ManualMerge || isPrivateFork { // Auto merge
-		// Merge branch
-		if cfg.PRMergeBranch != "" {
-			return checkoutPullRequestAutoMergeBranch{
-				baseBranch:  cfg.BranchDest,
-				mergeBranch: cfg.PRMergeBranch,
-				fetchTraits: fetchTraits{
-					Depth: cfg.CloneDepth,
-					Tags:  false,
-				},
-			}, nil
-		}
-
-		// Diff file
-		if patch, err := getDiffFile(cfg.BuildURL, cfg.BuildAPIToken, cfg.PRID); err != nil {
-			return nil, fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and can't download diff file: %v", err)
-		} else {
-			return checkoutPullRequestAutoDiffFile{
-				baseBranch: cfg.BranchDest,
-				patch:      patch,
-				fetchTraits: fetchTraits{
-					Depth: cfg.CloneDepth,
-					Tags:  false,
-				},
-			}, nil
-		}
-	}
-
-	// ** PR/MR with manual merge
-	// Clone Depth is not set for manual merge yet
-	if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
-		return checkoutForkPullRequestManual{
-			branchFork:             cfg.Branch,
-			forkRepoURL:            cfg.PRRepositoryURL,
-			branchBase:             cfg.BranchDest,
-			shouldUpdateSubmodules: cfg.UpdateSubmodules,
-		}, nil
-	}
-
-	return checkoutMergeRequestManual{
-		branchHead:             cfg.Branch,
-		branchBase:             cfg.BranchDest,
-		commit:                 cfg.Commit,
-		shouldUpdateSubmodules: cfg.UpdateSubmodules,
-	}, nil
-}
-
-func checkoutStateStrangler(gitCmd git.Git, cfg Config) error {
-	checkoutMethod, err := choose(cfg)
+func checkoutState2(gitCmd git.Git, cfg Config) error {
+	checkoutMethod, err := selectCheckoutStrategy(cfg)
 	if err != nil {
 		return fmt.Errorf("could not apply any checkout strategy: %v", err)
 	}
@@ -234,10 +139,6 @@ func checkoutStateStrangler(gitCmd git.Git, cfg Config) error {
 		}
 
 		if err := checkoutMethod.Do(gitCmd); err != nil {
-			return err
-		}
-	} else {
-		if err := checkoutState(gitCmd, cfg); err != nil {
 			return err
 		}
 	}
@@ -300,8 +201,29 @@ func Execute(cfg Config) error {
 		}
 	}
 
-	if err := checkoutStateStrangler(gitCmd, cfg); err != nil {
-		return err
+	checkoutMethod, err := selectCheckoutStrategy(cfg)
+	if err != nil {
+		return fmt.Errorf("could not apply any checkout strategy: %v", err)
+	}
+
+	if checkoutMethod != nil {
+		if err := checkoutMethod.Validate(); err != nil {
+			return fmt.Errorf("Checkout method can not be used (%T): %v", checkoutMethod, err)
+		}
+
+		if err := checkoutMethod.Do(gitCmd); err != nil {
+			return err
+		}
+	}
+
+	if cfg.UpdateSubmodules {
+		if err := runner.Run(gitCmd.SubmoduleUpdate()); err != nil {
+			return newStepError(
+				updateSubmodelFailedTag,
+				fmt.Errorf("submodule update: %v", err),
+				"Updating submodules has failed",
+			)
+		}
 	}
 
 	checkoutArg := getCheckoutArg(cfg.Commit, cfg.Tag, cfg.Branch)

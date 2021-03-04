@@ -21,21 +21,11 @@ var testCases = [...]struct {
 	wantCmds   []string
 }{
 	// ** Simple checkout cases (using commit, tag and branch) **
-	// {
-	// 	name:     "No checkout args",
-	// 	cfg:      Config{},
-	// 	wantErr:  nil,
-	// 	wantCmds: nil,
-	// },
 	{
-		name: "No checkout args, update submodules",
-		cfg: Config{
-			UpdateSubmodules: true,
-		},
-		wantErr: nil,
-		wantCmds: []string{
-			`git "submodule" "update" "--init" "--recursive"`,
-		},
+		name:     "No checkout args",
+		cfg:      Config{},
+		wantErr:  nil,
+		wantCmds: nil,
 	},
 	{
 		name: "Checkout commit",
@@ -346,7 +336,6 @@ var testCases = [...]struct {
 			// Checkout failed, error: fatal: reference is not a tree: cfba2b01332e31cb1568dbf3f22edce063118bae
 			`git "fetch" "--unshallow"`,
 			`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
-			`git "submodule" "update" "--init" "--recursive"`,
 		},
 	},
 	{
@@ -395,7 +384,7 @@ func Test_checkoutState(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRunner := newMockRunner(tt.cmdOutputs)
 			runner = mockRunner
-			got := checkoutStateStrangler(git.Git{}, tt.cfg)
+			got := checkoutState2(git.Git{}, tt.cfg)
 			// if !reflect.DeepEqual(got, tt.wantErr) {
 			// 	t.Errorf("checkoutState().err = (%#v), want %#v", got, tt.wantErr)
 			// }

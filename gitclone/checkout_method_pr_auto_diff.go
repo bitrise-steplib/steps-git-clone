@@ -13,8 +13,7 @@ import (
 type checkoutPullRequestAutoDiffFile struct {
 	baseBranch, patch string
 	// Other
-	fetchTraits            fetchTraits
-	shouldUpdateSubmodules bool
+	fetchTraits fetchTraits
 }
 
 func (c checkoutPullRequestAutoDiffFile) Validate() error {
@@ -37,12 +36,6 @@ func (c checkoutPullRequestAutoDiffFile) Do(gitCmd git.Git) error {
 
 	if err := runner.Run(gitCmd.Apply(c.patch)); err != nil {
 		return fmt.Errorf("can't apply patch (%s): %v", c.patch, err)
-	}
-
-	if c.shouldUpdateSubmodules {
-		if err := updateSubmodules(gitCmd); err != nil {
-			return err
-		}
 	}
 
 	return detachHead(gitCmd)

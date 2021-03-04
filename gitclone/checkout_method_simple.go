@@ -7,35 +7,23 @@ import (
 	"github.com/bitrise-io/go-utils/command/git"
 )
 
-type checkoutStrategy interface {
-	Validate() error
-	Do(gitCmd git.Git) error
-}
-
 //
 // checkoutNone
-type checkoutNone struct {
-	ShouldUpdateSubmodules bool
-}
+type checkoutNone struct{}
 
 func (c checkoutNone) Validate() error {
 	return nil
 }
 
 func (c checkoutNone) Do(gitCmd git.Git) error {
-	if c.ShouldUpdateSubmodules {
-		return updateSubmodules(gitCmd)
-	}
-
 	return nil
 }
 
 //
 // checkoutCommit
 type checkoutCommit struct {
-	Commit                 string
-	FetchTraits            fetchTraits
-	ShouldUpdateSubmodules bool
+	Commit      string
+	FetchTraits fetchTraits
 }
 
 func (c checkoutCommit) Validate() error {
@@ -57,19 +45,14 @@ func (c checkoutCommit) Do(gitCmd git.Git) error {
 		return err
 	}
 
-	if c.ShouldUpdateSubmodules {
-		return updateSubmodules(gitCmd)
-	}
-
 	return nil
 }
 
 //
 // checkoutBranch
 type checkoutBranch struct {
-	Branch                 string
-	FetchTraits            fetchTraits
-	ShouldUpdateSubmodules bool
+	Branch      string
+	FetchTraits fetchTraits
 }
 
 func (c checkoutBranch) Validate() error {
@@ -86,20 +69,15 @@ func (c checkoutBranch) Do(gitCmd git.Git) error {
 		return err
 	}
 
-	if c.ShouldUpdateSubmodules {
-		return updateSubmodules(gitCmd)
-	}
-
 	return nil
 }
 
 //
 // checkoutTag
 type checkoutTag struct {
-	Tag                    string
-	Branch                 *string // Optional
-	FetchTraits            fetchTraits
-	ShouldUpdateSubmodules bool
+	Tag         string
+	Branch      *string // Optional
+	FetchTraits fetchTraits
 }
 
 func (c checkoutTag) Validate() error {
@@ -122,10 +100,6 @@ func (c checkoutTag) Do(gitCmd git.Git) error {
 
 	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{Arg: c.Tag}, simpleUnshallowFunc); err != nil {
 		return err
-	}
-
-	if c.ShouldUpdateSubmodules {
-		return updateSubmodules(gitCmd)
 	}
 
 	return nil

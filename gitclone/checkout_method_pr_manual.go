@@ -17,8 +17,7 @@ type checkoutMergeRequestManual struct {
 	// Destination
 	branchBase string
 	// Other
-	fetchTraits            fetchTraits
-	shouldUpdateSubmodules bool
+	fetchTraits fetchTraits
 }
 
 func (c checkoutMergeRequestManual) Validate() error {
@@ -63,12 +62,6 @@ func (c checkoutMergeRequestManual) Do(gitCmd git.Git) error {
 		return err
 	}
 
-	if c.shouldUpdateSubmodules {
-		if err := updateSubmodules(gitCmd); err != nil {
-			return err
-		}
-	}
-
 	return detachHead(gitCmd)
 }
 
@@ -80,8 +73,7 @@ type checkoutForkPullRequestManual struct {
 	// Destination
 	branchBase string
 	// Other
-	fetchTraits            fetchTraits
-	shouldUpdateSubmodules bool
+	fetchTraits fetchTraits
 }
 
 func (c checkoutForkPullRequestManual) Validate() error {
@@ -129,12 +121,6 @@ func (c checkoutForkPullRequestManual) Do(gitCmd git.Git) error {
 
 	if err := mergeWithCustomRetry(gitCmd, remoteForkBranch, simpleUnshallowFunc); err != nil {
 		return err
-	}
-
-	if c.shouldUpdateSubmodules {
-		if err := updateSubmodules(gitCmd); err != nil {
-			return err
-		}
 	}
 
 	return detachHead(gitCmd)

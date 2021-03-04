@@ -16,8 +16,7 @@ type checkoutPullRequestAutoMergeBranch struct {
 	// Merge branch contains the changes already merged
 	mergeBranch string
 	// Other
-	fetchTraits            fetchTraits
-	shouldUpdateSubmodules bool
+	fetchTraits fetchTraits
 }
 
 func (c checkoutPullRequestAutoMergeBranch) Validate() error {
@@ -75,12 +74,6 @@ func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git) error {
 	}
 	if err := mergeWithCustomRetry(gitCmd, mergeArg(c.mergeBranch), resetFunc); err != nil {
 		return err
-	}
-
-	if c.shouldUpdateSubmodules {
-		if err := updateSubmodules(gitCmd); err != nil {
-			return err
-		}
 	}
 
 	return detachHead(gitCmd)

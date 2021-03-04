@@ -137,18 +137,6 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retryFunc func(gitCmd git.
 	return nil
 }
 
-func updateSubmodules(gitCmd git.Git) error {
-	if err := runner.Run(gitCmd.SubmoduleUpdate()); err != nil {
-		return newStepError(
-			updateSubmodelFailedTag,
-			fmt.Errorf("submodule update: %v", err),
-			"Updating submodules has failed",
-		)
-	}
-
-	return nil
-}
-
 func detachHead(gitCmd git.Git) error {
 	if err := runner.Run(gitCmd.Checkout("--detach")); err != nil {
 		return newStepError(
