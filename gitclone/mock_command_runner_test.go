@@ -96,6 +96,8 @@ func (m *MockRunner) rememberCommand(args mock.Arguments) {
 		cmdModel = res
 	case func() *command.Model:
 		cmdModel = res()
+	default:
+		panic("Could not cast args[0] to *command.Model")
 	}
 
 	m.cmds = append(m.cmds, cmdModel.PrintableCommandArgs())
