@@ -2,10 +2,12 @@ package gitclone
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-io/go-utils/log"
 )
 
 type checkoutStrategy interface {
@@ -50,10 +52,25 @@ func (c checkoutCommit) Validate() error {
 func (c checkoutCommit) Do(gitCmd git.Git) *step.Error {
 	// Fetch then checkout
 	// No branch specified for fetch
-	if err := fetch(gitCmd, c.FetchTraits, nil, func(fetchRetry fetchRetry) *step.Error {
-		return checkoutOnly(gitCmd, checkoutArg{Arg: c.Commit}, &fetchRetry)
+	if err := fetch(gitCmd, c.FetchTraits, nil, nil); err != nil {
+		return newStepError(
+			"a", err, "aaaa",
+		)
+	}
+
+	if err := checkoutOnly(gitCmd, checkoutArg{Arg: c.Commit}, func(cerr error) error {
+		log.Warnf("Checkout failed, error: %v\nUnshallow...", cerr)
+		if err := runner.RunWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
+			return newStepError(
+				"fetch_unshallow_failed",
+				fmt.Errorf("fetch (unshallow) failed: %v", err),
+				"Fetching with unshallow parameter has failed",
+			)
+		}
+
+		return nil
 	}); err != nil {
-		return err
+		return newStepError("a", err, "aaa")
 	}
 
 	if c.ShouldUpdateSubmodules {
@@ -115,10 +132,23 @@ func (c checkoutTag) Do(gitCmd git.Git) *step.Error {
 		branchRef = newOriginFetchRef(branchRefPrefix + *c.Branch)
 	}
 
-	if err := fetch(gitCmd, c.FetchTraits, branchRef, func(fetchRetry fetchRetry) *step.Error {
-		return checkoutOnly(gitCmd, checkoutArg{Arg: c.Tag}, &fetchRetry)
-	}); err != nil {
+	if err := fetch(gitCmd, c.FetchTraits, branchRef, nil); err != nil {
 		return err
+	}
+
+	if err := checkoutOnly(gitCmd, checkoutArg{Arg: c.Tag}, func(cerr error) error {
+		log.Warnf("Checkout failed, error: %v\nUnshallow...", cerr)
+		if err := runner.RunWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
+			return newStepError(
+				"fetch_unshallow_failed",
+				fmt.Errorf("fetch (unshallow) failed: %v", err),
+				"Fetching with unshallow parameter has failed",
+			)
+		}
+
+		return nil
+	}); err != nil {
+		return newStepError("a", err, "aaa")
 	}
 
 	if c.ShouldUpdateSubmodules {

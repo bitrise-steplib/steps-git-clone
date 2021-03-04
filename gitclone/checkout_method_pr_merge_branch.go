@@ -68,7 +68,9 @@ func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git) *step.Error {
 	// `git "checkout" "master"`
 	// `git "merge" "origin/master"`
 	if err := checkoutOnly(gitCmd, checkoutArg{Arg: c.baseBranch, IsBranch: true}, nil); err != nil {
-		return err
+		return newStepError(
+			"a", err, "aaaa",
+		)
 	}
 	remoteBaseBranch := fmt.Sprintf("%s/%s", defaultRemoteName, c.baseBranch)
 	if err := runner.Run(gitCmd.Merge(remoteBaseBranch)); err != nil {

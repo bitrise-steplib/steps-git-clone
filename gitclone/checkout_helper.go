@@ -95,27 +95,17 @@ type checkoutArg struct {
 	IsBranch bool
 }
 
-func checkoutOnly(gitCmd git.Git, arg checkoutArg, fetchRetry *fetchRetry) *step.Error {
-	if err := runner.Run(gitCmd.Checkout(arg.Arg)); err != nil {
-		if fetchRetry != nil && fetchRetry.didUnshallow {
-			return newStepError(
-				"checkout_unshallow_failed",
-				fmt.Errorf("checkout failed (%s): %v", arg.Arg, err),
-				"Checkout after unshallow fetch has failed",
-			)
+func checkoutOnly(gitCmd git.Git, arg checkoutArg, retryFunc func(error) error) error {
+	if cerr := runner.Run(gitCmd.Checkout(arg.Arg)); cerr != nil {
+		if retryFunc != nil {
+			if err := retryFunc(cerr); err != nil {
+				return err
+			}
+
+			return runner.Run(gitCmd.Checkout(arg.Arg))
 		}
 
-		branch := ""
-		if arg.IsBranch {
-			branch = arg.Arg
-		}
-		return handleCheckoutError(
-			listBranches(gitCmd),
-			checkoutFailedTag,
-			fmt.Errorf("checkout failed (%s): %v", arg.Arg, err),
-			"Checkout has failed",
-			branch,
-		)
+		return cerr
 	}
 
 	return nil
@@ -129,7 +119,13 @@ func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchTraits) *
 	}
 
 	if err := checkoutOnly(gitCmd, checkoutArg{Arg: branch, IsBranch: true}, nil); err != nil {
-		return err
+		return handleCheckoutError(
+			listBranches(gitCmd),
+			checkoutFailedTag,
+			fmt.Errorf("checkout failed (%s): %v", branch, err),
+			"Checkout has failed",
+			branch,
+		)
 	}
 
 	// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
