@@ -133,23 +133,12 @@ func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchTraits) *
 	}
 
 	// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
-	if err := runner.Run(gitCmd.Merge("origin/" + branch)); err != nil {
+	remoteBranch := fmt.Sprintf("%s/%s", defaultRemoteName, branch)
+	if err := runner.Run(gitCmd.Merge(remoteBranch)); err != nil {
 		return newStepError(
 			"update_branch_failed",
 			fmt.Errorf("updating branch (merge) failed %q: %v", branch, err),
 			"Updating branch failed",
-		)
-	}
-
-	return nil
-}
-
-func mergeCommit(gitCmd git.Git, commit string) *step.Error {
-	if err := runner.Run(gitCmd.Merge(commit)); err != nil {
-		return newStepError(
-			"merge_failed",
-			fmt.Errorf("merge failed %q: %v", commit, err),
-			"Merge branch failed",
 		)
 	}
 

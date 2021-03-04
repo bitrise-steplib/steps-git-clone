@@ -370,7 +370,7 @@ var testCases = [...]struct {
 		},
 		wantErr: newStepError(
 			"checkout_method_select",
-			fmt.Errorf("Checkout method can not be used (gitclone.checkoutPRManualMerge): %v", "no source commit hash specified"),
+			fmt.Errorf("Checkout method can not be used (gitclone.checkoutMRManualMerge): %v", "no source commit hash specified"),
 			"Internal error",
 		),
 		wantCmds: nil,

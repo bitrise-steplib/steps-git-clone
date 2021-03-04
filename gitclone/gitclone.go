@@ -128,7 +128,7 @@ func checkoutState(gitCmd git.Git, cfg Config) *step.Error {
 	return nil
 }
 
-func choose(cfg Config) checkoutMethod {
+func choose(cfg Config) checkoutStrategy {
 	defaultFetchTraits := fetchTraits{
 		Depth: cfg.CloneDepth,
 		Tags:  cfg.Tag != "",
@@ -180,15 +180,21 @@ func choose(cfg Config) checkoutMethod {
 		return nil
 	}
 
+	// Clone Depth is not set for manual merge yet
 	if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
-		return nil
+		return checkoutForkPRManualMerge{
+			branchSource:           cfg.Branch,
+			forkRepoURL:            cfg.PRRepositoryURL,
+			branchDest:             cfg.BranchDest,
+			shouldUpdateSubmodules: cfg.UpdateSubmodules,
+		}
 	}
 
-	return checkoutPRManualMerge{
-		Branch:                 cfg.Branch,
-		BranchDest:             cfg.BranchDest,
-		Commit:                 cfg.Commit,
-		ShouldUpdateSubmodules: cfg.UpdateSubmodules,
+	return checkoutMRManualMerge{
+		branch:                 cfg.Branch,
+		branchDest:             cfg.BranchDest,
+		commit:                 cfg.Commit,
+		shouldUpdateSubmodules: cfg.UpdateSubmodules,
 	}
 }
 
