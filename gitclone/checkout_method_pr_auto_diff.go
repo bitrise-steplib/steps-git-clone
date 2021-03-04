@@ -28,7 +28,7 @@ func (c checkoutPullRequestAutoDiffFile) Validate() error {
 
 func (c checkoutPullRequestAutoDiffFile) Do(gitCmd git.Git) *step.Error {
 	baseBranchRef := newOriginFetchRef(branchRefPrefix + c.baseBranch)
-	if err := fetch(gitCmd, c.fetchTraits, baseBranchRef, nil); err != nil {
+	if err := fetch(gitCmd, c.fetchTraits, baseBranchRef); err != nil {
 		return err
 	}
 

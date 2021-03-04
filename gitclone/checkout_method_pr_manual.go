@@ -51,18 +51,19 @@ func (c checkoutMergeRequestManual) Do(gitCmd git.Git) *step.Error {
 
 	// Fetch and merge
 	headBranchRef := newOriginFetchRef(branchRefPrefix + c.branchHead)
-	if err := fetch(gitCmd, c.fetchTraits, headBranchRef, func(fetchRetry) *step.Error {
-		if err := runner.Run(gitCmd.Merge(c.commit)); err != nil {
-			return newStepError(
-				"merge_failed",
-				fmt.Errorf("merge failed %q: %v", c.commit, err),
-				"Merge branch failed",
-			)
-		}
+	if err := fetch(gitCmd, c.fetchTraits, headBranchRef); err != nil {
+		return nil
+	}
 
-		return nil
-	}); err != nil {
-		return nil
+	var unshallowFunc func(git.Git, error) error
+	if !c.fetchTraits.IsFullDepth() {
+		unshallowFunc = simpleUnshallowFunc
+	}
+
+	if err := mergeWithCustomRetry(gitCmd, c.commit, unshallowFunc); err != nil {
+		return newStepError(
+			"a", err, "aaa",
+		)
 	}
 
 	if c.shouldUpdateSubmodules {
@@ -130,18 +131,14 @@ func (c checkoutForkPullRequestManual) Do(gitCmd git.Git) *step.Error {
 	}
 	remoteForkBranch := fmt.Sprintf("%s/%s", forkRemoteName, c.branchFork)
 
-	if err := fetch(gitCmd, c.fetchTraits, &forkBranchRef, func(fetchRetry) *step.Error {
-		if err := runner.Run(gitCmd.Merge(remoteForkBranch)); err != nil {
-			return newStepError(
-				"merge_fork_failed",
-				fmt.Errorf("merge failed (%s): %v", remoteForkBranch, err),
-				"Merging fork remote branch failed",
-			)
-		}
-
-		return nil
-	}); err != nil {
+	if err := fetch(gitCmd, c.fetchTraits, &forkBranchRef); err != nil {
 		return err
+	}
+
+	if err := mergeWithCustomRetry(gitCmd, remoteForkBranch, simpleUnshallowFunc); err != nil {
+		return newStepError(
+			"a", err, "aaa",
+		)
 	}
 
 	if c.shouldUpdateSubmodules {

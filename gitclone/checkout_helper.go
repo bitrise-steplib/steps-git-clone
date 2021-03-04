@@ -34,11 +34,13 @@ func newOriginFetchRef(ref string) *fetchRef {
 	}
 }
 
-type fetchRetry struct {
-	didUnshallow bool
+var simpleUnshallowFunc func(git.Git, error) error = func(gitCmd git.Git, perr error) error {
+	log.Warnf("Checkout failed, error: %v\nUnshallow...", perr)
+
+	return runner.RunWithRetry(gitCmd.Fetch("--unshallow"))
 }
 
-func fetch(gitCmd git.Git, traits fetchTraits, ref *fetchRef, callback func(fetchRetry) *step.Error) *step.Error {
+func fetch(gitCmd git.Git, traits fetchTraits, ref *fetchRef) *step.Error {
 	var opts []string
 	if traits.Depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(traits.Depth))
@@ -66,27 +68,6 @@ func fetch(gitCmd git.Git, traits fetchTraits, ref *fetchRef, callback func(fetc
 		)
 	}
 
-	if callback != nil {
-		err := callback(fetchRetry{didUnshallow: false})
-		if err == nil {
-			return nil
-		}
-		if traits.IsFullDepth() {
-			return err
-		}
-
-		log.Warnf("Checkout failed, error: %v\nUnshallow...", err)
-		if err := runner.RunWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
-			return newStepError(
-				"fetch_unshallow_failed",
-				fmt.Errorf("fetch (unshallow) failed: %v", err),
-				"Fetching with unshallow parameter has failed",
-			)
-		}
-
-		return callback(fetchRetry{didUnshallow: true})
-	}
-
 	return nil
 }
 
@@ -95,7 +76,7 @@ type checkoutArg struct {
 	IsBranch bool
 }
 
-func checkoutOnly(gitCmd git.Git, arg checkoutArg, retryFunc func(error) error) error {
+func checkoutWithCustomRetry(gitCmd git.Git, arg checkoutArg, retryFunc func(error) error) error {
 	if cerr := runner.Run(gitCmd.Checkout(arg.Arg)); cerr != nil {
 		if retryFunc != nil {
 			if err := retryFunc(cerr); err != nil {
@@ -114,11 +95,11 @@ func checkoutOnly(gitCmd git.Git, arg checkoutArg, retryFunc func(error) error) 
 func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchTraits) *step.Error {
 	branch := strings.TrimPrefix(ref.Ref, branchRefPrefix)
 	// Fetch then checkout
-	if err := fetch(gitCmd, fetchTraits, &ref, nil); err != nil {
+	if err := fetch(gitCmd, fetchTraits, &ref); err != nil {
 		return err
 	}
 
-	if err := checkoutOnly(gitCmd, checkoutArg{Arg: branch, IsBranch: true}, nil); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{Arg: branch, IsBranch: true}, nil); err != nil {
 		return handleCheckoutError(
 			listBranches(gitCmd),
 			checkoutFailedTag,
@@ -136,6 +117,22 @@ func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchTraits) *
 			fmt.Errorf("updating branch (merge) failed %q: %v", branch, err),
 			"Updating branch failed",
 		)
+	}
+
+	return nil
+}
+
+func mergeWithCustomRetry(gitCmd git.Git, arg string, retryFunc func(gitCmd git.Git, merr error) error) error {
+	if merr := runner.Run(gitCmd.Merge(arg)); merr != nil {
+		if retryFunc != nil {
+			if err := retryFunc(gitCmd, merr); err != nil {
+				return err
+			}
+
+			return runner.Run(gitCmd.Merge(arg))
+		}
+
+		return fmt.Errorf("merging %q: %v", arg, merr)
 	}
 
 	return nil

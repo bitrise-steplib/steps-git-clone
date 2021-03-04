@@ -32,42 +32,25 @@ func (c checkoutPullRequestAutoMergeBranch) Validate() error {
 	return nil
 }
 
-func mergeMergeBranch(gitCmd git.Git, branchName string, resetFunc func(merr error) error) error {
-	if merr := runner.Run(gitCmd.Merge(branchName)); merr != nil {
-		if resetFunc != nil {
-			//log.Warnf("Merge failed, error: %v\nReset repository, then unshallow...", err)
-			if err := resetFunc(merr); err != nil {
-				return err
-			}
-
-			return runner.Run(gitCmd.Merge(branchName))
-		}
-
-		return fmt.Errorf("merging %q: %v", branchName, merr)
-	}
-
-	return nil
-}
-
 func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git) *step.Error {
 	// Check out initial branch (fetchInitialBranch part1)
 	// `git "fetch" "origin" "refs/heads/master"`
 	baseBranchRef := newOriginFetchRef(branchRefPrefix + c.baseBranch)
-	if err := fetch(gitCmd, c.fetchTraits, baseBranchRef, nil); err != nil {
+	if err := fetch(gitCmd, c.fetchTraits, baseBranchRef); err != nil {
 		return err
 	}
 
 	// `git "fetch" "origin" "refs/pull/7/head:pull/7"`
 	// Does not apply clone depth (legacy)
 	headBranchRef := newOriginFetchRef(fetchArg(c.mergeBranch))
-	if err := fetch(gitCmd, fetchTraits{}, headBranchRef, nil); err != nil {
+	if err := fetch(gitCmd, fetchTraits{}, headBranchRef); err != nil {
 		return err
 	}
 
 	// Check out initial branch (fetchInitialBranch part2)
 	// `git "checkout" "master"`
 	// `git "merge" "origin/master"`
-	if err := checkoutOnly(gitCmd, checkoutArg{Arg: c.baseBranch, IsBranch: true}, nil); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{Arg: c.baseBranch, IsBranch: true}, nil); err != nil {
 		return newStepError(
 			"a", err, "aaaa",
 		)
@@ -82,9 +65,9 @@ func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git) *step.Error {
 	}
 
 	// `git "merge" "pull/7"`
-	var resetFunc func(error) error
+	var resetFunc func(git.Git, error) error
 	if !c.fetchTraits.IsFullDepth() {
-		resetFunc = func(merr error) error {
+		resetFunc = func(gitCmd git.Git, merr error) error {
 			log.Warnf("Merge failed: %v\nReset repository, then unshallow...", merr)
 
 			if err := resetRepo(gitCmd); err != nil {
@@ -97,7 +80,7 @@ func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git) *step.Error {
 			return nil
 		}
 	}
-	if err := mergeMergeBranch(gitCmd, mergeArg(c.mergeBranch), resetFunc); err != nil {
+	if err := mergeWithCustomRetry(gitCmd, mergeArg(c.mergeBranch), resetFunc); err != nil {
 		return newStepError(
 			"a",
 			fmt.Errorf("merge failed: %s", err),
