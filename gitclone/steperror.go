@@ -27,7 +27,7 @@ func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
 	return nil
 }
 
-func newStepError(tag string, err error, shortMsg string) *step.Error {
+func newStepError(tag string, err error, shortMsg string) error {
 	recommendations := mapDetailedErrorRecommendation(tag, err.Error())
 	if recommendations != nil {
 		return step.NewErrorWithRecommendations("git-clone", tag, err, shortMsg, recommendations)
@@ -36,20 +36,22 @@ func newStepError(tag string, err error, shortMsg string) *step.Error {
 	return step.NewError("git-clone", tag, err, shortMsg)
 }
 
-func newStepErrorWithBranchRecommendations(tag string, err error, shortMsg, currentBranch string, availableBranches []string) *step.Error {
+func newStepErrorWithBranchRecommendations(tag string, err error, shortMsg, currentBranch string, availableBranches []string) error {
 	// First: Map the error messages
-	mappedError := newStepError(tag, err, shortMsg)
+	newErr := newStepError(tag, err, shortMsg)
 
-	// Second: Extend recommendation with available branches, if has any
-	if len(availableBranches) > 0 {
-		rec := mappedError.Recommendations
-		if rec == nil {
-			rec = step.Recommendation{}
+	if mappedError, ok := newErr.(*step.Error); ok {
+		// Second: Extend recommendation with available branches, if has any
+		if len(availableBranches) > 0 {
+			rec := mappedError.Recommendations
+			if rec == nil {
+				rec = step.Recommendation{}
+			}
+			rec[branchRecKey] = availableBranches
 		}
-		rec[branchRecKey] = availableBranches
 	}
 
-	return mappedError
+	return newErr
 }
 
 func newUpdateSubmoduleFailedErrorMatcher() *errormapper.PatternErrorMatcher {

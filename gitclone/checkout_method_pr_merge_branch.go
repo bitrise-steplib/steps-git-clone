@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 )
@@ -32,7 +31,7 @@ func (c checkoutPullRequestAutoMergeBranch) Validate() error {
 	return nil
 }
 
-func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git) *step.Error {
+func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git) error {
 	// Check out initial branch (fetchInitialBranch part1)
 	// `git "fetch" "origin" "refs/heads/master"`
 	baseBranchRef := newOriginFetchRef(branchRefPrefix + c.baseBranch)
@@ -51,17 +50,11 @@ func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git) *step.Error {
 	// `git "checkout" "master"`
 	// `git "merge" "origin/master"`
 	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{Arg: c.baseBranch, IsBranch: true}, nil); err != nil {
-		return newStepError(
-			"a", err, "aaaa",
-		)
+		return err
 	}
 	remoteBaseBranch := fmt.Sprintf("%s/%s", defaultRemoteName, c.baseBranch)
 	if err := runner.Run(gitCmd.Merge(remoteBaseBranch)); err != nil {
-		return newStepError(
-			"a",
-			err,
-			"aaaa",
-		)
+		return err
 	}
 
 	// `git "merge" "pull/7"`
@@ -81,11 +74,7 @@ func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git) *step.Error {
 		}
 	}
 	if err := mergeWithCustomRetry(gitCmd, mergeArg(c.mergeBranch), resetFunc); err != nil {
-		return newStepError(
-			"a",
-			fmt.Errorf("merge failed: %s", err),
-			"aaa",
-		)
+		return err
 	}
 
 	if c.shouldUpdateSubmodules {

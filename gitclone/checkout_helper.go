@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 )
@@ -40,7 +39,7 @@ var simpleUnshallowFunc func(git.Git, error) error = func(gitCmd git.Git, perr e
 	return runner.RunWithRetry(gitCmd.Fetch("--unshallow"))
 }
 
-func fetch(gitCmd git.Git, traits fetchTraits, ref *fetchRef) *step.Error {
+func fetch(gitCmd git.Git, traits fetchTraits, ref *fetchRef) error {
 	var opts []string
 	if traits.Depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(traits.Depth))
@@ -76,10 +75,10 @@ type checkoutArg struct {
 	IsBranch bool
 }
 
-func checkoutWithCustomRetry(gitCmd git.Git, arg checkoutArg, retryFunc func(error) error) error {
+func checkoutWithCustomRetry(gitCmd git.Git, arg checkoutArg, retryFunc func(git.Git, error) error) error {
 	if cerr := runner.Run(gitCmd.Checkout(arg.Arg)); cerr != nil {
 		if retryFunc != nil {
-			if err := retryFunc(cerr); err != nil {
+			if err := retryFunc(gitCmd, cerr); err != nil {
 				return err
 			}
 
@@ -92,7 +91,7 @@ func checkoutWithCustomRetry(gitCmd git.Git, arg checkoutArg, retryFunc func(err
 	return nil
 }
 
-func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchTraits) *step.Error {
+func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchTraits) error {
 	branch := strings.TrimPrefix(ref.Ref, branchRefPrefix)
 	// Fetch then checkout
 	if err := fetch(gitCmd, fetchTraits, &ref); err != nil {
@@ -132,13 +131,13 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retryFunc func(gitCmd git.
 			return runner.Run(gitCmd.Merge(arg))
 		}
 
-		return fmt.Errorf("merging %q: %v", arg, merr)
+		return fmt.Errorf("merge failed (%q): %v", arg, merr)
 	}
 
 	return nil
 }
 
-func updateSubmodules(gitCmd git.Git) *step.Error {
+func updateSubmodules(gitCmd git.Git) error {
 	if err := runner.Run(gitCmd.SubmoduleUpdate()); err != nil {
 		return newStepError(
 			updateSubmodelFailedTag,
@@ -150,7 +149,7 @@ func updateSubmodules(gitCmd git.Git) *step.Error {
 	return nil
 }
 
-func detachHead(gitCmd git.Git) *step.Error {
+func detachHead(gitCmd git.Git) error {
 	if err := runner.Run(gitCmd.Checkout("--detach")); err != nil {
 		return newStepError(
 			"detach_head_failed",

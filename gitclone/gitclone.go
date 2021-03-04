@@ -3,7 +3,6 @@ package gitclone
 import (
 	"fmt"
 
-	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/envman/envman"
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command/git"
@@ -65,7 +64,7 @@ func getMaxEnvLength() (int, error) {
 	return configs.EnvBytesLimitInKB * 1024, nil
 }
 
-func checkoutState(gitCmd git.Git, cfg Config) *step.Error {
+func checkoutState(gitCmd git.Git, cfg Config) error {
 	checkoutArg := getCheckoutArg(cfg.Commit, cfg.Tag, cfg.Branch)
 
 	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
@@ -223,24 +222,17 @@ func choose(cfg Config) (checkoutStrategy, error) {
 	}, nil
 }
 
-func checkoutStateStrangler(gitCmd git.Git, cfg Config) *step.Error {
+func checkoutStateStrangler(gitCmd git.Git, cfg Config) error {
 	checkoutMethod, err := choose(cfg)
 	if err != nil {
-		return newStepError(
-			"auto_merge_failed",
-			fmt.Errorf("could not apply any checkout strategy: %v", err),
-			"no automatic merge method available",
-		)
+		return fmt.Errorf("could not apply any checkout strategy: %v", err)
 	}
 
 	if checkoutMethod != nil {
 		if err := checkoutMethod.Validate(); err != nil {
-			return newStepError(
-				"checkout_method_select",
-				fmt.Errorf("Checkout method can not be used (%T): %v", checkoutMethod, err),
-				"Internal error",
-			)
+			return fmt.Errorf("Checkout method can not be used (%T): %v", checkoutMethod, err)
 		}
+
 		if err := checkoutMethod.Do(gitCmd); err != nil {
 			return err
 		}
@@ -254,7 +246,7 @@ func checkoutStateStrangler(gitCmd git.Git, cfg Config) *step.Error {
 }
 
 // Execute is the entry point of the git clone process
-func Execute(cfg Config) *step.Error {
+func Execute(cfg Config) error {
 	maxEnvLength, err := getMaxEnvLength()
 	if err != nil {
 		return newStepError(

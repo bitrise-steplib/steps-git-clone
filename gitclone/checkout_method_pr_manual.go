@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 )
@@ -36,7 +35,7 @@ func (c checkoutMergeRequestManual) Validate() error {
 	return nil
 }
 
-func (c checkoutMergeRequestManual) Do(gitCmd git.Git) *step.Error {
+func (c checkoutMergeRequestManual) Do(gitCmd git.Git) error {
 	// Fetch and checkout base (target) branch
 	baseBranchRef := *newOriginFetchRef(branchRefPrefix + c.branchBase)
 	if err := fetchInitialBranch(gitCmd, baseBranchRef, c.fetchTraits); err != nil {
@@ -61,9 +60,7 @@ func (c checkoutMergeRequestManual) Do(gitCmd git.Git) *step.Error {
 	}
 
 	if err := mergeWithCustomRetry(gitCmd, c.commit, unshallowFunc); err != nil {
-		return newStepError(
-			"a", err, "aaa",
-		)
+		return err
 	}
 
 	if c.shouldUpdateSubmodules {
@@ -101,7 +98,7 @@ func (c checkoutForkPullRequestManual) Validate() error {
 	return nil
 }
 
-func (c checkoutForkPullRequestManual) Do(gitCmd git.Git) *step.Error {
+func (c checkoutForkPullRequestManual) Do(gitCmd git.Git) error {
 	// Fetch and checkout base branch
 	baseBranchRef := *newOriginFetchRef(branchRefPrefix + c.branchBase)
 	if err := fetchInitialBranch(gitCmd, baseBranchRef, c.fetchTraits); err != nil {
@@ -117,11 +114,7 @@ func (c checkoutForkPullRequestManual) Do(gitCmd git.Git) *step.Error {
 	const forkRemoteName = "fork"
 	// Add fork remote
 	if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.forkRepoURL)); err != nil {
-		return newStepError(
-			"add_remote_failed",
-			fmt.Errorf("adding remote fork repository failed (%s): %v", c.forkRepoURL, err),
-			"Adding remote fork repository failed",
-		)
+		return fmt.Errorf("adding remote fork repository failed (%s): %v", c.forkRepoURL, err)
 	}
 
 	// Fetch + merge fork branch
@@ -130,15 +123,12 @@ func (c checkoutForkPullRequestManual) Do(gitCmd git.Git) *step.Error {
 		Ref:    branchRefPrefix + c.branchFork,
 	}
 	remoteForkBranch := fmt.Sprintf("%s/%s", forkRemoteName, c.branchFork)
-
 	if err := fetch(gitCmd, c.fetchTraits, &forkBranchRef); err != nil {
 		return err
 	}
 
 	if err := mergeWithCustomRetry(gitCmd, remoteForkBranch, simpleUnshallowFunc); err != nil {
-		return newStepError(
-			"a", err, "aaa",
-		)
+		return err
 	}
 
 	if c.shouldUpdateSubmodules {

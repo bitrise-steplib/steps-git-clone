@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command/git"
 )
 
@@ -26,26 +25,18 @@ func (c checkoutPullRequestAutoDiffFile) Validate() error {
 	return nil
 }
 
-func (c checkoutPullRequestAutoDiffFile) Do(gitCmd git.Git) *step.Error {
+func (c checkoutPullRequestAutoDiffFile) Do(gitCmd git.Git) error {
 	baseBranchRef := newOriginFetchRef(branchRefPrefix + c.baseBranch)
 	if err := fetch(gitCmd, c.fetchTraits, baseBranchRef); err != nil {
 		return err
 	}
 
 	if err := runner.Run(gitCmd.Checkout(c.baseBranch)); err != nil {
-		return newStepError(
-			"a",
-			fmt.Errorf("checkout failed (%s): %v", c.baseBranch, err),
-			"aaa",
-		)
+		return fmt.Errorf("checkout failed (%s): %v", c.baseBranch, err)
 	}
 
 	if err := runner.Run(gitCmd.Apply(c.patch)); err != nil {
-		return newStepError(
-			"a",
-			fmt.Errorf("can't apply patch (%s): %v", c.patch, err),
-			"aaa",
-		)
+		return fmt.Errorf("can't apply patch (%s): %v", c.patch, err)
 	}
 
 	if c.shouldUpdateSubmodules {

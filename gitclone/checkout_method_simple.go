@@ -2,17 +2,14 @@ package gitclone
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
-	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command/git"
-	"github.com/bitrise-io/go-utils/log"
 )
 
 type checkoutStrategy interface {
 	Validate() error
-	Do(gitCmd git.Git) *step.Error
+	Do(gitCmd git.Git) error
 }
 
 //
@@ -25,7 +22,7 @@ func (c checkoutNone) Validate() error {
 	return nil
 }
 
-func (c checkoutNone) Do(gitCmd git.Git) *step.Error {
+func (c checkoutNone) Do(gitCmd git.Git) error {
 	if c.ShouldUpdateSubmodules {
 		return updateSubmodules(gitCmd)
 	}
@@ -49,28 +46,15 @@ func (c checkoutCommit) Validate() error {
 	return nil
 }
 
-func (c checkoutCommit) Do(gitCmd git.Git) *step.Error {
+func (c checkoutCommit) Do(gitCmd git.Git) error {
 	// Fetch then checkout
 	// No branch specified for fetch
 	if err := fetch(gitCmd, c.FetchTraits, nil); err != nil {
-		return newStepError(
-			"a", err, "aaaa",
-		)
+		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{Arg: c.Commit}, func(cerr error) error {
-		log.Warnf("Checkout failed, error: %v\nUnshallow...", cerr)
-		if err := runner.RunWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
-			return newStepError(
-				"fetch_unshallow_failed",
-				fmt.Errorf("fetch (unshallow) failed: %v", err),
-				"Fetching with unshallow parameter has failed",
-			)
-		}
-
-		return nil
-	}); err != nil {
-		return newStepError("a", err, "aaa")
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{Arg: c.Commit}, simpleUnshallowFunc); err != nil {
+		return err
 	}
 
 	if c.ShouldUpdateSubmodules {
@@ -96,7 +80,7 @@ func (c checkoutBranch) Validate() error {
 	return nil
 }
 
-func (c checkoutBranch) Do(gitCmd git.Git) *step.Error {
+func (c checkoutBranch) Do(gitCmd git.Git) error {
 	branchRef := *newOriginFetchRef(branchRefPrefix + c.Branch)
 	if err := fetchInitialBranch(gitCmd, branchRef, c.FetchTraits); err != nil {
 		return err
@@ -126,7 +110,7 @@ func (c checkoutTag) Validate() error {
 	return nil
 }
 
-func (c checkoutTag) Do(gitCmd git.Git) *step.Error {
+func (c checkoutTag) Do(gitCmd git.Git) error {
 	var branchRef *fetchRef
 	if c.Branch != nil {
 		branchRef = newOriginFetchRef(branchRefPrefix + *c.Branch)
@@ -136,19 +120,8 @@ func (c checkoutTag) Do(gitCmd git.Git) *step.Error {
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{Arg: c.Tag}, func(cerr error) error {
-		log.Warnf("Checkout failed, error: %v\nUnshallow...", cerr)
-		if err := runner.RunWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
-			return newStepError(
-				"fetch_unshallow_failed",
-				fmt.Errorf("fetch (unshallow) failed: %v", err),
-				"Fetching with unshallow parameter has failed",
-			)
-		}
-
-		return nil
-	}); err != nil {
-		return newStepError("a", err, "aaa")
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{Arg: c.Tag}, simpleUnshallowFunc); err != nil {
+		return err
 	}
 
 	if c.ShouldUpdateSubmodules {

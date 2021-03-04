@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
@@ -276,7 +275,7 @@ func parseListBranchesOutput(output string) map[string][]string {
 	return branchesByRemote
 }
 
-func handleCheckoutError(callback getAvailableBranches, tag string, err error, shortMsg string, branch string) *step.Error {
+func handleCheckoutError(callback getAvailableBranches, tag string, err error, shortMsg string, branch string) error {
 	// We were checking out a branch (not tag or commit)
 	if branch != "" {
 		branchesByRemote, branchesErr := callback()
@@ -301,7 +300,7 @@ func handleCheckoutError(callback getAvailableBranches, tag string, err error, s
 	)
 }
 
-func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) *step.Error {
+func checkout(gitCmd git.Git, arg, branch string, depth int, isTag bool) error {
 	var opts []string
 	if depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(depth))
