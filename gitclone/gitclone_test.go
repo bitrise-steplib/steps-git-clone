@@ -290,9 +290,7 @@ var testCases = [...]struct {
 				`Get "/diff.txt?api_token=": unsupported protocol scheme ""`),
 			"no automatic merge method available",
 		),
-		wantCmds: []string{
-			`git "fetch" "origin" "refs/heads/master"`,
-		},
+		wantCmds: nil,
 	},
 
 	// ** Errors **
