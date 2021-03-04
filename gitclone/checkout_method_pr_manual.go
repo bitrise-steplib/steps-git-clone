@@ -16,8 +16,6 @@ type checkoutMergeRequestManual struct {
 	branchHead, commit string
 	// Destination
 	branchBase string
-	// Other
-	fetchTraits fetchTraits
 }
 
 func (c checkoutMergeRequestManual) Validate() error {
@@ -34,10 +32,10 @@ func (c checkoutMergeRequestManual) Validate() error {
 	return nil
 }
 
-func (c checkoutMergeRequestManual) Do(gitCmd git.Git) error {
+func (c checkoutMergeRequestManual) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
 	// Fetch and checkout base (target) branch
 	baseBranchRef := *newOriginFetchRef(branchRefPrefix + c.branchBase)
-	if err := fetchInitialBranch(gitCmd, baseBranchRef, c.fetchTraits); err != nil {
+	if err := fetchInitialBranch(gitCmd, baseBranchRef, fetchOptions); err != nil {
 		return err
 	}
 
@@ -49,12 +47,12 @@ func (c checkoutMergeRequestManual) Do(gitCmd git.Git) error {
 
 	// Fetch and merge
 	headBranchRef := newOriginFetchRef(branchRefPrefix + c.branchHead)
-	if err := fetch(gitCmd, c.fetchTraits, headBranchRef); err != nil {
+	if err := fetch(gitCmd, fetchOptions, headBranchRef); err != nil {
 		return nil
 	}
 
 	var unshallowFunc func(git.Git, error) error
-	if !c.fetchTraits.IsFullDepth() {
+	if !fetchOptions.IsFullDepth() {
 		unshallowFunc = simpleUnshallowFunc
 	}
 
@@ -72,8 +70,6 @@ type checkoutForkPullRequestManual struct {
 	branchFork, forkRepoURL string
 	// Destination
 	branchBase string
-	// Other
-	fetchTraits fetchTraits
 }
 
 func (c checkoutForkPullRequestManual) Validate() error {
@@ -90,10 +86,10 @@ func (c checkoutForkPullRequestManual) Validate() error {
 	return nil
 }
 
-func (c checkoutForkPullRequestManual) Do(gitCmd git.Git) error {
+func (c checkoutForkPullRequestManual) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
 	// Fetch and checkout base branch
 	baseBranchRef := *newOriginFetchRef(branchRefPrefix + c.branchBase)
-	if err := fetchInitialBranch(gitCmd, baseBranchRef, c.fetchTraits); err != nil {
+	if err := fetchInitialBranch(gitCmd, baseBranchRef, fetchOptions); err != nil {
 		return err
 	}
 
@@ -111,11 +107,11 @@ func (c checkoutForkPullRequestManual) Do(gitCmd git.Git) error {
 
 	// Fetch + merge fork branch
 	forkBranchRef := fetchRef{
-		Remote: forkRemoteName,
-		Ref:    branchRefPrefix + c.branchFork,
+		remote: forkRemoteName,
+		ref:    branchRefPrefix + c.branchFork,
 	}
 	remoteForkBranch := fmt.Sprintf("%s/%s", forkRemoteName, c.branchFork)
-	if err := fetch(gitCmd, c.fetchTraits, &forkBranchRef); err != nil {
+	if err := fetch(gitCmd, fetchOptions, &forkBranchRef); err != nil {
 		return err
 	}
 

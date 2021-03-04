@@ -8,22 +8,23 @@ import (
 
 type checkoutStrategy interface {
 	Validate() error
-	Do(gitCmd git.Git) error
+	Do(gitCmd git.Git, fetchOptions fetchOptions) error
 }
 
-func selectCheckoutStrategy(cfg Config) (checkoutStrategy, error) {
-	defaultFetchTraits := fetchTraits{
-		Depth: cfg.CloneDepth,
-		Tags:  cfg.Tag != "",
+func selectCheckoutStrategy(cfg Config) (checkoutStrategy, fetchOptions, error) {
+	defaultFetchTraits := fetchOptions{
+		depth: cfg.CloneDepth,
+		tags:  cfg.Tag != "",
 	}
 
 	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
 	if !isPR {
 		if cfg.Commit != "" {
 			return checkoutCommit{
-				Commit:      cfg.Commit,
-				FetchTraits: defaultFetchTraits,
-			}, nil
+					commit: cfg.Commit,
+				},
+				defaultFetchTraits,
+				nil
 		}
 
 		if cfg.Tag != "" {
@@ -33,23 +34,24 @@ func selectCheckoutStrategy(cfg Config) (checkoutStrategy, error) {
 			}
 
 			return checkoutTag{
-				Tag:    cfg.Tag,
-				Branch: branch,
-				FetchTraits: fetchTraits{
-					Depth: cfg.CloneDepth,
-					Tags:  true,
+					tag:    cfg.Tag,
+					branch: branch,
 				},
-			}, nil
+				fetchOptions{
+					depth: cfg.CloneDepth,
+					tags:  true,
+				}, nil
 		}
 
 		if cfg.Branch != "" {
 			return checkoutBranch{
-				Branch:      cfg.Branch,
-				FetchTraits: defaultFetchTraits,
-			}, nil
+					branch: cfg.Branch,
+				},
+				defaultFetchTraits,
+				nil
 		}
 
-		return checkoutNone{}, nil
+		return checkoutNone{}, fetchOptions{}, nil
 	}
 
 	// ** PR **
@@ -58,27 +60,28 @@ func selectCheckoutStrategy(cfg Config) (checkoutStrategy, error) {
 		// Merge branch
 		if cfg.PRMergeBranch != "" {
 			return checkoutPullRequestAutoMergeBranch{
-				baseBranch:  cfg.BranchDest,
-				mergeBranch: cfg.PRMergeBranch,
-				fetchTraits: fetchTraits{
-					Depth: cfg.CloneDepth,
-					Tags:  false,
+					baseBranch:  cfg.BranchDest,
+					mergeBranch: cfg.PRMergeBranch,
 				},
-			}, nil
+				fetchOptions{
+					depth: cfg.CloneDepth,
+					tags:  false,
+				},
+				nil
 		}
 
 		// Diff file
 		if patch, err := getDiffFile(cfg.BuildURL, cfg.BuildAPIToken, cfg.PRID); err != nil {
-			return nil, fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and can't download diff file: %v", err)
+			return nil, fetchOptions{}, fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and can't download diff file: %v", err)
 		} else {
 			return checkoutPullRequestAutoDiffFile{
-				baseBranch: cfg.BranchDest,
-				patch:      patch,
-				fetchTraits: fetchTraits{
-					Depth: cfg.CloneDepth,
-					Tags:  false,
+					baseBranch: cfg.BranchDest,
+					patch:      patch,
 				},
-			}, nil
+				fetchOptions{
+					depth: cfg.CloneDepth,
+					tags:  false,
+				}, nil
 		}
 	}
 
@@ -86,15 +89,19 @@ func selectCheckoutStrategy(cfg Config) (checkoutStrategy, error) {
 	// Clone Depth is not set for manual merge yet
 	if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
 		return checkoutForkPullRequestManual{
-			branchFork:  cfg.Branch,
-			forkRepoURL: cfg.PRRepositoryURL,
-			branchBase:  cfg.BranchDest,
-		}, nil
+				branchFork:  cfg.Branch,
+				forkRepoURL: cfg.PRRepositoryURL,
+				branchBase:  cfg.BranchDest,
+			},
+			fetchOptions{},
+			nil
 	}
 
 	return checkoutMergeRequestManual{
-		branchHead: cfg.Branch,
-		branchBase: cfg.BranchDest,
-		commit:     cfg.Commit,
-	}, nil
+			branchHead: cfg.Branch,
+			branchBase: cfg.BranchDest,
+			commit:     cfg.Commit,
+		},
+		fetchOptions{},
+		nil
 }

@@ -15,8 +15,6 @@ type checkoutPullRequestAutoMergeBranch struct {
 	baseBranch string
 	// Merge branch contains the changes already merged
 	mergeBranch string
-	// Other
-	fetchTraits fetchTraits
 }
 
 func (c checkoutPullRequestAutoMergeBranch) Validate() error {
@@ -30,25 +28,25 @@ func (c checkoutPullRequestAutoMergeBranch) Validate() error {
 	return nil
 }
 
-func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git) error {
+func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git, fetchOpts fetchOptions) error {
 	// Check out initial branch (fetchInitialBranch part1)
 	// `git "fetch" "origin" "refs/heads/master"`
 	baseBranchRef := newOriginFetchRef(branchRefPrefix + c.baseBranch)
-	if err := fetch(gitCmd, c.fetchTraits, baseBranchRef); err != nil {
+	if err := fetch(gitCmd, fetchOpts, baseBranchRef); err != nil {
 		return err
 	}
 
 	// `git "fetch" "origin" "refs/pull/7/head:pull/7"`
 	// Does not apply clone depth (legacy)
 	headBranchRef := newOriginFetchRef(fetchArg(c.mergeBranch))
-	if err := fetch(gitCmd, fetchTraits{}, headBranchRef); err != nil {
+	if err := fetch(gitCmd, fetchOptions{}, headBranchRef); err != nil {
 		return err
 	}
 
 	// Check out initial branch (fetchInitialBranch part2)
 	// `git "checkout" "master"`
 	// `git "merge" "origin/master"`
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{Arg: c.baseBranch, IsBranch: true}, nil); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.baseBranch, isBranch: true}, nil); err != nil {
 		return err
 	}
 	remoteBaseBranch := fmt.Sprintf("%s/%s", defaultRemoteName, c.baseBranch)
@@ -58,7 +56,7 @@ func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git) error {
 
 	// `git "merge" "pull/7"`
 	var resetFunc func(git.Git, error) error
-	if !c.fetchTraits.IsFullDepth() {
+	if !fetchOpts.IsFullDepth() {
 		resetFunc = func(gitCmd git.Git, merr error) error {
 			log.Warnf("Merge failed: %v\nReset repository, then unshallow...", merr)
 

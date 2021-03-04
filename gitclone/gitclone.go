@@ -128,7 +128,7 @@ func checkoutState(gitCmd git.Git, cfg Config) error {
 }
 
 func checkoutState2(gitCmd git.Git, cfg Config) error {
-	checkoutMethod, err := selectCheckoutStrategy(cfg)
+	checkoutMethod, fetchOpts, err := selectCheckoutStrategy(cfg)
 	if err != nil {
 		return fmt.Errorf("could not apply any checkout strategy: %v", err)
 	}
@@ -138,7 +138,7 @@ func checkoutState2(gitCmd git.Git, cfg Config) error {
 			return fmt.Errorf("Checkout method can not be used (%T): %v", checkoutMethod, err)
 		}
 
-		if err := checkoutMethod.Do(gitCmd); err != nil {
+		if err := checkoutMethod.Do(gitCmd, fetchOpts); err != nil {
 			return err
 		}
 	}
@@ -201,19 +201,8 @@ func Execute(cfg Config) error {
 		}
 	}
 
-	checkoutMethod, err := selectCheckoutStrategy(cfg)
-	if err != nil {
-		return fmt.Errorf("could not apply any checkout strategy: %v", err)
-	}
-
-	if checkoutMethod != nil {
-		if err := checkoutMethod.Validate(); err != nil {
-			return fmt.Errorf("Checkout method can not be used (%T): %v", checkoutMethod, err)
-		}
-
-		if err := checkoutMethod.Do(gitCmd); err != nil {
-			return err
-		}
+	if err := checkoutState2(gitCmd, cfg); err != nil {
+		return err
 	}
 
 	if cfg.UpdateSubmodules {

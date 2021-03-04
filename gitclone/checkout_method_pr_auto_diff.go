@@ -12,8 +12,6 @@ import (
 // checkoutPullRequestAutoDiffFile
 type checkoutPullRequestAutoDiffFile struct {
 	baseBranch, patch string
-	// Other
-	fetchTraits fetchTraits
 }
 
 func (c checkoutPullRequestAutoDiffFile) Validate() error {
@@ -24,9 +22,9 @@ func (c checkoutPullRequestAutoDiffFile) Validate() error {
 	return nil
 }
 
-func (c checkoutPullRequestAutoDiffFile) Do(gitCmd git.Git) error {
+func (c checkoutPullRequestAutoDiffFile) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
 	baseBranchRef := newOriginFetchRef(branchRefPrefix + c.baseBranch)
-	if err := fetch(gitCmd, c.fetchTraits, baseBranchRef); err != nil {
+	if err := fetch(gitCmd, fetchOptions, baseBranchRef); err != nil {
 		return err
 	}
 
