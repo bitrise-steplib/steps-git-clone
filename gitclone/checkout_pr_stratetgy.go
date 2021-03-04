@@ -14,22 +14,22 @@ import (
 // checkoutMRManualMerge
 type checkoutMRManualMerge struct {
 	// Source
-	branch, commit string
+	branchHead, commit string
 	// Destination
-	branchDest string
+	branchBase string
 	// Other
 	fetchTraits            fetchTraits
 	shouldUpdateSubmodules bool
 }
 
 func (c checkoutMRManualMerge) Validate() error {
-	if strings.TrimSpace(c.branch) == "" {
+	if strings.TrimSpace(c.branchHead) == "" {
 		return errors.New("no source branch specified")
 	}
 	if strings.TrimSpace(c.commit) == "" {
 		return errors.New("no source commit hash specified")
 	}
-	if strings.TrimSpace(c.branchDest) == "" {
+	if strings.TrimSpace(c.branchBase) == "" {
 		return errors.New("no destiantion branch specified")
 	}
 
@@ -37,8 +37,9 @@ func (c checkoutMRManualMerge) Validate() error {
 }
 
 func (c checkoutMRManualMerge) Do(gitCmd git.Git) *step.Error {
-	destBranchRef := *newOriginFetchRef(branchRefPrefix + c.branchDest)
-	if err := fetchInitialBranch(gitCmd, destBranchRef, c.fetchTraits); err != nil {
+	// Fetch and checkout base (target) branch
+	baseBranchRef := *newOriginFetchRef(branchRefPrefix + c.branchBase)
+	if err := fetchInitialBranch(gitCmd, baseBranchRef, c.fetchTraits); err != nil {
 		return err
 	}
 
@@ -48,8 +49,9 @@ func (c checkoutMRManualMerge) Do(gitCmd git.Git) *step.Error {
 	}
 	log.Printf("commit hash: %s", commitHash)
 
-	sourceBranchRef := newOriginFetchRef(branchRefPrefix + c.branch)
-	if err := fetch(gitCmd, c.fetchTraits, sourceBranchRef, func(fetchRetry) *step.Error {
+	// Fetch and merge
+	headBranchRef := newOriginFetchRef(branchRefPrefix + c.branchHead)
+	if err := fetch(gitCmd, c.fetchTraits, headBranchRef, func(fetchRetry) *step.Error {
 		if err := runner.Run(gitCmd.Merge(c.commit)); err != nil {
 			return newStepError(
 				"merge_failed",
@@ -76,22 +78,22 @@ func (c checkoutMRManualMerge) Do(gitCmd git.Git) *step.Error {
 // checkoutForkPRManualMerge
 type checkoutForkPRManualMerge struct {
 	// Source
-	branchSource, forkRepoURL string
+	branchFork, forkRepoURL string
 	// Destination
-	branchDest string
+	branchBase string
 	// Other
 	fetchTraits            fetchTraits
 	shouldUpdateSubmodules bool
 }
 
 func (c checkoutForkPRManualMerge) Validate() error {
-	if strings.TrimSpace(c.branchSource) == "" {
+	if strings.TrimSpace(c.branchFork) == "" {
 		return errors.New("no source branch specified")
 	}
-	if strings.TrimSpace(c.branchDest) == "" {
+	if strings.TrimSpace(c.branchBase) == "" {
 		return errors.New("no source repository URL specified")
 	}
-	if strings.TrimSpace(c.branchDest) == "" {
+	if strings.TrimSpace(c.branchBase) == "" {
 		return errors.New("no destiantion branch specified")
 	}
 
@@ -99,8 +101,9 @@ func (c checkoutForkPRManualMerge) Validate() error {
 }
 
 func (c checkoutForkPRManualMerge) Do(gitCmd git.Git) *step.Error {
-	destBranchRef := *newOriginFetchRef(branchRefPrefix + c.branchDest)
-	if err := fetchInitialBranch(gitCmd, destBranchRef, c.fetchTraits); err != nil {
+	// Fetch and checkout base branch
+	baseBranchRef := *newOriginFetchRef(branchRefPrefix + c.branchBase)
+	if err := fetchInitialBranch(gitCmd, baseBranchRef, c.fetchTraits); err != nil {
 		return err
 	}
 
@@ -120,12 +123,14 @@ func (c checkoutForkPRManualMerge) Do(gitCmd git.Git) *step.Error {
 		)
 	}
 
+	// Fetch + merge fork branch
 	forkBranchRef := fetchRef{
-		Remote: "fork",
-		Ref:    branchRefPrefix + c.branchSource,
+		Remote: forkRemoteName,
+		Ref:    branchRefPrefix + c.branchFork,
 	}
+	remoteForkBranch := fmt.Sprintf("%s/%s", forkRemoteName, c.branchFork)
+
 	if err := fetch(gitCmd, c.fetchTraits, &forkBranchRef, func(fetchRetry) *step.Error {
-		remoteForkBranch := fmt.Sprintf("%s/%s", forkRemoteName, c.branchSource)
 		if err := runner.Run(gitCmd.Merge(remoteForkBranch)); err != nil {
 			return newStepError(
 				"merge_fork_failed",

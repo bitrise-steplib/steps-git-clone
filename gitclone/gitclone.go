@@ -185,14 +185,14 @@ func choose(cfg Config) checkoutStrategy {
 		return checkoutForkPRManualMerge{
 			branchSource:           cfg.Branch,
 			forkRepoURL:            cfg.PRRepositoryURL,
-			branchDest:             cfg.BranchDest,
+			branchTarget:           cfg.BranchDest,
 			shouldUpdateSubmodules: cfg.UpdateSubmodules,
 		}
 	}
 
 	return checkoutMRManualMerge{
 		branch:                 cfg.Branch,
-		branchDest:             cfg.BranchDest,
+		branchTarget:           cfg.BranchDest,
 		commit:                 cfg.Commit,
 		shouldUpdateSubmodules: cfg.UpdateSubmodules,
 	}
