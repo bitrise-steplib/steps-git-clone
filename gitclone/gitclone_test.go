@@ -52,7 +52,7 @@ var testCases = [...]struct {
 		cfg: Config{
 			Commit: "76a934ae",
 		},
-		mockRunner: givenMockRunnerSucceedsFailsFirstTime(),
+		mockRunner: givenMockRunnerSucceedsAfter(1),
 		wantCmds: []string{
 			`git "fetch"`,
 			`git "fetch"`,
@@ -299,8 +299,7 @@ var testCases = [...]struct {
 		},
 		mockRunner: givenMockRunner().
 			GivenRunWithRetryFailsAfter(2).
-			GivenRunSucceeds().
-			GivenRunForOutputSucceeds(),
+			GivenRunSucceeds(),
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/fake"`,
 			`git "fetch" "origin" "refs/heads/fake"`,
@@ -370,9 +369,8 @@ var testCases = [...]struct {
 		},
 		mockRunner: givenMockRunner().
 			GivenRunFailsForCommand(`git "merge" "pull/5"`, 1).
-			GivenRunWithRetrySucceeds().
-			GivenRunForOutputSucceeds().
-			GivenRunSucceeds(),
+			GivenRunSucceeds().
+			GivenRunWithRetrySucceeds(),
 		wantCmds: []string{
 			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
 			`git "fetch" "origin" "refs/pull/5/head:pull/5"`,
@@ -427,22 +425,19 @@ type commandOutput struct {
 }
 
 func givenMockRunner() *MockRunner {
-	return new(MockRunner)
+	mockRunner := new(MockRunner)
+	mockRunner.GivenRunForOutputSucceeds()
+	return mockRunner
 }
 
 func givenMockRunnerSucceeds() *MockRunner {
 	return givenMockRunnerSucceedsAfter(0)
 }
 
-func givenMockRunnerSucceedsFailsFirstTime() *MockRunner {
-	return givenMockRunnerSucceedsAfter(1)
-}
-
 func givenMockRunnerSucceedsAfter(times int) *MockRunner {
 	return givenMockRunner().
 		GivenRunWithRetrySucceedsAfter(times).
-		GivenRunSucceeds().
-		GivenRunForOutputSucceeds()
+		GivenRunSucceeds()
 }
 
 type MockPatchSource struct {

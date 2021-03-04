@@ -12,6 +12,8 @@ type MockRunner struct {
 	cmds []string
 }
 
+var errDummy = errors.New("dummy_cmd_error")
+
 // Cmds...
 func (m *MockRunner) Cmds() []string {
 	return m.cmds
@@ -52,7 +54,7 @@ func (m *MockRunner) GivenRunFailsForCommand(cmdString string, times int) *MockR
 	})).
 		Run(m.rememberCommand).
 		Times(times).
-		Return(errors.New("dummy_cmd_error"))
+		Return(errDummy)
 	return m
 }
 
@@ -71,9 +73,7 @@ func (m *MockRunner) GivenRunWithRetrySucceeds() *MockRunner {
 func (m *MockRunner) GivenRunWithRetrySucceedsAfter(times int) *MockRunner {
 	m.On("RunWithRetry", mock.Anything).
 		Run(func(args mock.Arguments) {
-			for i := 0; i < times+1; i++ {
-				m.rememberCommand(args)
-			}
+			m.rememberCommands(args, times)
 		}).
 		Return(nil)
 	return m
@@ -83,25 +83,9 @@ func (m *MockRunner) GivenRunWithRetrySucceedsAfter(times int) *MockRunner {
 func (m *MockRunner) GivenRunWithRetryFailsAfter(times int) *MockRunner {
 	m.On("RunWithRetry", mock.Anything).
 		Run(func(args mock.Arguments) {
-			for i := 0; i < times+1; i++ {
-				m.rememberCommand(args)
-			}
+			m.rememberCommands(args, times)
 		}).
-		Return(errors.New("dummy_cmd_error"))
-	return m
-}
-
-// GivenRunWithRetryFails ...
-func (m *MockRunner) GivenRunWithRetryFailsForCommand(cmdString string, times int) *MockRunner {
-	m.On("RunWithRetry", mock.MatchedBy(func(command *command.Model) bool {
-		return m.isCommandMatching(command, cmdString)
-	})).
-		Run(func(args mock.Arguments) {
-			for i := 0; i < times+1; i++ {
-				m.rememberCommand(args)
-			}
-		}).
-		Return(errors.New("dummy_cmd_error"))
+		Return(errDummy)
 	return m
 }
 
@@ -115,6 +99,12 @@ func (m *MockRunner) rememberCommand(args mock.Arguments) {
 	}
 
 	m.cmds = append(m.cmds, cmdModel.PrintableCommandArgs())
+}
+
+func (m *MockRunner) rememberCommands(args mock.Arguments, times int) {
+	for i := 0; i < times+1; i++ {
+		m.rememberCommand(args)
+	}
 }
 
 func (m *MockRunner) isCommandMatching(command *command.Model, cmdString string) bool {
