@@ -285,8 +285,10 @@ var testCases = [...]struct {
 		},
 		wantErr: newStepError(
 			"auto_merge_failed",
-			fmt.Errorf("merging PR (automatic) failed: %v", "there is no Pull Request branch and can't download diff file"),
-			"Merging pull request failed",
+			fmt.Errorf("could not apply any checkout strategy: %s: %s",
+				"merging PR (automatic) failed, there is no Pull Request branch and can't download diff file",
+				`Get "/diff.txt?api_token=": unsupported protocol scheme ""`),
+			"no automatic merge method available",
 		),
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/master"`,
@@ -327,15 +329,13 @@ var testCases = [...]struct {
 			PRID:          7,
 			CloneDepth:    1,
 		},
-		wantErr: nil,
-		wantCmds: []string{
-			`git "fetch" "--depth=1" "origin" "refs/heads/"`,
-			`git "fetch" "origin" "refs/pull/7/head:pull/7"`,
-			`git "checkout" ""`,
-			`git "merge" "origin/"`,
-			`git "merge" "pull/7"`,
-			`git "checkout" "--detach"`,
-		},
+		// {StepID:"git-clone", Tag:"checkout_method_select", ShortMsg:"Internal error", Err:(*errors.errorString)(0xc000195360), Recommendations:step.Recommendation(nil)}
+		wantErr: newStepError(
+			"checkout_method_select",
+			fmt.Errorf("Checkout method can not be used (%T): %v", checkoutPullRequestAutoMergeBranch{}, "no base branch specified"),
+			"Internal error",
+		),
+		wantCmds: nil,
 	},
 
 	// ** CloneDepth specified, Unshallow needed **
@@ -370,7 +370,7 @@ var testCases = [...]struct {
 		},
 		wantErr: newStepError(
 			"checkout_method_select",
-			fmt.Errorf("Checkout method can not be used (gitclone.checkoutMRManualMerge): %v", "no source commit hash specified"),
+			fmt.Errorf("Checkout method can not be used (%T): %v", checkoutMergeRequestManual{}, "no head branch commit hash specified"),
 			"Internal error",
 		),
 		wantCmds: nil,
