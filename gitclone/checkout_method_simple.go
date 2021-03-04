@@ -5,15 +5,12 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/gitcloneparams"
 )
 
 //
 // checkoutNone
 type checkoutNone struct{}
-
-func (c checkoutNone) Validate() error {
-	return nil
-}
 
 func (c checkoutNone) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
 	return nil
@@ -22,11 +19,11 @@ func (c checkoutNone) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
 //
 // checkoutCommit
 type checkoutCommit struct {
-	commit string
+	params gitcloneparams.CommitParams
 }
 
 func (c checkoutCommit) Validate() error {
-	if strings.TrimSpace(c.commit) == "" {
+	if strings.TrimSpace(c.params.Commit) == "" {
 		return errors.New("no commit hash specified")
 	}
 
@@ -40,7 +37,7 @@ func (c checkoutCommit) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.commit}, simpleUnshallowFunc); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.Commit}, simpleUnshallowFunc); err != nil {
 		return err
 	}
 
@@ -50,19 +47,11 @@ func (c checkoutCommit) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
 //
 // checkoutBranch
 type checkoutBranch struct {
-	branch string
-}
-
-func (c checkoutBranch) Validate() error {
-	if strings.TrimSpace(c.branch) == "" {
-		return errors.New("no branch specified")
-	}
-
-	return nil
+	params gitcloneparams.BranchParams
 }
 
 func (c checkoutBranch) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
-	branchRef := *newOriginFetchRef(branchRefPrefix + c.branch)
+	branchRef := *newOriginFetchRef(branchRefPrefix + c.params.Branch)
 	if err := fetchInitialBranch(gitCmd, branchRef, fetchOptions); err != nil {
 		return err
 	}
@@ -73,29 +62,20 @@ func (c checkoutBranch) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
 //
 // checkoutTag
 type checkoutTag struct {
-	tag    string
-	branch *string // Optional
-}
-
-func (c checkoutTag) Validate() error {
-	if strings.TrimSpace(c.tag) == "" {
-		return errors.New("no tag specified")
-	}
-
-	return nil
+	params gitcloneparams.TagParams
 }
 
 func (c checkoutTag) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
 	var branchRef *fetchRef
-	if c.branch != nil {
-		branchRef = newOriginFetchRef(branchRefPrefix + *c.branch)
+	if c.params.Branch != nil {
+		branchRef = newOriginFetchRef(branchRefPrefix + *c.params.Branch)
 	}
 
 	if err := fetch(gitCmd, fetchOptions, branchRef); err != nil {
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.tag}, simpleUnshallowFunc); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.Tag}, simpleUnshallowFunc); err != nil {
 		return err
 	}
 

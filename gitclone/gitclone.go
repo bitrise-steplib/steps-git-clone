@@ -128,19 +128,18 @@ func checkoutState(gitCmd git.Git, cfg Config) error {
 }
 
 func checkoutState2(gitCmd git.Git, cfg Config) error {
-	checkoutMethod, fetchOpts, err := selectCheckoutStrategy(cfg)
+	checkoutStrategy, fetchOpts, err := selectCheckoutStrategy(cfg)
 	if err != nil {
-		return fmt.Errorf("could not apply any checkout strategy: %v", err)
+		return err
 	}
+	if checkoutStrategy == nil {
+		return fmt.Errorf("failed to select a checkout stategy")
+	}
+	log.Debugf("Checkout strategy used: %T", checkoutStrategy)
 
-	if checkoutMethod != nil {
-		if err := checkoutMethod.Validate(); err != nil {
-			return fmt.Errorf("Checkout method can not be used (%T): %v", checkoutMethod, err)
-		}
-
-		if err := checkoutMethod.Do(gitCmd, fetchOpts); err != nil {
-			return err
-		}
+	if err := checkoutStrategy.Do(gitCmd, fetchOpts); err != nil {
+		log.Infof("Checkout strategy used: %T", checkoutStrategy)
+		return err
 	}
 
 	return nil

@@ -1,44 +1,33 @@
 package gitclone
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/gitcloneparams"
 )
 
 //
-// checkoutPullRequestAutoMergeBranch
-type checkoutPullRequestAutoMergeBranch struct {
-	baseBranch string
-	// Merge branch contains the changes already merged
-	mergeBranch string
+// checkoutPRMergeBranch
+type checkoutPRMergeBranch struct {
+	// baseBranch string
+	// // Merge branch contains the changes already merged
+	// mergeBranch string
+	params gitcloneparams.PRMergeBranchParams
 }
 
-func (c checkoutPullRequestAutoMergeBranch) Validate() error {
-	if strings.TrimSpace(c.baseBranch) == "" {
-		return errors.New("no base branch specified")
-	}
-	if strings.TrimSpace(c.mergeBranch) == "" {
-		return errors.New("no merge branch specified")
-	}
-
-	return nil
-}
-
-func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git, fetchOpts fetchOptions) error {
+func (c checkoutPRMergeBranch) Do(gitCmd git.Git, fetchOpts fetchOptions) error {
 	// Check out initial branch (fetchInitialBranch part1)
 	// `git "fetch" "origin" "refs/heads/master"`
-	baseBranchRef := newOriginFetchRef(branchRefPrefix + c.baseBranch)
+	baseBranchRef := newOriginFetchRef(branchRefPrefix + c.params.BaseBranch)
 	if err := fetch(gitCmd, fetchOpts, baseBranchRef); err != nil {
 		return err
 	}
 
 	// `git "fetch" "origin" "refs/pull/7/head:pull/7"`
 	// Does not apply clone depth (legacy)
-	headBranchRef := newOriginFetchRef(fetchArg(c.mergeBranch))
+	headBranchRef := newOriginFetchRef(fetchArg(c.params.MergeBranch))
 	if err := fetch(gitCmd, fetchOptions{}, headBranchRef); err != nil {
 		return err
 	}
@@ -46,10 +35,10 @@ func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git, fetchOpts fetchOp
 	// Check out initial branch (fetchInitialBranch part2)
 	// `git "checkout" "master"`
 	// `git "merge" "origin/master"`
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.baseBranch, isBranch: true}, nil); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.BaseBranch, isBranch: true}, nil); err != nil {
 		return err
 	}
-	remoteBaseBranch := fmt.Sprintf("%s/%s", defaultRemoteName, c.baseBranch)
+	remoteBaseBranch := fmt.Sprintf("%s/%s", defaultRemoteName, c.params.BaseBranch)
 	if err := runner.Run(gitCmd.Merge(remoteBaseBranch)); err != nil {
 		return err
 	}
@@ -70,7 +59,7 @@ func (c checkoutPullRequestAutoMergeBranch) Do(gitCmd git.Git, fetchOpts fetchOp
 			return nil
 		}
 	}
-	if err := mergeWithCustomRetry(gitCmd, mergeArg(c.mergeBranch), resetFunc); err != nil {
+	if err := mergeWithCustomRetry(gitCmd, mergeArg(c.params.MergeBranch), resetFunc); err != nil {
 		return err
 	}
 

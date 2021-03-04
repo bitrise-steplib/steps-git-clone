@@ -7,6 +7,7 @@ import (
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/gitcloneparams"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,11 +15,12 @@ const always = 9999
 const rawCmdError = "dummy_cmd_error"
 
 var testCases = [...]struct {
-	name       string
-	cfg        Config
-	cmdOutputs map[string]commandOutput
-	wantErr    error
-	wantCmds   []string
+	name        string
+	cfg         Config
+	cmdOutputs  map[string]commandOutput
+	wantErr     error
+	wantErrType error
+	wantCmds    []string
 }{
 	// ** Simple checkout cases (using commit, tag and branch) **
 	{
@@ -272,7 +274,7 @@ var testCases = [...]struct {
 			Commit:          "76a934ae",
 			ManualMerge:     true,
 		},
-		wantErr: fmt.Errorf("could not apply any checkout strategy: %s: %s",
+		wantErr: fmt.Errorf("%s: %s",
 			"merging PR (automatic) failed, there is no Pull Request branch and can't download diff file",
 			`Get "/diff.txt?api_token=": unsupported protocol scheme ""`),
 		wantCmds: nil,
@@ -312,9 +314,8 @@ var testCases = [...]struct {
 			PRID:          7,
 			CloneDepth:    1,
 		},
-		// {StepID:"git-clone", Tag:"checkout_method_select", ShortMsg:"Internal error", Err:(*errors.errorString)(0xc000195360), Recommendations:step.Recommendation(nil)}
-		wantErr:  fmt.Errorf("Checkout method can not be used (%T): %v", checkoutPullRequestAutoMergeBranch{}, "no base branch specified"),
-		wantCmds: nil,
+		wantErrType: gitcloneparams.ValidationError{},
+		wantCmds:    nil,
 	},
 
 	// ** CloneDepth specified, Unshallow needed **
@@ -346,8 +347,8 @@ var testCases = [...]struct {
 			BranchDest:    "master",
 			ManualMerge:   true,
 		},
-		wantErr:  fmt.Errorf("Checkout method can not be used (%T): %v", checkoutMergeRequestManual{}, "no head branch commit hash specified"),
-		wantCmds: nil,
+		wantErrType: gitcloneparams.ValidationError{},
+		wantCmds:    nil,
 	},
 	{
 		name: "Checkout PR - auto merge - merge branch, with depth (unshallow needed)",
@@ -391,7 +392,11 @@ func Test_checkoutState(t *testing.T) {
 			// if !reflect.DeepEqual(mockRunner.Cmds(), tt.wantCmds) {
 			// 	t.Errorf("checkoutState().cmds =\n%v, want\n%v", mockRunner.Cmds(), tt.wantCmds)
 			// }
-			require.Equal(t, tt.wantErr, got)
+			if tt.wantErrType != nil {
+				require.IsType(t, tt.wantErrType, got)
+			} else {
+				require.Equal(t, tt.wantErr, got)
+			}
 			require.Equal(t, tt.wantCmds, mockRunner.Cmds())
 		})
 	}
