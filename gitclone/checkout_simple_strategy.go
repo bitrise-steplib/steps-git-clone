@@ -8,7 +8,7 @@ import (
 	"github.com/bitrise-io/go-utils/command/git"
 )
 
-type checkoutMethod interface {
+type checkoutStrategy interface {
 	Validate() error
 	Do(gitCmd git.Git) *step.Error
 }
@@ -51,7 +51,7 @@ func (c checkoutCommit) Do(gitCmd git.Git) *step.Error {
 	// Fetch then checkout
 	// No branch specified for fetch
 	if err := fetch(gitCmd, c.FetchTraits, nil, func(fetchRetry fetchRetry) *step.Error {
-		return checkoutOnly(gitCmd, checkoutArg{Arg: c.Commit}, fetchRetry)
+		return checkoutOnly(gitCmd, checkoutArg{Arg: c.Commit}, &fetchRetry)
 	}); err != nil {
 		return err
 	}
@@ -80,15 +80,8 @@ func (c checkoutBranch) Validate() error {
 }
 
 func (c checkoutBranch) Do(gitCmd git.Git) *step.Error {
-	branchRef := branchRefPrefix + c.Branch
-	if err := fetch(gitCmd, c.FetchTraits, newOriginFetchRef(branchRef), func(fetchRetry fetchRetry) *step.Error {
-		return checkoutOnly(gitCmd, checkoutArg{Arg: c.Branch, IsBranch: true}, fetchRetry)
-	}); err != nil {
-		return err
-	}
-
-	// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
-	if err := mergeBranch(gitCmd, c.Branch); err != nil {
+	branchRef := *newOriginFetchRef(branchRefPrefix + c.Branch)
+	if err := fetchInitialBranch(gitCmd, branchRef, c.FetchTraits); err != nil {
 		return err
 	}
 
@@ -123,7 +116,7 @@ func (c checkoutTag) Do(gitCmd git.Git) *step.Error {
 	}
 
 	if err := fetch(gitCmd, c.FetchTraits, branchRef, func(fetchRetry fetchRetry) *step.Error {
-		return checkoutOnly(gitCmd, checkoutArg{Arg: c.Tag}, fetchRetry)
+		return checkoutOnly(gitCmd, checkoutArg{Arg: c.Tag}, &fetchRetry)
 	}); err != nil {
 		return err
 	}

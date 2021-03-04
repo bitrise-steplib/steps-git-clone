@@ -38,18 +38,6 @@ type fetchRetry struct {
 	didUnshallow bool
 }
 
-func updateSubmodules(gitCmd git.Git) *step.Error {
-	if err := runner.Run(gitCmd.SubmoduleUpdate()); err != nil {
-		return newStepError(
-			updateSubmodelFailedTag,
-			fmt.Errorf("submodule update: %v", err),
-			"Updating submodules has failed",
-		)
-	}
-
-	return nil
-}
-
 func fetch(gitCmd git.Git, traits fetchTraits, ref *fetchRef, callback func(fetchRetry) *step.Error) *step.Error {
 	var opts []string
 	if traits.Depth != 0 {
@@ -107,9 +95,9 @@ type checkoutArg struct {
 	IsBranch bool
 }
 
-func checkoutOnly(gitCmd git.Git, arg checkoutArg, fetchRetry fetchRetry) *step.Error {
+func checkoutOnly(gitCmd git.Git, arg checkoutArg, fetchRetry *fetchRetry) *step.Error {
 	if err := runner.Run(gitCmd.Checkout(arg.Arg)); err != nil {
-		if fetchRetry.didUnshallow {
+		if fetchRetry != nil && fetchRetry.didUnshallow {
 			return newStepError(
 				"checkout_unshallow_failed",
 				fmt.Errorf("checkout failed (%s): %v", arg.Arg, err),
@@ -133,7 +121,18 @@ func checkoutOnly(gitCmd git.Git, arg checkoutArg, fetchRetry fetchRetry) *step.
 	return nil
 }
 
-func mergeBranch(gitCmd git.Git, branch string) *step.Error {
+func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchTraits) *step.Error {
+	branch := strings.TrimPrefix(ref.Ref, branchRefPrefix)
+	// Fetch then checkout
+	if err := fetch(gitCmd, fetchTraits, &ref, nil); err != nil {
+		return err
+	}
+
+	if err := checkoutOnly(gitCmd, checkoutArg{Arg: branch, IsBranch: true}, nil); err != nil {
+		return err
+	}
+
+	// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
 	if err := runner.Run(gitCmd.Merge("origin/" + branch)); err != nil {
 		return newStepError(
 			"update_branch_failed",
@@ -151,6 +150,18 @@ func mergeCommit(gitCmd git.Git, commit string) *step.Error {
 			"merge_failed",
 			fmt.Errorf("merge failed %q: %v", commit, err),
 			"Merge branch failed",
+		)
+	}
+
+	return nil
+}
+
+func updateSubmodules(gitCmd git.Git) *step.Error {
+	if err := runner.Run(gitCmd.SubmoduleUpdate()); err != nil {
+		return newStepError(
+			updateSubmodelFailedTag,
+			fmt.Errorf("submodule update: %v", err),
+			"Updating submodules has failed",
 		)
 	}
 

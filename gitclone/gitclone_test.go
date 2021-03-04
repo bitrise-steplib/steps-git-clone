@@ -312,7 +312,7 @@ var testCases = [...]struct {
 		},
 		wantErr: newStepErrorWithBranchRecommendations(
 			fetchFailedTag,
-			fmt.Errorf("fetch failed, error: %v", errors.New(rawCmdError)),
+			fmt.Errorf("fetch failed: %v", errors.New(rawCmdError)),
 			"Fetching repository has failed",
 			"fake",
 			[]string{"master"},

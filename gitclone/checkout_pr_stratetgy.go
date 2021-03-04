@@ -35,15 +35,9 @@ func (c checkoutPRManualMerge) Validate() error {
 }
 
 func (c checkoutPRManualMerge) Do(gitCmd git.Git) *step.Error {
-	destBranchRef := newOriginFetchRef(branchRefPrefix + c.BranchDest)
-	if err := fetch(gitCmd, c.fetchTraits, destBranchRef, nil); err != nil {
+	destBranchRef := *newOriginFetchRef(branchRefPrefix + c.BranchDest)
+	if err := fetchInitialBranch(gitCmd, destBranchRef, c.fetchTraits); err != nil {
 		return err
-	}
-	if err := checkoutOnly(gitCmd, checkoutArg{Arg: c.BranchDest}, fetchRetry{}); err != nil {
-		return err
-	}
-	if err := mergeBranch(gitCmd, c.BranchDest); err != nil {
-		return nil
 	}
 
 	commitHash, err := runner.RunForOutput(gitCmd.Log("%H"))
