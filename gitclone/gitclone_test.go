@@ -3,12 +3,12 @@ package gitclone
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/gitcloneparams"
-	"github.com/stretchr/testify/require"
 )
 
 const always = 9999
@@ -144,13 +144,13 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - manual merge: branch and commit (ignore depth)",
 		cfg: Config{
-			Commit:        "76a934ae",
-			Branch:        "test/commit-messages",
-			PRMergeBranch: "pull/7/merge",
-			BranchDest:    "master",
-			PRID:          7,
-			CloneDepth:    1,
-			ManualMerge:   true,
+			Commit: "76a934ae",
+			Branch: "test/commit-messages",
+			// PRMergeBranch: "pull/7/merge",
+			BranchDest: "master",
+			// PRID:          7,
+			CloneDepth:  1,
+			ManualMerge: true,
 		},
 		wantErr: nil,
 		wantCmds: []string{
@@ -385,19 +385,21 @@ func Test_checkoutState(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRunner := newMockRunner(tt.cmdOutputs)
 			runner = mockRunner
-			got := checkoutState2(git.Git{}, tt.cfg)
-			// if !reflect.DeepEqual(got, tt.wantErr) {
-			// 	t.Errorf("checkoutState().err = (%#v), want %#v", got, tt.wantErr)
-			// }
-			// if !reflect.DeepEqual(mockRunner.Cmds(), tt.wantCmds) {
-			// 	t.Errorf("checkoutState().cmds =\n%v, want\n%v", mockRunner.Cmds(), tt.wantCmds)
-			// }
+			gotErr := checkoutState(git.Git{}, tt.cfg)
+
 			if tt.wantErrType != nil {
-				require.IsType(t, tt.wantErrType, got)
+				if reflect.TypeOf(tt.wantErrType) != reflect.TypeOf(gotErr) {
+					t.Errorf("checkoutState().err type = (%T), want (%T)", gotErr, tt.wantErrType)
+				}
 			} else {
-				require.Equal(t, tt.wantErr, got)
+				if !reflect.DeepEqual(gotErr, tt.wantErr) {
+					t.Errorf("checkoutState().err = (%#v), want %#v", gotErr, tt.wantErr)
+				}
 			}
-			require.Equal(t, tt.wantCmds, mockRunner.Cmds())
+
+			if !reflect.DeepEqual(mockRunner.Cmds(), tt.wantCmds) {
+				t.Errorf("checkoutState().cmds =\n%v, want\n%v", mockRunner.Cmds(), tt.wantCmds)
+			}
 		})
 	}
 }
