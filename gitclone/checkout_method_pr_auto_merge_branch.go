@@ -17,7 +17,7 @@ type checkoutPRMergeBranch struct {
 	params gitcloneparams.PRMergeBranchParams
 }
 
-func (c checkoutPRMergeBranch) Do(gitCmd git.Git, fetchOpts fetchOptions) error {
+func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions) error {
 	// Check out initial branch (fetchInitialBranch part1)
 	// `git "fetch" "origin" "refs/heads/master"`
 	baseBranchRef := newOriginFetchRef(branchRefPrefix + c.params.BaseBranch)

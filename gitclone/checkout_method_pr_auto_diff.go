@@ -12,7 +12,7 @@ type checkoutPRDiffFile struct {
 	baseBranch, patch string
 }
 
-func (c checkoutPRDiffFile) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
+func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions) error {
 	baseBranchRef := newOriginFetchRef(branchRefPrefix + c.baseBranch)
 	if err := fetch(gitCmd, fetchOptions, baseBranchRef); err != nil {
 		return err

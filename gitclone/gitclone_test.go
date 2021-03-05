@@ -26,7 +26,6 @@ var testCases = [...]struct {
 	{
 		name:     "No checkout args",
 		cfg:      Config{},
-		wantErr:  nil,
 		wantCmds: nil,
 	},
 	{
@@ -34,7 +33,6 @@ var testCases = [...]struct {
 		cfg: Config{
 			Commit: "76a934a",
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch"`,
 			`git "checkout" "76a934a"`,
@@ -46,7 +44,6 @@ var testCases = [...]struct {
 			Commit: "76a934ae",
 			Branch: "hcnarb",
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch"`,
 			`git "checkout" "76a934ae"`,
@@ -60,7 +57,6 @@ var testCases = [...]struct {
 		cmdOutputs: map[string]commandOutput{
 			`git "fetch"`: {failForCalls: 1},
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch"`,
 			`git "fetch"`,
@@ -72,7 +68,6 @@ var testCases = [...]struct {
 		cfg: Config{
 			Branch: "hcnarb",
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "hcnarb"`,
@@ -84,7 +79,6 @@ var testCases = [...]struct {
 		cfg: Config{
 			Tag: "gat",
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "--tags"`,
 			`git "checkout" "gat"`,
@@ -96,7 +90,6 @@ var testCases = [...]struct {
 			Tag:    "gat",
 			Branch: "hcnarb",
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "--tags" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "gat"`,
@@ -108,7 +101,6 @@ var testCases = [...]struct {
 			Tag:    "gat",
 			Branch: "gat",
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "--tags" "origin" "refs/heads/gat"`,
 			`git "checkout" "gat"`,
@@ -121,7 +113,6 @@ var testCases = [...]struct {
 			Tag:    "gat",
 			Branch: "hcnarb",
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "--tags"`,
 			`git "checkout" "76a934ae"`,
@@ -133,7 +124,6 @@ var testCases = [...]struct {
 			Commit: "76a934ae",
 			Tag:    "gat",
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "--tags"`,
 			`git "checkout" "76a934ae"`,
@@ -144,13 +134,13 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - manual merge: branch and commit (ignore depth)",
 		cfg: Config{
-			Commit: "76a934ae",
-			Branch: "test/commit-messages",
-			// PRMergeBranch: "pull/7/merge",
-			BranchDest: "master",
-			// PRID:          7,
-			CloneDepth:  1,
-			ManualMerge: true,
+			Commit:        "76a934ae",
+			Branch:        "test/commit-messages",
+			PRMergeBranch: "pull/7/merge",
+			BranchDest:    "master",
+			PRID:          7,
+			CloneDepth:    1,
+			ManualMerge:   true,
 		},
 		wantErr: nil,
 		wantCmds: []string{
@@ -164,6 +154,20 @@ var testCases = [...]struct {
 		},
 	},
 	{
+		name: "PR - no fork - manual merge: branch and commit (Checked out as commit, why?)",
+		cfg: Config{
+			Commit:      "76a934ae",
+			Branch:      "test/commit-messages",
+			BranchDest:  "master",
+			CloneDepth:  1,
+			ManualMerge: true,
+		},
+		wantCmds: []string{
+			`git "fetch" "--depth=1"`,
+			`git "checkout" "76a934ae"`,
+		},
+	},
+	{
 		name: "PR - fork - manual merge",
 		cfg: Config{
 			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
@@ -173,7 +177,6 @@ var testCases = [...]struct {
 			Commit:          "76a934ae",
 			ManualMerge:     true,
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
@@ -197,7 +200,6 @@ var testCases = [...]struct {
 			Commit:          "76a934ae",
 			ManualMerge:     true,
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
@@ -216,7 +218,6 @@ var testCases = [...]struct {
 			BranchDest:    "master",
 			PRMergeBranch: "pull/5/merge",
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/master"`,
 			`git "fetch" "origin" "refs/pull/5/head:pull/5"`,
@@ -232,7 +233,6 @@ var testCases = [...]struct {
 			BranchDest:    "master",
 			PRMergeBranch: "pr_test",
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/master"`,
 			`git "fetch" "origin" "refs/heads/pr_test:pr_test"`,
@@ -254,7 +254,6 @@ var testCases = [...]struct {
 			Commit:          "76a934ae",
 			ManualMerge:     true,
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/master"`,
 			`git "fetch" "origin" "refs/pull/7/head:pull/7"`,
@@ -329,7 +328,6 @@ var testCases = [...]struct {
 		cmdOutputs: map[string]commandOutput{
 			`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`: {failForCalls: 1},
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "--depth=1"`,
 			`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
@@ -360,7 +358,6 @@ var testCases = [...]struct {
 		cmdOutputs: map[string]commandOutput{
 			`git "merge" "pull/5"`: {failForCalls: 1},
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
 			`git "fetch" "origin" "refs/pull/5/head:pull/5"`,

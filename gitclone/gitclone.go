@@ -74,7 +74,7 @@ func checkoutState(gitCmd git.Git, cfg Config) error {
 	}
 	log.Debugf("Checkout strategy used: %T", checkoutStrategy)
 
-	if err := checkoutStrategy.Do(gitCmd, fetchOpts); err != nil {
+	if err := checkoutStrategy.do(gitCmd, fetchOpts); err != nil {
 		log.Infof("Checkout strategy used: %T", checkoutStrategy)
 		return err
 	}

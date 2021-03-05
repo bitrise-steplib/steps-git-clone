@@ -14,7 +14,7 @@ type checkoutPRManualMerge struct {
 	params gitcloneparams.PRManualMergeParams
 }
 
-func (c checkoutPRManualMerge) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
+func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions) error {
 	// Fetch and checkout base (target) branch
 	baseBranchRef := *newOriginFetchRef(branchRefPrefix + c.params.BaseBranch)
 	if err := fetchInitialBranch(gitCmd, baseBranchRef, fetchOptions); err != nil {
@@ -51,7 +51,7 @@ type checkoutForkPRManualMerge struct {
 	params gitcloneparams.ForkPRManualMergeParams
 }
 
-func (c checkoutForkPRManualMerge) Do(gitCmd git.Git, fetchOptions fetchOptions) error {
+func (c checkoutForkPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions) error {
 	// Fetch and checkout base branch
 	baseBranchRef := *newOriginFetchRef(branchRefPrefix + c.params.BaseBranch)
 	if err := fetchInitialBranch(gitCmd, baseBranchRef, fetchOptions); err != nil {
