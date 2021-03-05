@@ -1,0 +1,42 @@
+# github.com/bitrise-io/bitrise-init v0.0.0-20201117094539-a984f01dd477
+## explicit
+github.com/bitrise-io/bitrise-init/errormapper
+github.com/bitrise-io/bitrise-init/step
+# github.com/bitrise-io/envman v0.0.0-20200512105748-919e33f391ee
+## explicit
+github.com/bitrise-io/envman/envman
+github.com/bitrise-io/envman/models
+# github.com/bitrise-io/go-steputils v0.0.0-20201016102104-03ae3a6ded35
+## explicit
+github.com/bitrise-io/go-steputils/stepconf
+github.com/bitrise-io/go-steputils/tools
+# github.com/bitrise-io/go-utils v0.0.0-20201019131314-6cc2aa4d248a
+## explicit
+github.com/bitrise-io/go-utils/colorstring
+github.com/bitrise-io/go-utils/command
+github.com/bitrise-io/go-utils/command/git
+github.com/bitrise-io/go-utils/errorutil
+github.com/bitrise-io/go-utils/fileutil
+github.com/bitrise-io/go-utils/log
+github.com/bitrise-io/go-utils/parseutil
+github.com/bitrise-io/go-utils/pathutil
+github.com/bitrise-io/go-utils/pointers
+github.com/bitrise-io/go-utils/retry
+github.com/bitrise-io/go-utils/sliceutil
+# github.com/bitrise-io/goinp v0.0.0-20190611131639-bd18a8681e27
+## explicit
+github.com/bitrise-io/goinp/goinp
+# golang.org/x/crypto v0.0.0-20201116153603-4be66e5b6582
+## explicit
+golang.org/x/crypto/ssh/terminal
+# golang.org/x/sys v0.0.0-20201116194326-cc9327a14d48
+## explicit
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/plan9
+golang.org/x/sys/unix
+golang.org/x/sys/windows
+# golang.org/x/term v0.0.0-20201113234701-d7a72108b828
+golang.org/x/term
+# gopkg.in/yaml.v2 v2.3.0
+## explicit
+gopkg.in/yaml.v2
