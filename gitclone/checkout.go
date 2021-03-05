@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/bitrise-io/go-utils/command/git"
-	"github.com/bitrise-steplib/steps-git-clone/gitclone/gitcloneparams"
 )
 
 type checkoutStrategy interface {
@@ -20,7 +19,7 @@ func selectCheckoutStrategy(cfg Config) (checkoutStrategy, fetchOptions, error) 
 	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
 	if !isPR {
 		if cfg.Commit != "" {
-			params, err := gitcloneparams.NewCommitParams(cfg.Commit)
+			params, err := NewCommitParams(cfg.Commit)
 			if err != nil {
 				return nil, fetchOptions{}, err
 			}
@@ -37,7 +36,7 @@ func selectCheckoutStrategy(cfg Config) (checkoutStrategy, fetchOptions, error) 
 			if cfg.Branch != "" {
 				branch = &cfg.Branch
 			}
-			params, err := gitcloneparams.NewTagParams(cfg.Tag, branch)
+			params, err := NewTagParams(cfg.Tag, branch)
 			if err != nil {
 				return nil, fetchOptions{}, err
 			}
@@ -53,7 +52,7 @@ func selectCheckoutStrategy(cfg Config) (checkoutStrategy, fetchOptions, error) 
 		}
 
 		if cfg.Branch != "" {
-			params, err := gitcloneparams.NewBranchParams(cfg.Branch, nil)
+			params, err := NewBranchParams(cfg.Branch, nil)
 			if err != nil {
 				return nil, fetchOptions{}, err
 			}
@@ -74,7 +73,7 @@ func selectCheckoutStrategy(cfg Config) (checkoutStrategy, fetchOptions, error) 
 	if !cfg.ManualMerge || isPrivateFork { // Auto merge
 		// Merge branch
 		if cfg.PRMergeBranch != "" {
-			params, err := gitcloneparams.NewPRMergeBranchParams(cfg.BranchDest, cfg.PRMergeBranch)
+			params, err := NewPRMergeBranchParams(cfg.BranchDest, cfg.PRMergeBranch)
 			if err != nil {
 				return nil, fetchOptions{}, err
 			}
@@ -109,7 +108,7 @@ func selectCheckoutStrategy(cfg Config) (checkoutStrategy, fetchOptions, error) 
 	// ** PR/MR with manual merge
 	// Clone Depth is not set for manual merge yet
 	if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
-		params, err := gitcloneparams.NewForkPRManualMergeParams(cfg.Branch, cfg.PRRepositoryURL, cfg.BranchDest)
+		params, err := NewForkPRManualMergeParams(cfg.Branch, cfg.PRRepositoryURL, cfg.BranchDest)
 		if err != nil {
 			return nil, fetchOptions{}, err
 		}
@@ -122,7 +121,7 @@ func selectCheckoutStrategy(cfg Config) (checkoutStrategy, fetchOptions, error) 
 
 	}
 
-	params, err := gitcloneparams.NewPRManualMergeParams(cfg.Branch, cfg.Commit, cfg.BranchDest)
+	params, err := NewPRManualMergeParams(cfg.Branch, cfg.Commit, cfg.BranchDest)
 	if err != nil {
 		return nil, fetchOptions{}, err
 	}

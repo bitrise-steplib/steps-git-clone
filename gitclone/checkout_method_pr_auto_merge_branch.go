@@ -5,7 +5,6 @@ import (
 
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-steplib/steps-git-clone/gitclone/gitcloneparams"
 )
 
 //
@@ -14,7 +13,7 @@ type checkoutPRMergeBranch struct {
 	// baseBranch string
 	// // Merge branch contains the changes already merged
 	// mergeBranch string
-	params gitcloneparams.PRMergeBranchParams
+	params PRMergeBranchParams
 }
 
 func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions) error {

@@ -8,7 +8,6 @@ import (
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
-	"github.com/bitrise-steplib/steps-git-clone/gitclone/gitcloneparams"
 )
 
 const always = 9999
@@ -313,7 +312,7 @@ var testCases = [...]struct {
 			PRID:          7,
 			CloneDepth:    1,
 		},
-		wantErrType: gitcloneparams.ValidationError{},
+		wantErrType: ParameterValidationError{},
 		wantCmds:    nil,
 	},
 
@@ -345,7 +344,7 @@ var testCases = [...]struct {
 			BranchDest:    "master",
 			ManualMerge:   true,
 		},
-		wantErrType: gitcloneparams.ValidationError{},
+		wantErrType: ParameterValidationError{},
 		wantCmds:    nil,
 	},
 	{

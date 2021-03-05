@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
-	"github.com/bitrise-steplib/steps-git-clone/gitclone/gitcloneparams"
 )
 
 //
@@ -19,7 +18,7 @@ func (c checkoutNone) do(gitCmd git.Git, fetchOptions fetchOptions) error {
 //
 // checkoutCommit
 type checkoutCommit struct {
-	params gitcloneparams.CommitParams
+	params CommitParams
 }
 
 func (c checkoutCommit) Validate() error {
@@ -47,7 +46,7 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions) error {
 //
 // checkoutBranch
 type checkoutBranch struct {
-	params gitcloneparams.BranchParams
+	params BranchParams
 }
 
 func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions) error {
@@ -62,7 +61,7 @@ func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions) error {
 //
 // checkoutTag
 type checkoutTag struct {
-	params gitcloneparams.TagParams
+	params TagParams
 }
 
 func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions) error {

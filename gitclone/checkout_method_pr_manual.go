@@ -5,13 +5,12 @@ import (
 
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-steplib/steps-git-clone/gitclone/gitcloneparams"
 )
 
 //
 // checkoutPRManualMerge
 type checkoutPRManualMerge struct {
-	params gitcloneparams.PRManualMergeParams
+	params PRManualMergeParams
 }
 
 func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions) error {
@@ -48,7 +47,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions) err
 //
 // checkoutForkPRManualMerge
 type checkoutForkPRManualMerge struct {
-	params gitcloneparams.ForkPRManualMergeParams
+	params ForkPRManualMergeParams
 }
 
 func (c checkoutForkPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions) error {
