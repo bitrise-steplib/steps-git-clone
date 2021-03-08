@@ -76,9 +76,9 @@ func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) error {
 		return fmt.Errorf("failed to select a checkout stategy")
 	}
 
-	log.Debugf("Checkout strategy used: %T", checkoutMethod)
+	log.Debugf("Checkout strategy used: %T", checkoutStrategy)
 	if err := checkoutStrategy.do(gitCmd, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
-		log.Infof("Checkout strategy used: %T", checkoutMethod)
+		log.Infof("Checkout strategy used: %T", checkoutStrategy)
 		return err
 	}
 
