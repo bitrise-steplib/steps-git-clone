@@ -59,7 +59,7 @@ func fetch(gitCmd git.Git, remote string, ref *string, traits fetchOptions) erro
 func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error {
 	if cErr := runner.Run(gitCmd.Checkout(arg)); cErr != nil {
 		if retry != nil {
-			log.Warnf("%v", cErr)
+			log.Warnf("Checkout failed (%s): %v", arg, cErr)
 			if err := retry.do(gitCmd); err != nil {
 				return err
 			}
@@ -106,7 +106,7 @@ func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTr
 func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error {
 	if mErr := runner.Run(gitCmd.Merge(arg)); mErr != nil {
 		if retry != nil {
-			log.Warnf("%v", mErr)
+			log.Warnf("Merge failed (%s): %v", arg, mErr)
 			if err := retry.do(gitCmd); err != nil {
 				return err
 			}
