@@ -16,6 +16,7 @@ const rawCmdError = "dummy_cmd_error"
 var testCases = [...]struct {
 	name        string
 	cfg         Config
+	patchSource patchSource
 	cmdOutputs  map[string]commandOutput
 	wantErr     error
 	wantErrType error
@@ -263,7 +264,7 @@ var testCases = [...]struct {
 		},
 	},
 	{
-		name: "PR - fork - auto merge: private fork overrides manual merge flag, Fails",
+		name: "PR - fork - auto merge - diff file: private fork overrides manual merge flag, Fails",
 		cfg: Config{
 			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
 			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
@@ -272,10 +273,27 @@ var testCases = [...]struct {
 			Commit:          "76a934ae",
 			ManualMerge:     true,
 		},
-		wantErr: fmt.Errorf("%s: %s",
-			"merging PR (automatic) failed, there is no Pull Request branch and can't download diff file",
-			`Get "/diff.txt?api_token=": unsupported protocol scheme ""`),
-		wantCmds: nil,
+		patchSource: MockPatchSource{"", errors.New(rawCmdError)},
+		wantErr:     fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and could not download diff file: %s", rawCmdError),
+		wantCmds:    nil,
+	},
+	{
+		name: "PR - fork - auto merge - diff file: private fork overrides manual merge flag",
+		cfg: Config{
+			RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
+			Branch:        "test/commit-messages",
+			BranchDest:    "master",
+			PRID:          7,
+			ManualMerge:   false,
+		},
+		patchSource: MockPatchSource{"diff_path", nil},
+		wantErr:     nil,
+		wantCmds: []string{
+			`git "fetch" "origin" "refs/heads/master"`,
+			`git "checkout" "master"`,
+			`git "apply" "--index" "diff_path"`,
+			`git "checkout" "--detach"`,
+		},
 	},
 
 	// ** Errors **
@@ -381,7 +399,7 @@ func Test_checkoutState(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRunner := newMockRunner(tt.cmdOutputs)
 			runner = mockRunner
-			gotErr := checkoutState(git.Git{}, tt.cfg)
+			gotErr := checkoutState(git.Git{}, tt.cfg, tt.patchSource)
 
 			if tt.wantErrType != nil {
 				if reflect.TypeOf(tt.wantErrType) != reflect.TypeOf(gotErr) {
@@ -458,4 +476,13 @@ func (r *MockRunner) RunWithRetry(c *command.Model) error {
 	}
 
 	return err
+}
+
+type MockPatchSource struct {
+	diffFilePath string
+	err          error
+}
+
+func (m MockPatchSource) getDiffPath(_, _ string, _ int) (string, error) {
+	return m.diffFilePath, m.err
 }

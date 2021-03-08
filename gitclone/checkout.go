@@ -62,7 +62,7 @@ type checkoutStrategy interface {
 // | branch      |  _     |  _  |  X !   |  X       |  X       |  X        |          |
 // | branchDest  |        |     |        |  X       |  X       |           |  X       |
 // | PRRepoURL   |        |     |        |  ?   !   |  X !     |    !      |    !     |
-// | PRID        |        |     |        |          |          |           |  X       |
+// | PRID        |        |     |        |          |          |           |    !     |
 // | mergeBranch |        |     |        |          |          |  X !      |          |
 // |==================================================================================|
 
@@ -103,7 +103,7 @@ func selectCheckoutMethod(cfg Config) CheckoutMethod {
 	return CheckoutPRManualMergeMethod
 }
 
-func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch string) (checkoutStrategy, error) {
+func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch patchSource) (checkoutStrategy, error) {
 	switch checkoutMethod {
 	case CheckoutNoneMethod:
 		{
@@ -159,9 +159,14 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch str
 		}
 	case CheckoutPRDiffFileMethod:
 		{
+			patchFile, err := patch.getDiffPath(cfg.BuildURL, cfg.BuildAPIToken, cfg.PRID)
+			if err != nil {
+				return nil, fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and could not download diff file: %v", err)
+			}
+
 			return checkoutPRDiffFile{
 				baseBranch: cfg.BranchDest,
-				patch:      patch,
+				patchFile:  patchFile,
 			}, nil
 		}
 	case CheckoutForkPRManualMergeMethod:

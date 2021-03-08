@@ -29,7 +29,6 @@ func NewPRMergeBranchParams(baseBranch, mergeBranch string) (*PRMergeBranchParam
 	}, nil
 }
 
-//
 // checkoutPRMergeBranch
 type checkoutPRMergeBranch struct {
 	params PRMergeBranchParams

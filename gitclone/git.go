@@ -2,14 +2,11 @@ package gitclone
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/sliceutil"
 )
@@ -69,42 +66,6 @@ func getCheckoutArg(commit, tag, branch string) string {
 	default:
 		return ""
 	}
-}
-
-func getDiffFile(buildURL, apiToken string, prID int) (string, error) {
-	url := fmt.Sprintf("%s/diff.txt?api_token=%s", buildURL, apiToken)
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Warnf("Failed to close response body, error: %s", err)
-		}
-	}()
-
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("Can't download diff file, HTTP status code: %d", resp.StatusCode)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	diffFile, err := ioutil.TempFile("", fmt.Sprintf("%d.diff", prID))
-	if err != nil {
-		return "", err
-	}
-
-	if _, err := diffFile.Write(body); err != nil {
-		return "", err
-	}
-	if err := diffFile.Close(); err != nil {
-		return "", err
-	}
-
-	return diffFile.Name(), nil
 }
 
 func isFork(repoURL, prRepoURL string) bool {

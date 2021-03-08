@@ -8,6 +8,7 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
+//
 // PRManualMergeParams are parameters to check out a Merge Request if no merge branch or diff file is avavilable
 type PRManualMergeParams struct {
 	// Source
@@ -35,7 +36,6 @@ func NewPRManualMergeParams(headBranch, commit, baseBranch string) (*PRManualMer
 	}, nil
 }
 
-//
 // checkoutPRManualMerge
 type checkoutPRManualMerge struct {
 	params PRManualMergeParams
@@ -67,6 +67,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 	return detachHead(gitCmd)
 }
 
+//
 // ForkPRManualMergeParams are parameters to check out a Pull Request if no merge branch or diff file is available
 type ForkPRManualMergeParams struct {
 	// Source
@@ -94,7 +95,6 @@ func NewForkPRManualMergeParams(headBranch, forkRepoURL, baseBranch string) (*Fo
 	}, nil
 }
 
-//
 // checkoutForkPRManualMerge
 type checkoutForkPRManualMerge struct {
 	params ForkPRManualMergeParams

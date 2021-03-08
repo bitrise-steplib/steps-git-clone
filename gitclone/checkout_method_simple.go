@@ -15,6 +15,7 @@ func (c checkoutNone) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fal
 	return nil
 }
 
+//
 // CommitParams are parameters to check out a given commit (In addition to the repository URL)
 type CommitParams struct {
 	Commit string
@@ -31,7 +32,6 @@ func NewCommitParams(commit string) (*CommitParams, error) {
 	}, nil
 }
 
-//
 // checkoutCommit
 type checkoutCommit struct {
 	params CommitParams
@@ -59,6 +59,7 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 	return nil
 }
 
+//
 // BranchParams are parameters to check out a given branch (In addition to the repository URL)
 type BranchParams struct {
 	Branch string
@@ -80,7 +81,6 @@ func NewBranchParams(branch string, commit *string) (*BranchParams, error) {
 	}, nil
 }
 
-//
 // checkoutBranch
 type checkoutBranch struct {
 	params BranchParams
@@ -95,6 +95,7 @@ func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallback
 	return nil
 }
 
+//
 // TagParams are parameters to checko out a given tag
 type TagParams struct {
 	Tag    string
@@ -116,7 +117,6 @@ func NewTagParams(tag string, branch *string) (*TagParams, error) {
 	}, nil
 }
 
-//
 // checkoutTag
 type checkoutTag struct {
 	params TagParams
