@@ -47,8 +47,24 @@ func NewParameterValidationError(msg string) error {
 
 // checkoutStrategy is the interface an actual checkout strategy implements
 type checkoutStrategy interface {
-	do(gitCmd git.Git, fetchOptions fetchOptions) error
+	do(gitCmd git.Git, fetchOptions fetchOptions, fallbacks fallbacks) error
 }
+
+// X: required parameter
+// !: used to identify checkout strategy
+// _: optional parameter
+// ?: manual PR checkout method uses PRRepoURL to identify if it should be used,
+//    branchDest is a better candidate
+// |==================================================================================|
+// | params\strat| commit | tag | branch | manualMR | manualPR | autoMerge | autoDiff |
+// | commit      |  X  !  |     |        |  X       |          |           |          |
+// | tag         |        |  X !|        |          |          |           |          |
+// | branch      |  _     |  _  |  X !   |  X       |  X       |  X        |          |
+// | branchDest  |        |     |        |  X       |  X       |           |  X       |
+// | PRRepoURL   |        |     |        |  ?   !   |  X !     |  _ !      |    !     |
+// | PRID        |        |     |        |          |          |           |  X       |
+// | mergeBranch |        |     |        |          |          |  X !      |          |
+// |==================================================================================|
 
 func selectCheckoutMethod(cfg Config) CheckoutMethod {
 	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
@@ -177,14 +193,12 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch str
 }
 
 func selectfetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, isTag bool) fetchOptions {
-	defaultFetchTraits := fetchOptions{
-		depth: cloneDepth,
-		tags:  isTag,
-	}
-
 	switch checkoutStrategy {
 	case CheckoutCommitMethod, CheckoutBranchMethod:
-		return defaultFetchTraits
+		return fetchOptions{
+			depth: cloneDepth,
+			tags:  isTag,
+		}
 	case CheckoutTagMethod:
 		return fetchOptions{
 			depth: cloneDepth,
@@ -200,5 +214,36 @@ func selectfetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, isTag b
 		return fetchOptions{}
 	default:
 		return fetchOptions{}
+	}
+}
+
+func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fallbacks {
+	switch checkoutStrategy {
+	// ToDo: fallback not needed for branch and tag checkout
+	case CheckoutCommitMethod, CheckoutTagMethod, CheckoutBranchMethod:
+		{
+			if !fetchOpts.IsFullDepth() {
+				return fallbacks{checkout: simpleUnshallow{}}
+			}
+
+			return fallbacks{}
+		}
+	case CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod:
+		return fallbacks{}
+	case CheckoutPRMergeBranchMethod:
+		{
+			if !fetchOpts.IsFullDepth() {
+				return fallbacks{
+					checkout: nil,
+					merge:    resetUnshallow{},
+				}
+			}
+
+			return fallbacks{}
+		}
+	case CheckoutPRDiffFileMethod:
+		return fallbacks{}
+	default:
+		return fallbacks{}
 	}
 }

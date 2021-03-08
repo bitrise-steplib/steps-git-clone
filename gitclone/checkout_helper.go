@@ -6,8 +6,11 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
-	"github.com/bitrise-io/go-utils/log"
 )
+
+type fallbacks struct {
+	checkout, merge fallbackRetry
+}
 
 type fetchOptions struct {
 	// Fetch tags ("--tags")
@@ -31,12 +34,6 @@ func newOriginFetchRef(ref string) *fetchRef {
 		remote: defaultRemoteName,
 		ref:    ref,
 	}
-}
-
-var simpleUnshallowFunc func(git.Git, error) error = func(gitCmd git.Git, perr error) error {
-	log.Warnf("Checkout failed, error: %v\nUnshallow...", perr)
-
-	return runner.RunWithRetry(gitCmd.Fetch("--unshallow"))
 }
 
 func fetch(gitCmd git.Git, traits fetchOptions, ref *fetchRef) error {
@@ -75,17 +72,17 @@ type checkoutArg struct {
 	isBranch bool
 }
 
-func checkoutWithCustomRetry(gitCmd git.Git, arg checkoutArg, retryFunc func(git.Git, error) error) error {
+func checkoutWithCustomRetry(gitCmd git.Git, arg checkoutArg, retry fallbackRetry) error {
 	if cerr := runner.Run(gitCmd.Checkout(arg.arg)); cerr != nil {
-		if retryFunc != nil {
-			if err := retryFunc(gitCmd, cerr); err != nil {
+		if retry != nil {
+			if err := retry.do(gitCmd, cerr); err != nil {
 				return err
 			}
 
 			return runner.Run(gitCmd.Checkout(arg.arg))
 		}
 
-		return cerr
+		return fmt.Errorf("checkout failed (%s): %v", arg.arg, cerr)
 	}
 
 	return nil
@@ -102,7 +99,7 @@ func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchOptions) 
 		return handleCheckoutError(
 			listBranches(gitCmd),
 			checkoutFailedTag,
-			fmt.Errorf("checkout failed (%s): %v", branch, err),
+			err,
 			"Checkout has failed",
 			branch,
 		)
@@ -113,7 +110,7 @@ func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchOptions) 
 	if err := runner.Run(gitCmd.Merge(remoteBranch)); err != nil {
 		return newStepError(
 			"update_branch_failed",
-			fmt.Errorf("updating branch (merge) failed %q: %v", branch, err),
+			fmt.Errorf("updating branch (merge) failed %s: %v", branch, err),
 			"Updating branch failed",
 		)
 	}
@@ -121,17 +118,17 @@ func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchOptions) 
 	return nil
 }
 
-func mergeWithCustomRetry(gitCmd git.Git, arg string, retryFunc func(gitCmd git.Git, merr error) error) error {
+func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error {
 	if merr := runner.Run(gitCmd.Merge(arg)); merr != nil {
-		if retryFunc != nil {
-			if err := retryFunc(gitCmd, merr); err != nil {
+		if retry != nil {
+			if err := retry.do(gitCmd, merr); err != nil {
 				return err
 			}
 
 			return runner.Run(gitCmd.Merge(arg))
 		}
 
-		return fmt.Errorf("merge failed (%q): %v", arg, merr)
+		return fmt.Errorf("merge failed (%s): %v", arg, merr)
 	}
 
 	return nil
