@@ -2,12 +2,14 @@ package gitclone
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"net/url"
+	"path/filepath"
 	"strings"
 
+	"github.com/bitrise-io/go-steputils/input"
 	"github.com/bitrise-io/go-utils/command/git"
-	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-steplib/bitrise-step-export-universal-apk/filedownloader"
 )
 
 //
@@ -56,37 +58,16 @@ type patchSource interface {
 type defaultPatchSource struct{}
 
 func (defaultPatchSource) getDiffPath(buildURL, apiToken string) (string, error) {
-	url := fmt.Sprintf("%s/diff.txt?api_token=%s", buildURL, apiToken)
-	resp, err := http.Get(url)
+	url, err := url.Parse(buildURL)
 	if err != nil {
-		return "", err
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Warnf("Failed to close response body: %s", err)
-		}
-	}()
-
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("Can't download diff file, HTTP status code: %d", resp.StatusCode)
+		return "", fmt.Errorf("Could not parse diff file URL: %v", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
+	if url.Scheme == "file" {
+		return filepath.Join(buildURL, "diff.txt"), nil
 	}
 
-	diffFile, err := ioutil.TempFile("", "*.diff")
-	if err != nil {
-		return "", err
-	}
-
-	if _, err := diffFile.Write(body); err != nil {
-		return "", err
-	}
-	if err := diffFile.Close(); err != nil {
-		return "", err
-	}
-
-	return diffFile.Name(), nil
+	diffURL := fmt.Sprintf("%s/diff.txt?api_token=%s", buildURL, apiToken)
+	fileProvider := input.NewFileProvider(filedownloader.New(http.DefaultClient))
+	return fileProvider.LocalPath(diffURL)
 }
