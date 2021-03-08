@@ -64,7 +64,7 @@ func (defaultPatchSource) getDiffPath(buildURL, apiToken string) (string, error)
 	}
 
 	if url.Scheme == "file" {
-		return filepath.Join(buildURL, "diff.txt"), nil
+		return filepath.Join(url.Path, "diff.txt"), nil
 	}
 
 	diffURL := fmt.Sprintf("%s/diff.txt?api_token=%s", buildURL, apiToken)
