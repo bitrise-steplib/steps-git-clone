@@ -57,7 +57,7 @@ type patchSource interface {
 
 type defaultPatchSource struct{}
 
-func (_ defaultPatchSource) getDiffPath(buildURL, apiToken string, prID int) (string, error) {
+func (defaultPatchSource) getDiffPath(buildURL, apiToken string, prID int) (string, error) {
 	url := fmt.Sprintf("%s/diff.txt?api_token=%s", buildURL, apiToken)
 	resp, err := http.Get(url)
 	if err != nil {
