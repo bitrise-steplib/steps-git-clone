@@ -483,6 +483,6 @@ type MockPatchSource struct {
 	err          error
 }
 
-func (m MockPatchSource) getDiffPath(_, _ string, _ int) (string, error) {
+func (m MockPatchSource) getDiffPath(_, _ string) (string, error) {
 	return m.diffFilePath, m.err
 }

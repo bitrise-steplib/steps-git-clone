@@ -14,7 +14,6 @@ import (
 // PRDiffFileParams are parameters to check out a Merge/Pull Request if a diff file is available
 type PRDiffFileParams struct {
 	BaseBranch string
-	PRID       uint
 }
 
 // NewPRDiffFileParams validates and returns a new PRDiffFile
@@ -25,7 +24,6 @@ func NewPRDiffFileParams(baseBranch string, PRID uint) (*PRDiffFileParams, error
 
 	return &PRDiffFileParams{
 		BaseBranch: baseBranch,
-		PRID:       PRID,
 	}, nil
 }
 
@@ -52,12 +50,12 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 }
 
 type patchSource interface {
-	getDiffPath(buildURL, apiToken string, PRID int) (string, error)
+	getDiffPath(buildURL, apiToken string) (string, error)
 }
 
 type defaultPatchSource struct{}
 
-func (defaultPatchSource) getDiffPath(buildURL, apiToken string, prID int) (string, error) {
+func (defaultPatchSource) getDiffPath(buildURL, apiToken string) (string, error) {
 	url := fmt.Sprintf("%s/diff.txt?api_token=%s", buildURL, apiToken)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -78,7 +76,7 @@ func (defaultPatchSource) getDiffPath(buildURL, apiToken string, prID int) (stri
 		return "", err
 	}
 
-	diffFile, err := ioutil.TempFile("", fmt.Sprintf("%d.diff", prID))
+	diffFile, err := ioutil.TempFile("", "*.diff")
 	if err != nil {
 		return "", err
 	}

@@ -160,7 +160,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 		}
 	case CheckoutPRDiffFileMethod:
 		{
-			patchFile, err := patch.getDiffPath(cfg.BuildURL, cfg.BuildAPIToken, cfg.PRID)
+			patchFile, err := patch.getDiffPath(cfg.BuildURL, cfg.BuildAPIToken)
 			if err != nil {
 				return nil, fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and could not download diff file: %v", err)
 			}
