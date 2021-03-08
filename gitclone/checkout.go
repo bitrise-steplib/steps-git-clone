@@ -85,7 +85,8 @@ func selectCheckoutMethod(cfg Config) CheckoutMethod {
 	}
 
 	// ** PR **
-	isPrivateFork := isPrivate(cfg.PRRepositoryURL) && isFork(cfg.RepositoryURL, cfg.PRRepositoryURL)
+	isFork := isFork(cfg.RepositoryURL, cfg.PRRepositoryURL)
+	isPrivateFork := isPrivate(cfg.PRRepositoryURL) && isFork
 	if !cfg.ManualMerge || isPrivateFork { // Auto merge
 		// Merge branch
 		if cfg.PRMergeBranch != "" {
@@ -96,7 +97,7 @@ func selectCheckoutMethod(cfg Config) CheckoutMethod {
 	}
 
 	// ** PR/MR with manual merge
-	if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
+	if isFork {
 		return CheckoutForkPRManualMergeMethod
 	}
 
