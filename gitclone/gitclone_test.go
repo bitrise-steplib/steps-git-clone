@@ -466,10 +466,10 @@ func (r *MockRunner) Run(c *command.Model) error {
 	return err
 }
 
-func (r *MockRunner) RunWithRetry(c *command.Model) error {
+func (r *MockRunner) RunWithRetry(getCommnad func() *command.Model) error {
 	var err error
 	for i := 0; i < 3; i++ {
-		err = r.Run(c)
+		err = r.Run(getCommnad())
 		if err == nil {
 			return nil
 		}

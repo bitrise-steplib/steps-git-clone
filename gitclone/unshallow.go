@@ -3,6 +3,7 @@ package gitclone
 import (
 	"fmt"
 
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 )
@@ -16,7 +17,9 @@ type simpleUnshallow struct{}
 func (s simpleUnshallow) do(gitCmd git.Git) error {
 	log.Infof("Fetch with unshallow...")
 
-	if err := runner.RunWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
+	if err := runner.RunWithRetry(func() *command.Model {
+		return gitCmd.Fetch("--unshallow")
+	}); err != nil {
 		return fmt.Errorf("fetch failed: %v", err)
 	}
 
@@ -31,7 +34,9 @@ func (r resetUnshallow) do(gitCmd git.Git) error {
 	if err := resetRepo(gitCmd); err != nil {
 		return fmt.Errorf("reset repository: %v", err)
 	}
-	if err := runner.RunWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
+	if err := runner.RunWithRetry(func() *command.Model {
+		return gitCmd.Fetch("--unshallow")
+	}); err != nil {
 		return fmt.Errorf("fetch failed: %v", err)
 	}
 

@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 )
@@ -40,7 +41,9 @@ func fetch(gitCmd git.Git, remote string, ref *string, traits fetchOptions) erro
 		branch = strings.TrimPrefix(*ref, branchRefPrefix)
 	}
 
-	if err := runner.RunWithRetry(gitCmd.Fetch(opts...)); err != nil {
+	if err := runner.RunWithRetry(func() *command.Model {
+		return gitCmd.Fetch(opts...)
+	}); err != nil {
 		return handleCheckoutError(
 			listBranches(gitCmd),
 			fetchFailedTag,

@@ -18,7 +18,7 @@ import (
 type CommandRunner interface {
 	RunForOutput(c *command.Model) (string, error)
 	Run(c *command.Model) error
-	RunWithRetry(c *command.Model) error
+	RunWithRetry(getCommmand func() *command.Model) error
 }
 
 // DefaultRunner ...
@@ -55,13 +55,13 @@ func (r DefaultRunner) Run(c *command.Model) error {
 }
 
 // RunWithRetry ...
-func (r DefaultRunner) RunWithRetry(c *command.Model) error {
+func (r DefaultRunner) RunWithRetry(getCommand func() *command.Model) error {
 	return retry.Times(2).Wait(5).Try(func(attempt uint) error {
 		if attempt > 0 {
 			log.Warnf("Retrying...")
 		}
 
-		err := r.Run(c)
+		err := r.Run(getCommand())
 		if err != nil {
 			log.Warnf("Attempt %d failed:", attempt+1)
 			fmt.Println(err.Error())
