@@ -35,7 +35,7 @@ type checkoutPRMergeBranch struct {
 	params PRMergeBranchParams
 }
 
-func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallbacks fallbacks) error {
+func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
 	// ToDo: Use fetchInitialBranch
 	// Check out initial branch (fetchInitialBranch part1)
 	// `git "fetch" "origin" "refs/heads/master"`
@@ -54,7 +54,7 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	// Check out initial branch (fetchInitialBranch part2)
 	// `git "checkout" "master"`
 	// `git "merge" "origin/master"`
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.BaseBranch, isBranch: true}, fallbacks.checkout); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.BaseBranch, isBranch: true}, nil); err != nil {
 		return err
 	}
 	remoteBaseBranch := fmt.Sprintf("%s/%s", defaultRemoteName, c.params.BaseBranch)
@@ -63,7 +63,7 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	}
 
 	// `git "merge" "pull/7"`
-	if err := mergeWithCustomRetry(gitCmd, mergeArg(c.params.MergeBranch), fallbacks.merge); err != nil {
+	if err := mergeWithCustomRetry(gitCmd, mergeArg(c.params.MergeBranch), fallback); err != nil {
 		return err
 	}
 

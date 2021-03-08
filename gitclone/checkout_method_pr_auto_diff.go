@@ -31,13 +31,13 @@ type checkoutPRDiffFile struct {
 	baseBranch, patch string
 }
 
-func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallbacks fallbacks) error {
+func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	baseBranchRef := newOriginFetchRef(branchRefPrefix + c.baseBranch)
 	if err := fetch(gitCmd, fetchOptions, baseBranchRef); err != nil {
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.baseBranch, isBranch: true}, fallbacks.checkout); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.baseBranch, isBranch: true}, fallback); err != nil {
 		return err
 	}
 

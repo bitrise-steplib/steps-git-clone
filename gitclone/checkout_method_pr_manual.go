@@ -41,7 +41,7 @@ type checkoutPRManualMerge struct {
 	params PRManualMergeParams
 }
 
-func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallbacks fallbacks) error {
+func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch and checkout base (target) branch
 	baseBranchRef := *newOriginFetchRef(branchRefPrefix + c.params.BaseBranch)
 	if err := fetchInitialBranch(gitCmd, baseBranchRef, fetchOptions); err != nil {
@@ -60,7 +60,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 		return nil
 	}
 
-	if err := mergeWithCustomRetry(gitCmd, c.params.Commit, fallbacks.merge); err != nil {
+	if err := mergeWithCustomRetry(gitCmd, c.params.Commit, fallback); err != nil {
 		return err
 	}
 
@@ -100,7 +100,7 @@ type checkoutForkPRManualMerge struct {
 	params ForkPRManualMergeParams
 }
 
-func (c checkoutForkPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallbacks fallbacks) error {
+func (c checkoutForkPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch and checkout base branch
 	baseBranchRef := *newOriginFetchRef(branchRefPrefix + c.params.BaseBranch)
 	if err := fetchInitialBranch(gitCmd, baseBranchRef, fetchOptions); err != nil {
@@ -129,7 +129,7 @@ func (c checkoutForkPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions,
 		return err
 	}
 
-	if err := mergeWithCustomRetry(gitCmd, remoteForkBranch, fallbacks.merge); err != nil {
+	if err := mergeWithCustomRetry(gitCmd, remoteForkBranch, fallback); err != nil {
 		return err
 	}
 

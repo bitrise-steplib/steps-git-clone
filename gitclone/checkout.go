@@ -47,7 +47,7 @@ func NewParameterValidationError(msg string) error {
 
 // checkoutStrategy is the interface an actual checkout strategy implements
 type checkoutStrategy interface {
-	do(gitCmd git.Git, fetchOptions fetchOptions, fallbacks fallbacks) error
+	do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error
 }
 
 // X: required parameter
@@ -217,33 +217,32 @@ func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, isTag b
 	}
 }
 
-func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fallbacks {
+func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fallbackRetry {
 	switch checkoutStrategy {
-	// ToDo: fallback not needed for branch and tag checkout
-	case CheckoutCommitMethod, CheckoutTagMethod, CheckoutBranchMethod:
+	// ToDo: fallback not needed for tag checkout
+	case CheckoutCommitMethod, CheckoutTagMethod:
 		{
 			if !fetchOpts.IsFullDepth() {
-				return fallbacks{checkout: simpleUnshallow{}}
+				return simpleUnshallow{}
 			}
 
-			return fallbacks{}
+			return nil
 		}
+	case CheckoutBranchMethod:
+		return nil
 	case CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod:
-		return fallbacks{}
+		return nil
 	case CheckoutPRMergeBranchMethod:
 		{
 			if !fetchOpts.IsFullDepth() {
-				return fallbacks{
-					checkout: nil,
-					merge:    resetUnshallow{},
-				}
+				return resetUnshallow{}
 			}
 
-			return fallbacks{}
+			return nil
 		}
 	case CheckoutPRDiffFileMethod:
-		return fallbacks{}
+		return nil
 	default:
-		return fallbacks{}
+		return nil
 	}
 }

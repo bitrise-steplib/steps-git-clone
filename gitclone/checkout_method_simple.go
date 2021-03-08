@@ -11,7 +11,7 @@ import (
 // checkoutNone
 type checkoutNone struct{}
 
-func (c checkoutNone) do(gitCmd git.Git, fetchOptions fetchOptions, fallbacks fallbacks) error {
+func (c checkoutNone) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	return nil
 }
 
@@ -45,14 +45,14 @@ func (c checkoutCommit) Validate() error {
 	return nil
 }
 
-func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallbacks fallbacks) error {
+func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch then checkout
 	// No branch specified for fetch
 	if err := fetch(gitCmd, fetchOptions, nil); err != nil {
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.Commit}, fallbacks.checkout); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.Commit}, fallback); err != nil {
 		return err
 	}
 
@@ -86,7 +86,7 @@ type checkoutBranch struct {
 	params BranchParams
 }
 
-func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, fallbacks fallbacks) error {
+func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallbackRetry) error {
 	branchRef := *newOriginFetchRef(branchRefPrefix + c.params.Branch)
 	if err := fetchInitialBranch(gitCmd, branchRef, fetchOptions); err != nil {
 		return err
@@ -122,7 +122,7 @@ type checkoutTag struct {
 	params TagParams
 }
 
-func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallbacks fallbacks) error {
+func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	var branchRef *fetchRef
 	if c.params.Branch != nil {
 		branchRef = newOriginFetchRef(branchRefPrefix + *c.params.Branch)
@@ -132,7 +132,7 @@ func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallbacks fal
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.Tag}, fallbacks.checkout); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.Tag}, fallback); err != nil {
 		return err
 	}
 

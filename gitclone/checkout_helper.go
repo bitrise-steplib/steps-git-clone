@@ -8,10 +8,6 @@ import (
 	"github.com/bitrise-io/go-utils/command/git"
 )
 
-type fallbacks struct {
-	checkout, merge fallbackRetry
-}
-
 type fetchOptions struct {
 	// Fetch tags ("--tags")
 	tags bool
