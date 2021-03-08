@@ -8,13 +8,13 @@ import (
 )
 
 type fallbackRetry interface {
-	do(gitCmd git.Git, oErr error) error
+	do(gitCmd git.Git) error
 }
 
 type simpleUnshallow struct{}
 
-func (s simpleUnshallow) do(gitCmd git.Git, oErr error) error {
-	log.Warnf("Checkout failed, error: %v\nUnshallow...", oErr)
+func (s simpleUnshallow) do(gitCmd git.Git) error {
+	log.Warnf("Unshallow...")
 
 	if err := runner.RunWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
 		return fmt.Errorf("fetch failed: %v", err)
@@ -25,8 +25,8 @@ func (s simpleUnshallow) do(gitCmd git.Git, oErr error) error {
 
 type resetUnshallow struct{}
 
-func (r resetUnshallow) do(gitCmd git.Git, oErr error) error {
-	log.Warnf("Merge failed: %v\nReset repository, then unshallow...", oErr)
+func (r resetUnshallow) do(gitCmd git.Git) error {
+	log.Warnf("Reset repository, then unshallow...")
 
 	if err := resetRepo(gitCmd); err != nil {
 		return fmt.Errorf("reset repository: %v", err)

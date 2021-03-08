@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-io/go-utils/log"
 )
 
 type fetchOptions struct {
@@ -69,16 +70,17 @@ type checkoutArg struct {
 }
 
 func checkoutWithCustomRetry(gitCmd git.Git, arg checkoutArg, retry fallbackRetry) error {
-	if cerr := runner.Run(gitCmd.Checkout(arg.arg)); cerr != nil {
+	if cErr := runner.Run(gitCmd.Checkout(arg.arg)); cErr != nil {
 		if retry != nil {
-			if err := retry.do(gitCmd, cerr); err != nil {
+			log.Warnf("%v", cErr)
+			if err := retry.do(gitCmd); err != nil {
 				return err
 			}
 
 			return runner.Run(gitCmd.Checkout(arg.arg))
 		}
 
-		return fmt.Errorf("checkout failed (%s): %v", arg.arg, cerr)
+		return fmt.Errorf("checkout failed (%s): %v", arg.arg, cErr)
 	}
 
 	return nil
@@ -115,16 +117,17 @@ func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchOptions) 
 }
 
 func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error {
-	if merr := runner.Run(gitCmd.Merge(arg)); merr != nil {
+	if mErr := runner.Run(gitCmd.Merge(arg)); mErr != nil {
 		if retry != nil {
-			if err := retry.do(gitCmd, merr); err != nil {
+			log.Warnf("%v", mErr)
+			if err := retry.do(gitCmd); err != nil {
 				return err
 			}
 
 			return runner.Run(gitCmd.Merge(arg))
 		}
 
-		return fmt.Errorf("merge failed (%s): %v", arg, merr)
+		return fmt.Errorf("merge failed (%s): %v", arg, mErr)
 	}
 
 	return nil
