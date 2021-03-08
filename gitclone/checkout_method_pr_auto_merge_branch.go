@@ -10,9 +10,6 @@ import (
 //
 // checkoutPRMergeBranch
 type checkoutPRMergeBranch struct {
-	// baseBranch string
-	// // Merge branch contains the changes already merged
-	// mergeBranch string
 	params PRMergeBranchParams
 }
 

@@ -4,6 +4,20 @@ import (
 	"strings"
 )
 
+type CheckoutMethod int
+
+const (
+	InvalidCheckoutMethod CheckoutMethod = iota
+	CheckoutNoneMeyhod
+	CheckoutCommitMethod
+	CheckoutTagMethod
+	CheckoutBranchMethod
+	CheckoutPRMergeBranchMethod
+	CheckoutPRDiffFileMethod
+	CheckoutPRManualMergeMethod
+	CheckoutForkPRManualMergeMethod
+)
+
 // ParameterValidationError is returned when there is missing or malformatted parameter for a given parameter set
 type ParameterValidationError struct {
 	ErrorString string

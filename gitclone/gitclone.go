@@ -65,17 +65,28 @@ func getMaxEnvLength() (int, error) {
 }
 
 func checkoutState(gitCmd git.Git, cfg Config) error {
-	checkoutStrategy, fetchOpts, err := selectCheckoutStrategy(cfg)
+	checkoutMethod := selectCheckoutStrategy(cfg)
+	fetchOpts := selectfetchOptions(checkoutMethod, cfg.CloneDepth, cfg.Tag != "")
+
+	var patch string
+	if checkoutMethod == CheckoutPRDiffFileMethod {
+		var err error
+		if patch, err = getDiffFile(cfg.BuildURL, cfg.BuildAPIToken, cfg.PRID); err != nil {
+			return fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and can't download diff file: %v", err)
+		}
+	}
+
+	checkoutStrategy, err := createCheckoutStrategy(checkoutMethod, cfg, patch)
 	if err != nil {
 		return err
 	}
 	if checkoutStrategy == nil {
 		return fmt.Errorf("failed to select a checkout stategy")
 	}
-	log.Debugf("Checkout strategy used: %T", checkoutStrategy)
 
+	log.Debugf("Checkout strategy used: %T", checkoutMethod)
 	if err := checkoutStrategy.do(gitCmd, fetchOpts); err != nil {
-		log.Infof("Checkout strategy used: %T", checkoutStrategy)
+		log.Infof("Checkout strategy used: %T", checkoutMethod)
 		return err
 	}
 
