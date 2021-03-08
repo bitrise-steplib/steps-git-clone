@@ -48,7 +48,7 @@ func (c checkoutCommit) Validate() error {
 func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch then checkout
 	// No branch specified for fetch
-	if err := fetch(gitCmd, fetchOptions, nil); err != nil {
+	if err := fetch(gitCmd, defaultRemoteName, nil, fetchOptions); err != nil {
 		return err
 	}
 
@@ -82,8 +82,8 @@ type checkoutBranch struct {
 }
 
 func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallbackRetry) error {
-	branchRef := *newOriginFetchRef(branchRefPrefix + c.params.Branch)
-	if err := fetchInitialBranch(gitCmd, branchRef, fetchOptions); err != nil {
+	branchRef := branchRefPrefix + c.params.Branch
+	if err := fetchInitialBranch(gitCmd, defaultRemoteName, branchRef, fetchOptions); err != nil {
 		return err
 	}
 
@@ -118,12 +118,13 @@ type checkoutTag struct {
 }
 
 func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	var branchRef *fetchRef
+	var branchRefParam *string
 	if c.params.Branch != nil {
-		branchRef = newOriginFetchRef(branchRefPrefix + *c.params.Branch)
+		branchRef := branchRefPrefix + *c.params.Branch
+		branchRefParam = &branchRef
 	}
 
-	if err := fetch(gitCmd, fetchOptions, branchRef); err != nil {
+	if err := fetch(gitCmd, defaultRemoteName, branchRefParam, fetchOptions); err != nil {
 		return err
 	}
 

@@ -22,18 +22,7 @@ func (t fetchOptions) IsFullDepth() bool {
 
 const branchRefPrefix = "refs/heads/"
 
-type fetchRef struct {
-	remote, ref string
-}
-
-func newOriginFetchRef(ref string) *fetchRef {
-	return &fetchRef{
-		remote: defaultRemoteName,
-		ref:    ref,
-	}
-}
-
-func fetch(gitCmd git.Git, traits fetchOptions, ref *fetchRef) error {
+func fetch(gitCmd git.Git, remote string, ref *string, traits fetchOptions) error {
 	var opts []string
 	if traits.depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(traits.depth))
@@ -42,13 +31,13 @@ func fetch(gitCmd git.Git, traits fetchOptions, ref *fetchRef) error {
 		opts = append(opts, "--tags")
 	}
 	if ref != nil {
-		opts = append(opts, ref.remote, ref.ref)
+		opts = append(opts, remote, *ref)
 	}
 
 	// Not neccessarily a branch, can be tag too
 	branch := ""
-	if ref != nil && strings.HasPrefix(ref.ref, branchRefPrefix) {
-		branch = strings.TrimPrefix(ref.ref, branchRefPrefix)
+	if ref != nil && strings.HasPrefix(*ref, branchRefPrefix) {
+		branch = strings.TrimPrefix(*ref, branchRefPrefix)
 	}
 
 	if err := runner.RunWithRetry(gitCmd.Fetch(opts...)); err != nil {
@@ -85,10 +74,10 @@ func checkoutWithCustomRetry(gitCmd git.Git, arg checkoutArg, retry fallbackRetr
 	return nil
 }
 
-func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchOptions) error {
-	branch := strings.TrimPrefix(ref.ref, branchRefPrefix)
+func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTraits fetchOptions) error {
+	branch := strings.TrimPrefix(branchRef, branchRefPrefix)
 	// Fetch then checkout
-	if err := fetch(gitCmd, fetchTraits, &ref); err != nil {
+	if err := fetch(gitCmd, remote, &branchRef, fetchTraits); err != nil {
 		return err
 	}
 

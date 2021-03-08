@@ -35,8 +35,8 @@ type checkoutPRDiffFile struct {
 }
 
 func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	baseBranchRef := newOriginFetchRef(branchRefPrefix + c.baseBranch)
-	if err := fetch(gitCmd, fetchOptions, baseBranchRef); err != nil {
+	baseBranchRef := branchRefPrefix + c.baseBranch
+	if err := fetch(gitCmd, defaultRemoteName, &baseBranchRef, fetchOptions); err != nil {
 		return err
 	}
 
