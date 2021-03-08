@@ -14,7 +14,7 @@ type fallbackRetry interface {
 type simpleUnshallow struct{}
 
 func (s simpleUnshallow) do(gitCmd git.Git) error {
-	log.Warnf("Unshallow...")
+	log.Infof("Fetch with unshallow...")
 
 	if err := runner.RunWithRetry(gitCmd.Fetch("--unshallow")); err != nil {
 		return fmt.Errorf("fetch failed: %v", err)
@@ -26,7 +26,7 @@ func (s simpleUnshallow) do(gitCmd git.Git) error {
 type resetUnshallow struct{}
 
 func (r resetUnshallow) do(gitCmd git.Git) error {
-	log.Warnf("Reset repository, then unshallow...")
+	log.Infof("Resetting repository, then fetch with unshallow...")
 
 	if err := resetRepo(gitCmd); err != nil {
 		return fmt.Errorf("reset repository: %v", err)
