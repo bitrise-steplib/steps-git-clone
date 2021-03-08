@@ -1,7 +1,6 @@
 package gitclone
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
@@ -35,14 +34,6 @@ func NewCommitParams(commit string) (*CommitParams, error) {
 // checkoutCommit
 type checkoutCommit struct {
 	params CommitParams
-}
-
-func (c checkoutCommit) Validate() error {
-	if strings.TrimSpace(c.params.Commit) == "" {
-		return errors.New("no commit hash specified")
-	}
-
-	return nil
 }
 
 func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
