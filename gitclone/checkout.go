@@ -137,7 +137,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 		}
 	case CheckoutBranchMethod:
 		{
-			params, err := NewBranchParams(cfg.Branch, nil)
+			params, err := NewBranchParams(cfg.Branch)
 			if err != nil {
 				return nil, err
 			}

@@ -24,7 +24,7 @@ type CommitParams struct {
 // NewCommitParams validates and returns a new CommitParams
 func NewCommitParams(commit string) (*CommitParams, error) {
 	if strings.TrimSpace(commit) == "" {
-		return nil, NewParameterValidationError("commit checkout strategy can not be used, no commit hash specified")
+		return nil, NewParameterValidationError("commit checkout strategy can not be used: no commit hash specified")
 	}
 
 	return &CommitParams{
@@ -63,21 +63,16 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 // BranchParams are parameters to check out a given branch (In addition to the repository URL)
 type BranchParams struct {
 	Branch string
-	Commit *string
 }
 
 // NewBranchParams validates and returns a new BranchParams
-func NewBranchParams(branch string, commit *string) (*BranchParams, error) {
+func NewBranchParams(branch string) (*BranchParams, error) {
 	if strings.TrimSpace(branch) == "" {
-		return nil, NewParameterValidationError("branch checkout strategy can not be used, no branch specified")
-	}
-	if commit != nil && strings.TrimSpace(*commit) == "" {
-		return nil, NewParameterValidationError("branch checkout strategy can not be used, no commit specified")
+		return nil, NewParameterValidationError("branch checkout strategy can not be used: no branch specified")
 	}
 
 	return &BranchParams{
 		Branch: branch,
-		Commit: commit,
 	}, nil
 }
 
@@ -105,10 +100,10 @@ type TagParams struct {
 // NewTagParams validates and returns a new TagParams
 func NewTagParams(tag string, branch *string) (*TagParams, error) {
 	if strings.TrimSpace(tag) == "" {
-		return nil, NewParameterValidationError("tag checkout strategy can not be used, no tag specified")
+		return nil, NewParameterValidationError("tag checkout strategy can not be used: no tag specified")
 	}
 	if branch != nil && strings.TrimSpace(*branch) == "" {
-		return nil, NewParameterValidationError("tag checkout strategy can not be used, branch non nil but empty")
+		return nil, NewParameterValidationError("tag checkout strategy can not be used: branch non nil but empty")
 	}
 
 	return &TagParams{

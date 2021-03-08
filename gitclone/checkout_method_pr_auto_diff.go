@@ -20,7 +20,7 @@ type PRDiffFileParams struct {
 // NewPRDiffFileParams validates and returns a new PRDiffFile
 func NewPRDiffFileParams(baseBranch string, PRID uint) (*PRDiffFileParams, error) {
 	if strings.TrimSpace(baseBranch) == "" {
-		return nil, NewParameterValidationError("PR diff file based checkout strategy can not be used, base branch specified")
+		return nil, NewParameterValidationError("PR diff file based checkout strategy can not be used: no base branch specified")
 	}
 
 	return &PRDiffFileParams{
@@ -40,7 +40,7 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.baseBranch, isBranch: true}, fallback); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.baseBranch}, fallback); err != nil {
 		return err
 	}
 

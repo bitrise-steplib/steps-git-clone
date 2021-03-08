@@ -17,10 +17,10 @@ type PRMergeBranchParams struct {
 // NewPRMergeBranchParams validates and returns a new PRMergeBranchParams
 func NewPRMergeBranchParams(baseBranch, mergeBranch string) (*PRMergeBranchParams, error) {
 	if strings.TrimSpace(baseBranch) == "" {
-		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used, no base branch specified")
+		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used: no base branch specified")
 	}
 	if strings.TrimSpace(mergeBranch) == "" {
-		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used, no merge branch specified")
+		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used: no merge branch specified")
 	}
 
 	return &PRMergeBranchParams{
@@ -53,7 +53,7 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	// Check out initial branch (fetchInitialBranch part2)
 	// `git "checkout" "master"`
 	// `git "merge" "origin/master"`
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.BaseBranch, isBranch: true}, nil); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.BaseBranch}, nil); err != nil {
 		return err
 	}
 	remoteBaseBranch := fmt.Sprintf("%s/%s", defaultRemoteName, c.params.BaseBranch)

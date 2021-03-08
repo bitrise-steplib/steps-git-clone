@@ -20,13 +20,13 @@ type PRManualMergeParams struct {
 //NewPRManualMergeParams  validates and returns a new PRManualMergeParams
 func NewPRManualMergeParams(headBranch, commit, baseBranch string) (*PRManualMergeParams, error) {
 	if strings.TrimSpace(headBranch) == "" {
-		return nil, NewParameterValidationError("manual PR merge checkout strategy can not be used, no head branch specified")
+		return nil, NewParameterValidationError("manual PR merge checkout strategy can not be used: no head branch specified")
 	}
 	if strings.TrimSpace(commit) == "" {
-		return nil, NewParameterValidationError("manual PR merge checkout strategy can not be used, no head branch commit hash specified")
+		return nil, NewParameterValidationError("manual PR merge checkout strategy can not be used: no head branch commit hash specified")
 	}
 	if strings.TrimSpace(baseBranch) == "" {
-		return nil, NewParameterValidationError("manual PR merge checkout strategy can not be used, no base branch specified")
+		return nil, NewParameterValidationError("manual PR merge checkout strategy can not be used: no base branch specified")
 	}
 
 	return &PRManualMergeParams{
@@ -79,13 +79,13 @@ type ForkPRManualMergeParams struct {
 // NewForkPRManualMergeParams validates and returns a new ForkPRManualMergeParams
 func NewForkPRManualMergeParams(headBranch, forkRepoURL, baseBranch string) (*ForkPRManualMergeParams, error) {
 	if strings.TrimSpace(headBranch) == "" {
-		return nil, NewParameterValidationError("manual PR (fork) merge checkout strategy can not be used, no head branch specified")
+		return nil, NewParameterValidationError("manual PR (fork) merge checkout strategy can not be used: no head branch specified")
 	}
 	if strings.TrimSpace(forkRepoURL) == "" {
-		return nil, NewParameterValidationError("manual PR (fork) merge chekout strategy can not be used, no base repository URL specified")
+		return nil, NewParameterValidationError("manual PR (fork) merge chekout strategy can not be used: no base repository URL specified")
 	}
 	if strings.TrimSpace(baseBranch) == "" {
-		return nil, NewParameterValidationError("manual PR (fork) merge checkout strategy can not be used, no base branch specified")
+		return nil, NewParameterValidationError("manual PR (fork) merge checkout strategy can not be used: no base branch specified")
 	}
 
 	return &ForkPRManualMergeParams{

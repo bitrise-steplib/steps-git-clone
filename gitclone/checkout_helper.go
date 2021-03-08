@@ -65,8 +65,7 @@ func fetch(gitCmd git.Git, traits fetchOptions, ref *fetchRef) error {
 }
 
 type checkoutArg struct {
-	arg      string
-	isBranch bool
+	arg string
 }
 
 func checkoutWithCustomRetry(gitCmd git.Git, arg checkoutArg, retry fallbackRetry) error {
@@ -93,7 +92,7 @@ func fetchInitialBranch(gitCmd git.Git, ref fetchRef, fetchTraits fetchOptions) 
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: branch, isBranch: true}, nil); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: branch}, nil); err != nil {
 		return handleCheckoutError(
 			listBranches(gitCmd),
 			checkoutFailedTag,
