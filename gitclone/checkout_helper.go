@@ -53,22 +53,18 @@ func fetch(gitCmd git.Git, remote string, ref *string, traits fetchOptions) erro
 	return nil
 }
 
-type checkoutArg struct {
-	arg string
-}
-
-func checkoutWithCustomRetry(gitCmd git.Git, arg checkoutArg, retry fallbackRetry) error {
-	if cErr := runner.Run(gitCmd.Checkout(arg.arg)); cErr != nil {
+func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error {
+	if cErr := runner.Run(gitCmd.Checkout(arg)); cErr != nil {
 		if retry != nil {
 			log.Warnf("%v", cErr)
 			if err := retry.do(gitCmd); err != nil {
 				return err
 			}
 
-			return runner.Run(gitCmd.Checkout(arg.arg))
+			return runner.Run(gitCmd.Checkout(arg))
 		}
 
-		return fmt.Errorf("checkout failed (%s): %v", arg.arg, cErr)
+		return fmt.Errorf("checkout failed (%s): %v", arg, cErr)
 	}
 
 	return nil
@@ -81,7 +77,7 @@ func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTr
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: branch}, nil); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, branch, nil); err != nil {
 		return handleCheckoutError(
 			listBranches(gitCmd),
 			checkoutFailedTag,

@@ -40,7 +40,7 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.baseBranch}, fallback); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, c.baseBranch, fallback); err != nil {
 		return err
 	}
 

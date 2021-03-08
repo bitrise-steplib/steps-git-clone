@@ -53,7 +53,7 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	// Check out initial branch (fetchInitialBranch part2)
 	// `git "checkout" "master"`
 	// `git "merge" "origin/master"`
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.BaseBranch}, nil); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, c.params.BaseBranch, nil); err != nil {
 		return err
 	}
 	remoteBaseBranch := fmt.Sprintf("%s/%s", defaultRemoteName, c.params.BaseBranch)

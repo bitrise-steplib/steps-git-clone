@@ -52,7 +52,7 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.Commit}, fallback); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, c.params.Commit, fallback); err != nil {
 		return err
 	}
 
@@ -128,7 +128,7 @@ func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fall
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, checkoutArg{arg: c.params.Tag}, fallback); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, c.params.Tag, fallback); err != nil {
 		return err
 	}
 
