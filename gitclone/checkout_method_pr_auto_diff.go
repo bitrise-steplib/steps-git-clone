@@ -2,9 +2,28 @@ package gitclone
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
 )
+
+// PRDiffFileParams are parameters to check out a Merge/Pull Request if a diff file is available
+type PRDiffFileParams struct {
+	BaseBranch string
+	PRID       uint
+}
+
+// NewPRDiffFileParams validates and returns a new PRDiffFile
+func NewPRDiffFileParams(baseBranch string, PRID uint) (*PRDiffFileParams, error) {
+	if strings.TrimSpace(baseBranch) == "" {
+		return nil, NewParameterValidationError("PR diff file based checkout strategy can not be used, base branch specified")
+	}
+
+	return &PRDiffFileParams{
+		BaseBranch: baseBranch,
+		PRID:       PRID,
+	}, nil
+}
 
 //
 // checkoutPRDiffFile

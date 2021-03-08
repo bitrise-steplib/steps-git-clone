@@ -2,10 +2,33 @@ package gitclone
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 )
+
+// PRMergeBranchParams are parameters to check out a Merge/Pull Request if merge branch is available
+type PRMergeBranchParams struct {
+	BaseBranch string
+	// Merge branch contains the changes premerged by the Git provider
+	MergeBranch string
+}
+
+// NewPRMergeBranchParams validates and returns a new PRMergeBranchParams
+func NewPRMergeBranchParams(baseBranch, mergeBranch string) (*PRMergeBranchParams, error) {
+	if strings.TrimSpace(baseBranch) == "" {
+		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used, no base branch specified")
+	}
+	if strings.TrimSpace(mergeBranch) == "" {
+		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used, no merge branch specified")
+	}
+
+	return &PRMergeBranchParams{
+		BaseBranch:  baseBranch,
+		MergeBranch: mergeBranch,
+	}, nil
+}
 
 //
 // checkoutPRMergeBranch

@@ -65,7 +65,7 @@ func getMaxEnvLength() (int, error) {
 }
 
 func checkoutState(gitCmd git.Git, cfg Config) error {
-	checkoutMethod := selectCheckoutStrategy(cfg)
+	checkoutMethod := selectCheckoutMethod(cfg)
 	fetchOpts := selectfetchOptions(checkoutMethod, cfg.CloneDepth, cfg.Tag != "")
 
 	var patch string

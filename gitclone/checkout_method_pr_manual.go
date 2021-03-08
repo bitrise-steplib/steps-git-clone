@@ -2,10 +2,38 @@ package gitclone
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 )
+
+// PRManualMergeParams are parameters to check out a Merge Request if no merge branch or diff file is avavilable
+type PRManualMergeParams struct {
+	// Source
+	HeadBranch, Commit string
+	// Target
+	BaseBranch string
+}
+
+//NewPRManualMergeParams  validates and returns a new PRManualMergeParams
+func NewPRManualMergeParams(headBranch, commit, baseBranch string) (*PRManualMergeParams, error) {
+	if strings.TrimSpace(headBranch) == "" {
+		return nil, NewParameterValidationError("manual PR merge checkout strategy can not be used, no head branch specified")
+	}
+	if strings.TrimSpace(commit) == "" {
+		return nil, NewParameterValidationError("manual PR merge checkout strategy can not be used, no head branch commit hash specified")
+	}
+	if strings.TrimSpace(baseBranch) == "" {
+		return nil, NewParameterValidationError("manual PR merge checkout strategy can not be used, no base branch specified")
+	}
+
+	return &PRManualMergeParams{
+		HeadBranch: headBranch,
+		Commit:     commit,
+		BaseBranch: baseBranch,
+	}, nil
+}
 
 //
 // checkoutPRManualMerge
@@ -42,6 +70,33 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions) err
 	}
 
 	return detachHead(gitCmd)
+}
+
+// ForkPRManualMergeParams are parameters to check out a Pull Request if no merge branch or diff file is available
+type ForkPRManualMergeParams struct {
+	// Source
+	HeadBranch, HeadRepoURL string
+	// Target
+	BaseBranch string
+}
+
+// NewForkPRManualMergeParams validates and returns a new ForkPRManualMergeParams
+func NewForkPRManualMergeParams(headBranch, forkRepoURL, baseBranch string) (*ForkPRManualMergeParams, error) {
+	if strings.TrimSpace(headBranch) == "" {
+		return nil, NewParameterValidationError("manual PR (fork) merge checkout strategy can not be used, no head branch specified")
+	}
+	if strings.TrimSpace(forkRepoURL) == "" {
+		return nil, NewParameterValidationError("manual PR (fork) merge chekout strategy can not be used, no base repository URL specified")
+	}
+	if strings.TrimSpace(baseBranch) == "" {
+		return nil, NewParameterValidationError("manual PR (fork) merge checkout strategy can not be used, no base branch specified")
+	}
+
+	return &ForkPRManualMergeParams{
+		HeadBranch:  headBranch,
+		HeadRepoURL: forkRepoURL,
+		BaseBranch:  baseBranch,
+	}, nil
 }
 
 //

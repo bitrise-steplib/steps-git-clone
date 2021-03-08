@@ -6,11 +6,51 @@ import (
 	"github.com/bitrise-io/go-utils/command/git"
 )
 
+// CheckoutMethod is the checkout method used
+type CheckoutMethod int
+
+const (
+	// InvalidCheckoutMethod ...
+	InvalidCheckoutMethod CheckoutMethod = iota
+	// CheckoutNoneMethod only adds remote, resets repo, updates submodules
+	CheckoutNoneMethod
+	// CheckoutCommitMethod checks out a commit
+	CheckoutCommitMethod
+	// CheckoutTagMethod checks out a tag
+	CheckoutTagMethod
+	// CheckoutBranchMethod checks out a branch
+	CheckoutBranchMethod
+	// CheckoutPRMergeBranchMethod checks out a MR/PR in case a merge branch is available
+	CheckoutPRMergeBranchMethod
+	// CheckoutPRDiffFileMethod  checks out a MR/PR in case a diff file is available
+	CheckoutPRDiffFileMethod
+	// CheckoutPRManualMergeMethod checks out a MR
+	CheckoutPRManualMergeMethod
+	// CheckoutForkPRManualMergeMethod checks out a PR
+	CheckoutForkPRManualMergeMethod
+)
+
+// ParameterValidationError is returned when there is missing or malformatted parameter for a given parameter set
+type ParameterValidationError struct {
+	ErrorString string
+}
+
+// Error ...
+func (e ParameterValidationError) Error() string {
+	return e.ErrorString
+}
+
+// NewParameterValidationError return a new ValidationError
+func NewParameterValidationError(msg string) error {
+	return ParameterValidationError{ErrorString: msg}
+}
+
+// checkoutStrategy is the interface an actual checkout strategy implements
 type checkoutStrategy interface {
 	do(gitCmd git.Git, fetchOptions fetchOptions) error
 }
 
-func selectCheckoutStrategy(cfg Config) CheckoutMethod {
+func selectCheckoutMethod(cfg Config) CheckoutMethod {
 	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
 	if !isPR {
 		if cfg.Commit != "" {
@@ -25,7 +65,7 @@ func selectCheckoutStrategy(cfg Config) CheckoutMethod {
 			return CheckoutBranchMethod
 		}
 
-		return CheckoutNoneMeyhod
+		return CheckoutNoneMethod
 	}
 
 	// ** PR **
@@ -49,7 +89,7 @@ func selectCheckoutStrategy(cfg Config) CheckoutMethod {
 
 func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch string) (checkoutStrategy, error) {
 	switch checkoutMethod {
-	case CheckoutNoneMeyhod:
+	case CheckoutNoneMethod:
 		{
 			return checkoutNone{}, nil
 		}
@@ -156,7 +196,7 @@ func selectfetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, isTag b
 			tags:  false,
 		}
 	// Clone Depth is not set for manual merge yet
-	case CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod, CheckoutNoneMeyhod:
+	case CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod, CheckoutNoneMethod:
 		return fetchOptions{}
 	default:
 		return fetchOptions{}
