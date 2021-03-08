@@ -61,7 +61,7 @@ type checkoutStrategy interface {
 // | tag         |        |  X !|        |          |          |           |          |
 // | branch      |  _     |  _  |  X !   |  X       |  X       |  X        |          |
 // | branchDest  |        |     |        |  X       |  X       |           |  X       |
-// | PRRepoURL   |        |     |        |  ?   !   |  X !     |  _ !      |    !     |
+// | PRRepoURL   |        |     |        |  ?   !   |  X !     |    !      |    !     |
 // | PRID        |        |     |        |          |          |           |  X       |
 // | mergeBranch |        |     |        |          |          |  X !      |          |
 // |==================================================================================|
@@ -192,7 +192,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch str
 
 }
 
-func selectfetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, isTag bool) fetchOptions {
+func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, isTag bool) fetchOptions {
 	switch checkoutStrategy {
 	case CheckoutCommitMethod, CheckoutBranchMethod:
 		return fetchOptions{
