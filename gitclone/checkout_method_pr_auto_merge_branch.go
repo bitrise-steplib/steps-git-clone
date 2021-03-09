@@ -1,6 +1,7 @@
 package gitclone
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
