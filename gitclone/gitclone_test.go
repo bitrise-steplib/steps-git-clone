@@ -3,21 +3,19 @@ package gitclone
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"testing"
 
-	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/stretchr/testify/assert"
 )
 
-const always = 9999
 const rawCmdError = "dummy_cmd_error"
 
 var testCases = [...]struct {
 	name        string
 	cfg         Config
 	patchSource patchSource
-	cmdOutputs  map[string]commandOutput
+	mockRunner  *MockRunner
 	wantErr     error
 	wantErrType error
 	wantCmds    []string
@@ -54,9 +52,7 @@ var testCases = [...]struct {
 		cfg: Config{
 			Commit: "76a934ae",
 		},
-		cmdOutputs: map[string]commandOutput{
-			`git "fetch"`: {failForCalls: 1},
-		},
+		mockRunner: givenMockRunnerSucceedsAfter(1),
 		wantCmds: []string{
 			`git "fetch"`,
 			`git "fetch"`,
@@ -142,7 +138,6 @@ var testCases = [...]struct {
 			CloneDepth:    1,
 			ManualMerge:   true,
 		},
-		wantErr: nil,
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,     // Already on 'master'
@@ -302,10 +297,9 @@ var testCases = [...]struct {
 		cfg: Config{
 			Branch: "fake",
 		},
-		cmdOutputs: map[string]commandOutput{
-			`git "fetch" "origin" "refs/heads/fake"`: {failForCalls: always},
-			`git "branch" "-r"`:                      {output: "  origin/master"},
-		},
+		mockRunner: givenMockRunner().
+			GivenRunWithRetryFailsAfter(2).
+			GivenRunSucceeds(),
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/fake"`,
 			`git "fetch" "origin" "refs/heads/fake"`,
@@ -342,9 +336,10 @@ var testCases = [...]struct {
 			CloneDepth:       1,
 			UpdateSubmodules: true,
 		},
-		cmdOutputs: map[string]commandOutput{
-			`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`: {failForCalls: 1},
-		},
+		mockRunner: givenMockRunner().
+			GivenRunFailsForCommand(`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`, 1).
+			GivenRunWithRetrySucceeds().
+			GivenRunSucceeds(),
 		wantCmds: []string{
 			`git "fetch" "--depth=1"`,
 			`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
@@ -372,9 +367,10 @@ var testCases = [...]struct {
 			PRMergeBranch: "pull/5/merge",
 			CloneDepth:    1,
 		},
-		cmdOutputs: map[string]commandOutput{
-			`git "merge" "pull/5"`: {failForCalls: 1},
-		},
+		mockRunner: givenMockRunner().
+			GivenRunFailsForCommand(`git "merge" "pull/5"`, 1).
+			GivenRunSucceeds().
+			GivenRunWithRetrySucceeds(),
 		wantCmds: []string{
 			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
 			`git "fetch" "origin" "refs/pull/5/head:pull/5"`,
@@ -397,85 +393,46 @@ var testCases = [...]struct {
 func Test_checkoutState(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRunner := newMockRunner(tt.cmdOutputs)
-			runner = mockRunner
-			gotErr := checkoutState(git.Git{}, tt.cfg, tt.patchSource)
-
-			if tt.wantErrType != nil {
-				if reflect.TypeOf(tt.wantErrType) != reflect.TypeOf(gotErr) {
-					t.Errorf("checkoutState().err type = (%T), want (%T)", gotErr, tt.wantErrType)
-				}
+			// Given
+			var mockRunner *MockRunner
+			if tt.mockRunner != nil {
+				mockRunner = tt.mockRunner
 			} else {
-				if !reflect.DeepEqual(gotErr, tt.wantErr) {
-					t.Errorf("checkoutState().err = (%#v), want %#v", gotErr, tt.wantErr)
-				}
+				mockRunner = givenMockRunnerSucceeds()
+			}
+			runner = mockRunner
+
+			// When
+			actualErr := checkoutState(git.Git{}, tt.cfg, tt.patchSource)
+
+			// Then
+			if tt.wantErrType != nil {
+				assert.IsType(t, tt.wantErrType, actualErr)
+			} else if tt.wantErr != nil {
+				assert.EqualError(t, tt.wantErr, actualErr.Error())
+			} else {
+				assert.Nil(t, actualErr)
 			}
 
-			if !reflect.DeepEqual(mockRunner.Cmds(), tt.wantCmds) {
-				t.Errorf("checkoutState().cmds =\n%v, want\n%v", mockRunner.Cmds(), tt.wantCmds)
-			}
+			assert.Equal(t, tt.wantCmds, mockRunner.Cmds())
 		})
 	}
 }
 
-type commandOutput struct {
-	output       string
-	failForCalls int
+func givenMockRunner() *MockRunner {
+	mockRunner := new(MockRunner)
+	mockRunner.GivenRunForOutputSucceeds()
+	return mockRunner
 }
 
-type MockRunner struct {
-	cmds       []string
-	cmdOutputs map[string]commandOutput
+func givenMockRunnerSucceeds() *MockRunner {
+	return givenMockRunnerSucceedsAfter(0)
 }
 
-func newMockRunner(cmdOutputs map[string]commandOutput) *MockRunner {
-	return &MockRunner{cmdOutputs: cmdOutputs}
-}
-
-func (r *MockRunner) Cmds() []string {
-	return r.cmds
-}
-
-func (r *MockRunner) RunForOutput(c *command.Model) (string, error) {
-	commandID := c.PrintableCommandArgs()
-
-	count := 0
-	for _, cmd := range r.cmds {
-		if cmd == commandID {
-			count = count + 1
-		}
-	}
-
-	r.cmds = append(r.cmds, commandID)
-
-	if r.cmdOutputs == nil {
-		return "", nil
-	}
-	if cmdOutput, ok := r.cmdOutputs[commandID]; ok {
-		if cmdOutput.failForCalls != 0 && count < cmdOutput.failForCalls {
-			return "", errors.New(rawCmdError)
-		}
-		return cmdOutput.output, nil
-	}
-
-	return "", nil
-}
-
-func (r *MockRunner) Run(c *command.Model) error {
-	_, err := r.RunForOutput(c)
-	return err
-}
-
-func (r *MockRunner) RunWithRetry(getCommnad func() *command.Model) error {
-	var err error
-	for i := 0; i < 3; i++ {
-		err = r.Run(getCommnad())
-		if err == nil {
-			return nil
-		}
-	}
-
-	return err
+func givenMockRunnerSucceedsAfter(times int) *MockRunner {
+	return givenMockRunner().
+		GivenRunWithRetrySucceedsAfter(times).
+		GivenRunSucceeds()
 }
 
 type MockPatchSource struct {
