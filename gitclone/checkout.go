@@ -14,19 +14,20 @@ const (
 	InvalidCheckoutMethod CheckoutMethod = iota
 	// CheckoutNoneMethod only adds remote, resets repo, updates submodules
 	CheckoutNoneMethod
-	// CheckoutCommitMethod checks out a commit
+	// CheckoutCommitMethod checks out a given commit
 	CheckoutCommitMethod
-	// CheckoutTagMethod checks out a tag
+	// CheckoutTagMethod checks out a given tag
 	CheckoutTagMethod
-	// CheckoutBranchMethod checks out a branch
+	// CheckoutBranchMethod checks out a given branch
 	CheckoutBranchMethod
-	// CheckoutPRMergeBranchMethod checks out a MR/PR in case a merge branch is available
+	// CheckoutPRMergeBranchMethod checks out a MR/PR (when merge branch is available)
 	CheckoutPRMergeBranchMethod
-	// CheckoutPRDiffFileMethod  checks out a MR/PR in case a diff file is available
+	// CheckoutPRDiffFileMethod  checks out a MR/PR (when a diff file is available)
 	CheckoutPRDiffFileMethod
-	// CheckoutPRManualMergeMethod checks out a MR
+	// CheckoutPRManualMergeMethod check out a Merge Request using manual merge
+
 	CheckoutPRManualMergeMethod
-	// CheckoutForkPRManualMergeMethod checks out a PR
+	// CheckoutForkPRManualMergeMethod checks out a PR using manual merge
 	CheckoutForkPRManualMergeMethod
 )
 
@@ -53,15 +54,13 @@ type checkoutStrategy interface {
 // X: required parameter
 // !: used to identify checkout strategy
 // _: optional parameter
-// ?: manual PR checkout method uses PRRepoURL to identify if it should be used,
-//    branchDest is a better candidate
 // |==================================================================================|
 // | params\strat| commit | tag | branch | manualMR | manualPR | autoMerge | autoDiff |
 // | commit      |  X  !  |     |        |  X       |          |           |          |
 // | tag         |        |  X !|        |          |          |           |          |
 // | branch      |  _     |  _  |  X !   |  X       |  X       |  X        |          |
 // | branchDest  |        |     |        |  X       |  X       |           |  X       |
-// | PRRepoURL   |        |     |        |  ?   !   |  X !     |    !      |    !     |
+// | PRRepoURL   |        |     |        |      !   |  X !     |    !      |    !     |
 // | PRID        |        |     |        |          |          |           |    !     |
 // | mergeBranch |        |     |        |          |          |  X !      |          |
 // |==================================================================================|
@@ -84,11 +83,9 @@ func selectCheckoutMethod(cfg Config) CheckoutMethod {
 		return CheckoutNoneMethod
 	}
 
-	// ** PR **
 	isFork := isFork(cfg.RepositoryURL, cfg.PRRepositoryURL)
 	isPrivateFork := isPrivate(cfg.PRRepositoryURL) && isFork
-	if !cfg.ManualMerge || isPrivateFork { // Auto merge
-		// Merge branch
+	if !cfg.ManualMerge || isPrivateFork {
 		if cfg.PRMergeBranch != "" {
 			return CheckoutPRMergeBranchMethod
 		}
@@ -96,7 +93,6 @@ func selectCheckoutMethod(cfg Config) CheckoutMethod {
 		return CheckoutPRDiffFileMethod
 	}
 
-	// ** PR/MR with manual merge
 	if isFork {
 		return CheckoutForkPRManualMergeMethod
 	}
@@ -202,20 +198,19 @@ func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, isTag b
 	switch checkoutStrategy {
 	case CheckoutCommitMethod, CheckoutBranchMethod:
 		return fetchOptions{
-			depth: cloneDepth,
-			tags:  isTag,
+			depth:   cloneDepth,
+			allTags: isTag,
 		}
 	case CheckoutTagMethod:
 		return fetchOptions{
-			depth: cloneDepth,
-			tags:  true, // Needed to check out tags
+			depth:   cloneDepth,
+			allTags: true,
 		}
 	case CheckoutPRMergeBranchMethod, CheckoutPRDiffFileMethod:
 		return fetchOptions{
-			depth: cloneDepth,
-			tags:  false,
+			depth:   cloneDepth,
+			allTags: false,
 		}
-	// Clone Depth is not set for manual merge yet
 	case CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod, CheckoutNoneMethod:
 		return fetchOptions{}
 	default:
@@ -233,10 +228,6 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 
 			return nil
 		}
-	case CheckoutBranchMethod:
-		return nil
-	case CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod:
-		return nil
 	case CheckoutPRMergeBranchMethod:
 		{
 			if !fetchOpts.IsFullDepth() {
@@ -245,7 +236,7 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 
 			return nil
 		}
-	case CheckoutPRDiffFileMethod:
+	case CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod, CheckoutBranchMethod, CheckoutPRDiffFileMethod:
 		return nil
 	default:
 		return nil

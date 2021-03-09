@@ -13,7 +13,7 @@ import (
 )
 
 //
-// PRDiffFileParams are parameters to check out a Merge/Pull Request if a diff file is available
+// PRDiffFileParams are parameters to check out a Merge/Pull Request (when a diff file is available)
 type PRDiffFileParams struct {
 	BaseBranch string
 }

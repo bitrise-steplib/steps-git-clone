@@ -7,7 +7,7 @@ import (
 	"github.com/bitrise-io/go-utils/command/git"
 )
 
-// PRMergeBranchParams are parameters to check out a Merge/Pull Request if merge branch is available
+// PRMergeBranchParams are parameters to check out a Merge/Pull Request (when a merge branch is available)
 type PRMergeBranchParams struct {
 	BaseBranch string
 	// Merge branch contains the changes premerged by the Git provider

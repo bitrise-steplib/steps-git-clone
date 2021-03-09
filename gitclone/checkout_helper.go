@@ -11,9 +11,13 @@ import (
 )
 
 type fetchOptions struct {
-	// Fetch tags ("--tags")
-	tags bool
-	// Clone depth ("--depth=")
+	// Sets '--tags' flag
+	// From https://git-scm.com/docs/fetch-options/2.29.0#Documentation/fetch-options.txt---allTags:
+	// "Fetch all tags from the remote (i.e., fetch remote tags refs/tags/* into local tags with the same name),
+	// in addition to whatever else would otherwise be fetched"
+	allTags bool
+	// Sets '--depth' flag
+	// More info: https://git-scm.com/docs/fetch-options/2.29.0#Documentation/fetch-options.txt---depthltdepthgt
 	depth int
 }
 
@@ -28,7 +32,7 @@ func fetch(gitCmd git.Git, remote string, ref *string, traits fetchOptions) erro
 	if traits.depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(traits.depth))
 	}
-	if traits.tags {
+	if traits.allTags {
 		opts = append(opts, "--tags")
 	}
 	if ref != nil {
@@ -75,7 +79,6 @@ func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) er
 
 func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTraits fetchOptions) error {
 	branch := strings.TrimPrefix(branchRef, branchRefPrefix)
-	// Fetch then checkout
 	if err := fetch(gitCmd, remote, &branchRef, fetchTraits); err != nil {
 		return err
 	}

@@ -9,7 +9,7 @@ import (
 )
 
 //
-// PRManualMergeParams are parameters to check out a Merge Request if no merge branch or diff file is avavilable
+// PRManualMergeParams are parameters to check out a Merge Request using manual merge
 type PRManualMergeParams struct {
 	// Source
 	HeadBranch, Commit string
@@ -17,7 +17,7 @@ type PRManualMergeParams struct {
 	BaseBranch string
 }
 
-//NewPRManualMergeParams  validates and returns a new PRManualMergeParams
+//NewPRManualMergeParams validates and returns a new PRManualMergeParams
 func NewPRManualMergeParams(headBranch, commit, baseBranch string) (*PRManualMergeParams, error) {
 	if strings.TrimSpace(headBranch) == "" {
 		return nil, NewParameterValidationError("manual PR merge checkout strategy can not be used: no head branch specified")
@@ -68,7 +68,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 }
 
 //
-// ForkPRManualMergeParams are parameters to check out a Pull Request if no merge branch or diff file is available
+// ForkPRManualMergeParams are parameters to check out a Pull Request using manual merge
 type ForkPRManualMergeParams struct {
 	// Source
 	HeadBranch, HeadRepoURL string

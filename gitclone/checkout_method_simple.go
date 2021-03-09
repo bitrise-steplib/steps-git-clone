@@ -82,7 +82,7 @@ func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallback
 }
 
 //
-// TagParams are parameters to checko out a given tag
+// TagParams are parameters to check out a given tag
 type TagParams struct {
 	Tag    string
 	Branch *string
