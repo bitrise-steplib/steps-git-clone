@@ -3,7 +3,6 @@ package gitclone
 import (
 	"fmt"
 
-	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/envman/envman"
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command/git"
@@ -65,71 +64,28 @@ func getMaxEnvLength() (int, error) {
 	return configs.EnvBytesLimitInKB * 1024, nil
 }
 
-func checkoutState(gitCmd git.Git, cfg Config) *step.Error {
-	checkoutArg := getCheckoutArg(cfg.Commit, cfg.Tag, cfg.Branch)
+func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) error {
+	checkoutMethod := selectCheckoutMethod(cfg)
+	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.Tag != "")
 
-	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
-	if isPR {
-		if !cfg.ManualMerge || isPrivate(cfg.PRRepositoryURL) && isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
-			if err := autoMerge(gitCmd, cfg.PRMergeBranch, cfg.BranchDest, cfg.BuildURL,
-				cfg.BuildAPIToken, cfg.CloneDepth, cfg.PRID); err != nil {
-				return newStepError(
-					"auto_merge_failed",
-					fmt.Errorf("merging PR (automatic) failed: %v", err),
-					"Merging pull request failed",
-				)
-			}
-		} else {
-			if err := manualMerge(gitCmd, cfg.RepositoryURL, cfg.PRRepositoryURL, cfg.Branch,
-				cfg.Commit, cfg.BranchDest); err != nil {
-				return newStepError(
-					"manual_merge_failed",
-					fmt.Errorf("merging PR (manual) failed: %v", err),
-					"Merging pull request failed",
-				)
-			}
-		}
-	} else if checkoutArg != "" {
-		if err := checkout(gitCmd, checkoutArg, cfg.Branch, cfg.CloneDepth, cfg.Tag != ""); err != nil {
-			return err
-		}
-		// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
-		if checkoutArg == cfg.Branch && cfg.Tag == "" && cfg.Commit == "" {
-			if err := runner.Run(gitCmd.Merge("origin/" + cfg.Branch)); err != nil {
-				return newStepError(
-					"update_branch_failed",
-					fmt.Errorf("updating branch (merge) failed %q: %v", cfg.Branch, err),
-					"Updating branch failed",
-				)
-			}
-		}
+	checkoutStrategy, err := createCheckoutStrategy(checkoutMethod, cfg, patch)
+	if err != nil {
+		return err
+	}
+	if checkoutStrategy == nil {
+		return fmt.Errorf("failed to select a checkout stategy")
 	}
 
-	if cfg.UpdateSubmodules {
-		if err := runner.Run(gitCmd.SubmoduleUpdate()); err != nil {
-			return newStepError(
-				updateSubmodelFailedTag,
-				fmt.Errorf("submodule update: %v", err),
-				"Updating submodules has failed",
-			)
-		}
-	}
-
-	if isPR {
-		if err := runner.Run(gitCmd.Checkout("--detach")); err != nil {
-			return newStepError(
-				"detach_head_failed",
-				fmt.Errorf("detach head failed: %v", err),
-				"Detaching head failed",
-			)
-		}
+	if err := checkoutStrategy.do(gitCmd, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
+		log.Infof("Checkout strategy used: %T", checkoutStrategy)
+		return err
 	}
 
 	return nil
 }
 
 // Execute is the entry point of the git clone process
-func Execute(cfg Config) *step.Error {
+func Execute(cfg Config) error {
 	maxEnvLength, err := getMaxEnvLength()
 	if err != nil {
 		return newStepError(
@@ -183,8 +139,18 @@ func Execute(cfg Config) *step.Error {
 		}
 	}
 
-	if err := checkoutState(gitCmd, cfg); err != nil {
+	if err := checkoutState(gitCmd, cfg, defaultPatchSource{}); err != nil {
 		return err
+	}
+
+	if cfg.UpdateSubmodules {
+		if err := runner.Run(gitCmd.SubmoduleUpdate()); err != nil {
+			return newStepError(
+				updateSubmodelFailedTag,
+				fmt.Errorf("submodule update: %v", err),
+				"Updating submodules has failed",
+			)
+		}
 	}
 
 	checkoutArg := getCheckoutArg(cfg.Commit, cfg.Tag, cfg.Branch)
