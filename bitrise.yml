@@ -596,23 +596,21 @@ workflows:
             mkdir ${CLONE_DIR}
 
             # Repo A
-            cd repoA
+            cd ${GIT_DIR}
             git init
             echo "aabbccdd" > README.md
             git add .
             git commit -m "Initial commit A"
-            cd -
 
             # Repo B (clone of Repo A)
-            cd repoB
-            git clone ../repoA .
+            cd ${PR_GIT_DIR}
+            git clone ${GIT_DIR} .
             echo "eeffgghh" >>README.md
             git add .
             git commit -m "PR commit B"
             
             # Diff files
             git diff HEAD^ HEAD | tee -a ${DIFF_DIR}/diff.txt
-            cd -
             
             # Set envs
             envman add --key CLONE_INTO_DIR --value ${CLONE_DIR}
@@ -626,8 +624,11 @@ workflows:
         - clone_into_dir: $CLONE_INTO_DIR
         - pull_request_id: 8
         - pull_request_repository_url: $PR_REPOSITORY_URL
+        - pull_request_merge_branch: ""
         - branch_dest: "master"
         - branch: "master"
+        - commit: ""
+        - tag: ""
         - clone_depth: "1"
         - manual_merge: "no"
     - script:
