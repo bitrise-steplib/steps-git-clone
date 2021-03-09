@@ -238,7 +238,7 @@ var testCases = [...]struct {
 			`git "fetch" "origin" "refs/heads/pr_test:pr_test"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
-			`git "merge" "pr_test"`, // ToDo: warning: refname 'pr_test' is ambiguous.
+			`git "merge" "pr_test"`, // warning: refname 'pr_test' is ambiguous.
 			`git "checkout" "--detach"`,
 		},
 	},
@@ -304,7 +304,7 @@ var testCases = [...]struct {
 		},
 		cmdOutputs: map[string]commandOutput{
 			`git "fetch" "origin" "refs/heads/fake"`: {failForCalls: always},
-			`git "branch" "-r"`:                      {output: "  origin/master"}, //"ToDO:  origin/master\n  origin/HEAD -> origin/master"
+			`git "branch" "-r"`:                      {output: "  origin/master"},
 		},
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/fake"`,

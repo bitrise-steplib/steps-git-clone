@@ -225,7 +225,6 @@ func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, isTag b
 
 func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fallbackRetry {
 	switch checkoutStrategy {
-	// ToDo: fallback not needed for tag checkout
 	case CheckoutCommitMethod, CheckoutTagMethod:
 		{
 			if !fetchOpts.IsFullDepth() {

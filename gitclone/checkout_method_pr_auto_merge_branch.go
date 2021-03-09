@@ -1,7 +1,6 @@
 package gitclone
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
@@ -35,7 +34,6 @@ type checkoutPRMergeBranch struct {
 }
 
 func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
-	// ToDo: Use fetchInitialBranch
 	// Check out initial branch (fetchInitialBranch part1)
 	// `git "fetch" "origin" "refs/heads/master"`
 	baseBranchRef := branchRefPrefix + c.params.BaseBranch
@@ -44,7 +42,6 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	}
 
 	// `git "fetch" "origin" "refs/pull/7/head:pull/7"`
-	// ToDo: apply clone depth
 	headBranchRef := fetchArg(c.params.MergeBranch)
 	if err := fetch(gitCmd, defaultRemoteName, &headBranchRef, fetchOptions{}); err != nil {
 		return err
