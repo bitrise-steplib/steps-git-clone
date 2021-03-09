@@ -60,7 +60,7 @@ type defaultPatchSource struct{}
 func (defaultPatchSource) getDiffPath(buildURL, apiToken string) (string, error) {
 	url, err := url.Parse(buildURL)
 	if err != nil {
-		return "", fmt.Errorf("Could not parse diff file URL: %v", err)
+		return "", fmt.Errorf("could not parse diff file URL: %v", err)
 	}
 
 	if url.Scheme == "file" {

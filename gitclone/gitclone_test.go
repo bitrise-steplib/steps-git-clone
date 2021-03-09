@@ -419,11 +419,6 @@ func Test_checkoutState(t *testing.T) {
 	}
 }
 
-type commandOutput struct {
-	output       string
-	failForCalls int
-}
-
 func givenMockRunner() *MockRunner {
 	mockRunner := new(MockRunner)
 	mockRunner.GivenRunForOutputSucceeds()
