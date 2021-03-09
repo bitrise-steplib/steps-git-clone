@@ -609,10 +609,10 @@ workflows:
             echo "eeffgghh" >>README.md
             git add .
             git commit -m "PR commit B"
-            cd -
             
             # Diff files
             git diff HEAD^ HEAD | tee -a ${DIFF_DIR}/diff.txt
+            cd -
             
             # Set envs
             envman add --key CLONE_INTO_DIR --value ${CLONE_DIR}
