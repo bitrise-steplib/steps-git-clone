@@ -25,7 +25,6 @@ const (
 	// CheckoutPRDiffFileMethod  checks out a MR/PR (when a diff file is available)
 	CheckoutPRDiffFileMethod
 	// CheckoutPRManualMergeMethod check out a Merge Request using manual merge
-
 	CheckoutPRManualMergeMethod
 	// CheckoutForkPRManualMergeMethod checks out a PR using manual merge
 	CheckoutForkPRManualMergeMethod
