@@ -40,7 +40,6 @@ workflows:
     - errcheck:
     - go-test:
     after_run:
-    - test_diff_file
     - _test_error
     - _test_submodule
     - _test_no_checkout
@@ -60,6 +59,7 @@ workflows:
     - _test_hosted_git_notfork
     - _test_unrelated_histories
     - _test_hosted_git_ssh_prefix
+    - test_diff_file
 
   _test_submodule:
     before_run:
@@ -601,6 +601,7 @@ workflows:
             echo "aabbccdd" > README.md
             git add .
             git commit -m "Initial commit A"
+            cd -
 
             # Repo B (clone of Repo A)
             cd ${PR_GIT_DIR}
@@ -608,6 +609,7 @@ workflows:
             echo "eeffgghh" >>README.md
             git add .
             git commit -m "PR commit B"
+            cd -
             
             # Diff files
             git diff HEAD^ HEAD | tee -a ${DIFF_DIR}/diff.txt
