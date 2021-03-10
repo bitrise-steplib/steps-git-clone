@@ -216,25 +216,15 @@ func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchAl
 }
 
 func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fallbackRetry {
-	switch checkoutStrategy {
-	case CheckoutCommitMethod, CheckoutTagMethod:
-		{
-			if !fetchOpts.IsFullDepth() {
-				return simpleUnshallow{}
-			}
-
-			return nil
-		}
-	case CheckoutPRMergeBranchMethod:
-		{
-			if !fetchOpts.IsFullDepth() {
-				return resetUnshallow{}
-			}
-
-			return nil
-		}
-	case CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod, CheckoutBranchMethod, CheckoutPRDiffFileMethod:
+	if fetchOpts.IsFullDepth() {
 		return nil
+	}
+
+	switch checkoutStrategy {
+	case CheckoutCommitMethod, CheckoutTagMethod, CheckoutBranchMethod:
+		return simpleUnshallow{}
+	case CheckoutPRMergeBranchMethod, CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod, CheckoutPRDiffFileMethod:
+		return resetUnshallow{}
 	default:
 		return nil
 	}
