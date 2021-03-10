@@ -32,13 +32,12 @@ workflows:
     envs:
     - CLONE_INTO_DIR: .
     - GIT_REPOSITORY_URL: https://github.com/bitrise-io/git-clone-test.git
+    before_run:
+    - audit-this-step
+    - go-tests
     steps:
     - activate-ssh-key:
         run_if: true
-    - go-list:
-    - golint:
-    - errcheck:
-    - go-test:
     after_run:
     - _test_error
     - _test_submodule
@@ -60,6 +59,13 @@ workflows:
     - _test_unrelated_histories
     - _test_hosted_git_ssh_prefix
     - test_diff_file
+
+  go-tests:
+    steps:
+    - go-list:
+    - golint:
+    - errcheck:
+    - go-test:
 
   _test_submodule:
     before_run:
@@ -686,8 +692,6 @@ workflows:
         inputs:
         - path: $STEP_TMPDIR
 
-  # ----------------------------------------------------------------
-  # --- workflow to Share this step into a Step Library
   audit-this-step:
     steps:
     - script:
