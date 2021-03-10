@@ -44,7 +44,7 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 
 	// `git "fetch" "origin" "refs/pull/7/head:pull/7"`
 	headBranchRef := fetchArg(c.params.MergeBranch)
-	if err := fetch(gitCmd, defaultRemoteName, &headBranchRef, fetchOptions{}); err != nil {
+	if err := fetch(gitCmd, defaultRemoteName, &headBranchRef, fetchOpts); err != nil {
 		return err
 	}
 

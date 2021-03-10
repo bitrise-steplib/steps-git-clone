@@ -193,28 +193,21 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 
 }
 
-func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, isTag bool) fetchOptions {
+func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchAllTags bool) fetchOptions {
+	opts := fetchOptions{
+		depth:   cloneDepth,
+		allTags: false,
+	}
+
 	switch checkoutStrategy {
 	case CheckoutCommitMethod, CheckoutBranchMethod:
-		return fetchOptions{
-			depth:   cloneDepth,
-			allTags: isTag,
-		}
+		opts.allTags = fetchAllTags
 	case CheckoutTagMethod:
-		return fetchOptions{
-			depth:   cloneDepth,
-			allTags: true,
-		}
-	case CheckoutPRMergeBranchMethod, CheckoutPRDiffFileMethod:
-		return fetchOptions{
-			depth:   cloneDepth,
-			allTags: false,
-		}
-	case CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod, CheckoutNoneMethod:
-		return fetchOptions{}
+		opts.allTags = true
 	default:
-		return fetchOptions{}
 	}
+
+	return opts
 }
 
 func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fallbackRetry {
