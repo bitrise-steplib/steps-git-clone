@@ -12,8 +12,8 @@ app:
       echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
       echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
       echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
-      opts:
-    is_expand: false
+    opts:
+      is_expand: false
   # define these envs in your .bitrise.secrets.yml
   - SSH_RSA_PRIVATE_KEY: $SSH_RSA_PRIVATE_KEY
 
