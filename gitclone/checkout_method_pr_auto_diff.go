@@ -15,17 +15,25 @@ import (
 //
 // PRDiffFileParams are parameters to check out a Merge/Pull Request (when a diff file is available)
 type PRDiffFileParams struct {
-	BaseBranch string
+	BaseBranch             string
+	PRManualMergeParam     *PRManualMergeParams
+	ForkPRManualMergeParam *ForkPRManualMergeParams
 }
 
 // NewPRDiffFileParams validates and returns a new PRDiffFileParams
-func NewPRDiffFileParams(baseBranch string) (*PRDiffFileParams, error) {
+func NewPRDiffFileParams(
+	baseBranch string,
+	prManualMergeParam *PRManualMergeParams,
+	forkPRManualMergeParam *ForkPRManualMergeParams,
+) (*PRDiffFileParams, error) {
 	if strings.TrimSpace(baseBranch) == "" {
 		return nil, NewParameterValidationError("PR diff file based checkout strategy can not be used: no base branch specified")
 	}
 
 	return &PRDiffFileParams{
-		BaseBranch: baseBranch,
+		BaseBranch:             baseBranch,
+		PRManualMergeParam:     prManualMergeParam,
+		ForkPRManualMergeParam: forkPRManualMergeParam,
 	}, nil
 }
 
@@ -46,6 +54,7 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 	}
 
 	if err := runner.Run(gitCmd.Apply(c.patchFile)); err != nil {
+
 		return fmt.Errorf("could not apply patch (%s): %v", c.patchFile, err)
 	}
 
