@@ -226,7 +226,10 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 	}
 
 	switch checkoutStrategy {
-	case CheckoutCommitMethod, CheckoutTagMethod, CheckoutBranchMethod:
+	case CheckoutBranchMethod:
+		// the given branch's tip will be checked out, no need to unshallow
+		return nil
+	case CheckoutCommitMethod, CheckoutTagMethod:
 		return simpleUnshallow{}
 	case CheckoutPRMergeBranchMethod, CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod, CheckoutPRDiffFileMethod:
 		return resetUnshallow{}
