@@ -38,13 +38,13 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	// Check out initial branch (fetchInitialBranch part1)
 	// `git "fetch" "origin" "refs/heads/master"`
 	baseBranchRef := branchRefPrefix + c.params.BaseBranch
-	if err := fetch(gitCmd, defaultRemoteName, &baseBranchRef, fetchOpts); err != nil {
+	if err := fetch(gitCmd, defaultRemoteName, baseBranchRef, fetchOpts); err != nil {
 		return err
 	}
 
 	// `git "fetch" "origin" "refs/pull/7/head:pull/7"`
 	headBranchRef := fetchArg(c.params.MergeBranch)
-	if err := fetch(gitCmd, defaultRemoteName, &headBranchRef, fetchOpts); err != nil {
+	if err := fetch(gitCmd, defaultRemoteName, headBranchRef, fetchOpts); err != nil {
 		return err
 	}
 

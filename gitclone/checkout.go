@@ -118,11 +118,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 		}
 	case CheckoutTagMethod:
 		{
-			var branch *string
-			if cfg.Branch != "" {
-				branch = &cfg.Branch
-			}
-			params, err := NewTagParams(cfg.Tag, branch)
+			params, err := NewTagParams(cfg.Tag, cfg.Branch)
 			if err != nil {
 				return nil, err
 			}
