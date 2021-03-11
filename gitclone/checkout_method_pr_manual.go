@@ -124,9 +124,8 @@ func (c checkoutManualMergeParams) manualMerge(gitCmd git.Git, fetchOptions fetc
 		}
 	}
 
-	// Fetch + merge fork branch
-	forkBranchRef := branchRefPrefix + c.HeadBranch
-	if err := fetch(gitCmd, remote, forkBranchRef, fetchOptions); err != nil {
+	branchRef := branchRefPrefix + c.HeadBranch
+	if err := fetch(gitCmd, remote, branchRef, fetchOptions); err != nil {
 		return err
 	}
 
