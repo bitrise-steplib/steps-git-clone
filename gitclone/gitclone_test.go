@@ -44,7 +44,7 @@ var testCases = [...]struct {
 			Branch: "hcnarb",
 		},
 		wantCmds: []string{
-			`git "fetch"`,
+			`git "fetch" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -113,7 +113,7 @@ var testCases = [...]struct {
 			Branch: "hcnarb",
 		},
 		wantCmds: []string{
-			`git "fetch" "--tags"`,
+			`git "fetch" "--tags" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -160,7 +160,7 @@ var testCases = [...]struct {
 			ManualMerge: true,
 		},
 		wantCmds: []string{
-			`git "fetch"`,
+			`git "fetch" "origin" "refs/heads/test/commit-messages"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},

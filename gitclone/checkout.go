@@ -107,7 +107,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 		}
 	case CheckoutCommitMethod:
 		{
-			params, err := NewCommitParams(cfg.Commit)
+			params, err := NewCommitParams(cfg.Commit, cfg.Branch)
 			if err != nil {
 				return nil, err
 			}

@@ -18,16 +18,18 @@ func (c checkoutNone) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fal
 // CommitParams are parameters to check out a given commit (In addition to the repository URL)
 type CommitParams struct {
 	Commit string
+	Branch string
 }
 
 // NewCommitParams validates and returns a new CommitParams
-func NewCommitParams(commit string) (*CommitParams, error) {
+func NewCommitParams(commit, branch string) (*CommitParams, error) {
 	if strings.TrimSpace(commit) == "" {
 		return nil, NewParameterValidationError("commit checkout strategy can not be used: no commit hash specified")
 	}
 
 	return &CommitParams{
 		Commit: commit,
+		Branch: branch,
 	}, nil
 }
 
@@ -37,9 +39,12 @@ type checkoutCommit struct {
 }
 
 func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	// Fetch then checkout
-	// No branch specified for fetch
-	if err := fetch(gitCmd, defaultRemoteName, "", fetchOptions); err != nil {
+	branchRefParam := ""
+	if c.params.Branch != "" {
+		branchRefParam = branchRefPrefix + c.params.Branch
+	}
+
+	if err := fetch(gitCmd, defaultRemoteName, branchRefParam, fetchOptions); err != nil {
 		return err
 	}
 
