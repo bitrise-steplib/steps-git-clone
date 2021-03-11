@@ -29,10 +29,11 @@ var testCases = [...]struct {
 	{
 		name: "Checkout commit",
 		cfg: Config{
-			Commit: "76a934a",
+			Commit:     "76a934a",
+			CloneDepth: 1,
 		},
 		wantCmds: []string{
-			`git "fetch"`,
+			`git "fetch" "--depth=1"`,
 			`git "checkout" "76a934a"`,
 		},
 	},
@@ -62,10 +63,11 @@ var testCases = [...]struct {
 	{
 		name: "Checkout branch",
 		cfg: Config{
-			Branch: "hcnarb",
+			Branch:     "hcnarb",
+			CloneDepth: 1,
 		},
 		wantCmds: []string{
-			`git "fetch" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--depth=1" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "hcnarb"`,
 			`git "merge" "origin/hcnarb"`,
 		},
@@ -73,10 +75,11 @@ var testCases = [...]struct {
 	{
 		name: "Checkout tag",
 		cfg: Config{
-			Tag: "gat",
+			Tag:        "gat",
+			CloneDepth: 1,
 		},
 		wantCmds: []string{
-			`git "fetch" "--tags"`,
+			`git "fetch" "--depth=1" "--tags"`,
 			`git "checkout" "gat"`,
 		},
 	},
@@ -128,7 +131,7 @@ var testCases = [...]struct {
 
 	// ** PRs manual merge
 	{
-		name: "PR - no fork - manual merge: branch and commit (ignore depth)",
+		name: "PR - no fork - manual merge: branch and commit",
 		cfg: Config{
 			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
@@ -139,11 +142,11 @@ var testCases = [...]struct {
 			ManualMerge:   true,
 		},
 		wantCmds: []string{
-			`git "fetch" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,     // Already on 'master'
 			`git "merge" "origin/master"`, // Already up to date.
 			`git "log" "-1" "--format=%H"`,
-			`git "fetch" "origin" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--depth=1" "origin" "refs/heads/test/commit-messages"`,
 			`git "merge" "76a934ae"`,
 			`git "checkout" "--detach"`,
 		},
@@ -154,11 +157,10 @@ var testCases = [...]struct {
 			Commit:      "76a934ae",
 			Branch:      "test/commit-messages",
 			BranchDest:  "master",
-			CloneDepth:  1,
 			ManualMerge: true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--depth=1"`,
+			`git "fetch"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -171,14 +173,15 @@ var testCases = [...]struct {
 			BranchDest:      "master",
 			Commit:          "76a934ae",
 			ManualMerge:     true,
+			CloneDepth:      1,
 		},
 		wantCmds: []string{
-			`git "fetch" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
 			`git "remote" "add" "fork" "https://github.com/bitrise-io/other-repo.git"`,
-			`git "fetch" "fork" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--depth=1" "fork" "refs/heads/test/commit-messages"`,
 			`git "merge" "fork/test/commit-messages"`,
 			`git "checkout" "--detach"`,
 		},
@@ -212,10 +215,11 @@ var testCases = [...]struct {
 		cfg: Config{
 			BranchDest:    "master",
 			PRMergeBranch: "pull/5/merge",
+			CloneDepth:    1,
 		},
 		wantCmds: []string{
-			`git "fetch" "origin" "refs/heads/master"`,
-			`git "fetch" "origin" "refs/pull/5/head:pull/5"`,
+			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "origin" "refs/pull/5/head:pull/5"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "merge" "pull/5"`,
@@ -280,11 +284,12 @@ var testCases = [...]struct {
 			BranchDest:    "master",
 			PRID:          7,
 			ManualMerge:   false,
+			CloneDepth:    1,
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
 		wantErr:     nil,
 		wantCmds: []string{
-			`git "fetch" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "apply" "--index" "diff_path"`,
 			`git "checkout" "--detach"`,
@@ -373,7 +378,7 @@ var testCases = [...]struct {
 			GivenRunWithRetrySucceeds(),
 		wantCmds: []string{
 			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
-			`git "fetch" "origin" "refs/pull/5/head:pull/5"`,
+			`git "fetch" "--depth=1" "origin" "refs/pull/5/head:pull/5"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "merge" "pull/5"`,

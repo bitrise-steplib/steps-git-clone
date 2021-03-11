@@ -3,19 +3,19 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-    - STEP_ID_IN_STEPLIB: git-clone
-    - GIT_REPOSITORY_URL: https://github.com/bitrise-io/steps-git-clone.git
-    - opts:
-        is_expand: false
-      EVAL_SCRIPT: |-
-        echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
-        echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
-        echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
-        echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
-        echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
-        echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
-        echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
-        echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+  - EVAL_SCRIPT: |-
+      echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+      echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+      echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+      echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
+      echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+      echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+      echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+      echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    opts:
+      is_expand: false
+  # define these envs in your .bitrise.secrets.yml
+  - SSH_RSA_PRIVATE_KEY: $SSH_RSA_PRIVATE_KEY
 
 workflows:
   test:
@@ -32,13 +32,12 @@ workflows:
     envs:
     - CLONE_INTO_DIR: .
     - GIT_REPOSITORY_URL: https://github.com/bitrise-io/git-clone-test.git
+    before_run:
+    - audit-this-step
+    - go-tests
     steps:
     - activate-ssh-key:
         run_if: true
-    - go-list:
-    - golint:
-    - errcheck:
-    - go-test:
     after_run:
     - _test_error
     - _test_submodule
@@ -54,12 +53,19 @@ workflows:
     - _test_checkout_pull_request_with_depth
     - _test_unshallow
     - _test_checkout_different_dir
-    - _test_manual_merge_ignore_depth
+    - _test_manual_merge_unshallow
     - _test_commit_logs
     - _test_hosted_git_notfork
     - _test_unrelated_histories
     - _test_hosted_git_ssh_prefix
     - test_diff_file
+
+  go-tests:
+    steps:
+    - go-list:
+    - golint:
+    - errcheck:
+    - go-test:
 
   _test_submodule:
     before_run:
@@ -406,7 +412,7 @@ workflows:
         inputs:
         - dir_to_check: $CLONE_INTO_DIR
 
-  _test_manual_merge_ignore_depth:
+  _test_manual_merge_unshallow:
     before_run:
     - _create_tmpdir
     steps:
@@ -686,8 +692,6 @@ workflows:
         inputs:
         - path: $STEP_TMPDIR
 
-  # ----------------------------------------------------------------
-  # --- workflow to Share this step into a Step Library
   audit-this-step:
     steps:
     - script:

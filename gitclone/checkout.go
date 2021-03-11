@@ -160,9 +160,14 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 				return nil, fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and could not download diff file: %v", err)
 			}
 
+			params, err := NewPRDiffFileParams(cfg.BranchDest)
+			if err != nil {
+				return nil, err
+			}
+
 			return checkoutPRDiffFile{
-				baseBranch: cfg.BranchDest,
-				patchFile:  patchFile,
+				params:    *params,
+				patchFile: patchFile,
 			}, nil
 		}
 	case CheckoutForkPRManualMergeMethod:
@@ -193,50 +198,36 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 
 }
 
-func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, isTag bool) fetchOptions {
+func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchAllTags bool) fetchOptions {
+	opts := fetchOptions{
+		depth:   cloneDepth,
+		allTags: false,
+	}
+
 	switch checkoutStrategy {
 	case CheckoutCommitMethod, CheckoutBranchMethod:
-		return fetchOptions{
-			depth:   cloneDepth,
-			allTags: isTag,
-		}
+		opts.allTags = fetchAllTags
 	case CheckoutTagMethod:
-		return fetchOptions{
-			depth:   cloneDepth,
-			allTags: true,
-		}
-	case CheckoutPRMergeBranchMethod, CheckoutPRDiffFileMethod:
-		return fetchOptions{
-			depth:   cloneDepth,
-			allTags: false,
-		}
-	case CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod, CheckoutNoneMethod:
-		return fetchOptions{}
+		opts.allTags = true
 	default:
-		return fetchOptions{}
 	}
+
+	return opts
 }
 
 func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fallbackRetry {
-	switch checkoutStrategy {
-	case CheckoutCommitMethod, CheckoutTagMethod:
-		{
-			if !fetchOpts.IsFullDepth() {
-				return simpleUnshallow{}
-			}
-
-			return nil
-		}
-	case CheckoutPRMergeBranchMethod:
-		{
-			if !fetchOpts.IsFullDepth() {
-				return resetUnshallow{}
-			}
-
-			return nil
-		}
-	case CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod, CheckoutBranchMethod, CheckoutPRDiffFileMethod:
+	if fetchOpts.IsFullDepth() {
 		return nil
+	}
+
+	switch checkoutStrategy {
+	case CheckoutBranchMethod:
+		// the given branch's tip will be checked out, no need to unshallow
+		return nil
+	case CheckoutCommitMethod, CheckoutTagMethod:
+		return simpleUnshallow{}
+	case CheckoutPRMergeBranchMethod, CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod, CheckoutPRDiffFileMethod:
+		return resetUnshallow{}
 	default:
 		return nil
 	}

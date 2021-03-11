@@ -18,8 +18,8 @@ type PRDiffFileParams struct {
 	BaseBranch string
 }
 
-// NewPRDiffFileParams validates and returns a new PRDiffFile
-func NewPRDiffFileParams(baseBranch string, PRID uint) (*PRDiffFileParams, error) {
+// NewPRDiffFileParams validates and returns a new PRDiffFileParams
+func NewPRDiffFileParams(baseBranch string) (*PRDiffFileParams, error) {
 	if strings.TrimSpace(baseBranch) == "" {
 		return nil, NewParameterValidationError("PR diff file based checkout strategy can not be used: no base branch specified")
 	}
@@ -31,16 +31,17 @@ func NewPRDiffFileParams(baseBranch string, PRID uint) (*PRDiffFileParams, error
 
 // checkoutPRDiffFile
 type checkoutPRDiffFile struct {
-	baseBranch, patchFile string
+	params    PRDiffFileParams
+	patchFile string
 }
 
 func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	baseBranchRef := branchRefPrefix + c.baseBranch
+	baseBranchRef := branchRefPrefix + c.params.BaseBranch
 	if err := fetch(gitCmd, defaultRemoteName, &baseBranchRef, fetchOptions); err != nil {
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, c.baseBranch, fallback); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, c.params.BaseBranch, fallback); err != nil {
 		return err
 	}
 
