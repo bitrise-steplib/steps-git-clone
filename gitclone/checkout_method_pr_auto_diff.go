@@ -9,6 +9,7 @@ import (
 
 	"github.com/bitrise-io/go-steputils/input"
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-steplib/bitrise-step-export-universal-apk/filedownloader"
 )
 
@@ -54,8 +55,42 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 	}
 
 	if err := runner.Run(gitCmd.Apply(c.patchFile)); err != nil {
+		log.Warnf("Could not apply patch (%s): %v", c.patchFile, err)
+		log.Warnf("Falling back to manual merge...")
 
-		return fmt.Errorf("could not apply patch (%s): %v", c.patchFile, err)
+		if c.params.PRManualMergeParam != nil {
+			headBranchRef := branchRefPrefix + c.params.PRManualMergeParam.HeadBranch
+			if err := fetch(gitCmd, defaultRemoteName, &headBranchRef, fetchOptions); err != nil {
+				return nil
+			}
+
+			if err := mergeWithCustomRetry(gitCmd, c.params.PRManualMergeParam.Commit, fallback); err != nil {
+				return err
+			}
+
+			return nil
+		} else if c.params.ForkPRManualMergeParam != nil {
+			const forkRemoteName = "fork"
+			// Add fork remote
+			if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.params.ForkPRManualMergeParam.HeadRepoURL)); err != nil {
+				return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.ForkPRManualMergeParam.HeadRepoURL, err)
+			}
+
+			// Fetch + merge fork branch
+			forkBranchRef := branchRefPrefix + c.params.ForkPRManualMergeParam.HeadBranch
+			if err := fetch(gitCmd, forkRemoteName, &forkBranchRef, fetchOptions); err != nil {
+				return err
+			}
+
+			remoteForkBranch := fmt.Sprintf("%s/%s", forkRemoteName, c.params.ForkPRManualMergeParam.HeadBranch)
+			if err := mergeWithCustomRetry(gitCmd, remoteForkBranch, fallback); err != nil {
+				return err
+			}
+
+			return nil
+		} else {
+			return fmt.Errorf("could not apply patch (%s): %v", c.patchFile, err)
+		}
 	}
 
 	return detachHead(gitCmd)
