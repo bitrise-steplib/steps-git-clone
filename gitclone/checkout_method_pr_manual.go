@@ -8,6 +8,8 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
+const forkRemoteName = "fork"
+
 //
 // PRManualMergeParams are parameters to check out a Merge Request using manual merge
 type PRManualMergeParams struct {
@@ -48,19 +50,12 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 		return err
 	}
 
-	commitHash, err := runner.RunForOutput(gitCmd.Log("%H"))
-	if err != nil {
-		log.Errorf("log commit hash: %v", err)
-	}
-	log.Printf("commit hash: %s", commitHash)
-
-	// Fetch and merge
-	headBranchRef := branchRefPrefix + c.params.HeadBranch
-	if err := fetch(gitCmd, defaultRemoteName, headBranchRef, fetchOptions); err != nil {
-		return nil
-	}
-
-	if err := mergeWithCustomRetry(gitCmd, c.params.Commit, fallback); err != nil {
+	if err := manualMerge(gitCmd, fetchOptions, fallback, manualMergeParams{
+		HeadBranch:  c.params.HeadBranch,
+		HeadRepoURL: "",
+		BaseBranch:  c.params.BaseBranch,
+		MergeArg:    c.params.Commit,
+	}); err != nil {
 		return err
 	}
 
@@ -107,28 +102,54 @@ func (c checkoutForkPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions,
 		return err
 	}
 
+	const forkRemoteName = "fork"
+	remoteForkBranch := fmt.Sprintf("%s/%s", forkRemoteName, c.params.HeadBranch)
+	if err := manualMerge(gitCmd, fetchOptions, fallback, manualMergeParams{
+		HeadBranch:  c.params.HeadBranch,
+		HeadRepoURL: c.params.HeadRepoURL,
+		BaseBranch:  c.params.BaseBranch,
+		MergeArg:    remoteForkBranch,
+	}); err != nil {
+		return err
+	}
+
+	return detachHead(gitCmd)
+}
+
+type manualMergeParams struct {
+	// Source
+	MergeArg    string
+	HeadBranch  string
+	HeadRepoURL string
+	// Target
+	BaseBranch string
+}
+
+func manualMerge(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry, params manualMergeParams) error {
 	commitHash, err := runner.RunForOutput(gitCmd.Log("%H"))
 	if err != nil {
 		log.Errorf("log commit hash: %v", err)
 	}
 	log.Printf("commit hash: %s", commitHash)
 
-	const forkRemoteName = "fork"
-	// Add fork remote
-	if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.params.HeadRepoURL)); err != nil {
-		return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.HeadRepoURL, err)
+	remote := defaultRemoteName
+	if params.HeadRepoURL != "" {
+		remote = forkRemoteName
+		// Add fork remote
+		if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, params.HeadRepoURL)); err != nil {
+			return fmt.Errorf("adding remote fork repository failed (%s): %v", params.HeadRepoURL, err)
+		}
 	}
 
 	// Fetch + merge fork branch
-	forkBranchRef := branchRefPrefix + c.params.HeadBranch
-	if err := fetch(gitCmd, forkRemoteName, forkBranchRef, fetchOptions); err != nil {
+	forkBranchRef := branchRefPrefix + params.HeadBranch
+	if err := fetch(gitCmd, remote, forkBranchRef, fetchOptions); err != nil {
 		return err
 	}
 
-	remoteForkBranch := fmt.Sprintf("%s/%s", forkRemoteName, c.params.HeadBranch)
-	if err := mergeWithCustomRetry(gitCmd, remoteForkBranch, fallback); err != nil {
+	if err := mergeWithCustomRetry(gitCmd, params.MergeArg, fallback); err != nil {
 		return err
 	}
 
-	return detachHead(gitCmd)
+	return nil
 }
