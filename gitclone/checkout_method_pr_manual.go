@@ -71,9 +71,28 @@ type checkoutManualMergeParams struct {
 	// Source
 	MergeArg    string
 	HeadBranch  string
-	HeadRepoURL string
+	HeadRepoURL string // Optional
 	// Target
 	BaseBranch string
+}
+
+func newCheckoutManualMergeMR(params PRManualMergeParams) checkoutManualMergeParams {
+	return checkoutManualMergeParams{
+		HeadBranch:  params.HeadBranch,
+		HeadRepoURL: "",
+		BaseBranch:  params.BaseBranch,
+		MergeArg:    params.Commit,
+	}
+}
+
+func newCheckoutManualMergePR(params ForkPRManualMergeParams) checkoutManualMergeParams {
+	remoteForkBranch := fmt.Sprintf("%s/%s", forkRemoteName, params.HeadBranch)
+	return checkoutManualMergeParams{
+		HeadBranch:  params.HeadBranch,
+		HeadRepoURL: params.HeadRepoURL,
+		BaseBranch:  params.BaseBranch,
+		MergeArg:    remoteForkBranch,
+	}
 }
 
 func (c checkoutManualMergeParams) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {

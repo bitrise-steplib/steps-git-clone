@@ -173,13 +173,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 				return nil, err
 			}
 
-			remoteForkBranch := fmt.Sprintf("%s/%s", forkRemoteName, params.HeadBranch)
-			return checkoutManualMergeParams{
-				HeadBranch:  params.HeadBranch,
-				HeadRepoURL: params.HeadRepoURL,
-				BaseBranch:  params.BaseBranch,
-				MergeArg:    remoteForkBranch,
-			}, nil
+			return newCheckoutManualMergePR(*params), nil
 		}
 	case CheckoutPRManualMergeMethod:
 		{
@@ -188,12 +182,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 				return nil, err
 			}
 
-			return checkoutManualMergeParams{
-				HeadBranch:  params.HeadBranch,
-				HeadRepoURL: "",
-				BaseBranch:  params.BaseBranch,
-				MergeArg:    params.Commit,
-			}, nil
+			return newCheckoutManualMergeMR(*params), nil
 		}
 	default:
 		return nil, fmt.Errorf("invalid checkout strategy selected")
