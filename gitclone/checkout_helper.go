@@ -10,6 +10,17 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
+type fetchParams struct {
+	branch  string
+	remote  string
+	options fetchOptions
+}
+
+type mergeParams struct {
+	arg      string
+	fallback fallbackRetry
+}
+
 type fetchOptions struct {
 	// Sets '--tags' flag
 	// From https://git-scm.com/docs/fetch-options/2.29.0#Documentation/fetch-options.txt---allTags:
@@ -26,6 +37,7 @@ func (t fetchOptions) IsFullDepth() bool {
 }
 
 const branchRefPrefix = "refs/heads/"
+const forkRemoteName = "fork"
 
 func fetch(gitCmd git.Git, remote string, ref *string, traits fetchOptions) error {
 	var opts []string
@@ -118,6 +130,23 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error
 		}
 
 		return fmt.Errorf("merge failed (%s): %v", arg, mErr)
+	}
+
+	return nil
+}
+
+func fetchAndMerge(gitCmd git.Git, fetchParam fetchParams, mergeParam mergeParams) error {
+	headBranchRef := branchRefPrefix + fetchParam.branch
+	if err := fetch(gitCmd, fetchParam.remote, &headBranchRef, fetchParam.options); err != nil {
+		return nil
+	}
+
+	return mergeWithCustomRetry(gitCmd, mergeParam.arg, mergeParam.fallback)
+}
+
+func addForkRemote(gitCmd git.Git, repoURL string) error {
+	if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, repoURL)); err != nil {
+		return fmt.Errorf("adding remote fork repository failed (%s): %v", repoURL, err)
 	}
 
 	return nil
