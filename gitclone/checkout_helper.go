@@ -37,7 +37,6 @@ func (t fetchOptions) IsFullDepth() bool {
 }
 
 const branchRefPrefix = "refs/heads/"
-const forkRemoteName = "fork"
 
 func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error {
 	var opts []string
@@ -106,7 +105,7 @@ func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTr
 	}
 
 	// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
-	remoteBranch := fmt.Sprintf("%s/%s", defaultRemoteName, branch)
+	remoteBranch := fmt.Sprintf("%s/%s", originRemoteName, branch)
 	if err := runner.Run(gitCmd.Merge(remoteBranch)); err != nil {
 		return newStepError(
 			"update_branch_failed",
@@ -142,14 +141,6 @@ func fetchAndMerge(gitCmd git.Git, fetchParam fetchParams, mergeParam mergeParam
 	}
 
 	return mergeWithCustomRetry(gitCmd, mergeParam.arg, mergeParam.fallback)
-}
-
-func addForkRemote(gitCmd git.Git, repoURL string) error {
-	if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, repoURL)); err != nil {
-		return fmt.Errorf("adding remote fork repository failed (%s): %v", repoURL, err)
-	}
-
-	return nil
 }
 
 func detachHead(gitCmd git.Git) error {

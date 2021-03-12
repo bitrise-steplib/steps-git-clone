@@ -44,7 +44,7 @@ type checkoutPRManualMerge struct {
 func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch and checkout base (target) branch
 	baseBranchRef := branchRefPrefix + c.params.BaseBranch
-	if err := fetchInitialBranch(gitCmd, defaultRemoteName, baseBranchRef, fetchOptions); err != nil {
+	if err := fetchInitialBranch(gitCmd, originRemoteName, baseBranchRef, fetchOptions); err != nil {
 		return err
 	}
 
@@ -56,7 +56,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 
 	// Fetch and merge
 	headBranchRef := branchRefPrefix + c.params.HeadBranch
-	if err := fetch(gitCmd, defaultRemoteName, headBranchRef, fetchOptions); err != nil {
+	if err := fetch(gitCmd, originRemoteName, &headBranchRef, fetchOptions); err != nil {
 		return nil
 	}
 
@@ -103,7 +103,7 @@ type checkoutForkPRManualMerge struct {
 func (c checkoutForkPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch and checkout base branch
 	baseBranchRef := branchRefPrefix + c.params.BaseBranch
-	if err := fetchInitialBranch(gitCmd, defaultRemoteName, baseBranchRef, fetchOptions); err != nil {
+	if err := fetchInitialBranch(gitCmd, originRemoteName, baseBranchRef, fetchOptions); err != nil {
 		return err
 	}
 

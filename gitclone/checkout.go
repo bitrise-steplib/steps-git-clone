@@ -234,16 +234,11 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 	}
 }
 
-func createManualMergeParams(cfg Config) (*PRManualMergeParams, *ForkPRManualMergeParams, error) {
-	var prManualMergeParam *PRManualMergeParams
-	var forkPRManualMergeParam *ForkPRManualMergeParams
-	var err error
-
+func createManualMergeParams(cfg Config) (prManualMergeParam *PRManualMergeParams, forkPRManualMergeParam *ForkPRManualMergeParams, err error) {
 	if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
-		forkPRManualMergeParam, err = NewForkPRManualMergeParams(cfg.Branch, cfg.PRRepositoryURL, cfg.BranchDest)
-	} else {
-		prManualMergeParam, err = NewPRManualMergeParams(cfg.Branch, cfg.Commit, cfg.BranchDest)
-	}
-
-	return prManualMergeParam, forkPRManualMergeParam, err
+ 		forkPRManualMergeParam, err = NewForkPRManualMergeParams(cfg.Branch, cfg.PRRepositoryURL, cfg.BranchDest)
+ 	} else {
+ 		prManualMergeParam, err = NewPRManualMergeParams(cfg.Branch, cfg.Commit, cfg.BranchDest)
+ 	}
+       return
 }

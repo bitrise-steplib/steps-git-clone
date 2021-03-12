@@ -157,7 +157,7 @@ func handleCheckoutError(callback getAvailableBranches, tag string, err error, s
 	// We were checking out a branch (not tag or commit)
 	if branch != "" {
 		branchesByRemote, branchesErr := callback()
-		branches := branchesByRemote[defaultRemoteName]
+		branches := branchesByRemote[originRemoteName]
 		// There was no error grabbing the available branches
 		// And the current branch is not present in the list
 		if branchesErr == nil && !sliceutil.IsStringInSlice(branch, branches) {
