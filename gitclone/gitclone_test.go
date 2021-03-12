@@ -284,6 +284,7 @@ var testCases = [...]struct {
 			BranchDest:    "master",
 			PRID:          7,
 			ManualMerge:   false,
+			Commit:        "76a934ae",
 			CloneDepth:    1,
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
@@ -293,6 +294,54 @@ var testCases = [...]struct {
 			`git "checkout" "master"`,
 			`git "apply" "--index" "diff_path"`,
 			`git "checkout" "--detach"`,
+		},
+	},
+	{
+		name: "PR - no fork - auto merge - diff file: fallback to manual merge if unable to apply patch",
+		cfg: Config{
+			RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
+			Branch:        "test/commit-messages",
+			BranchDest:    "master",
+			PRID:          7,
+			ManualMerge:   false,
+			Commit:        "76a934ae",
+			CloneDepth:    1,
+		},
+		patchSource: MockPatchSource{"diff_path", nil},
+		mockRunner: givenMockRunner().
+			GivenRunFailsForCommand(`git "apply" "--index" "diff_path"`, 1).
+			GivenRunWithRetrySucceeds().
+			GivenRunSucceeds(),
+		wantCmds: []string{
+			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
+			`git "checkout" "master"`,
+			`git "apply" "--index" "diff_path"`,
+			`git "fetch" "--depth=1" "origin" "refs/heads/test/commit-messages"`,
+			`git "merge" "76a934ae"`,
+		},
+	},
+	{
+		name: "PR - fork - auto merge - diff file: fallback to manual merge if unable to apply patch",
+		cfg: Config{
+			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
+			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
+			Branch:          "test/commit-messages",
+			BranchDest:      "master",
+			Commit:          "76a934ae",
+			ManualMerge:     true,
+		},
+		patchSource: MockPatchSource{"diff_path", nil},
+		mockRunner: givenMockRunner().
+			GivenRunFailsForCommand(`git "apply" "--index" "diff_path"`, 1).
+			GivenRunWithRetrySucceeds().
+			GivenRunSucceeds(),
+		wantCmds: []string{
+			`git "fetch" "origin" "refs/heads/master"`,
+			`git "checkout" "master"`,
+			`git "apply" "--index" "diff_path"`,
+			`git "remote" "add" "fork" "git@github.com:bitrise-io/other-repo.git"`,
+			`git "fetch" "fork" "refs/heads/test/commit-messages"`,
+			`git "merge" "fork/test/commit-messages"`,
 		},
 	},
 

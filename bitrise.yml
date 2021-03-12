@@ -635,7 +635,7 @@ workflows:
         - pull_request_merge_branch: ""
         - branch_dest: "master"
         - branch: "master"
-        - commit: ""
+        - commit: "c6810e6"
         - tag: ""
         - clone_depth: "1"
         - manual_merge: "no"

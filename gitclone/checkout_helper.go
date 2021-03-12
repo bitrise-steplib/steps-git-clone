@@ -10,6 +10,17 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
+type fetchParams struct {
+	branch  string
+	remote  string
+	options fetchOptions
+}
+
+type mergeParams struct {
+	arg      string
+	fallback fallbackRetry
+}
+
 type fetchOptions struct {
 	// Sets '--tags' flag
 	// From https://git-scm.com/docs/fetch-options/2.29.0#Documentation/fetch-options.txt---allTags:
@@ -94,7 +105,7 @@ func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTr
 	}
 
 	// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
-	remoteBranch := fmt.Sprintf("%s/%s", defaultRemoteName, branch)
+	remoteBranch := fmt.Sprintf("%s/%s", originRemoteName, branch)
 	if err := runner.Run(gitCmd.Merge(remoteBranch)); err != nil {
 		return newStepError(
 			"update_branch_failed",
@@ -121,6 +132,15 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error
 	}
 
 	return nil
+}
+
+func fetchAndMerge(gitCmd git.Git, fetchParam fetchParams, mergeParam mergeParams) error {
+	headBranchRef := branchRefPrefix + fetchParam.branch
+	if err := fetch(gitCmd, fetchParam.remote, headBranchRef, fetchParam.options); err != nil {
+		return nil
+	}
+
+	return mergeWithCustomRetry(gitCmd, mergeParam.arg, mergeParam.fallback)
 }
 
 func detachHead(gitCmd git.Git) error {
