@@ -284,7 +284,7 @@ var testCases = [...]struct {
 			BranchDest:    "master",
 			PRID:          7,
 			ManualMerge:   false,
-			Commit:        "76a934ae", // TODO
+			Commit:        "76a934ae",
 			CloneDepth:    1,
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
@@ -304,7 +304,7 @@ var testCases = [...]struct {
 			BranchDest:    "master",
 			PRID:          7,
 			ManualMerge:   false,
-			Commit:        "76a934ae", // TODO
+			Commit:        "76a934ae",
 			CloneDepth:    1,
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
@@ -327,7 +327,7 @@ var testCases = [...]struct {
 			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 			Branch:          "test/commit-messages",
 			BranchDest:      "master",
-			Commit:          "76a934ae", // TODO
+			Commit:          "76a934ae",
 			ManualMerge:     true,
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
