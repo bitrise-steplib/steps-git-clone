@@ -56,7 +56,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 
 	// Fetch and merge
 	headBranchRef := branchRefPrefix + c.params.HeadBranch
-	if err := fetch(gitCmd, originRemoteName, &headBranchRef, fetchOptions); err != nil {
+	if err := fetch(gitCmd, originRemoteName, headBranchRef, fetchOptions); err != nil {
 		return nil
 	}
 
