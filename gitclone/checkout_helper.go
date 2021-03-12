@@ -136,7 +136,7 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error
 
 func fetchAndMerge(gitCmd git.Git, fetchParam fetchParams, mergeParam mergeParams) error {
 	headBranchRef := branchRefPrefix + fetchParam.branch
-	if err := fetch(gitCmd, fetchParam.remote, &headBranchRef, fetchParam.options); err != nil {
+	if err := fetch(gitCmd, fetchParam.remote, headBranchRef, fetchParam.options); err != nil {
 		return nil
 	}
 
