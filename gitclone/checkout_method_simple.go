@@ -39,9 +39,12 @@ type checkoutCommit struct {
 }
 
 func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	// Fetch then checkout
-	// No branch specified for fetch
-	if err := fetch(gitCmd, originRemoteName, nil, fetchOptions); err != nil {
+	branchRefParam := ""
+	if c.params.Branch != "" {
+		branchRefParam = branchRefPrefix + c.params.Branch
+	}
+
+	if err := fetch(gitCmd, originRemoteName, branchRefParam, fetchOptions); err != nil {
 		return err
 	}
 

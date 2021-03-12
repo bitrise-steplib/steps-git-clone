@@ -141,7 +141,7 @@ func Test_handleCheckoutError(t *testing.T) {
 			args: args{
 				callback: func() (map[string][]string, error) {
 					return map[string][]string{
-						defaultRemoteName: {"master", "develop"},
+						originRemoteName: {"master", "develop"},
 					}, nil
 				},
 				tag:      "checkout_failed",
@@ -192,7 +192,7 @@ func Test_handleCheckoutError(t *testing.T) {
 			args: args{
 				callback: func() (map[string][]string, error) {
 					return map[string][]string{
-						defaultRemoteName: {"master", "develop", "test"},
+						originRemoteName: {"master", "develop", "test"},
 					}, nil
 				},
 				tag:      "checkout_failed",
