@@ -107,7 +107,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 		}
 	case CheckoutCommitMethod:
 		{
-			params, err := NewCommitParams(cfg.Commit)
+			params, err := NewCommitParams(cfg.Commit, cfg.Branch)
 			if err != nil {
 				return nil, err
 			}
@@ -118,11 +118,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 		}
 	case CheckoutTagMethod:
 		{
-			var branch *string
-			if cfg.Branch != "" {
-				branch = &cfg.Branch
-			}
-			params, err := NewTagParams(cfg.Tag, branch)
+			params, err := NewTagParams(cfg.Tag, cfg.Branch)
 			if err != nil {
 				return nil, err
 			}

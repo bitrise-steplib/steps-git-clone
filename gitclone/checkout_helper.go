@@ -27,7 +27,7 @@ func (t fetchOptions) IsFullDepth() bool {
 
 const branchRefPrefix = "refs/heads/"
 
-func fetch(gitCmd git.Git, remote string, ref *string, traits fetchOptions) error {
+func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error {
 	var opts []string
 	if traits.depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(traits.depth))
@@ -35,14 +35,14 @@ func fetch(gitCmd git.Git, remote string, ref *string, traits fetchOptions) erro
 	if traits.allTags {
 		opts = append(opts, "--tags")
 	}
-	if ref != nil {
-		opts = append(opts, remote, *ref)
+	if ref != "" {
+		opts = append(opts, remote, ref)
 	}
 
 	// Not neccessarily a branch, can be tag too
 	branch := ""
-	if ref != nil && strings.HasPrefix(*ref, branchRefPrefix) {
-		branch = strings.TrimPrefix(*ref, branchRefPrefix)
+	if strings.HasPrefix(ref, branchRefPrefix) {
+		branch = strings.TrimPrefix(ref, branchRefPrefix)
 	}
 
 	if err := runner.RunWithRetry(func() *command.Model {
@@ -79,7 +79,7 @@ func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) er
 
 func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTraits fetchOptions) error {
 	branch := strings.TrimPrefix(branchRef, branchRefPrefix)
-	if err := fetch(gitCmd, remote, &branchRef, fetchTraits); err != nil {
+	if err := fetch(gitCmd, remote, branchRef, fetchTraits); err != nil {
 		return err
 	}
 
