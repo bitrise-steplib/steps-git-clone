@@ -240,5 +240,5 @@ func createManualMergeParams(cfg Config) (prManualMergeParam *PRManualMergeParam
  	} else {
  		prManualMergeParam, err = NewPRManualMergeParams(cfg.Branch, cfg.Commit, cfg.BranchDest)
  	}
-    return
+	return
 }
