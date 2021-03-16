@@ -44,7 +44,7 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 		branchRefParam = refsHeadsPrefix + c.params.Branch
 	}
 
-	if err := fetch(gitCmd, originRemoteName, branchRefParam, fetchOptions); err != nil {
+	if err := fetch(gitCmd, originRemoteName, branchRefParam, "", fetchOptions); err != nil {
 		return err
 	}
 
@@ -115,7 +115,7 @@ func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fall
 		branchRefParam = refsHeadsPrefix + c.params.Branch
 	}
 
-	if err := fetch(gitCmd, originRemoteName, branchRefParam, fetchOptions); err != nil {
+	if err := fetch(gitCmd, originRemoteName, branchRefParam, "", fetchOptions); err != nil {
 		return err
 	}
 

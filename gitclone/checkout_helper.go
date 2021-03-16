@@ -41,7 +41,7 @@ const (
 	refsPrefix      = "refs/"
 )
 
-func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error {
+func fetch(gitCmd git.Git, remote string, ref string, trackingBranch string, traits fetchOptions) error {
 	var opts []string
 	if traits.depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(traits.depth))
@@ -50,7 +50,11 @@ func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error
 		opts = append(opts, "--tags")
 	}
 	if ref != "" {
-		opts = append(opts, remote, ref)
+		fetchArg := ref
+		if trackingBranch != "" {
+			fetchArg = fmt.Sprintf("%s:%s", ref, trackingBranch)
+		}
+		opts = append(opts, remote, fetchArg)
 	}
 
 	// Not neccessarily a branch, can be tag too
@@ -92,27 +96,28 @@ func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) er
 }
 
 func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTraits fetchOptions) error {
-	branch := strings.TrimPrefix(branchRef, refsPrefix)
-	if err := fetch(gitCmd, remote, branchRef, fetchTraits); err != nil {
+	trackingBranch := strings.TrimPrefix(branchRef, refsHeadsPrefix)
+	trackingBranch = strings.TrimPrefix(trackingBranch, refsPrefix)
+	if err := fetch(gitCmd, remote, branchRef, trackingBranch, fetchTraits); err != nil {
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, branch, nil); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, trackingBranch, nil); err != nil {
 		return handleCheckoutError(
 			listBranches(gitCmd),
 			checkoutFailedTag,
 			err,
 			"Checkout has failed",
-			branch,
+			trackingBranch,
 		)
 	}
 
 	// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
-	remoteBranch := fmt.Sprintf("%s/%s", originRemoteName, branch)
+	remoteBranch := fmt.Sprintf("%s/%s", originRemoteName, trackingBranch)
 	if err := runner.Run(gitCmd.Merge(remoteBranch)); err != nil {
 		return newStepError(
 			"update_branch_failed",
-			fmt.Errorf("updating branch (merge) failed %s: %v", branch, err),
+			fmt.Errorf("updating branch (merge) failed %s: %v", trackingBranch, err),
 			"Updating branch failed",
 		)
 	}
@@ -139,7 +144,7 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error
 
 func fetchAndMerge(gitCmd git.Git, fetchParam fetchParams, mergeParam mergeParams) error {
 	headBranchRef := refsHeadsPrefix + fetchParam.branch
-	if err := fetch(gitCmd, fetchParam.remote, headBranchRef, fetchParam.options); err != nil {
+	if err := fetch(gitCmd, fetchParam.remote, headBranchRef, "", fetchParam.options); err != nil {
 		return nil
 	}
 
