@@ -134,15 +134,6 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error
 	return nil
 }
 
-func fetchAndMerge(gitCmd git.Git, fetchParam fetchParams, mergeParam mergeParams) error {
-	headBranchRef := branchRefPrefix + fetchParam.branch
-	if err := fetch(gitCmd, fetchParam.remote, headBranchRef, fetchParam.options); err != nil {
-		return nil
-	}
-
-	return mergeWithCustomRetry(gitCmd, mergeParam.arg, mergeParam.fallback)
-}
-
 func detachHead(gitCmd git.Git) error {
 	if err := runner.Run(gitCmd.Checkout("--detach")); err != nil {
 		return newStepError(
