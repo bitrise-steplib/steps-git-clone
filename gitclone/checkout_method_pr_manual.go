@@ -36,15 +36,15 @@ func NewPRManualMergeParams(isFork bool, headBranch, commit, forkRepoURL, baseBr
 			HeadRepoURL: forkRepoURL,
 			BaseBranch:  baseBranch,
 		}, nil
-	} else {
-		return &PRManualMergeParams{
-			IsFork:      isFork,
-			HeadBranch:  headBranch,
-			MergeArg:    commit,
-			HeadRepoURL: "",
-			BaseBranch:  baseBranch,
-		}, nil
 	}
+
+	return &PRManualMergeParams{
+		IsFork:      isFork,
+		HeadBranch:  headBranch,
+		MergeArg:    commit,
+		HeadRepoURL: "",
+		BaseBranch:  baseBranch,
+	}, nil
 }
 
 func validatePRManualMergeParams(isFork bool, headBranch, commit, forkRepoURL, baseBranch string) error {
