@@ -41,6 +41,17 @@ const (
 	refsPrefix      = "refs/"
 )
 
+func branchRefToTrackingBranch(branchRef string) string {
+	trackingBranch := branchRef
+	if strings.HasPrefix(branchRef, refsHeadsPrefix) {
+		trackingBranch = strings.TrimPrefix(trackingBranch, refsHeadsPrefix)
+	} else {
+		trackingBranch = strings.TrimPrefix(trackingBranch, refsPrefix)
+	}
+
+	return trackingBranch
+}
+
 func fetch(gitCmd git.Git, remote string, ref string, trackingBranch string, traits fetchOptions) error {
 	var opts []string
 	if traits.depth != 0 {
@@ -96,8 +107,7 @@ func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) er
 }
 
 func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTraits fetchOptions) error {
-	trackingBranch := strings.TrimPrefix(branchRef, refsHeadsPrefix)
-	trackingBranch = strings.TrimPrefix(trackingBranch, refsPrefix)
+	trackingBranch := branchRefToTrackingBranch(branchRef)
 	if err := fetch(gitCmd, remote, branchRef, trackingBranch, fetchTraits); err != nil {
 		return err
 	}

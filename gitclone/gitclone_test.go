@@ -67,9 +67,8 @@ var testCases = [...]struct {
 			CloneDepth: 1,
 		},
 		wantCmds: []string{
-			`git "fetch" "--depth=1" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--depth=1" "origin" "refs/heads/hcnarb:hcnarb"`,
 			`git "checkout" "hcnarb"`,
-			`git "merge" "origin/hcnarb"`,
 		},
 	},
 	{
@@ -142,9 +141,8 @@ var testCases = [...]struct {
 			ManualMerge:   true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
-			`git "checkout" "master"`,     // Already on 'master'
-			`git "merge" "origin/master"`, // Already up to date.
+			`git "fetch" "--depth=1" "origin" "refs/heads/master:master"`,
+			`git "checkout" "master"`, // Already on 'master'
 			`git "log" "-1" "--format=%H"`,
 			`git "fetch" "--depth=1" "origin" "refs/heads/test/commit-messages"`,
 			`git "merge" "76a934ae"`,
@@ -176,9 +174,8 @@ var testCases = [...]struct {
 			CloneDepth:      1,
 		},
 		wantCmds: []string{
-			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "origin" "refs/heads/master:master"`,
 			`git "checkout" "master"`,
-			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
 			`git "remote" "add" "fork" "https://github.com/bitrise-io/other-repo.git"`,
 			`git "fetch" "--depth=1" "fork" "refs/heads/test/commit-messages"`,
@@ -199,9 +196,8 @@ var testCases = [...]struct {
 			ManualMerge:     true,
 		},
 		wantCmds: []string{
-			`git "fetch" "origin" "refs/heads/master"`,
+			`git "fetch" "origin" "refs/heads/master:master"`,
 			`git "checkout" "master"`,
-			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
 			`git "fetch" "origin" "refs/heads/test/commit-messages"`,
 			`git "merge" "76a934ae"`,
@@ -355,9 +351,9 @@ var testCases = [...]struct {
 			GivenRunWithRetryFailsAfter(2).
 			GivenRunSucceeds(),
 		wantCmds: []string{
-			`git "fetch" "origin" "refs/heads/fake"`,
-			`git "fetch" "origin" "refs/heads/fake"`,
-			`git "fetch" "origin" "refs/heads/fake"`,
+			`git "fetch" "origin" "refs/heads/fake:fake"`,
+			`git "fetch" "origin" "refs/heads/fake:fake"`,
+			`git "fetch" "origin" "refs/heads/fake:fake"`,
 			`git "fetch"`,
 			`git "branch" "-r"`,
 		},
