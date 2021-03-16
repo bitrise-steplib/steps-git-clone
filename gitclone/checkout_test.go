@@ -101,7 +101,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				Commit:          "76a934ae",
 				ManualMerge:     true,
 			},
-			want: CheckoutForkPRManualMergeMethod,
+			want: CheckoutPRManualMergeMethod,
 		},
 		{
 			name: "PR - no fork - manual merge: repo is the same with different scheme",
