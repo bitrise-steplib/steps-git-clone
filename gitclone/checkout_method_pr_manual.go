@@ -43,7 +43,7 @@ type checkoutPRManualMerge struct {
 
 func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch and checkout base (target) branch
-	baseBranchRef := branchRefPrefix + c.params.BaseBranch
+	baseBranchRef := refsHeadsPrefix + c.params.BaseBranch
 	if err := fetchInitialBranch(gitCmd, originRemoteName, baseBranchRef, fetchOptions); err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 	log.Printf("commit hash: %s", commitHash)
 
 	// Fetch and merge
-	headBranchRef := branchRefPrefix + c.params.HeadBranch
+	headBranchRef := refsHeadsPrefix + c.params.HeadBranch
 	if err := fetch(gitCmd, originRemoteName, headBranchRef, fetchOptions); err != nil {
 		return nil
 	}
@@ -102,7 +102,7 @@ type checkoutForkPRManualMerge struct {
 
 func (c checkoutForkPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch and checkout base branch
-	baseBranchRef := branchRefPrefix + c.params.BaseBranch
+	baseBranchRef := refsHeadsPrefix + c.params.BaseBranch
 	if err := fetchInitialBranch(gitCmd, originRemoteName, baseBranchRef, fetchOptions); err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (c checkoutForkPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions,
 	}
 
 	// Fetch + merge fork branch
-	forkBranchRef := branchRefPrefix + c.params.HeadBranch
+	forkBranchRef := refsHeadsPrefix + c.params.HeadBranch
 	if err := fetch(gitCmd, forkRemoteName, forkBranchRef, fetchOptions); err != nil {
 		return err
 	}

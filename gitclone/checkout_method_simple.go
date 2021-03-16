@@ -41,7 +41,7 @@ type checkoutCommit struct {
 func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	branchRefParam := ""
 	if c.params.Branch != "" {
-		branchRefParam = branchRefPrefix + c.params.Branch
+		branchRefParam = refsHeadsPrefix + c.params.Branch
 	}
 
 	if err := fetch(gitCmd, originRemoteName, branchRefParam, fetchOptions); err != nil {
@@ -58,17 +58,17 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 //
 // BranchParams are parameters to check out a given branch (In addition to the repository URL)
 type BranchParams struct {
-	Branch string
+	BranchRef string
 }
 
 // NewBranchParams validates and returns a new BranchParams
-func NewBranchParams(branch string) (*BranchParams, error) {
-	if strings.TrimSpace(branch) == "" {
+func NewBranchParams(branchRef string) (*BranchParams, error) {
+	if strings.TrimSpace(branchRef) == "" {
 		return nil, NewParameterValidationError("branch checkout strategy can not be used: no branch specified")
 	}
 
 	return &BranchParams{
-		Branch: branch,
+		BranchRef: branchRef,
 	}, nil
 }
 
@@ -78,8 +78,7 @@ type checkoutBranch struct {
 }
 
 func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallbackRetry) error {
-	branchRef := branchRefPrefix + c.params.Branch
-	if err := fetchInitialBranch(gitCmd, originRemoteName, branchRef, fetchOptions); err != nil {
+	if err := fetchInitialBranch(gitCmd, originRemoteName, c.params.BranchRef, fetchOptions); err != nil {
 		return err
 	}
 
@@ -113,7 +112,7 @@ type checkoutTag struct {
 func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	branchRefParam := ""
 	if c.params.Branch != "" {
-		branchRefParam = branchRefPrefix + c.params.Branch
+		branchRefParam = refsHeadsPrefix + c.params.Branch
 	}
 
 	if err := fetch(gitCmd, originRemoteName, branchRefParam, fetchOptions); err != nil {

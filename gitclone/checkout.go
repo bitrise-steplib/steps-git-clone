@@ -20,6 +20,8 @@ const (
 	CheckoutTagMethod
 	// CheckoutBranchMethod checks out a given branch
 	CheckoutBranchMethod
+	// CheckoutPRNoMerge checks out a MR/PR head branch only, without merging into base branch
+	CheckoutPRNoMerge
 	// CheckoutPRMergeBranchMethod checks out a MR/PR (when merge branch is available)
 	CheckoutPRMergeBranchMethod
 	// CheckoutPRDiffFileMethod  checks out a MR/PR (when a diff file is available)
@@ -53,16 +55,17 @@ type checkoutStrategy interface {
 // X: required parameter
 // !: used to identify checkout strategy
 // _: optional parameter
-// |==================================================================================|
-// | params\strat| commit | tag | branch | manualMR | manualPR | autoMerge | autoDiff |
-// | commit      |  X  !  |     |        |  X       |          |           |          |
-// | tag         |        |  X !|        |          |          |           |          |
-// | branch      |  _     |  _  |  X !   |  X       |  X       |  X        |          |
-// | branchDest  |        |     |        |  X       |  X       |           |  X       |
-// | PRRepoURL   |        |     |        |      !   |  X !     |    !      |    !     |
-// | PRID        |        |     |        |          |          |           |    !     |
-// | mergeBranch |        |     |        |          |          |  X !      |          |
-// |==================================================================================|
+// |==============================================================================================|
+// | params\strat| commit | tag | branch | manualMR | manualPR | autoMerge | autoDiff | noMergePR |
+// | commit      |  X  !  |     |        |  X       |          |           |          |           |
+// | tag         |        |  X !|        |          |          |           |          |           |
+// | branch      |  _     |  _  |  X !   |  X       |  X       |  X        |          |           |
+// | branchDest  |        |     |        |  X       |  X       |           |  X       |           |
+// | PRRepoURL   |        |     |        |      !   |  X !     |    !      |    !     |           |
+// | PRID        |        |     |        |          |          |           |    !     |           |
+// | mergeBranch |        |     |        |          |          |  X !      |          |           |
+// | headBranch  |        |     |        |          |          |           |          |  X        |
+// |==============================================================================================|
 
 func selectCheckoutMethod(cfg Config) CheckoutMethod {
 	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
@@ -80,6 +83,10 @@ func selectCheckoutMethod(cfg Config) CheckoutMethod {
 		}
 
 		return CheckoutNoneMethod
+	}
+
+	if !cfg.ShouldMergePR && cfg.PRHeadBranch != "" {
+		return CheckoutPRNoMerge
 	}
 
 	isFork := isFork(cfg.RepositoryURL, cfg.PRRepositoryURL)
@@ -129,7 +136,20 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 		}
 	case CheckoutBranchMethod:
 		{
-			params, err := NewBranchParams(cfg.Branch)
+			branchRef := refsHeadsPrefix + cfg.Branch
+			params, err := NewBranchParams(branchRef)
+			if err != nil {
+				return nil, err
+			}
+
+			return checkoutBranch{
+				params: *params,
+			}, nil
+		}
+	case CheckoutPRNoMerge:
+		{
+			branchRef := refsPrefix + cfg.PRHeadBranch
+			params, err := NewBranchParams(branchRef)
 			if err != nil {
 				return nil, err
 			}

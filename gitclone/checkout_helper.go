@@ -36,7 +36,10 @@ func (t fetchOptions) IsFullDepth() bool {
 	return t.depth == 0
 }
 
-const branchRefPrefix = "refs/heads/"
+const (
+	refsHeadsPrefix = "refs/heads/"
+	refsPrefix      = "refs/"
+)
 
 func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error {
 	var opts []string
@@ -52,8 +55,8 @@ func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error
 
 	// Not neccessarily a branch, can be tag too
 	branch := ""
-	if strings.HasPrefix(ref, branchRefPrefix) {
-		branch = strings.TrimPrefix(ref, branchRefPrefix)
+	if strings.HasPrefix(ref, refsHeadsPrefix) {
+		branch = strings.TrimPrefix(ref, refsHeadsPrefix)
 	}
 
 	if err := runner.RunWithRetry(func() *command.Model {
@@ -89,7 +92,7 @@ func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) er
 }
 
 func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTraits fetchOptions) error {
-	branch := strings.TrimPrefix(branchRef, branchRefPrefix)
+	branch := strings.TrimPrefix(branchRef, refsPrefix)
 	if err := fetch(gitCmd, remote, branchRef, fetchTraits); err != nil {
 		return err
 	}
@@ -135,7 +138,7 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error
 }
 
 func fetchAndMerge(gitCmd git.Git, fetchParam fetchParams, mergeParam mergeParams) error {
-	headBranchRef := branchRefPrefix + fetchParam.branch
+	headBranchRef := refsHeadsPrefix + fetchParam.branch
 	if err := fetch(gitCmd, fetchParam.remote, headBranchRef, fetchParam.options); err != nil {
 		return nil
 	}
