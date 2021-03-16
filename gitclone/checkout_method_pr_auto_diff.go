@@ -52,7 +52,7 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 	}
 
 	if err := runner.Run(gitCmd.Apply(c.patchFile)); err != nil {
-		log.Warnf("Could not apply patch (%s)", c.patchFile)
+		log.Warnf("Could not apply patch (%s): %v", c.patchFile, err)
 		log.Warnf("Falling back to manual merge...")
 
 		if err := c.params.PRManualMergeStrategy.do(gitCmd, fetchOptions, fallback); err != nil {
