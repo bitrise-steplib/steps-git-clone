@@ -27,24 +27,21 @@ func NewPRManualMergeParams(isFork bool, headBranch, commit, forkRepoURL, baseBr
 		return nil, err
 	}
 
-	if isFork {
-		remoteForkBranch := fmt.Sprintf("%s/%s", forkRemoteName, headBranch)
-		return &PRManualMergeParams{
-			IsFork:      isFork,
-			HeadBranch:  headBranch,
-			MergeArg:    remoteForkBranch,
-			HeadRepoURL: forkRepoURL,
-			BaseBranch:  baseBranch,
-		}, nil
+	prManualMergeParams := &PRManualMergeParams{
+		IsFork:     isFork,
+		HeadBranch: headBranch,
+		BaseBranch: baseBranch,
 	}
 
-	return &PRManualMergeParams{
-		IsFork:      isFork,
-		HeadBranch:  headBranch,
-		MergeArg:    commit,
-		HeadRepoURL: "",
-		BaseBranch:  baseBranch,
-	}, nil
+	if isFork {
+		prManualMergeParams.MergeArg = fmt.Sprintf("%s/%s", forkRemoteName, headBranch)
+		prManualMergeParams.HeadRepoURL = forkRepoURL
+	} else {
+		prManualMergeParams.MergeArg = commit
+		prManualMergeParams.HeadRepoURL = ""
+	}
+
+	return prManualMergeParams, nil
 }
 
 func validatePRManualMergeParams(isFork bool, headBranch, commit, forkRepoURL, baseBranch string) error {
