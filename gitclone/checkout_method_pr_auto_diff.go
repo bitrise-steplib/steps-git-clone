@@ -23,7 +23,7 @@ type PRDiffFileParams struct {
 // NewPRDiffFileParams validates and returns a new PRDiffFileParams
 func NewPRDiffFileParams(
 	baseBranch string,
-	checkoutStrategy checkoutStrategy,
+	prManualMergeStrategy checkoutStrategy,
 ) (*PRDiffFileParams, error) {
 	if strings.TrimSpace(baseBranch) == "" {
 		return nil, NewParameterValidationError("PR diff file based checkout strategy can not be used: no base branch specified")
@@ -31,7 +31,7 @@ func NewPRDiffFileParams(
 
 	return &PRDiffFileParams{
 		BaseBranch:            baseBranch,
-		PRManualMergeStrategy: checkoutStrategy,
+		PRManualMergeStrategy: prManualMergeStrategy,
 	}, nil
 }
 

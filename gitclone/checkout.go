@@ -152,12 +152,12 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 				return nil, fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and could not download diff file: %v", err)
 			}
 
-			prManualMergeParam, err := createCheckoutStrategy(CheckoutPRManualMergeMethod, cfg, patch)
+			prManualMergeStrategy, err := createCheckoutStrategy(CheckoutPRManualMergeMethod, cfg, patch)
 			if err != nil {
 				return nil, err
 			}
 
-			params, err := NewPRDiffFileParams(cfg.BranchDest, prManualMergeParam)
+			params, err := NewPRDiffFileParams(cfg.BranchDest, prManualMergeStrategy)
 			if err != nil {
 				return nil, err
 			}
