@@ -87,6 +87,14 @@ inputs:
       category: "Clone arguments"
       title: "Merged pull request branch"
       is_dont_change_value: true
+  - pull_request_head_branch: "$BITRISEIO_PULL_REQUEST_HEAD_BRANCH"
+    opts:
+      category: "Clone arguments"
+      title: "Pull request head branch"
+      description: |-
+        If the Git hosting provider system supports and provides this, 
+        this special git ref should point to the source of the pull request.
+      is_dont_change_value: true
   - update_submodules: "yes"
     opts:
       category: "Checkout options"

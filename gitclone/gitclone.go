@@ -21,6 +21,7 @@ type Config struct {
 	PRID            int    `env:"pull_request_id"`
 	PRRepositoryURL string `env:"pull_request_repository_url"`
 	PRMergeBranch   string `env:"pull_request_merge_branch"`
+	PRHeadBranch    string `env:"pull_request_head_branch"`
 	// Clone options
 	UpdateSubmodules bool `env:"update_submodules,opt[yes,no]"`
 	CloneDepth       int  `env:"clone_depth"`
