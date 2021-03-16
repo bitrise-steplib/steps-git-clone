@@ -11,11 +11,11 @@ import (
 )
 
 type fetchOptions struct {
-	// Sets '--tags' flag
-	// From https://git-scm.com/docs/fetch-options/2.29.0#Documentation/fetch-options.txt---allTags:
-	// "Fetch all tags from the remote (i.e., fetch remote tags refs/tags/* into local tags with the same name),
-	// in addition to whatever else would otherwise be fetched"
-	allTags bool
+	// Sets '--tags' or `--no-tags` flag
+	// More info:
+	// - https://git-scm.com/docs/git-fetch#Documentation/git-fetch.txt---tags
+	// - https://git-scm.com/docs/git-fetch#Documentation/git-fetch.txt---no-tags
+	tags bool
 	// Sets '--depth' flag
 	// More info: https://git-scm.com/docs/fetch-options/2.29.0#Documentation/fetch-options.txt---depthltdepthgt
 	depth int
@@ -38,8 +38,11 @@ func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error
 	if traits.depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(traits.depth))
 	}
-	if traits.allTags {
+
+	if traits.tags {
 		opts = append(opts, "--tags")
+	} else {
+		opts = append(opts, "--no-tags")
 	}
 	if !traits.fetchSubmodules {
 		opts = append(opts, "--no-recurse-submodules")

@@ -175,7 +175,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 		}
 	case CheckoutTagMethod:
 		{
-			params, err := NewTagParams(cfg.Tag, cfg.Branch)
+			params, err := NewTagParams(cfg.Tag)
 			if err != nil {
 				return nil, err
 			}
@@ -269,22 +269,12 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 
 }
 
-func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchAllTags bool, fetchSubmodules bool) fetchOptions {
-	opts := fetchOptions{
+func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchTags, fetchSubmodules bool) fetchOptions {
+	return fetchOptions{
 		depth:           cloneDepth,
-		allTags:         false,
+		tags:            fetchTags,
 		fetchSubmodules: fetchSubmodules,
 	}
-
-	switch checkoutStrategy {
-	case CheckoutCommitMethod, CheckoutBranchMethod:
-		opts.allTags = fetchAllTags
-	case CheckoutTagMethod:
-		opts.allTags = true
-	default:
-	}
-
-	return opts
 }
 
 func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fallbackRetry {
