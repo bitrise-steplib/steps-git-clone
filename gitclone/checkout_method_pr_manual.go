@@ -85,14 +85,17 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 	}
 	log.Printf("commit hash: %s", commitHash)
 
-	remoteName := originRemoteName
+	var remoteName string
 	if c.params.IsFork {
+		remoteName = forkRemoteName
+
 		// Add fork remote
 		if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.params.HeadRepoURL)); err != nil {
 			return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.HeadRepoURL, err)
 		}
 
-		remoteName = forkRemoteName
+	} else {
+		remoteName = originRemoteName
 	}
 
 	// Fetch and merge
