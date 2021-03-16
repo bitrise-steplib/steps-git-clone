@@ -8,6 +8,8 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
+const forkRemoteName = "fork"
+
 // PRManualMergeParams are parameters to check out a Merge Request using manual merge
 type PRManualMergeParams struct {
 	IsFork bool
@@ -66,7 +68,6 @@ func validatePRManualMergeParams(isFork bool, headBranch, commit, forkRepoURL, b
 	return nil
 }
 
-// checkoutPRManualMerge
 type checkoutPRManualMerge struct {
 	params PRManualMergeParams
 }
@@ -86,7 +87,6 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 
 	remoteName := originRemoteName
 	if c.params.IsFork {
-		const forkRemoteName = "fork"
 		// Add fork remote
 		if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.params.HeadRepoURL)); err != nil {
 			return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.HeadRepoURL, err)
