@@ -16,25 +16,22 @@ import (
 //
 // PRDiffFileParams are parameters to check out a Merge/Pull Request (when a diff file is available)
 type PRDiffFileParams struct {
-	BaseBranch             string
-	PRManualMergeParam     *PRManualMergeParams
-	ForkPRManualMergeParam *ForkPRManualMergeParams
+	BaseBranch            string
+	PRManualMergeStrategy checkoutStrategy
 }
 
 // NewPRDiffFileParams validates and returns a new PRDiffFileParams
 func NewPRDiffFileParams(
 	baseBranch string,
-	prManualMergeParam *PRManualMergeParams,
-	forkPRManualMergeParam *ForkPRManualMergeParams,
+	checkoutStrategy checkoutStrategy,
 ) (*PRDiffFileParams, error) {
 	if strings.TrimSpace(baseBranch) == "" {
 		return nil, NewParameterValidationError("PR diff file based checkout strategy can not be used: no base branch specified")
 	}
 
 	return &PRDiffFileParams{
-		BaseBranch:             baseBranch,
-		PRManualMergeParam:     prManualMergeParam,
-		ForkPRManualMergeParam: forkPRManualMergeParam,
+		BaseBranch:            baseBranch,
+		PRManualMergeStrategy: checkoutStrategy,
 	}, nil
 }
 
@@ -58,13 +55,7 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 		log.Warnf("Could not apply patch (%s): %v", c.patchFile, err)
 		log.Warnf("Falling back to manual merge...")
 
-		return fallbackToManualMergeOnApplyError(
-			gitCmd,
-			c.params.PRManualMergeParam,
-			c.params.ForkPRManualMergeParam,
-			fetchOptions,
-			fallback,
-		)
+		c.params.PRManualMergeStrategy.do(gitCmd, fetchOptions, fallback)
 	}
 
 	return detachHead(gitCmd)
@@ -89,45 +80,4 @@ func (defaultPatchSource) getDiffPath(buildURL, apiToken string) (string, error)
 	diffURL := fmt.Sprintf("%s/diff.txt?api_token=%s", buildURL, apiToken)
 	fileProvider := input.NewFileProvider(filedownloader.New(http.DefaultClient))
 	return fileProvider.LocalPath(diffURL)
-}
-
-func fallbackToManualMergeOnApplyError(
-	gitCmd git.Git,
-	prManualMergeParam *PRManualMergeParams,
-	forkPRManualMergeParam *ForkPRManualMergeParams,
-	fetchOptions fetchOptions,
-	fallback fallbackRetry,
-) error {
-	var fetchParam fetchParams
-	var mergeParam mergeParams
-
-	if prManualMergeParam != nil {
-		fetchParam = fetchParams{
-			branch:  prManualMergeParam.HeadBranch,
-			remote:  originRemoteName,
-			options: fetchOptions,
-		}
-
-		mergeParam = mergeParams{
-			arg:      prManualMergeParam.Commit,
-			fallback: fallback,
-		}
-	} else if forkPRManualMergeParam != nil {
-		if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, forkPRManualMergeParam.HeadRepoURL)); err != nil {
-			return fmt.Errorf("adding remote fork repository failed (%s): %v", forkPRManualMergeParam.HeadRepoURL, err)
-		}
-
-		fetchParam = fetchParams{
-			branch:  forkPRManualMergeParam.HeadBranch,
-			remote:  forkRemoteName,
-			options: fetchOptions,
-		}
-
-		mergeParam = mergeParams{
-			arg:      fmt.Sprintf("%s/%s", forkRemoteName, forkPRManualMergeParam.HeadBranch),
-			fallback: fallback,
-		}
-	}
-
-	return fetchAndMerge(gitCmd, fetchParam, mergeParam)
 }

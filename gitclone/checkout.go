@@ -152,12 +152,12 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 				return nil, fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and could not download diff file: %v", err)
 			}
 
-			prManualMergeParam, forkPRManualMergeParam, err := createManualMergeParams(cfg)
+			prManualMergeParam, err := createCheckoutStrategy(CheckoutPRManualMergeMethod, cfg, patch)
 			if err != nil {
 				return nil, err
 			}
 
-			params, err := NewPRDiffFileParams(cfg.BranchDest, prManualMergeParam, forkPRManualMergeParam)
+			params, err := NewPRDiffFileParams(cfg.BranchDest, prManualMergeParam)
 			if err != nil {
 				return nil, err
 			}
@@ -220,11 +220,11 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 	}
 }
 
-func createManualMergeParams(cfg Config) (prManualMergeParam *PRManualMergeParams, forkPRManualMergeParam *ForkPRManualMergeParams, err error) {
-	if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
- 		forkPRManualMergeParam, err = NewForkPRManualMergeParams(cfg.Branch, cfg.PRRepositoryURL, cfg.BranchDest)
- 	} else {
- 		prManualMergeParam, err = NewPRManualMergeParams(cfg.Branch, cfg.Commit, cfg.BranchDest)
- 	}
-	return
-}
+// func createManualMergeParams(cfg Config) (prManualMergeParam *PRManualMergeParams, forkPRManualMergeParam *ForkPRManualMergeParams, err error) {
+// 	if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
+// 		forkPRManualMergeParam, err = NewForkPRManualMergeParams(cfg.Branch, cfg.PRRepositoryURL, cfg.BranchDest)
+// 	} else {
+// 		prManualMergeParam, err = NewPRManualMergeParams(cfg.Branch, cfg.Commit, cfg.BranchDest)
+// 	}
+// 	return
+// }
