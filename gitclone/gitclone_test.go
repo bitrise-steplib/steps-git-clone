@@ -483,6 +483,50 @@ func Test_checkoutState(t *testing.T) {
 	}
 }
 
+// SubmoduleUpdate
+var submoduleTestCases = [...]struct {
+	name     string
+	cfg      Config
+	wantCmds []string
+}{
+	{
+		name: "Limiting submodule depth",
+		cfg: Config{
+			LimitSubmoduleUpdateDepth: true,
+		},
+		wantCmds: []string{
+			`git "submodule" "update" "--init" "--recursive" "--depth=1"`,
+		},
+	},
+	{
+		name: "Not limiting submodule depth",
+		cfg: Config{
+			LimitSubmoduleUpdateDepth: false,
+		},
+		wantCmds: []string{
+			`git "submodule" "update" "--init" "--recursive"`,
+		},
+	},
+}
+
+func Test_SubmoduleUpdate(t *testing.T) {
+	for _, tt := range submoduleTestCases {
+		t.Run(tt.name, func(t *testing.T) {
+			// Given
+			mockRunner := givenMockRunnerSucceeds()
+			runner = mockRunner
+
+			// When
+			actualErr := updateSubmodules(git.Git{}, tt.cfg)
+
+			// Then
+			assert.NoError(t, actualErr)
+			assert.Equal(t, tt.wantCmds, mockRunner.Cmds())
+		})
+	}
+}
+
+// Mocks
 func givenMockRunner() *MockRunner {
 	mockRunner := new(MockRunner)
 	mockRunner.GivenRunForOutputSucceeds()

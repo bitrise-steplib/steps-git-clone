@@ -1,34 +1,34 @@
 title: "Git Clone Repository"
 summary: The Step checks out the defined repository state, optionally updates the repository submodules and exports the achieved git repository state properties.
 description: |
-   The checkout process depends on the checkout properties: the Step either checks out a repository state defined by a git commit or a git tag, or achieves a merged state of a pull / merge request.
-   The Step uses two solutions to achieve the merged state of the pull / merge request: auto merge in the case of a merge branch or diff file (provided by the Git service) and manual merge otherwise.
-   Once the desired state is checked out, the Step optionally updates the submodules. In the case of pull / merge request, the Step checks out a detach head and exports the achieved git state properties.
+  The checkout process depends on the checkout properties: the Step either checks out a repository state defined by a git commit or a git tag, or achieves a merged state of a pull / merge request.
+  The Step uses two solutions to achieve the merged state of the pull / merge request: auto merge in the case of a merge branch or diff file (provided by the Git service) and manual merge otherwise.
+  Once the desired state is checked out, the Step optionally updates the submodules. In the case of pull / merge request, the Step checks out a detach head and exports the achieved git state properties.
+
+  ### Configuring the Step
+
+  1. The **Git repository URL** and the ** Clone destination (local)directory path** fields are required fields and are automatically filled out based on your project settings.
+  Optionally, you can modify the following fields in the **Clone Config** section:
+  1. You can set the **Update the registered submodules?** option to `yes` to pull the most up-to-date version of the submodule from the submodule's repository.
+  2. You can set the number of commits you want the Step to fetch in the **Limit fetching to the specified number of commits** option. Make sure you set a decimal number.
+
+  Other **Clone config** inputs are not editable unless you go to the **bitrise.yml** tab, however, to avoid issues, we suggest you to contact our Support team instead.
+
+  ### Troubleshooting
+  If you have GitHub Enterprise set up, it works slightly differently on [bitrise.io](https://www.bitrise.io) than on [github.com](https://github.com). You have to manually set the git clone URL, register the SSH key and the webhook.
+  If you face network issues in the case of self-hosted git servers, we advise you to contact our Support Team to help you out.
+  If you face slow clone speed, set the **Limit fetching to the specified number of commits** to the number of commits you want to clone instead of cloning the whole commit history or you can use the Git LFS solution provided by the git provider.
    
-   ### Configuring the Step
+  ### Useful links
+
+  - [How to register a GitHub Enterprise repository](https://discuss.bitrise.io/t/how-to-register-a-github-enterprise-repository/218)
+  - [Code security](https://devcenter.bitrise.io/getting-started/code-security/)
+
+  ### Related Steps
    
-   1. The **Git repository URL** and the ** Clone destination (local)directory path** fields are required fields and are automatically filled out based on your project settings.
-   Optionally, you can modify the following fields in the **Clone Config** section:
-   1. You can set the **Update the registered submodules?** option to `yes` to pull the most up-to-date version of the submodule from the submodule's repository.
-   2. You can set the number of commits you want the Step to fetch in the **Limit fetching to the specified number of commits** option. Make sure you set a decimal number.
-   
-   Other **Clone config** inputs are not editable unless you go to the **bitrise.yml** tab, however, to avoid issues, we suggest you to contact our Support team instead.
-   
-   ### Troubleshooting
-   If you have GitHub Enterprise set up, it works slightly differently on [bitrise.io](https://www.bitrise.io) than on [github.com](https://github.com). You have to manually set the git clone URL, register the SSH key and the webhook.
-   If you face network issues in the case of self-hosted git servers, we advise you to contact our Support Team to help you out.
-   If you face slow clone speed, set the **Limit fetching to the specified number of commits** to the number of commits you want to clone instead of cloning the whole commit history or you can use the Git LFS solution provided by the git provider.
-    
-   ### Useful links
-   
-   - [How to register a GitHub Enterprise repository](https://discuss.bitrise.io/t/how-to-register-a-github-enterprise-repository/218)
-   - [Code security](https://devcenter.bitrise.io/getting-started/code-security/)
-   
-   ### Related Steps
-    
-   - [Activate SSH key (RSA private key)](https://www.bitrise.io/integrations/steps/activate-ssh-key)
-   - [Bitrise.io Cache:Pull](https://www.bitrise.io/integrations/steps/cache-pull)
-   - [Bitrise.io Cache:Push](https://www.bitrise.io/integrations/steps/cache-push)
+  - [Activate SSH key (RSA private key)](https://www.bitrise.io/integrations/steps/activate-ssh-key)
+  - [Bitrise.io Cache:Pull](https://www.bitrise.io/integrations/steps/cache-pull)
+  - [Bitrise.io Cache:Push](https://www.bitrise.io/integrations/steps/cache-push)
 
 website: https://github.com/bitrise-steplib/steps-git-clone
 source_code_url: https://github.com/bitrise-steplib/steps-git-clone
@@ -96,8 +96,8 @@ inputs:
       description: |-
         Update the registered submodules?
       value_options:
-      - "yes"
-      - "no"
+        - "yes"
+        - "no"
   - clone_depth:
     opts:
       category: Clone Config
@@ -105,25 +105,33 @@ inputs:
       description: |-
         Limit fetching to the specified number of commits.
         The value should be a decimal number, for example `10`.
+  - limit_submodule_update_depth: "yes"
+    opts:
+      category: Clone Config
+      title: "Shalow update submodules"
+      summary: "Shoud submodules be shallow cloned with a history truncated to the latest revisions."
+      value_options:
+        - "yes"
+        - "no"
   - reset_repository: "No"
     opts:
       category: Debug
       summary: Reset repository contents with git reset --hard HEAD and git clean -f after repository updated
       title: Reset repository
       value_options:
-      - "No"
-      - "Yes"
+        - "No"
+        - "Yes"
   - manual_merge: "yes"
     opts:
       category: Debug
       title: Manual merge
-      summary:  Prefer to do a manual `git merge` by default.
+      summary: Prefer to do a manual `git merge` by default.
       description: |-
         Prefer to do a manual `git merge` by default.
         When the Pull Request is from a GitHub or Bitbucket private fork repository set this to `"no"`.
       value_options:
-      - "yes"
-      - "no"
+        - "yes"
+        - "no"
   - build_url: "$BITRISE_BUILD_URL"
     opts:
       category: Debug
