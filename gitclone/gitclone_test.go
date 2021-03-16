@@ -316,8 +316,14 @@ var testCases = [...]struct {
 			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "apply" "--index" "diff_path"`,
+			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
+			`git "checkout" "master"`,
+			`git "merge" "origin/master"`,
+			`git "log" "-1" "--format=%H"`,
 			`git "fetch" "--depth=1" "origin" "refs/heads/test/commit-messages"`,
 			`git "merge" "76a934ae"`,
+			`git "checkout" "--detach"`, // Detach for manual merge
+			`git "checkout" "--detach"`, // Detach for auto merge
 		},
 	},
 	{
@@ -339,9 +345,15 @@ var testCases = [...]struct {
 			`git "fetch" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "apply" "--index" "diff_path"`,
+			`git "fetch" "origin" "refs/heads/master"`,
+			`git "checkout" "master"`,
+			`git "merge" "origin/master"`,
+			`git "log" "-1" "--format=%H"`,
 			`git "remote" "add" "fork" "git@github.com:bitrise-io/other-repo.git"`,
 			`git "fetch" "fork" "refs/heads/test/commit-messages"`,
 			`git "merge" "fork/test/commit-messages"`,
+			`git "checkout" "--detach"`, // Detach for manual merge
+			`git "checkout" "--detach"`, // Detach for auto merge
 		},
 	},
 
