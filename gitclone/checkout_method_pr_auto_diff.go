@@ -58,6 +58,8 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 		if err := c.params.PRManualMergeStrategy.do(gitCmd, fetchOptions, fallback); err != nil {
 			return fmt.Errorf("Applying patch (%s) failed: %v", c.patchFile, err)
 		}
+
+		return nil
 	}
 
 	return detachHead(gitCmd)
