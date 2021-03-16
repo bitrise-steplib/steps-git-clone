@@ -21,20 +21,22 @@ type Config struct {
 	PRID            int    `env:"pull_request_id"`
 	PRRepositoryURL string `env:"pull_request_repository_url"`
 	PRMergeBranch   string `env:"pull_request_merge_branch"`
+	// Clone options
+	UpdateSubmodules bool `env:"update_submodules,opt[yes,no]"`
+	CloneDepth       int  `env:"clone_depth"`
+	ShouldMergePR    bool `env:"merge_pr,opt[yes,no]"`
+	// Debug options
 	ResetRepository bool   `env:"reset_repository,opt[Yes,No]"`
-	CloneDepth      int    `env:"clone_depth"`
-
-	BuildURL         string `env:"build_url"`
-	BuildAPIToken    string `env:"build_api_token"`
-	UpdateSubmodules bool   `env:"update_submodules,opt[yes,no]"`
-	ManualMerge      bool   `env:"manual_merge,opt[yes,no]"`
+	ManualMerge     bool   `env:"manual_merge,opt[yes,no]"`
+	BuildURL        string `env:"build_url"`
+	BuildAPIToken   string `env:"build_api_token"`
 }
 
 const (
 	trimEnding              = "..."
-	originRemoteName       = "origin"
+	originRemoteName        = "origin"
 	updateSubmodelFailedTag = "update_submodule_failed"
-	forkRemoteName = "fork"
+	forkRemoteName          = "fork"
 )
 
 func printLogAndExportEnv(gitCmd git.Git, format, env string, maxEnvLength int) error {
