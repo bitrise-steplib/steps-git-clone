@@ -108,7 +108,7 @@ inputs:
   - limit_submodule_update_depth: "yes"
     opts:
       category: Clone Config
-      title: "Shalow update submodules"
+      title: "Shallow update submodules"
       summary: "Shoud submodules be shallow cloned with a history truncated to the latest revisions."
       value_options:
         - "yes"
