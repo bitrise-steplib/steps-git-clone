@@ -92,10 +92,6 @@ func selectCheckoutMethod(cfg Config) CheckoutMethod {
 		return CheckoutPRDiffFileMethod
 	}
 
-	if isFork {
-		return CheckoutForkPRManualMergeMethod
-	}
-
 	return CheckoutPRManualMergeMethod
 }
 
@@ -171,20 +167,10 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 				patchFile: patchFile,
 			}, nil
 		}
-	case CheckoutForkPRManualMergeMethod:
-		{
-			params, err := NewForkPRManualMergeParams(cfg.Branch, cfg.PRRepositoryURL, cfg.BranchDest)
-			if err != nil {
-				return nil, err
-			}
-
-			return checkoutForkPRManualMerge{
-				params: *params,
-			}, nil
-		}
 	case CheckoutPRManualMergeMethod:
 		{
-			params, err := NewPRManualMergeParams(cfg.Branch, cfg.Commit, cfg.BranchDest)
+			isFork := isFork(cfg.RepositoryURL, cfg.PRRepositoryURL)
+			params, err := NewPRManualMergeParams(isFork, cfg.Branch, cfg.Commit, cfg.PRRepositoryURL, cfg.BranchDest)
 			if err != nil {
 				return nil, err
 			}
