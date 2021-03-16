@@ -219,12 +219,3 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 		return nil
 	}
 }
-
-// func createManualMergeParams(cfg Config) (prManualMergeParam *PRManualMergeParams, forkPRManualMergeParam *ForkPRManualMergeParams, err error) {
-// 	if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
-// 		forkPRManualMergeParam, err = NewForkPRManualMergeParams(cfg.Branch, cfg.PRRepositoryURL, cfg.BranchDest)
-// 	} else {
-// 		prManualMergeParam, err = NewPRManualMergeParams(cfg.Branch, cfg.Commit, cfg.BranchDest)
-// 	}
-// 	return
-// }
