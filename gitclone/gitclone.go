@@ -32,9 +32,8 @@ type Config struct {
 
 const (
 	trimEnding              = "..."
-	originRemoteName       = "origin"
+	originRemoteName        = "origin"
 	updateSubmodelFailedTag = "update_submodule_failed"
-	forkRemoteName = "fork"
 )
 
 func printLogAndExportEnv(gitCmd git.Git, format, env string, maxEnvLength int) error {

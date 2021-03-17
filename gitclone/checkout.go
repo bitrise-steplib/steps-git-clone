@@ -92,10 +92,6 @@ func selectCheckoutMethod(cfg Config) CheckoutMethod {
 		return CheckoutPRDiffFileMethod
 	}
 
-	if isFork {
-		return CheckoutForkPRManualMergeMethod
-	}
-
 	return CheckoutPRManualMergeMethod
 }
 
@@ -156,12 +152,12 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 				return nil, fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and could not download diff file: %v", err)
 			}
 
-			prManualMergeParam, forkPRManualMergeParam, err := createManualMergeParams(cfg)
+			prManualMergeStrategy, err := createCheckoutStrategy(CheckoutPRManualMergeMethod, cfg, patch)
 			if err != nil {
 				return nil, err
 			}
 
-			params, err := NewPRDiffFileParams(cfg.BranchDest, prManualMergeParam, forkPRManualMergeParam)
+			params, err := NewPRDiffFileParams(cfg.BranchDest, prManualMergeStrategy)
 			if err != nil {
 				return nil, err
 			}
@@ -171,20 +167,14 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 				patchFile: patchFile,
 			}, nil
 		}
-	case CheckoutForkPRManualMergeMethod:
-		{
-			params, err := NewForkPRManualMergeParams(cfg.Branch, cfg.PRRepositoryURL, cfg.BranchDest)
-			if err != nil {
-				return nil, err
-			}
-
-			return checkoutForkPRManualMerge{
-				params: *params,
-			}, nil
-		}
 	case CheckoutPRManualMergeMethod:
 		{
-			params, err := NewPRManualMergeParams(cfg.Branch, cfg.Commit, cfg.BranchDest)
+			prRepositoryURL := ""
+			if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
+				prRepositoryURL = cfg.PRRepositoryURL
+			}
+
+			params, err := NewPRManualMergeParams(cfg.Branch, cfg.Commit, prRepositoryURL, cfg.BranchDest)
 			if err != nil {
 				return nil, err
 			}
@@ -232,13 +222,4 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 	default:
 		return nil
 	}
-}
-
-func createManualMergeParams(cfg Config) (prManualMergeParam *PRManualMergeParams, forkPRManualMergeParam *ForkPRManualMergeParams, err error) {
-	if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
- 		forkPRManualMergeParam, err = NewForkPRManualMergeParams(cfg.Branch, cfg.PRRepositoryURL, cfg.BranchDest)
- 	} else {
- 		prManualMergeParam, err = NewPRManualMergeParams(cfg.Branch, cfg.Commit, cfg.BranchDest)
- 	}
-	return
 }

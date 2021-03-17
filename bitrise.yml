@@ -518,7 +518,7 @@ workflows:
         - pull_request_merge_branch:
         - pull_request_repository_url: "git@gitlab.com:bitrise/git-clone-test.git"
         - branch_dest: "master"
-        - commit: "842b0922232eeb09c1cf5c526f7cdd67ff0e83f7"
+        - commit: "8d558357cf085bc26af23b88f6bc4c07e175b8ac"
         - tag: ""
         - branch: "develop"
         - clone_depth: ""
