@@ -17,12 +17,13 @@ type Config struct {
 	Tag           string `env:"tag"`
 	Branch        string `env:"branch"`
 
-	BranchDest      string `env:"branch_dest"`
-	PRID            int    `env:"pull_request_id"`
-	PRRepositoryURL string `env:"pull_request_repository_url"`
-	PRMergeBranch   string `env:"pull_request_merge_branch"`
-	ResetRepository bool   `env:"reset_repository,opt[Yes,No]"`
-	CloneDepth      int    `env:"clone_depth"`
+	BranchDest                string `env:"branch_dest"`
+	PRID                      int    `env:"pull_request_id"`
+	PRRepositoryURL           string `env:"pull_request_repository_url"`
+	PRMergeBranch             string `env:"pull_request_merge_branch"`
+	ResetRepository           bool   `env:"reset_repository,opt[Yes,No]"`
+	CloneDepth                int    `env:"clone_depth"`
+	LimitSubmoduleUpdateDepth bool   `env:"limit_submodule_update_depth,opt[yes,no]"`
 
 	BuildURL         string `env:"build_url"`
 	BuildAPIToken    string `env:"build_api_token"`
@@ -79,6 +80,18 @@ func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) error {
 	if err := checkoutStrategy.do(gitCmd, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
 		log.Infof("Checkout strategy used: %T", checkoutStrategy)
 		return err
+	}
+
+	return nil
+}
+
+func updateSubmodules(gitCmd git.Git, cfg Config) error {
+	if err := runner.Run(gitCmd.SubmoduleUpdate(cfg.LimitSubmoduleUpdateDepth)); err != nil {
+		return newStepError(
+			updateSubmodelFailedTag,
+			fmt.Errorf("submodule update: %v", err),
+			"Updating submodules has failed",
+		)
 	}
 
 	return nil
@@ -144,12 +157,8 @@ func Execute(cfg Config) error {
 	}
 
 	if cfg.UpdateSubmodules {
-		if err := runner.Run(gitCmd.SubmoduleUpdate()); err != nil {
-			return newStepError(
-				updateSubmodelFailedTag,
-				fmt.Errorf("submodule update: %v", err),
-				"Updating submodules has failed",
-			)
+		if err := updateSubmodules(gitCmd, cfg); err != nil {
+			return err
 		}
 	}
 
