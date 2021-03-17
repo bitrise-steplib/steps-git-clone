@@ -44,7 +44,7 @@ func (e ParameterValidationError) Error() string {
 	return e.ErrorString
 }
 
-// NewParameterValidationError return a new ValidationError
+// NewParameterValidationError returns a new ValidationError
 func NewParameterValidationError(msg string) error {
 	return ParameterValidationError{ErrorString: msg}
 }
