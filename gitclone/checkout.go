@@ -28,6 +28,10 @@ const (
 	CheckoutPRManualMergeMethod
 	// CheckoutForkPRManualMergeMethod checks out a PR using manual merge
 	CheckoutForkPRManualMergeMethod
+	// CheckoutNoMergeSpecialHeadBranch checks out a MR/PR head branch only, without merging into base branch
+	CheckoutNoMergeSpecialHeadBranch
+	// CheckoutNoMergeForkBranch checks out a PR source branch, without merging
+	CheckoutNoMergeForkBranch
 )
 
 // ParameterValidationError is returned when there is missing or malformatted parameter for a given parameter set
@@ -53,19 +57,20 @@ type checkoutStrategy interface {
 // X: required parameter
 // !: used to identify checkout strategy
 // _: optional parameter
-// |==================================================================================|
-// | params\strat| commit | tag | branch | manualMR | manualPR | autoMerge | autoDiff |
-// | commit      |  X  !  |     |        |  X       |          |           |          |
-// | tag         |        |  X !|        |          |          |           |          |
-// | branch      |  _     |  _  |  X !   |  X       |  X       |  X        |          |
-// | branchDest  |        |     |        |  X       |  X       |           |  X       |
-// | PRRepoURL   |        |     |        |      !   |  X !     |    !      |    !     |
-// | PRID        |        |     |        |          |          |           |    !     |
-// | mergeBranch |        |     |        |          |          |  X !      |          |
-// |==================================================================================|
+// |==========================================================================================================================|
+// | params\strat| commit | tag | branch | manualMR | manualPR | autoMerge | autoDiff | noMergeHeadBranch | noMergeForkBranch |
+// | commit      |  X  !  |     |        |  X       |          |           |          |                   |                   |
+// | tag         |        |  X !|        |          |          |           |          |                   |                   |
+// | branch      |  _     |  _  |  X !   |  X       |  X       |  X        |          |                   |  X                |
+// | branchDest  |        |     |        |  X       |  X       |           |  X       |                   |                   |
+// | PRRepoURL   |        |     |        |      !   |  X !     |    !      |    !     |                   |  X !              |
+// | PRID        |        |     |        |          |          |           |    !     |                   |    !              |
+// | mergeBranch |        |     |        |          |          |  X !      |          |    !              |                   |
+// | headBranch  |        |     |        |          |          |           |          |  X !              |                   |
+// |==========================================================================================================================|
 
 func selectCheckoutMethod(cfg Config) CheckoutMethod {
-	isPR := cfg.PRRepositoryURL != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
+	isPR := cfg.PRRepositoryURL != "" || cfg.BranchDest != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
 	if !isPR {
 		if cfg.Commit != "" {
 			return CheckoutCommitMethod
@@ -83,7 +88,26 @@ func selectCheckoutMethod(cfg Config) CheckoutMethod {
 	}
 
 	isFork := isFork(cfg.RepositoryURL, cfg.PRRepositoryURL)
-	isPrivateFork := isPrivate(cfg.PRRepositoryURL) && isFork
+	isPrivateSourceRepo := isPrivate(cfg.PRRepositoryURL)
+	isPrivateFork := isFork && isPrivateSourceRepo
+	isPublicFork := isFork && !isPrivateSourceRepo
+
+	if !cfg.ShouldMergePR {
+		if cfg.PRHeadBranch != "" {
+			return CheckoutNoMergeSpecialHeadBranch
+		}
+
+		if !isFork {
+			return CheckoutBranchMethod
+		}
+
+		if isPublicFork {
+			return CheckoutNoMergeForkBranch
+		}
+
+		return CheckoutPRDiffFileMethod
+	}
+
 	if !cfg.ManualMerge || isPrivateFork {
 		if cfg.PRMergeBranch != "" {
 			return CheckoutPRMergeBranchMethod
@@ -180,6 +204,28 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 			}
 
 			return checkoutPRManualMerge{
+				params: *params,
+			}, nil
+		}
+	case CheckoutNoMergeSpecialHeadBranch:
+		{
+			params, err := NewCheckoutNoMergeSpecialHeadBranchParams(cfg.PRHeadBranch)
+			if err != nil {
+				return nil, err
+			}
+
+			return checkoutSpecialHeadBranch{
+				params: *params,
+			}, nil
+		}
+	case CheckoutNoMergeForkBranch:
+		{
+			params, err := NewCheckoutNoMergeForkBranchParams(cfg.Branch, cfg.PRRepositoryURL)
+			if err != nil {
+				return nil, err
+			}
+
+			return checkoutForkBranch{
 				params: *params,
 			}, nil
 		}

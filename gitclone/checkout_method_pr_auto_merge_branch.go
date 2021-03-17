@@ -37,7 +37,7 @@ type checkoutPRMergeBranch struct {
 func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
 	// Check out initial branch (fetchInitialBranch part1)
 	// `git "fetch" "origin" "refs/heads/master"`
-	baseBranchRef := branchRefPrefix + c.params.BaseBranch
+	baseBranchRef := refsHeadsPrefix + c.params.BaseBranch
 	if err := fetch(gitCmd, originRemoteName, baseBranchRef, fetchOpts); err != nil {
 		return err
 	}

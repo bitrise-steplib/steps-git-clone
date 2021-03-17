@@ -41,7 +41,7 @@ type checkoutCommit struct {
 func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	branchRefParam := ""
 	if c.params.Branch != "" {
-		branchRefParam = branchRefPrefix + c.params.Branch
+		branchRefParam = refsHeadsPrefix + c.params.Branch
 	}
 
 	if err := fetch(gitCmd, originRemoteName, branchRefParam, fetchOptions); err != nil {
@@ -78,7 +78,7 @@ type checkoutBranch struct {
 }
 
 func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallbackRetry) error {
-	branchRef := branchRefPrefix + c.params.Branch
+	branchRef := refsHeadsPrefix + c.params.Branch
 	if err := fetchInitialBranch(gitCmd, originRemoteName, branchRef, fetchOptions); err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ type checkoutTag struct {
 func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	branchRefParam := ""
 	if c.params.Branch != "" {
-		branchRefParam = branchRefPrefix + c.params.Branch
+		branchRefParam = refsHeadsPrefix + c.params.Branch
 	}
 
 	if err := fetch(gitCmd, originRemoteName, branchRefParam, fetchOptions); err != nil {

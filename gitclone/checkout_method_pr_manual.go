@@ -64,7 +64,7 @@ type checkoutPRManualMerge struct {
 
 func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch and checkout base (target) branch
-	baseBranchRef := branchRefPrefix + c.params.BaseBranch
+	baseBranchRef := refsHeadsPrefix + c.params.BaseBranch
 	if err := fetchInitialBranch(gitCmd, originRemoteName, baseBranchRef, fetchOptions); err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 	}
 
 	// Fetch and merge
-	branchRef := branchRefPrefix + c.params.HeadBranch
+	branchRef := refsHeadsPrefix + c.params.HeadBranch
 	if err := fetch(gitCmd, remoteName, branchRef, fetchOptions); err != nil {
 		return nil
 	}
