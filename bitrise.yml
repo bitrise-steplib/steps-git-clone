@@ -39,26 +39,26 @@ workflows:
     - activate-ssh-key:
         run_if: true
     after_run:
-    - _test_error
-    - _test_submodule
-    - _test_no_checkout
-    - _test_checkout_commit
-    - _test_checkout_commit_on_branch
-    - _test_checkout_tag
-    - _test_checkout_tag_with_other_branch
-    - _test_checkout_tag_with_equally_named_branch
-    - _test_checkout_branch
-    - _test_checkout_pull_request
-    - _test_checkout_pull_request_standard_branch
-    - _test_checkout_pull_request_with_depth
-    - _test_unshallow
-    - _test_checkout_different_dir
-    - _test_manual_merge_unshallow
-    - _test_commit_logs
-    - _test_hosted_git_notfork
-    - _test_unrelated_histories
-    - _test_hosted_git_ssh_prefix
-    - test_diff_file
+    # - _test_error
+    # - _test_submodule
+    # - _test_no_checkout
+    # - _test_checkout_commit
+    # - _test_checkout_commit_on_branch
+    # - _test_checkout_tag
+    # - _test_checkout_tag_with_other_branch
+    # - _test_checkout_tag_with_equally_named_branch
+    # - _test_checkout_branch
+    # - _test_checkout_pull_request
+    # - _test_checkout_pull_request_standard_branch
+    # - _test_checkout_pull_request_with_depth
+    # - _test_unshallow
+    # - _test_checkout_different_dir
+    # - _test_manual_merge_unshallow
+    # - _test_commit_logs
+    # - _test_hosted_git_notfork
+    # - _test_unrelated_histories
+    # - _test_hosted_git_ssh_prefix
+    # - test_diff_file
 
   go-tests:
     steps:
@@ -505,7 +505,7 @@ workflows:
         inputs:
         - dir_to_check: $CLONE_INTO_DIR
 
-  _test_hosted_git_ssh_prefix:
+  test_hosted_git_ssh_prefix:
     before_run:
     - _create_tmpdir
     steps:
