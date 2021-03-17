@@ -169,8 +169,12 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 		}
 	case CheckoutPRManualMergeMethod:
 		{
-			isFork := isFork(cfg.RepositoryURL, cfg.PRRepositoryURL)
-			params, err := NewPRManualMergeParams(isFork, cfg.Branch, cfg.Commit, cfg.PRRepositoryURL, cfg.BranchDest)
+			prRepositoryURL := ""
+			if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
+				prRepositoryURL = cfg.PRRepositoryURL
+			}
+
+			params, err := NewPRManualMergeParams(cfg.Branch, cfg.Commit, prRepositoryURL, cfg.BranchDest)
 			if err != nil {
 				return nil, err
 			}

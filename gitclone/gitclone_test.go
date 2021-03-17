@@ -189,14 +189,13 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - manual merge: repo is the same with different scheme",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "git@github.com:bitrise-io/git-clone-test.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			PRMergeBranch:   "pull/7/merge",
-			PRID:            7,
-			Commit:          "76a934ae",
-			ManualMerge:     true,
+			RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
+			Branch:        "test/commit-messages",
+			BranchDest:    "master",
+			PRMergeBranch: "pull/7/merge",
+			PRID:          7,
+			Commit:        "76a934ae",
+			ManualMerge:   true,
 		},
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/master"`,

@@ -12,7 +12,6 @@ const forkRemoteName = "fork"
 
 // PRManualMergeParams are parameters to check out a Merge Request using manual merge
 type PRManualMergeParams struct {
-	IsFork bool
 	// Source
 	HeadBranch  string
 	MergeArg    string
@@ -22,18 +21,17 @@ type PRManualMergeParams struct {
 }
 
 //NewPRManualMergeParams validates and returns a new PRManualMergeParams
-func NewPRManualMergeParams(isFork bool, headBranch, commit, forkRepoURL, baseBranch string) (*PRManualMergeParams, error) {
-	if err := validatePRManualMergeParams(isFork, headBranch, commit, forkRepoURL, baseBranch); err != nil {
+func NewPRManualMergeParams(headBranch, commit, forkRepoURL, baseBranch string) (*PRManualMergeParams, error) {
+	if err := validatePRManualMergeParams(headBranch, commit, forkRepoURL, baseBranch); err != nil {
 		return nil, err
 	}
 
 	prManualMergeParams := &PRManualMergeParams{
-		IsFork:     isFork,
 		HeadBranch: headBranch,
 		BaseBranch: baseBranch,
 	}
 
-	if isFork {
+	if forkRepoURL != "" {
 		prManualMergeParams.MergeArg = fmt.Sprintf("%s/%s", forkRemoteName, headBranch)
 		prManualMergeParams.HeadRepoURL = forkRepoURL
 	} else {
@@ -44,22 +42,17 @@ func NewPRManualMergeParams(isFork bool, headBranch, commit, forkRepoURL, baseBr
 	return prManualMergeParams, nil
 }
 
-func validatePRManualMergeParams(isFork bool, headBranch, commit, forkRepoURL, baseBranch string) error {
+func validatePRManualMergeParams(headBranch, commit, forkRepoURL, baseBranch string) error {
 	if strings.TrimSpace(headBranch) == "" {
 		return NewParameterValidationError("manual PR merge checkout strategy can not be used: no head branch specified")
 	}
+
 	if strings.TrimSpace(baseBranch) == "" {
 		return NewParameterValidationError("manual PR merge checkout strategy can not be used: no base branch specified")
 	}
 
-	if isFork {
-		if strings.TrimSpace(forkRepoURL) == "" {
-			return NewParameterValidationError("manual PR merge chekout strategy can not be used: no base repository URL specified")
-		}
-	} else {
-		if strings.TrimSpace(commit) == "" {
-			return NewParameterValidationError("manual PR merge checkout strategy can not be used: no head branch commit hash specified")
-		}
+	if strings.TrimSpace(forkRepoURL) == "" && strings.TrimSpace(commit) == "" {
+		return NewParameterValidationError("manual PR merge chekout strategy can not be used: no base repository URL or head branch commit hash specified")
 	}
 
 	return nil
@@ -83,7 +76,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 	log.Printf("commit hash: %s", commitHash)
 
 	var remoteName string
-	if c.params.IsFork {
+	if c.params.HeadRepoURL != "" {
 		remoteName = forkRemoteName
 
 		// Add fork remote
