@@ -505,7 +505,7 @@ workflows:
         inputs:
         - dir_to_check: $CLONE_INTO_DIR
 
-  test_hosted_git_ssh_prefix:
+  _test_hosted_git_ssh_prefix:
     before_run:
     - _create_tmpdir
     steps:
