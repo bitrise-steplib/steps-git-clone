@@ -56,7 +56,7 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 		log.Warnf("Falling back to manual merge...")
 
 		if err := c.params.PRManualMergeStrategy.do(gitCmd, fetchOptions, fallback); err != nil {
-			return fmt.Errorf("Applying patch (%s) failed: %v", c.patchFile, err)
+			return fmt.Errorf("Fallback failed for applying patch (%s): %v", c.patchFile, err)
 		}
 
 		return nil
