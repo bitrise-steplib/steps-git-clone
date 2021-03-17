@@ -7,10 +7,12 @@ import (
 	"github.com/bitrise-io/go-utils/command/git"
 )
 
+// CheckoutNoMergeForkBranchParams are parameters to check out a PR branch from a fork, without merging
 type CheckoutNoMergeForkBranchParams struct {
 	HeadRepoURL, HeadBranch string
 }
 
+// NewCheckoutNoMergeForkBranchParams validates and retruns a new CheckoutNoMergeForkBranchParams
 func NewCheckoutNoMergeForkBranchParams(headBranch, forkRepoURL string) (*CheckoutNoMergeForkBranchParams, error) {
 	if strings.TrimSpace(forkRepoURL) == "" {
 		return nil, NewParameterValidationError("PR (fork) head branch checkout strategy can not be used: no head repository URL specified")
@@ -42,10 +44,12 @@ func (c checkoutForkBranch) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 	return nil
 }
 
+// CheckoutNoMergeSpecialHeadBranchParams are parameters to check out a head branch (provided by the git hosting service)
 type CheckoutNoMergeSpecialHeadBranchParams struct {
 	SpecialHeadBranch string
 }
 
+// NewCheckoutNoMergeSpecialHeadBranchParams validates and returns a new CheckoutNoMergeSpecialHeadBranchParams
 func NewCheckoutNoMergeSpecialHeadBranchParams(specialHeadBranch string) (*CheckoutNoMergeSpecialHeadBranchParams, error) {
 	if strings.TrimSpace(specialHeadBranch) == "" {
 		return nil, NewParameterValidationError("PR special head branch checkout strategy can not be used: no head branch specified")
