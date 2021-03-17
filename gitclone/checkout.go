@@ -28,8 +28,8 @@ const (
 	CheckoutPRManualMergeMethod
 	// CheckoutForkPRManualMergeMethod checks out a PR using manual merge
 	CheckoutForkPRManualMergeMethod
-	// CheckoutNoMergeSpecialHeadBranch checks out a MR/PR head branch only, without merging into base branch
-	CheckoutNoMergeSpecialHeadBranch
+	// CheckoutNoMergeProviderHeadBranch checks out a MR/PR head branch only, without merging into base branch
+	CheckoutNoMergeProviderHeadBranch
 	// CheckoutNoMergeForkBranch checks out a PR source branch, without merging
 	CheckoutNoMergeForkBranch
 )
@@ -94,7 +94,7 @@ func selectCheckoutMethod(cfg Config) CheckoutMethod {
 
 	if !cfg.ShouldMergePR {
 		if cfg.PRHeadBranch != "" {
-			return CheckoutNoMergeSpecialHeadBranch
+			return CheckoutNoMergeProviderHeadBranch
 		}
 
 		if !isFork {
@@ -207,9 +207,9 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 				params: *params,
 			}, nil
 		}
-	case CheckoutNoMergeSpecialHeadBranch:
+	case CheckoutNoMergeProviderHeadBranch:
 		{
-			params, err := NewCheckoutNoMergeSpecialHeadBranchParams(cfg.PRHeadBranch)
+			params, err := NewCheckoutNoMergeProviderHeadBranchParams(cfg.PRHeadBranch)
 			if err != nil {
 				return nil, err
 			}

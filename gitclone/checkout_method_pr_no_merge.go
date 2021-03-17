@@ -44,24 +44,24 @@ func (c checkoutForkBranch) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 	return nil
 }
 
-// CheckoutNoMergeSpecialHeadBranchParams are parameters to check out a head branch (provided by the git hosting service)
-type CheckoutNoMergeSpecialHeadBranchParams struct {
+// CheckoutNoMergeProviderHeadBranchParams are parameters to check out a head branch (provided by the git hosting service)
+type CheckoutNoMergeProviderHeadBranchParams struct {
 	SpecialHeadBranch string
 }
 
-// NewCheckoutNoMergeSpecialHeadBranchParams validates and returns a new CheckoutNoMergeSpecialHeadBranchParams
-func NewCheckoutNoMergeSpecialHeadBranchParams(specialHeadBranch string) (*CheckoutNoMergeSpecialHeadBranchParams, error) {
+// NewCheckoutNoMergeProviderHeadBranchParams validates and returns a new CheckoutNoMergeSpecialHeadBranchParams
+func NewCheckoutNoMergeProviderHeadBranchParams(specialHeadBranch string) (*CheckoutNoMergeProviderHeadBranchParams, error) {
 	if strings.TrimSpace(specialHeadBranch) == "" {
 		return nil, NewParameterValidationError("PR special head branch checkout strategy can not be used: no head branch specified")
 	}
 
-	return &CheckoutNoMergeSpecialHeadBranchParams{
+	return &CheckoutNoMergeProviderHeadBranchParams{
 		SpecialHeadBranch: specialHeadBranch,
 	}, nil
 }
 
 type checkoutSpecialHeadBranch struct {
-	params CheckoutNoMergeSpecialHeadBranchParams
+	params CheckoutNoMergeProviderHeadBranchParams
 }
 
 func (c checkoutSpecialHeadBranch) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {

@@ -180,7 +180,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				ManualMerge:   true,
 				ShouldMergePR: false,
 			},
-			want: CheckoutNoMergeSpecialHeadBranch,
+			want: CheckoutNoMergeProviderHeadBranch,
 		},
 		{
 			name: "PR - no merge - no fork - manual merge",
