@@ -65,12 +65,12 @@ inputs:
   - branch: "$BITRISE_GIT_BRANCH"
     opts:
       category: "Clone arguments"
-      title: "Git Branch to clone"
+      title: "Git branch to clone"
       is_dont_change_value: true
   - branch_dest: "$BITRISEIO_GIT_BRANCH_DEST"
     opts:
       category: "Clone arguments"
-      title: "Destination git Branch, used for pull requests"
+      title: "Destination git branch, used for pull requests"
       is_dont_change_value: true
   - pull_request_id: "$PULL_REQUEST_ID"
     opts:
@@ -127,8 +127,8 @@ inputs:
       title: "Merge the Pull Request source branch into target"
       summary: "Allows to validate a temporary merged state. Optional if head branch is required to be up-to-date before merging."
       description: |-
-        Allows disabling merging the head and base branches, 
-        in case the git provider has an option to require the Pull Request branch to be up-to-date.
+        Disables merging the head and base branches if the the git provider has an option
+        to require the Pull Request branch to be up-to-date.
         - `yes`: The default setting. Merges the head branch into the base branch.
         - `no`: Treats Pull Request events as Push events on the head (source) branch.
       value_options:
