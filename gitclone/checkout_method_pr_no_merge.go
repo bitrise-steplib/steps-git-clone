@@ -7,13 +7,13 @@ import (
 	"github.com/bitrise-io/go-utils/command/git"
 )
 
-// CheckoutNoMergeForkBranchParams are parameters to check out a PR branch from a fork, without merging
-type CheckoutNoMergeForkBranchParams struct {
+// CheckoutForkBranchParams are parameters to check out a PR branch from a fork, without merging
+type CheckoutForkBranchParams struct {
 	HeadRepoURL, HeadBranch string
 }
 
-// NewCheckoutNoMergeForkBranchParams validates and retruns a new CheckoutNoMergeForkBranchParams
-func NewCheckoutNoMergeForkBranchParams(headBranch, forkRepoURL string) (*CheckoutNoMergeForkBranchParams, error) {
+// NewCheckoutForkBranchParams validates and returns a new CheckoutForkBranchParams
+func NewCheckoutForkBranchParams(headBranch, forkRepoURL string) (*CheckoutForkBranchParams, error) {
 	if strings.TrimSpace(forkRepoURL) == "" {
 		return nil, NewParameterValidationError("PR (fork) head branch checkout strategy can not be used: no head repository URL specified")
 	}
@@ -21,14 +21,14 @@ func NewCheckoutNoMergeForkBranchParams(headBranch, forkRepoURL string) (*Checko
 		return nil, NewParameterValidationError("PR (fork) head branch checkout strategy can not be used: no head branch specified")
 	}
 
-	return &CheckoutNoMergeForkBranchParams{
+	return &CheckoutForkBranchParams{
 		HeadRepoURL: forkRepoURL,
 		HeadBranch:  headBranch,
 	}, nil
 }
 
 type checkoutForkBranch struct {
-	params CheckoutNoMergeForkBranchParams
+	params CheckoutForkBranchParams
 }
 
 func (c checkoutForkBranch) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
@@ -44,29 +44,29 @@ func (c checkoutForkBranch) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 	return nil
 }
 
-// CheckoutNoMergeProviderHeadBranchParams are parameters to check out a head branch (provided by the git hosting service)
-type CheckoutNoMergeProviderHeadBranchParams struct {
-	SpecialHeadBranch string
+// CheckoutHeadBranchParams are parameters to check out a head branch (provided by the git hosting service)
+type CheckoutHeadBranchParams struct {
+	HeadBranch string
 }
 
-// NewCheckoutNoMergeProviderHeadBranchParams validates and returns a new CheckoutNoMergeSpecialHeadBranchParams
-func NewCheckoutNoMergeProviderHeadBranchParams(specialHeadBranch string) (*CheckoutNoMergeProviderHeadBranchParams, error) {
+// NewCheckoutHeadBranchParams validates and returns a new NewCheckoutHeadBranchParams
+func NewCheckoutHeadBranchParams(specialHeadBranch string) (*CheckoutHeadBranchParams, error) {
 	if strings.TrimSpace(specialHeadBranch) == "" {
 		return nil, NewParameterValidationError("PR special head branch checkout strategy can not be used: no head branch specified")
 	}
 
-	return &CheckoutNoMergeProviderHeadBranchParams{
-		SpecialHeadBranch: specialHeadBranch,
+	return &CheckoutHeadBranchParams{
+		HeadBranch: specialHeadBranch,
 	}, nil
 }
 
-type checkoutSpecialHeadBranch struct {
-	params CheckoutNoMergeProviderHeadBranchParams
+type checkoutHeadBranch struct {
+	params CheckoutHeadBranchParams
 }
 
-func (c checkoutSpecialHeadBranch) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	branchRef := refsPrefix + c.params.SpecialHeadBranch
-	trackingBranch := c.params.SpecialHeadBranch
+func (c checkoutHeadBranch) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
+	branchRef := refsPrefix + c.params.HeadBranch
+	trackingBranch := c.params.HeadBranch
 	if err := fetch(gitCmd, originRemoteName, fmt.Sprintf("%s:%s", branchRef, trackingBranch), fetchOptions); err != nil {
 		return err
 	}

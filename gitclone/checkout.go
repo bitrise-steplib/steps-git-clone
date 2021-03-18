@@ -27,10 +27,10 @@ const (
 	CheckoutPRDiffFileMethod
 	// CheckoutPRManualMergeMethod check out a Merge Request using manual merge
 	CheckoutPRManualMergeMethod
-	// CheckoutNoMergeProviderHeadBranch checks out a MR/PR head branch only, without merging into base branch
-	CheckoutNoMergeProviderHeadBranch
-	// CheckoutNoMergeForkBranch checks out a PR source branch, without merging
-	CheckoutNoMergeForkBranch
+	// CheckoutHeadBranchMethod checks out a MR/PR head branch only, without merging into base branch
+	CheckoutHeadBranchMethod
+	// CheckoutForkBranchMethod checks out a PR source branch, without merging
+	CheckoutForkBranchMethod
 )
 
 const privateForkAuthWarning = `May fail due to missing authentication as Pull/Merge Request opened from a private fork.
@@ -96,7 +96,7 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 
 	if !cfg.ShouldMergePR {
 		if cfg.PRHeadBranch != "" {
-			return CheckoutNoMergeProviderHeadBranch, ""
+			return CheckoutHeadBranchMethod, ""
 		}
 
 		if !isFork {
@@ -104,7 +104,7 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 		}
 
 		if isPublicFork {
-			return CheckoutNoMergeForkBranch, ""
+			return CheckoutForkBranchMethod, ""
 		}
 
 		if cfg.BuildURL != "" {
@@ -117,7 +117,7 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 		}
 
 		log.Warnf(privateForkAuthWarning)
-		return CheckoutNoMergeForkBranch, ""
+		return CheckoutForkBranchMethod, ""
 	}
 
 	if !cfg.ManualMerge || isPrivateFork {
@@ -235,20 +235,20 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 				params: *params,
 			}, nil
 		}
-	case CheckoutNoMergeProviderHeadBranch:
+	case CheckoutHeadBranchMethod:
 		{
-			params, err := NewCheckoutNoMergeProviderHeadBranchParams(cfg.PRHeadBranch)
+			params, err := NewCheckoutHeadBranchParams(cfg.PRHeadBranch)
 			if err != nil {
 				return nil, err
 			}
 
-			return checkoutSpecialHeadBranch{
+			return checkoutHeadBranch{
 				params: *params,
 			}, nil
 		}
-	case CheckoutNoMergeForkBranch:
+	case CheckoutForkBranchMethod:
 		{
-			params, err := NewCheckoutNoMergeForkBranchParams(cfg.Branch, cfg.PRRepositoryURL)
+			params, err := NewCheckoutForkBranchParams(cfg.Branch, cfg.PRRepositoryURL)
 			if err != nil {
 				return nil, err
 			}
