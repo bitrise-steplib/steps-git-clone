@@ -124,13 +124,13 @@ inputs:
   - merge_pr: "yes"
     opts:
       category: "Checkout options"
-      title: "Merge PR head and base branch"
-      summary: "Optional if PR branch is required to be up-to-date."
+      title: "Merge the Pull Request source branch into target"
+      summary: "Allows to validate a temporary merged state. Optional if head branch is required to be up-to-date before merging."
       description: |-
         Allows disabling merging the head and base branches, 
-        in case the git provider has an option to require the PR branch to be up-to-date.
+        in case the git provider has an option to require the Pull Request branch to be up-to-date.
         - `yes`: The default setting. Merges the head branch into the base branch.
-        - `no`: Treats PR events as push events on the head (source) branch.
+        - `no`: Treats Pull Request events as Push events on the head (source) branch.
       value_options:
       - "yes"
       - "no"
