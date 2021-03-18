@@ -186,7 +186,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				ManualMerge:   true,
 				ShouldMergePR: false,
 			},
-			want: CheckoutNoMergeProviderHeadBranch,
+			want: CheckoutHeadBranchMethod,
 		},
 		{
 			name: "PR - no merge - no fork - manual merge",
@@ -224,7 +224,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				ManualMerge:     true,
 				ShouldMergePR:   false,
 			},
-			want: CheckoutNoMergeForkBranch,
+			want: CheckoutForkBranchMethod,
 		},
 		{
 			name: "PR - no merge - fork - auto merge - diff file: private fork",

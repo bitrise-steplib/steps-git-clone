@@ -286,7 +286,7 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 	}
 
 	switch checkoutStrategy {
-	case CheckoutBranchMethod:
+	case CheckoutBranchMethod, CheckoutHeadBranchMethod, CheckoutForkBranchMethod:
 		// the given branch's tip will be checked out, no need to unshallow
 		return nil
 	case CheckoutCommitMethod, CheckoutTagMethod:
