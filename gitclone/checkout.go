@@ -27,10 +27,10 @@ const (
 	CheckoutPRDiffFileMethod
 	// CheckoutPRManualMergeMethod check out a Merge Request using manual merge
 	CheckoutPRManualMergeMethod
-	// CheckoutHeadBranchMethod checks out a MR/PR head branch only, without merging into base branch
-	CheckoutHeadBranchMethod
-	// CheckoutForkBranchMethod checks out a PR source branch, without merging
-	CheckoutForkBranchMethod
+	// CheckoutHeadBranchCommitMethod checks out a MR/PR head branch only, without merging into base branch
+	CheckoutHeadBranchCommitMethod
+	// CheckoutForkCommitMethod checks out a PR source branch, without merging
+	CheckoutForkCommitMethod
 )
 
 const privateForkAuthWarning = `May fail due to missing authentication as Pull Request opened from a private fork.
@@ -96,15 +96,15 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 
 	if !cfg.ShouldMergePR {
 		if cfg.PRHeadBranch != "" {
-			return CheckoutHeadBranchMethod, ""
+			return CheckoutHeadBranchCommitMethod, ""
 		}
 
 		if !isFork {
-			return CheckoutBranchMethod, ""
+			return CheckoutCommitMethod, ""
 		}
 
 		if isPublicFork {
-			return CheckoutForkBranchMethod, ""
+			return CheckoutForkCommitMethod, ""
 		}
 
 		if cfg.BuildURL != "" {
@@ -116,7 +116,7 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 		}
 
 		log.Warnf(privateForkAuthWarning)
-		return CheckoutForkBranchMethod, ""
+		return CheckoutForkCommitMethod, ""
 	}
 
 	if !cfg.ManualMerge || isPrivateFork {
@@ -234,25 +234,25 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 				params: *params,
 			}, nil
 		}
-	case CheckoutHeadBranchMethod:
+	case CheckoutHeadBranchCommitMethod:
 		{
-			params, err := NewCheckoutHeadBranchParams(cfg.PRHeadBranch, cfg.Commit)
+			params, err := NewCheckoutHeadBranchCommitParams(cfg.PRHeadBranch, cfg.Commit)
 			if err != nil {
 				return nil, err
 			}
 
-			return checkoutHeadBranch{
+			return checkoutHeadBranchCommit{
 				params: *params,
 			}, nil
 		}
-	case CheckoutForkBranchMethod:
+	case CheckoutForkCommitMethod:
 		{
-			params, err := NewCheckoutForkBranchParams(cfg.Branch, cfg.PRSourceRepositoryURL)
+			params, err := NewCheckoutForkCommitParams(cfg.Branch, cfg.PRSourceRepositoryURL, cfg.Commit)
 			if err != nil {
 				return nil, err
 			}
 
-			return checkoutForkBranch{
+			return checkoutForkCommit{
 				params: *params,
 			}, nil
 		}
@@ -285,10 +285,10 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 	}
 
 	switch checkoutStrategy {
-	case CheckoutBranchMethod, CheckoutHeadBranchMethod, CheckoutForkBranchMethod:
+	case CheckoutBranchMethod:
 		// the given branch's tip will be checked out, no need to unshallow
 		return nil
-	case CheckoutCommitMethod, CheckoutTagMethod:
+	case CheckoutCommitMethod, CheckoutTagMethod, CheckoutHeadBranchCommitMethod, CheckoutForkCommitMethod:
 		return simpleUnshallow{}
 	case CheckoutPRMergeBranchMethod, CheckoutPRManualMergeMethod, CheckoutPRDiffFileMethod:
 		return resetUnshallow{}

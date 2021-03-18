@@ -186,7 +186,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				ManualMerge:   true,
 				ShouldMergePR: false,
 			},
-			want: CheckoutHeadBranchMethod,
+			want: CheckoutHeadBranchCommitMethod,
 		},
 		{
 			name: "PR - no merge - no fork - manual merge",
@@ -198,20 +198,20 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				ManualMerge:   true,
 				ShouldMergePR: false,
 			},
-			want: CheckoutBranchMethod,
+			want: CheckoutCommitMethod,
 		},
 		{
-			name: "PR - no merge - no fork - auto merge - diff file",
+			name: "PR - no merge - no fork - diff file exists",
 			cfg: Config{
 				RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
+				Commit:        "76a934ae",
 				PRDestBranch:  "master",
 				PRID:          7,
-				Commit:        "76a934ae",
 				ShouldMergePR: false,
 				BuildURL:      "dummy_url",
 			},
 			patchSource: MockPatchSource{diffFilePath: "dummy_path"},
-			want:        CheckoutBranchMethod,
+			want:        CheckoutCommitMethod,
 		},
 		{
 			name: "PR - no merge - fork - public fork",
@@ -224,7 +224,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				ManualMerge:           true,
 				ShouldMergePR:         false,
 			},
-			want: CheckoutForkBranchMethod,
+			want: CheckoutForkCommitMethod,
 		},
 		{
 			name: "PR - no merge - fork - auto merge - diff file: private fork",

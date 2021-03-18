@@ -394,13 +394,13 @@ var testCases = [...]struct {
 		},
 		wantCmds: []string{
 			`git "fetch" "--depth=1" "origin" "refs/heads/test/commit-messages"`,
-			`git "checkout" "test/commit-messages"`,
-			`git "merge" "origin/test/commit-messages"`,
+			`git "checkout" "76a934ae"`,
 		},
 	},
 	{
 		name: "PR - no merge - no fork - auto merge - head branch",
 		cfg: Config{
+			Commit:        "76a934ae",
 			PRDestBranch:  "master",
 			PRMergeBranch: "pull/5/merge",
 			PRHeadBranch:  "pull/5/head",
@@ -408,8 +408,8 @@ var testCases = [...]struct {
 			ShouldMergePR: false,
 		},
 		wantCmds: []string{
-			`git "fetch" "--depth=1" "origin" "refs/pull/5/head:pull/5/head"`,
-			`git "checkout" "pull/5/head"`,
+			`git "fetch" "--depth=1" "origin" "refs/pull/5/head"`,
+			`git "checkout" "76a934ae"`,
 		},
 	},
 	{
@@ -429,8 +429,7 @@ var testCases = [...]struct {
 		wantCmds: []string{
 			`git "remote" "add" "fork" "https://github.com/bitrise-io/git-clone-test2.git"`,
 			`git "fetch" "--depth=1" "fork" "refs/heads/test/commit-messages"`,
-			`git "checkout" "test/commit-messages"`,
-			`git "merge" "fork/test/commit-messages"`,
+			`git "checkout" "76a934ae"`,
 		},
 	},
 	{
