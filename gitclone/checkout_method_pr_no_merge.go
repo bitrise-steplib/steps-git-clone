@@ -9,21 +9,21 @@ import (
 
 // CheckoutForkBranchParams are parameters to check out a PR branch from a fork, without merging
 type CheckoutForkBranchParams struct {
-	HeadRepoURL, HeadBranch string
+	SourceRepoURL, SourceBranch string
 }
 
 // NewCheckoutForkBranchParams validates and returns a new CheckoutForkBranchParams
-func NewCheckoutForkBranchParams(headBranch, forkRepoURL string) (*CheckoutForkBranchParams, error) {
-	if strings.TrimSpace(forkRepoURL) == "" {
+func NewCheckoutForkBranchParams(sourceBranch, sourceRepoURL string) (*CheckoutForkBranchParams, error) {
+	if strings.TrimSpace(sourceRepoURL) == "" {
 		return nil, NewParameterValidationError("PR (fork) head branch checkout strategy can not be used: no head repository URL specified")
 	}
-	if strings.TrimSpace(headBranch) == "" {
+	if strings.TrimSpace(sourceBranch) == "" {
 		return nil, NewParameterValidationError("PR (fork) head branch checkout strategy can not be used: no head branch specified")
 	}
 
 	return &CheckoutForkBranchParams{
-		HeadRepoURL: forkRepoURL,
-		HeadBranch:  headBranch,
+		SourceRepoURL: sourceRepoURL,
+		SourceBranch:  sourceBranch,
 	}, nil
 }
 
@@ -32,12 +32,12 @@ type checkoutForkBranch struct {
 }
 
 func (c checkoutForkBranch) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.params.HeadRepoURL)); err != nil {
-		return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.HeadRepoURL, err)
+	if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.params.SourceRepoURL)); err != nil {
+		return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.SourceRepoURL, err)
 	}
 
-	forkBranchRef := refsHeadsPrefix + c.params.HeadBranch
-	if err := fetchInitialBranch(gitCmd, forkRemoteName, forkBranchRef, fetchOptions); err != nil {
+	sourceBranchRef := refsHeadsPrefix + c.params.SourceBranch
+	if err := fetchInitialBranch(gitCmd, forkRemoteName, sourceBranchRef, fetchOptions); err != nil {
 		return err
 	}
 
@@ -65,9 +65,10 @@ type checkoutHeadBranch struct {
 }
 
 func (c checkoutHeadBranch) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	branchRef := refsPrefix + c.params.HeadBranch
-	trackingBranch := c.params.HeadBranch
-	if err := fetch(gitCmd, originRemoteName, fmt.Sprintf("%s:%s", branchRef, trackingBranch), fetchOptions); err != nil {
+	branchRef := refsPrefix + c.params.HeadBranch                                  // ref/pull/2/head
+	trackingBranch := c.params.HeadBranch                                          // pull/2/head
+	branchRefWithTrackingBranch := fmt.Sprintf("%s:%s", branchRef, trackingBranch) // ref/pull/2/head:pull/2/head
+	if err := fetch(gitCmd, originRemoteName, branchRefWithTrackingBranch, fetchOptions); err != nil {
 		return err
 	}
 

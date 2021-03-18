@@ -137,7 +137,7 @@ var testCases = [...]struct {
 			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			CloneDepth:    1,
 			ManualMerge:   true,
 			ShouldMergePR: true,
@@ -155,10 +155,10 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - manual merge: branch and commit, no PRRepoURL or PRID",
 		cfg: Config{
-			Commit:      "76a934ae",
-			Branch:      "test/commit-messages",
-			BranchDest:  "master",
-			ManualMerge: true,
+			Commit:       "76a934ae",
+			Branch:       "test/commit-messages",
+			PRDestBranch: "master",
+			ManualMerge:  true,
 		},
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/test/commit-messages"`,
@@ -169,14 +169,14 @@ var testCases = [...]struct {
 	{
 		name: "PR - fork - manual merge",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "https://github.com/bitrise-io/other-repo.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			Commit:          "76a934ae",
-			ManualMerge:     true,
-			ShouldMergePR:   true,
-			CloneDepth:      1,
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "https://github.com/bitrise-io/other-repo.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			Commit:                "76a934ae",
+			ManualMerge:           true,
+			ShouldMergePR:         true,
+			CloneDepth:            1,
 		},
 		wantCmds: []string{
 			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
@@ -192,14 +192,14 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - manual merge: repo is the same with different scheme",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "git@github.com:bitrise-io/git-clone-test.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			PRMergeBranch:   "pull/7/merge",
-			Commit:          "76a934ae",
-			ManualMerge:     true,
-			ShouldMergePR:   true,
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "git@github.com:bitrise-io/git-clone-test.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			PRMergeBranch:         "pull/7/merge",
+			Commit:                "76a934ae",
+			ManualMerge:           true,
+			ShouldMergePR:         true,
 		},
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/master"`,
@@ -216,7 +216,7 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - auto merge - merge branch (GitHub format)",
 		cfg: Config{
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			PRMergeBranch: "pull/5/merge",
 			PRHeadBranch:  "pull/5/head",
 			CloneDepth:    1,
@@ -234,7 +234,7 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - auto merge - merge branch (standard branch format)",
 		cfg: Config{
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			PRMergeBranch: "pr_test",
 			ShouldMergePR: true,
 		},
@@ -250,14 +250,14 @@ var testCases = [...]struct {
 	{
 		name: "PR - fork - auto merge - merge branch: private fork overrides manual merge flag",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			PRMergeBranch:   "pull/7/merge",
-			Commit:          "76a934ae",
-			ManualMerge:     true,
-			ShouldMergePR:   true,
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			PRMergeBranch:         "pull/7/merge",
+			Commit:                "76a934ae",
+			ManualMerge:           true,
+			ShouldMergePR:         true,
 		},
 		wantCmds: []string{
 			`git "fetch" "origin" "refs/heads/master"`,
@@ -271,13 +271,13 @@ var testCases = [...]struct {
 	{
 		name: "PR - fork - auto merge - diff file: private fork overrides manual merge flag, Fails",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			Commit:          "76a934ae",
-			ManualMerge:     true,
-			BuildURL:        "dummy_url",
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			Commit:                "76a934ae",
+			ManualMerge:           true,
+			BuildURL:              "dummy_url",
 		},
 		patchSource: MockPatchSource{"", errors.New(rawCmdError)},
 		mockRunner: givenMockRunner().
@@ -298,7 +298,7 @@ var testCases = [...]struct {
 		cfg: Config{
 			RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 			Branch:        "test/commit-messages",
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			Commit:        "76a934ae",
 			CloneDepth:    1,
 			ManualMerge:   false,
@@ -319,7 +319,7 @@ var testCases = [...]struct {
 		cfg: Config{
 			RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 			Branch:        "test/commit-messages",
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			Commit:        "76a934ae",
 			CloneDepth:    1,
 			ManualMerge:   false,
@@ -347,13 +347,13 @@ var testCases = [...]struct {
 	{
 		name: "PR - fork - auto merge - diff file: fallback to manual merge if unable to apply patch",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			Commit:          "76a934ae",
-			ManualMerge:     true,
-			BuildURL:        "dummy_url",
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			Commit:                "76a934ae",
+			ManualMerge:           true,
+			BuildURL:              "dummy_url",
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
 		mockRunner: givenMockRunner().
@@ -381,7 +381,7 @@ var testCases = [...]struct {
 		cfg: Config{
 			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			CloneDepth:    1,
 			ManualMerge:   true,
 			ShouldMergePR: false,
@@ -395,7 +395,7 @@ var testCases = [...]struct {
 	{
 		name: "PR - no merge - no fork - auto merge - head branch",
 		cfg: Config{
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			PRMergeBranch: "pull/5/merge",
 			PRHeadBranch:  "pull/5/head",
 			CloneDepth:    1,
@@ -409,14 +409,14 @@ var testCases = [...]struct {
 	{
 		name: "PR - no merge - no fork - auto merge - diff file: public fork",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "https://github.com/bitrise-io/git-clone-test2.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			Commit:          "76a934ae",
-			CloneDepth:      1,
-			ManualMerge:     false,
-			ShouldMergePR:   false,
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "https://github.com/bitrise-io/git-clone-test2.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			Commit:                "76a934ae",
+			CloneDepth:            1,
+			ManualMerge:           false,
+			ShouldMergePR:         false,
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
 		wantErr:     nil,
@@ -430,15 +430,15 @@ var testCases = [...]struct {
 	{
 		name: "PR - no merge - fork - auto merge - diff file: private fork",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			Commit:          "76a934ae",
-			CloneDepth:      1,
-			ManualMerge:     false,
-			ShouldMergePR:   false,
-			BuildURL:        "dummy_url",
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			Commit:                "76a934ae",
+			CloneDepth:            1,
+			ManualMerge:           false,
+			ShouldMergePR:         false,
+			BuildURL:              "dummy_url",
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
 		wantErr:     nil,
@@ -513,7 +513,7 @@ var testCases = [...]struct {
 		cfg: Config{
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			ManualMerge:   true,
 			ShouldMergePR: true,
 		},
@@ -523,7 +523,7 @@ var testCases = [...]struct {
 	{
 		name: "Checkout PR - auto merge - merge branch, with depth (unshallow needed)",
 		cfg: Config{
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			PRMergeBranch: "pull/5/merge",
 			PRHeadBranch:  "pull/5/head",
 			CloneDepth:    1,

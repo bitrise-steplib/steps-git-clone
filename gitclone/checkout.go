@@ -72,7 +72,7 @@ type checkoutStrategy interface {
 // |==========================================================================================================================|
 
 func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string) {
-	isPR := cfg.PRRepositoryURL != "" || cfg.BranchDest != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
+	isPR := cfg.PRSourceRepositoryURL != "" || cfg.PRDestBranch != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
 	if !isPR {
 		if cfg.Commit != "" {
 			return CheckoutCommitMethod, ""
@@ -89,8 +89,8 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 		return CheckoutNoneMethod, ""
 	}
 
-	isFork := isFork(cfg.RepositoryURL, cfg.PRRepositoryURL)
-	isPrivateSourceRepo := isPrivate(cfg.PRRepositoryURL)
+	isFork := isFork(cfg.RepositoryURL, cfg.PRSourceRepositoryURL)
+	isPrivateSourceRepo := isPrivate(cfg.PRSourceRepositoryURL)
 	isPrivateFork := isFork && isPrivateSourceRepo
 	isPublicFork := isFork && !isPrivateSourceRepo
 
@@ -193,7 +193,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 		}
 	case CheckoutPRMergeBranchMethod:
 		{
-			params, err := NewPRMergeBranchParams(cfg.BranchDest, cfg.PRMergeBranch)
+			params, err := NewPRMergeBranchParams(cfg.PRDestBranch, cfg.PRMergeBranch)
 			if err != nil {
 				return nil, err
 			}
@@ -209,7 +209,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 				return nil, err
 			}
 
-			params, err := NewPRDiffFileParams(cfg.BranchDest, prManualMergeStrategy)
+			params, err := NewPRDiffFileParams(cfg.PRDestBranch, prManualMergeStrategy)
 			if err != nil {
 				return nil, err
 			}
@@ -222,11 +222,11 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 	case CheckoutPRManualMergeMethod:
 		{
 			prRepositoryURL := ""
-			if isFork(cfg.RepositoryURL, cfg.PRRepositoryURL) {
-				prRepositoryURL = cfg.PRRepositoryURL
+			if isFork(cfg.RepositoryURL, cfg.PRSourceRepositoryURL) {
+				prRepositoryURL = cfg.PRSourceRepositoryURL
 			}
 
-			params, err := NewPRManualMergeParams(cfg.Branch, cfg.Commit, prRepositoryURL, cfg.BranchDest)
+			params, err := NewPRManualMergeParams(cfg.Branch, cfg.Commit, prRepositoryURL, cfg.PRDestBranch)
 			if err != nil {
 				return nil, err
 			}
@@ -248,7 +248,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 		}
 	case CheckoutForkBranchMethod:
 		{
-			params, err := NewCheckoutForkBranchParams(cfg.Branch, cfg.PRRepositoryURL)
+			params, err := NewCheckoutForkBranchParams(cfg.Branch, cfg.PRSourceRepositoryURL)
 			if err != nil {
 				return nil, err
 			}

@@ -16,21 +16,21 @@ import (
 //
 // PRDiffFileParams are parameters to check out a Merge/Pull Request (when a diff file is available)
 type PRDiffFileParams struct {
-	BaseBranch            string
+	DestinationBranch     string
 	PRManualMergeStrategy checkoutStrategy
 }
 
 // NewPRDiffFileParams validates and returns a new PRDiffFileParams
 func NewPRDiffFileParams(
-	baseBranch string,
+	destBranch string,
 	prManualMergeStrategy checkoutStrategy,
 ) (*PRDiffFileParams, error) {
-	if strings.TrimSpace(baseBranch) == "" {
+	if strings.TrimSpace(destBranch) == "" {
 		return nil, NewParameterValidationError("PR diff file based checkout strategy can not be used: no base branch specified")
 	}
 
 	return &PRDiffFileParams{
-		BaseBranch:            baseBranch,
+		DestinationBranch:     destBranch,
 		PRManualMergeStrategy: prManualMergeStrategy,
 	}, nil
 }
@@ -42,12 +42,12 @@ type checkoutPRDiffFile struct {
 }
 
 func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	baseBranchRef := refsHeadsPrefix + c.params.BaseBranch
-	if err := fetch(gitCmd, originRemoteName, baseBranchRef, fetchOptions); err != nil {
+	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
+	if err := fetch(gitCmd, originRemoteName, destBranchRef, fetchOptions); err != nil {
 		return err
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, c.params.BaseBranch, fallback); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, c.params.DestinationBranch, fallback); err != nil {
 		return err
 	}
 

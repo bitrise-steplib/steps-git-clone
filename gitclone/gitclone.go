@@ -17,11 +17,11 @@ type Config struct {
 	Tag           string `env:"tag"`
 	Branch        string `env:"branch"`
 
-	BranchDest      string `env:"branch_dest"`
-	PRID            int    `env:"pull_request_id"`
-	PRRepositoryURL string `env:"pull_request_repository_url"`
-	PRMergeBranch   string `env:"pull_request_merge_branch"`
-	PRHeadBranch    string `env:"pull_request_head_branch"`
+	PRDestBranch          string `env:"branch_dest"`
+	PRID                  int    `env:"pull_request_id"`
+	PRSourceRepositoryURL string `env:"pull_request_repository_url"`
+	PRMergeBranch         string `env:"pull_request_merge_branch"`
+	PRHeadBranch          string `env:"pull_request_head_branch"`
 
 	ResetRepository           bool `env:"reset_repository,opt[Yes,No]"`
 	CloneDepth                int  `env:"clone_depth"`
