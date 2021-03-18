@@ -19,8 +19,8 @@ type PRManualMergeParams struct {
 }
 
 //NewPRManualMergeParams validates and returns a new PRManualMergeParams
-func NewPRManualMergeParams(sourceBranch, commit, forkRepoURL, destBranch string) (*PRManualMergeParams, error) {
-	if err := validatePRManualMergeParams(sourceBranch, commit, forkRepoURL, destBranch); err != nil {
+func NewPRManualMergeParams(sourceBranch, commit, sourceRepoURL, destBranch string) (*PRManualMergeParams, error) {
+	if err := validatePRManualMergeParams(sourceBranch, commit, sourceRepoURL, destBranch); err != nil {
 		return nil, err
 	}
 
@@ -29,9 +29,9 @@ func NewPRManualMergeParams(sourceBranch, commit, forkRepoURL, destBranch string
 		DestinationBranch: destBranch,
 	}
 
-	if forkRepoURL != "" {
+	if sourceRepoURL != "" {
 		prManualMergeParams.SourceMergeArg = fmt.Sprintf("%s/%s", forkRemoteName, sourceBranch)
-		prManualMergeParams.SourceRepoURL = forkRepoURL
+		prManualMergeParams.SourceRepoURL = sourceRepoURL
 	} else {
 		prManualMergeParams.SourceMergeArg = commit
 		prManualMergeParams.SourceRepoURL = ""
@@ -42,15 +42,15 @@ func NewPRManualMergeParams(sourceBranch, commit, forkRepoURL, destBranch string
 
 func validatePRManualMergeParams(sourceBranch, commit, sourceRepoURL, destBranch string) error {
 	if strings.TrimSpace(sourceBranch) == "" {
-		return NewParameterValidationError("manual PR merge checkout strategy can not be used: no head branch specified")
+		return NewParameterValidationError("manual PR merge checkout strategy can not be used: no source branch specified")
 	}
 
 	if strings.TrimSpace(destBranch) == "" {
-		return NewParameterValidationError("manual PR merge checkout strategy can not be used: no base branch specified")
+		return NewParameterValidationError("manual PR merge checkout strategy can not be used: no destination branch specified")
 	}
 
 	if strings.TrimSpace(sourceRepoURL) == "" && strings.TrimSpace(commit) == "" {
-		return NewParameterValidationError("manual PR merge chekout strategy can not be used: no base repository URL or head branch commit hash specified")
+		return NewParameterValidationError("manual PR merge chekout strategy can not be used: no source repository URL or source branch commit hash specified")
 	}
 
 	return nil
@@ -61,7 +61,7 @@ type checkoutPRManualMerge struct {
 }
 
 func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	// Fetch and checkout base (target) branch
+	// Fetch and checkout destinations branch
 	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
 	if err := fetchInitialBranch(gitCmd, originRemoteName, destBranchRef, fetchOptions); err != nil {
 		return err

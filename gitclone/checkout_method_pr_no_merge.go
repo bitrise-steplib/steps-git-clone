@@ -15,10 +15,10 @@ type CheckoutForkBranchParams struct {
 // NewCheckoutForkBranchParams validates and returns a new CheckoutForkBranchParams
 func NewCheckoutForkBranchParams(sourceBranch, sourceRepoURL string) (*CheckoutForkBranchParams, error) {
 	if strings.TrimSpace(sourceRepoURL) == "" {
-		return nil, NewParameterValidationError("PR (fork) head branch checkout strategy can not be used: no head repository URL specified")
+		return nil, NewParameterValidationError("PR (fork) source branch checkout strategy can not be used: no source repository URL specified")
 	}
 	if strings.TrimSpace(sourceBranch) == "" {
-		return nil, NewParameterValidationError("PR (fork) head branch checkout strategy can not be used: no head branch specified")
+		return nil, NewParameterValidationError("PR (fork) source branch checkout strategy can not be used: no source branch specified")
 	}
 
 	return &CheckoutForkBranchParams{
@@ -47,12 +47,16 @@ func (c checkoutForkBranch) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 // CheckoutHeadBranchParams are parameters to check out a head branch (provided by the git hosting service)
 type CheckoutHeadBranchParams struct {
 	HeadBranch string
+	Commit     string
 }
 
 // NewCheckoutHeadBranchParams validates and returns a new NewCheckoutHeadBranchParams
-func NewCheckoutHeadBranchParams(specialHeadBranch string) (*CheckoutHeadBranchParams, error) {
+func NewCheckoutHeadBranchParams(specialHeadBranch, commit string) (*CheckoutHeadBranchParams, error) {
 	if strings.TrimSpace(specialHeadBranch) == "" {
-		return nil, NewParameterValidationError("PR special head branch checkout strategy can not be used: no head branch specified")
+		return nil, NewParameterValidationError("PR head branch checkout strategy can not be used: no head branch specified")
+	}
+	if strings.TrimSpace(commit) == "" {
+		return nil, NewParameterValidationError("PR head branch checkout stategy can not be used: no commit specified")
 	}
 
 	return &CheckoutHeadBranchParams{

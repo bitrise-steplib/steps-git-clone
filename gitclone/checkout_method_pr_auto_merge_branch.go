@@ -15,16 +15,16 @@ type PRMergeBranchParams struct {
 }
 
 // NewPRMergeBranchParams validates and returns a new PRMergeBranchParams
-func NewPRMergeBranchParams(baseBranch, mergeBranch string) (*PRMergeBranchParams, error) {
-	if strings.TrimSpace(baseBranch) == "" {
-		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used: no base branch specified")
+func NewPRMergeBranchParams(destBranch, mergeBranch string) (*PRMergeBranchParams, error) {
+	if strings.TrimSpace(destBranch) == "" {
+		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used: no destination branch specified")
 	}
 	if strings.TrimSpace(mergeBranch) == "" {
 		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used: no merge branch specified")
 	}
 
 	return &PRMergeBranchParams{
-		DestinationBranch: baseBranch,
+		DestinationBranch: destBranch,
 		MergeBranch:       mergeBranch,
 	}, nil
 }

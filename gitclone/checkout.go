@@ -33,7 +33,7 @@ const (
 	CheckoutForkBranchMethod
 )
 
-const privateForkAuthWarning = `May fail due to missing authentication as Pull/Merge Request opened from a private fork.
+const privateForkAuthWarning = `May fail due to missing authentication as Pull Request opened from a private fork.
 A git hosting provider head branch or a diff file is unavailable.`
 
 // ParameterValidationError is returned when there is missing or malformatted parameter for a given parameter set
@@ -110,8 +110,7 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 		if cfg.BuildURL != "" {
 			patchFile := getPatchFile(patch, cfg.BuildURL, cfg.BuildAPIToken)
 			if patchFile != "" {
-				log.Infof("Merging Pull/Merge Request despite the option to disable merging, as it is opened from a private fork.")
-
+				log.Infof("Merging Pull Request despite the option to disable merging, as it is opened from a private fork.")
 				return CheckoutPRDiffFileMethod, patchFile
 			}
 		}
@@ -237,7 +236,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 		}
 	case CheckoutHeadBranchMethod:
 		{
-			params, err := NewCheckoutHeadBranchParams(cfg.PRHeadBranch)
+			params, err := NewCheckoutHeadBranchParams(cfg.PRHeadBranch, cfg.Commit)
 			if err != nil {
 				return nil, err
 			}
