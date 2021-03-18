@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-io/go-utils/log"
 )
 
 // CheckoutMethod is the checkout method used
@@ -26,13 +27,14 @@ const (
 	CheckoutPRDiffFileMethod
 	// CheckoutPRManualMergeMethod check out a Merge Request using manual merge
 	CheckoutPRManualMergeMethod
-	// CheckoutForkPRManualMergeMethod checks out a PR using manual merge
-	CheckoutForkPRManualMergeMethod
 	// CheckoutNoMergeProviderHeadBranch checks out a MR/PR head branch only, without merging into base branch
 	CheckoutNoMergeProviderHeadBranch
 	// CheckoutNoMergeForkBranch checks out a PR source branch, without merging
 	CheckoutNoMergeForkBranch
 )
+
+const privateForkAuthWarning = `May fail due to missing authentication as Pull/Merge Request opened from a private fork.
+A git hosting provider head branch or a diff file is unavailable.`
 
 // ParameterValidationError is returned when there is missing or malformatted parameter for a given parameter set
 type ParameterValidationError struct {
@@ -69,22 +71,22 @@ type checkoutStrategy interface {
 // | headBranch  |        |     |        |          |          |           |          |  X !              |                   |
 // |==========================================================================================================================|
 
-func selectCheckoutMethod(cfg Config) CheckoutMethod {
+func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string) {
 	isPR := cfg.PRRepositoryURL != "" || cfg.BranchDest != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
 	if !isPR {
 		if cfg.Commit != "" {
-			return CheckoutCommitMethod
+			return CheckoutCommitMethod, ""
 		}
 
 		if cfg.Tag != "" {
-			return CheckoutTagMethod
+			return CheckoutTagMethod, ""
 		}
 
 		if cfg.Branch != "" {
-			return CheckoutBranchMethod
+			return CheckoutBranchMethod, ""
 		}
 
-		return CheckoutNoneMethod
+		return CheckoutNoneMethod, ""
 	}
 
 	isFork := isFork(cfg.RepositoryURL, cfg.PRRepositoryURL)
@@ -94,32 +96,63 @@ func selectCheckoutMethod(cfg Config) CheckoutMethod {
 
 	if !cfg.ShouldMergePR {
 		if cfg.PRHeadBranch != "" {
-			return CheckoutNoMergeProviderHeadBranch
+			return CheckoutNoMergeProviderHeadBranch, ""
 		}
 
 		if !isFork {
-			return CheckoutBranchMethod
+			return CheckoutBranchMethod, ""
 		}
 
 		if isPublicFork {
-			return CheckoutNoMergeForkBranch
+			return CheckoutNoMergeForkBranch, ""
 		}
 
-		return CheckoutPRDiffFileMethod
+		if cfg.BuildURL != "" {
+			patchFile := getPatchFile(patch, cfg.BuildURL, cfg.BuildAPIToken)
+			if patchFile != "" {
+				log.Infof("Merging Pull/Merge Request despite the option to disable merging, as it is opened from a private fork.")
+
+				return CheckoutPRDiffFileMethod, patchFile
+			}
+		}
+
+		log.Warnf(privateForkAuthWarning)
+		return CheckoutNoMergeForkBranch, ""
 	}
 
 	if !cfg.ManualMerge || isPrivateFork {
 		if cfg.PRMergeBranch != "" {
-			return CheckoutPRMergeBranchMethod
+			return CheckoutPRMergeBranchMethod, ""
 		}
 
-		return CheckoutPRDiffFileMethod
+		if cfg.BuildURL != "" {
+			patchFile := getPatchFile(patch, cfg.BuildURL, cfg.BuildAPIToken)
+			if patchFile != "" {
+				return CheckoutPRDiffFileMethod, patchFile
+			}
+		}
+
+		log.Warnf(privateForkAuthWarning)
+		return CheckoutPRManualMergeMethod, ""
 	}
 
-	return CheckoutPRManualMergeMethod
+	return CheckoutPRManualMergeMethod, ""
 }
 
-func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch patchSource) (checkoutStrategy, error) {
+func getPatchFile(patch patchSource, buildURL, buildAPIToken string) string {
+	if patch != nil {
+		patchFile, err := patch.getDiffPath(buildURL, buildAPIToken)
+		if err != nil {
+			log.Warnf("Diff file unavailable: %v", err)
+		} else {
+			return patchFile
+		}
+	}
+
+	return ""
+}
+
+func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile string) (checkoutStrategy, error) {
 	switch checkoutMethod {
 	case CheckoutNoneMethod:
 		{
@@ -171,12 +204,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patch pat
 		}
 	case CheckoutPRDiffFileMethod:
 		{
-			patchFile, err := patch.getDiffPath(cfg.BuildURL, cfg.BuildAPIToken)
-			if err != nil {
-				return nil, fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and could not download diff file: %v", err)
-			}
-
-			prManualMergeStrategy, err := createCheckoutStrategy(CheckoutPRManualMergeMethod, cfg, patch)
+			prManualMergeStrategy, err := createCheckoutStrategy(CheckoutPRManualMergeMethod, cfg, patchFile)
 			if err != nil {
 				return nil, err
 			}
@@ -263,7 +291,7 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 		return nil
 	case CheckoutCommitMethod, CheckoutTagMethod:
 		return simpleUnshallow{}
-	case CheckoutPRMergeBranchMethod, CheckoutPRManualMergeMethod, CheckoutForkPRManualMergeMethod, CheckoutPRDiffFileMethod:
+	case CheckoutPRMergeBranchMethod, CheckoutPRManualMergeMethod, CheckoutPRDiffFileMethod:
 		return resetUnshallow{}
 	default:
 		return nil

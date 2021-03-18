@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/stretchr/testify/assert"
 )
@@ -137,7 +138,6 @@ var testCases = [...]struct {
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
 			BranchDest:    "master",
-			PRID:          7,
 			CloneDepth:    1,
 			ManualMerge:   true,
 			ShouldMergePR: true,
@@ -197,7 +197,6 @@ var testCases = [...]struct {
 			Branch:          "test/commit-messages",
 			BranchDest:      "master",
 			PRMergeBranch:   "pull/7/merge",
-			PRID:            7,
 			Commit:          "76a934ae",
 			ManualMerge:     true,
 			ShouldMergePR:   true,
@@ -256,7 +255,6 @@ var testCases = [...]struct {
 			Branch:          "test/commit-messages",
 			BranchDest:      "master",
 			PRMergeBranch:   "pull/7/merge",
-			PRID:            7,
 			Commit:          "76a934ae",
 			ManualMerge:     true,
 			ShouldMergePR:   true,
@@ -279,10 +277,21 @@ var testCases = [...]struct {
 			BranchDest:      "master",
 			Commit:          "76a934ae",
 			ManualMerge:     true,
+			BuildURL:        "dummy_url",
 		},
 		patchSource: MockPatchSource{"", errors.New(rawCmdError)},
-		wantErr:     fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and could not download diff file: %s", rawCmdError),
-		wantCmds:    nil,
+		mockRunner: givenMockRunner().
+			GivenRunWithRetryFailsAfter(2).
+			GivenRunSucceeds(),
+		wantCmds: []string{
+			`git "remote" "add" "fork" "git@github.com:bitrise-io/other-repo.git"`,
+			`git "fetch" "fork" "refs/heads/test/commit-messages"`,
+			`git "fetch" "fork" "refs/heads/test/commit-messages"`,
+			`git "fetch" "fork" "refs/heads/test/commit-messages"`,
+			`git "fetch"`,
+			`git "branch" "-r"`,
+		},
+		wantErrType: &step.Error{},
 	},
 	{
 		name: "PR - fork - auto merge - diff file: private fork overrides manual merge flag",
@@ -290,11 +299,11 @@ var testCases = [...]struct {
 			RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 			Branch:        "test/commit-messages",
 			BranchDest:    "master",
-			PRID:          7,
 			Commit:        "76a934ae",
 			CloneDepth:    1,
 			ManualMerge:   false,
 			ShouldMergePR: true,
+			BuildURL:      "dummy_url",
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
 		wantErr:     nil,
@@ -311,11 +320,11 @@ var testCases = [...]struct {
 			RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 			Branch:        "test/commit-messages",
 			BranchDest:    "master",
-			PRID:          7,
 			Commit:        "76a934ae",
 			CloneDepth:    1,
 			ManualMerge:   false,
 			ShouldMergePR: true,
+			BuildURL:      "dummy_url",
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
 		mockRunner: givenMockRunner().
@@ -344,6 +353,7 @@ var testCases = [...]struct {
 			BranchDest:      "master",
 			Commit:          "76a934ae",
 			ManualMerge:     true,
+			BuildURL:        "dummy_url",
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
 		mockRunner: givenMockRunner().
@@ -372,7 +382,6 @@ var testCases = [...]struct {
 			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
 			BranchDest:    "master",
-			PRID:          7,
 			CloneDepth:    1,
 			ManualMerge:   true,
 			ShouldMergePR: false,
@@ -404,7 +413,6 @@ var testCases = [...]struct {
 			PRRepositoryURL: "https://github.com/bitrise-io/git-clone-test2.git",
 			Branch:          "test/commit-messages",
 			BranchDest:      "master",
-			PRID:            7,
 			Commit:          "76a934ae",
 			CloneDepth:      1,
 			ManualMerge:     false,
@@ -426,11 +434,11 @@ var testCases = [...]struct {
 			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 			Branch:          "test/commit-messages",
 			BranchDest:      "master",
-			PRID:            7,
 			Commit:          "76a934ae",
 			CloneDepth:      1,
 			ManualMerge:     false,
 			ShouldMergePR:   false,
+			BuildURL:        "dummy_url",
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
 		wantErr:     nil,
@@ -472,7 +480,6 @@ var testCases = [...]struct {
 			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
-			PRID:          7,
 			CloneDepth:    1,
 			ShouldMergePR: true,
 		},
@@ -564,7 +571,7 @@ func Test_checkoutState(t *testing.T) {
 			if tt.wantErrType != nil {
 				assert.IsType(t, tt.wantErrType, actualErr)
 			} else if tt.wantErr != nil {
-				assert.EqualError(t, tt.wantErr, actualErr.Error())
+				assert.EqualError(t, actualErr, tt.wantErr.Error())
 			} else {
 				assert.Nil(t, actualErr)
 			}
