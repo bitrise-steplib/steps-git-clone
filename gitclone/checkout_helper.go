@@ -30,6 +30,9 @@ type fetchOptions struct {
 	// Sets '--depth' flag
 	// More info: https://git-scm.com/docs/fetch-options/2.29.0#Documentation/fetch-options.txt---depthltdepthgt
 	depth int
+	// Sets '--no-recurse-submodules' flag
+	// More info: https://git-scm.com/docs/git-fetch#Documentation/git-fetch.txt---no-recurse-submodules
+	fetchSubmodules bool
 }
 
 func (t fetchOptions) IsFullDepth() bool {
@@ -45,6 +48,9 @@ func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error
 	}
 	if traits.allTags {
 		opts = append(opts, "--tags")
+	}
+	if !traits.fetchSubmodules {
+		opts = append(opts, "--no-recurse-submodules")
 	}
 	if ref != "" {
 		opts = append(opts, remote, ref)
