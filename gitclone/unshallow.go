@@ -33,11 +33,9 @@ func (r resetUnshallow) do(gitCmd git.Git) error {
 }
 
 func unshallowFetch(gitCmd git.Git) error {
-	err := runner.RunWithRetry(func() *command.Model {
+	if err := runner.RunWithRetry(func() *command.Model {
 		return gitCmd.Fetch(jobsFlag, "--unshallow")
-	})
-
-	if err != nil {
+	}); err != nil {
 		return fmt.Errorf("fetch failed: %v", err)
 	}
 
