@@ -54,42 +54,50 @@ inputs:
       is_required: true
   - commit: "$BITRISE_GIT_COMMIT"
     opts:
-      category: Clone Config
+      category: "Clone arguments"
       title: "Git Commit to clone"
       is_dont_change_value: true
   - tag: "$BITRISE_GIT_TAG"
     opts:
-      category: Clone Config
+      category: "Clone arguments"
       title: "Git Tag to clone"
       is_dont_change_value: true
   - branch: "$BITRISE_GIT_BRANCH"
     opts:
-      category: Clone Config
-      title: "Git Branch to clone"
+      category: "Clone arguments"
+      title: "Git branch to clone"
       is_dont_change_value: true
   - branch_dest: "$BITRISEIO_GIT_BRANCH_DEST"
     opts:
-      category: Clone Config
-      title: "Destination git Branch, used for pull requests"
+      category: "Clone arguments"
+      title: "Destination git branch, used for pull requests"
       is_dont_change_value: true
   - pull_request_id: "$PULL_REQUEST_ID"
     opts:
-      category: Clone Config
+      category: "Clone arguments"
       title: "Pull request ID on GitHub"
       is_dont_change_value: true
   - pull_request_repository_url: "$BITRISEIO_PULL_REQUEST_REPOSITORY_URL"
     opts:
-      category: Clone Config
+      category: "Clone arguments"
       title: "Pull request git URL"
       is_dont_change_value: true
   - pull_request_merge_branch: "$BITRISEIO_PULL_REQUEST_MERGE_BRANCH"
     opts:
-      category: Clone Config
+      category: "Clone arguments"
       title: "Merged pull request branch"
+      is_dont_change_value: true
+  - pull_request_head_branch: "$BITRISEIO_PULL_REQUEST_HEAD_BRANCH"
+    opts:
+      category: "Clone arguments"
+      title: "Pull request head branch"
+      description: |-
+        If the Git hosting provider system supports and provides this, 
+        this special git ref should point to the source of the pull request.
       is_dont_change_value: true
   - update_submodules: "yes"
     opts:
-      category: Clone Config
+      category: "Checkout options"
       title: Update the registered submodules?
       description: |-
         Update the registered submodules to match what the superproject expects by cloning missing submodules, fetching missing commits in submodules and updating the working tree of the submodules.  
@@ -99,19 +107,31 @@ inputs:
         - "no"
   - clone_depth:
     opts:
-      category: Clone Config
+      category: "Checkout options"
       title: "Limit fetching to the specified number of commits"
       description: |-
         Limit fetching to the specified number of commits.
         The value should be a decimal number, for example `10`.
   - limit_submodule_update_depth: "yes"
     opts:
-      category: Clone Config
+      category: "Checkout options"
       title: "Shallow update submodules"
       summary: "Should submodules be shallow cloned with a history truncated to the latest revisions."
       value_options:
         - "yes"
         - "no"
+  - merge_pr: "yes"
+    opts:
+      category: "Checkout options"
+      title: "Merge the Pull Request source branch into destination"
+      summary: "Allows to validate a temporary merged state."
+      description: |-
+        Disables merging the source and destination branches.
+        - `yes`: The default setting. Merges the source branch into the destination branch.
+        - `no`: Treats Pull Request events as Push events on the source branch.
+      value_options:
+      - "yes"
+      - "no"
   - reset_repository: "No"
     opts:
       category: Debug

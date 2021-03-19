@@ -9,23 +9,23 @@ import (
 
 // PRMergeBranchParams are parameters to check out a Merge/Pull Request (when a merge branch is available)
 type PRMergeBranchParams struct {
-	BaseBranch string
+	DestinationBranch string
 	// Merge branch contains the changes premerged by the Git provider
 	MergeBranch string
 }
 
 // NewPRMergeBranchParams validates and returns a new PRMergeBranchParams
-func NewPRMergeBranchParams(baseBranch, mergeBranch string) (*PRMergeBranchParams, error) {
-	if strings.TrimSpace(baseBranch) == "" {
-		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used: no base branch specified")
+func NewPRMergeBranchParams(destBranch, mergeBranch string) (*PRMergeBranchParams, error) {
+	if strings.TrimSpace(destBranch) == "" {
+		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used: no destination branch specified")
 	}
 	if strings.TrimSpace(mergeBranch) == "" {
 		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used: no merge branch specified")
 	}
 
 	return &PRMergeBranchParams{
-		BaseBranch:  baseBranch,
-		MergeBranch: mergeBranch,
+		DestinationBranch: destBranch,
+		MergeBranch:       mergeBranch,
 	}, nil
 }
 
@@ -37,8 +37,8 @@ type checkoutPRMergeBranch struct {
 func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
 	// Check out initial branch (fetchInitialBranch part1)
 	// `git "fetch" "origin" "refs/heads/master"`
-	baseBranchRef := branchRefPrefix + c.params.BaseBranch
-	if err := fetch(gitCmd, originRemoteName, baseBranchRef, fetchOpts); err != nil {
+	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
+	if err := fetch(gitCmd, originRemoteName, destBranchRef, fetchOpts); err != nil {
 		return err
 	}
 
@@ -51,11 +51,11 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	// Check out initial branch (fetchInitialBranch part2)
 	// `git "checkout" "master"`
 	// `git "merge" "origin/master"`
-	if err := checkoutWithCustomRetry(gitCmd, c.params.BaseBranch, nil); err != nil {
+	if err := checkoutWithCustomRetry(gitCmd, c.params.DestinationBranch, nil); err != nil {
 		return err
 	}
-	remoteBaseBranch := fmt.Sprintf("%s/%s", originRemoteName, c.params.BaseBranch)
-	if err := runner.Run(gitCmd.Merge(remoteBaseBranch)); err != nil {
+	destBranchWithRemote := fmt.Sprintf("%s/%s", originRemoteName, c.params.DestinationBranch)
+	if err := runner.Run(gitCmd.Merge(destBranchWithRemote)); err != nil {
 		return err
 	}
 
