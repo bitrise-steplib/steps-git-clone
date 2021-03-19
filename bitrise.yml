@@ -173,6 +173,7 @@ workflows:
         - pull_request_repository_url: ""
         - branch_dest: ""
         - clone_depth: ""
+        - update_submodules: "no"
     - script:
         inputs:
         - content: |-
