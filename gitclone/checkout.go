@@ -269,10 +269,11 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 
 }
 
-func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchAllTags bool) fetchOptions {
+func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchAllTags bool, fetchSubmodules bool) fetchOptions {
 	opts := fetchOptions{
-		depth:   cloneDepth,
-		allTags: false,
+		depth:           cloneDepth,
+		allTags:         false,
+		fetchSubmodules: fetchSubmodules,
 	}
 
 	switch checkoutStrategy {

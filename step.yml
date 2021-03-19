@@ -99,10 +99,9 @@ inputs:
     opts:
       category: "Checkout options"
       title: Update the registered submodules?
-      summary: |-
-        Update the registered submodules?
       description: |-
-        Update the registered submodules?
+        Update the registered submodules to match what the superproject expects by cloning missing submodules, fetching missing commits in submodules and updating the working tree of the submodules.  
+        If set to "no" `git fetch` calls will get the `--no-recurse-submodules` flag.
       value_options:
         - "yes"
         - "no"
