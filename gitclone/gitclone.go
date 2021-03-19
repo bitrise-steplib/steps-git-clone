@@ -17,13 +17,16 @@ type Config struct {
 	Tag           string `env:"tag"`
 	Branch        string `env:"branch"`
 
-	BranchDest                string `env:"branch_dest"`
-	PRID                      int    `env:"pull_request_id"`
-	PRRepositoryURL           string `env:"pull_request_repository_url"`
-	PRMergeBranch             string `env:"pull_request_merge_branch"`
-	ResetRepository           bool   `env:"reset_repository,opt[Yes,No]"`
-	CloneDepth                int    `env:"clone_depth"`
-	LimitSubmoduleUpdateDepth bool   `env:"limit_submodule_update_depth,opt[yes,no]"`
+	PRDestBranch          string `env:"branch_dest"`
+	PRID                  int    `env:"pull_request_id"`
+	PRSourceRepositoryURL string `env:"pull_request_repository_url"`
+	PRMergeBranch         string `env:"pull_request_merge_branch"`
+	PRHeadBranch          string `env:"pull_request_head_branch"`
+
+	ResetRepository           bool `env:"reset_repository,opt[Yes,No]"`
+	CloneDepth                int  `env:"clone_depth"`
+	LimitSubmoduleUpdateDepth bool `env:"limit_submodule_update_depth,opt[yes,no]"`
+	ShouldMergePR             bool `env:"merge_pr,opt[yes,no]"`
 
 	BuildURL         string `env:"build_url"`
 	BuildAPIToken    string `env:"build_api_token"`
@@ -66,10 +69,10 @@ func getMaxEnvLength() (int, error) {
 }
 
 func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) error {
-	checkoutMethod := selectCheckoutMethod(cfg)
-	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.Tag != "")
+	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
+	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.Tag != "", cfg.UpdateSubmodules)
 
-	checkoutStrategy, err := createCheckoutStrategy(checkoutMethod, cfg, patch)
+	checkoutStrategy, err := createCheckoutStrategy(checkoutMethod, cfg, diffFile)
 	if err != nil {
 		return err
 	}

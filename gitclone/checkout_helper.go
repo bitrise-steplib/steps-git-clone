@@ -10,17 +10,6 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
-type fetchParams struct {
-	branch  string
-	remote  string
-	options fetchOptions
-}
-
-type mergeParams struct {
-	arg      string
-	fallback fallbackRetry
-}
-
 type fetchOptions struct {
 	// Sets '--tags' flag
 	// From https://git-scm.com/docs/fetch-options/2.29.0#Documentation/fetch-options.txt---allTags:
@@ -30,13 +19,19 @@ type fetchOptions struct {
 	// Sets '--depth' flag
 	// More info: https://git-scm.com/docs/fetch-options/2.29.0#Documentation/fetch-options.txt---depthltdepthgt
 	depth int
+	// Sets '--no-recurse-submodules' flag
+	// More info: https://git-scm.com/docs/git-fetch#Documentation/git-fetch.txt---no-recurse-submodules
+	fetchSubmodules bool
 }
 
 func (t fetchOptions) IsFullDepth() bool {
 	return t.depth == 0
 }
 
-const branchRefPrefix = "refs/heads/"
+const (
+	refsPrefix      = "refs/"
+	refsHeadsPrefix = "refs/heads/"
+)
 
 func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error {
 	var opts []string
@@ -48,14 +43,17 @@ func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error
 	if traits.allTags {
 		opts = append(opts, "--tags")
 	}
+	if !traits.fetchSubmodules {
+		opts = append(opts, "--no-recurse-submodules")
+	}
 	if ref != "" {
 		opts = append(opts, remote, ref)
 	}
 
 	// Not neccessarily a branch, can be tag too
 	branch := ""
-	if strings.HasPrefix(ref, branchRefPrefix) {
-		branch = strings.TrimPrefix(ref, branchRefPrefix)
+	if strings.HasPrefix(ref, refsHeadsPrefix) {
+		branch = strings.TrimPrefix(ref, refsHeadsPrefix)
 	}
 
 	if err := runner.RunWithRetry(func() *command.Model {
@@ -91,7 +89,7 @@ func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) er
 }
 
 func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTraits fetchOptions) error {
-	branch := strings.TrimPrefix(branchRef, branchRefPrefix)
+	branch := strings.TrimPrefix(branchRef, refsHeadsPrefix)
 	if err := fetch(gitCmd, remote, branchRef, fetchTraits); err != nil {
 		return err
 	}
@@ -107,7 +105,7 @@ func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTr
 	}
 
 	// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
-	remoteBranch := fmt.Sprintf("%s/%s", originRemoteName, branch)
+	remoteBranch := fmt.Sprintf("%s/%s", remote, branch)
 	if err := runner.Run(gitCmd.Merge(remoteBranch)); err != nil {
 		return newStepError(
 			"update_branch_failed",

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/bitrise-io/bitrise-init/step"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,7 +34,7 @@ var testCases = [...]struct {
 			CloneDepth: 1,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules"`,
 			`git "checkout" "76a934a"`,
 		},
 	},
@@ -44,7 +45,7 @@ var testCases = [...]struct {
 			Branch: "hcnarb",
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -55,8 +56,8 @@ var testCases = [...]struct {
 		},
 		mockRunner: givenMockRunnerSucceedsAfter(1),
 		wantCmds: []string{
-			`git "fetch" "--jobs=10"`,
-			`git "fetch" "--jobs=10"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -67,7 +68,7 @@ var testCases = [...]struct {
 			CloneDepth: 1,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "hcnarb"`,
 			`git "merge" "origin/hcnarb"`,
 		},
@@ -79,7 +80,7 @@ var testCases = [...]struct {
 			CloneDepth: 1,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "--tags"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--tags" "--no-recurse-submodules"`,
 			`git "checkout" "gat"`,
 		},
 	},
@@ -90,7 +91,7 @@ var testCases = [...]struct {
 			Branch: "hcnarb",
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--tags" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--jobs=10" "--tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "gat"`,
 		},
 	},
@@ -101,7 +102,7 @@ var testCases = [...]struct {
 			Branch: "gat",
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--tags" "origin" "refs/heads/gat"`,
+			`git "fetch" "--jobs=10" "--tags" "--no-recurse-submodules" "origin" "refs/heads/gat"`,
 			`git "checkout" "gat"`,
 		},
 	},
@@ -113,7 +114,7 @@ var testCases = [...]struct {
 			Branch: "hcnarb",
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--tags" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--jobs=10" "--tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -124,7 +125,7 @@ var testCases = [...]struct {
 			Tag:    "gat",
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--tags"`,
+			`git "fetch" "--jobs=10" "--tags" "--no-recurse-submodules"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -136,52 +137,59 @@ var testCases = [...]struct {
 			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
-			BranchDest:    "master",
-			PRID:          7,
+			PRDestBranch:  "master",
 			CloneDepth:    1,
 			ManualMerge:   true,
+			ShouldMergePR: true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,     // Already on 'master'
 			`git "merge" "origin/master"`, // Already up to date.
 			`git "log" "-1" "--format=%H"`,
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
 			`git "merge" "76a934ae"`,
 			`git "checkout" "--detach"`,
 		},
 	},
 	{
-		name: "PR - no fork - manual merge: branch and commit (Checked out as commit, why?)",
+		name: "PR - no fork - manual merge: branch and commit, no PRRepoURL or PRID",
 		cfg: Config{
-			Commit:      "76a934ae",
-			Branch:      "test/commit-messages",
-			BranchDest:  "master",
-			ManualMerge: true,
+			Commit:        "76a934ae",
+			Branch:        "test/commit-messages",
+			PRDestBranch:  "master",
+			ManualMerge:   true,
+			ShouldMergePR: true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "origin" "refs/heads/test/commit-messages"`,
-			`git "checkout" "76a934ae"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "checkout" "master"`,
+			`git "merge" "origin/master"`,
+			`git "log" "-1" "--format=%H"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
+			`git "merge" "76a934ae"`,
+			`git "checkout" "--detach"`,
 		},
 	},
 	{
 		name: "PR - fork - manual merge",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "https://github.com/bitrise-io/other-repo.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			Commit:          "76a934ae",
-			ManualMerge:     true,
-			CloneDepth:      1,
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "https://github.com/bitrise-io/other-repo.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			Commit:                "76a934ae",
+			CloneDepth:            1,
+			ManualMerge:           true,
+			ShouldMergePR:         true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
 			`git "remote" "add" "fork" "https://github.com/bitrise-io/other-repo.git"`,
-			`git "fetch" "--jobs=10" "--depth=1" "fork" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "fork" "refs/heads/test/commit-messages"`,
 			`git "merge" "fork/test/commit-messages"`,
 			`git "checkout" "--detach"`,
 		},
@@ -189,21 +197,21 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - manual merge: repo is the same with different scheme",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "git@github.com:bitrise-io/git-clone-test.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			PRMergeBranch:   "pull/7/merge",
-			PRID:            7,
-			Commit:          "76a934ae",
-			ManualMerge:     true,
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "git@github.com:bitrise-io/git-clone-test.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			PRMergeBranch:         "pull/7/merge",
+			Commit:                "76a934ae",
+			ManualMerge:           true,
+			ShouldMergePR:         true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
-			`git "fetch" "--jobs=10" "origin" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
 			`git "merge" "76a934ae"`,
 			`git "checkout" "--detach"`,
 		},
@@ -213,13 +221,15 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - auto merge - merge branch (GitHub format)",
 		cfg: Config{
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			PRMergeBranch: "pull/5/merge",
+			PRHeadBranch:  "pull/5/head",
 			CloneDepth:    1,
+			ShouldMergePR: true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/master"`,
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/pull/5/head:pull/5"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/pull/5/head:pull/5"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "merge" "pull/5"`,
@@ -229,12 +239,13 @@ var testCases = [...]struct {
 	{
 		name: "PR - no fork - auto merge - merge branch (standard branch format)",
 		cfg: Config{
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			PRMergeBranch: "pr_test",
+			ShouldMergePR: true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "origin" "refs/heads/master"`,
-			`git "fetch" "--jobs=10" "origin" "refs/heads/pr_test:pr_test"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/pr_test:pr_test"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "merge" "pr_test"`, // warning: refname 'pr_test' is ambiguous.
@@ -244,18 +255,18 @@ var testCases = [...]struct {
 	{
 		name: "PR - fork - auto merge - merge branch: private fork overrides manual merge flag",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			PRMergeBranch:   "pull/7/merge",
-			PRID:            7,
-			Commit:          "76a934ae",
-			ManualMerge:     true,
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			PRMergeBranch:         "pull/7/merge",
+			Commit:                "76a934ae",
+			ManualMerge:           true,
+			ShouldMergePR:         true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "origin" "refs/heads/master"`,
-			`git "fetch" "--jobs=10" "origin" "refs/pull/7/head:pull/7"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/pull/7/head:pull/7"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "merge" "pull/7"`,
@@ -265,32 +276,45 @@ var testCases = [...]struct {
 	{
 		name: "PR - fork - auto merge - diff file: private fork overrides manual merge flag, Fails",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			Commit:          "76a934ae",
-			ManualMerge:     true,
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			Commit:                "76a934ae",
+			ManualMerge:           true,
+			ShouldMergePR:         true,
+			BuildURL:              "dummy_url",
+			UpdateSubmodules:      true,
 		},
 		patchSource: MockPatchSource{"", errors.New(rawCmdError)},
-		wantErr:     fmt.Errorf("merging PR (automatic) failed, there is no Pull Request branch and could not download diff file: %s", rawCmdError),
-		wantCmds:    nil,
+		mockRunner: givenMockRunner().
+			GivenRunWithRetryFailsAfter(2).
+			GivenRunSucceeds(),
+		wantCmds: []string{
+			`git "fetch" "--jobs=10" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10"`,
+			`git "branch" "-r"`,
+		},
+		wantErrType: &step.Error{},
 	},
 	{
 		name: "PR - fork - auto merge - diff file: private fork overrides manual merge flag",
 		cfg: Config{
 			RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 			Branch:        "test/commit-messages",
-			BranchDest:    "master",
-			PRID:          7,
-			ManualMerge:   false,
+			PRDestBranch:  "master",
 			Commit:        "76a934ae",
 			CloneDepth:    1,
+			ManualMerge:   false,
+			ShouldMergePR: true,
+			BuildURL:      "dummy_url",
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
 		wantErr:     nil,
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "apply" "--index" "diff_path"`,
 			`git "checkout" "--detach"`,
@@ -301,11 +325,12 @@ var testCases = [...]struct {
 		cfg: Config{
 			RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 			Branch:        "test/commit-messages",
-			BranchDest:    "master",
-			PRID:          7,
-			ManualMerge:   false,
+			PRDestBranch:  "master",
 			Commit:        "76a934ae",
 			CloneDepth:    1,
+			ManualMerge:   false,
+			ShouldMergePR: true,
+			BuildURL:      "dummy_url",
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
 		mockRunner: givenMockRunner().
@@ -313,14 +338,14 @@ var testCases = [...]struct {
 			GivenRunWithRetrySucceeds().
 			GivenRunSucceeds(),
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "apply" "--index" "diff_path"`,
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
 			`git "merge" "76a934ae"`,
 			`git "checkout" "--detach"`,
 		},
@@ -328,12 +353,14 @@ var testCases = [...]struct {
 	{
 		name: "PR - fork - auto merge - diff file: fallback to manual merge if unable to apply patch",
 		cfg: Config{
-			RepositoryURL:   "https://github.com/bitrise-io/git-clone-test.git",
-			PRRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
-			Branch:          "test/commit-messages",
-			BranchDest:      "master",
-			Commit:          "76a934ae",
-			ManualMerge:     true,
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			Commit:                "76a934ae",
+			ManualMerge:           true,
+			ShouldMergePR:         true,
+			BuildURL:              "dummy_url",
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
 		mockRunner: givenMockRunner().
@@ -341,16 +368,94 @@ var testCases = [...]struct {
 			GivenRunWithRetrySucceeds().
 			GivenRunSucceeds(),
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "apply" "--index" "diff_path"`,
-			`git "fetch" "--jobs=10" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
 			`git "remote" "add" "fork" "git@github.com:bitrise-io/other-repo.git"`,
-			`git "fetch" "--jobs=10" "fork" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "fork" "refs/heads/test/commit-messages"`,
 			`git "merge" "fork/test/commit-messages"`,
+			`git "checkout" "--detach"`,
+		},
+	},
+
+	// PRs no merge
+	{
+		name: "PR - no merge - no fork - manual merge: branch and commit",
+		cfg: Config{
+			Commit:           "76a934ae",
+			Branch:           "test/commit-messages",
+			PRDestBranch:     "master",
+			CloneDepth:       1,
+			ManualMerge:      true,
+			ShouldMergePR:    false,
+			UpdateSubmodules: true,
+		},
+		wantCmds: []string{
+			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/test/commit-messages"`,
+			`git "checkout" "76a934ae"`,
+		},
+	},
+	{
+		name: "PR - no merge - no fork - auto merge - head branch",
+		cfg: Config{
+			Commit:           "76a934ae",
+			PRDestBranch:     "master",
+			PRMergeBranch:    "pull/5/merge",
+			PRHeadBranch:     "pull/5/head",
+			CloneDepth:       1,
+			ShouldMergePR:    false,
+			UpdateSubmodules: true,
+		},
+		wantCmds: []string{
+			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/pull/5/head"`,
+			`git "checkout" "76a934ae"`,
+		},
+	},
+	{
+		name: "PR - no merge - no fork - auto merge - diff file: public fork",
+		cfg: Config{
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "https://github.com/bitrise-io/git-clone-test2.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			Commit:                "76a934ae",
+			CloneDepth:            1,
+			ManualMerge:           false,
+			ShouldMergePR:         false,
+			UpdateSubmodules:      true,
+		},
+		patchSource: MockPatchSource{"diff_path", nil},
+		wantErr:     nil,
+		wantCmds: []string{
+			`git "remote" "add" "fork" "https://github.com/bitrise-io/git-clone-test2.git"`,
+			`git "fetch" "--jobs=10" "--depth=1" "fork" "refs/heads/test/commit-messages"`,
+			`git "checkout" "76a934ae"`,
+		},
+	},
+	{
+		name: "PR - no merge - fork - auto merge - diff file: private fork",
+		cfg: Config{
+			RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+			PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
+			Branch:                "test/commit-messages",
+			PRDestBranch:          "master",
+			Commit:                "76a934ae",
+			CloneDepth:            1,
+			ManualMerge:           false,
+			ShouldMergePR:         false,
+			UpdateSubmodules:      true,
+			BuildURL:              "dummy_url",
+		},
+		patchSource: MockPatchSource{"diff_path", nil},
+		wantErr:     nil,
+		wantCmds: []string{
+			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/master"`,
+			`git "checkout" "master"`,
+			`git "apply" "--index" "diff_path"`,
 			`git "checkout" "--detach"`,
 		},
 	},
@@ -365,9 +470,9 @@ var testCases = [...]struct {
 			GivenRunWithRetryFailsAfter(2).
 			GivenRunSucceeds(),
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "origin" "refs/heads/fake"`,
-			`git "fetch" "--jobs=10" "origin" "refs/heads/fake"`,
-			`git "fetch" "--jobs=10" "origin" "refs/heads/fake"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
+			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
 			`git "fetch" "--jobs=10"`,
 			`git "branch" "-r"`,
 		},
@@ -385,8 +490,8 @@ var testCases = [...]struct {
 			Commit:        "76a934ae",
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
-			PRID:          7,
 			CloneDepth:    1,
+			ShouldMergePR: true,
 		},
 		wantErrType: ParameterValidationError{},
 		wantCmds:    nil,
@@ -418,8 +523,9 @@ var testCases = [...]struct {
 		cfg: Config{
 			Branch:        "test/commit-messages",
 			PRMergeBranch: "pull/7/merge",
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			ManualMerge:   true,
+			ShouldMergePR: true,
 		},
 		wantErrType: ParameterValidationError{},
 		wantCmds:    nil,
@@ -427,17 +533,19 @@ var testCases = [...]struct {
 	{
 		name: "Checkout PR - auto merge - merge branch, with depth (unshallow needed)",
 		cfg: Config{
-			BranchDest:    "master",
+			PRDestBranch:  "master",
 			PRMergeBranch: "pull/5/merge",
+			PRHeadBranch:  "pull/5/head",
 			CloneDepth:    1,
+			ShouldMergePR: true,
 		},
 		mockRunner: givenMockRunner().
 			GivenRunFailsForCommand(`git "merge" "pull/5"`, 1).
 			GivenRunSucceeds().
 			GivenRunWithRetrySucceeds(),
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/master"`,
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/pull/5/head:pull/5"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/pull/5/head:pull/5"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "merge" "pull/5"`,
@@ -473,7 +581,7 @@ func Test_checkoutState(t *testing.T) {
 			if tt.wantErrType != nil {
 				assert.IsType(t, tt.wantErrType, actualErr)
 			} else if tt.wantErr != nil {
-				assert.EqualError(t, tt.wantErr, actualErr.Error())
+				assert.EqualError(t, actualErr, tt.wantErr.Error())
 			} else {
 				assert.Nil(t, actualErr)
 			}
