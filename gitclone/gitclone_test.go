@@ -284,6 +284,7 @@ var testCases = [...]struct {
 			ManualMerge:           true,
 			ShouldMergePR:         true,
 			BuildURL:              "dummy_url",
+			UpdateSubmodules:      true,
 		},
 		patchSource: MockPatchSource{"", errors.New(rawCmdError)},
 		mockRunner: givenMockRunner().
@@ -385,12 +386,13 @@ var testCases = [...]struct {
 	{
 		name: "PR - no merge - no fork - manual merge: branch and commit",
 		cfg: Config{
-			Commit:        "76a934ae",
-			Branch:        "test/commit-messages",
-			PRDestBranch:  "master",
-			CloneDepth:    1,
-			ManualMerge:   true,
-			ShouldMergePR: false,
+			Commit:           "76a934ae",
+			Branch:           "test/commit-messages",
+			PRDestBranch:     "master",
+			CloneDepth:       1,
+			ManualMerge:      true,
+			ShouldMergePR:    false,
+			UpdateSubmodules: true,
 		},
 		wantCmds: []string{
 			`git "fetch" "--depth=1" "origin" "refs/heads/test/commit-messages"`,
@@ -400,12 +402,13 @@ var testCases = [...]struct {
 	{
 		name: "PR - no merge - no fork - auto merge - head branch",
 		cfg: Config{
-			Commit:        "76a934ae",
-			PRDestBranch:  "master",
-			PRMergeBranch: "pull/5/merge",
-			PRHeadBranch:  "pull/5/head",
-			CloneDepth:    1,
-			ShouldMergePR: false,
+			Commit:           "76a934ae",
+			PRDestBranch:     "master",
+			PRMergeBranch:    "pull/5/merge",
+			PRHeadBranch:     "pull/5/head",
+			CloneDepth:       1,
+			ShouldMergePR:    false,
+			UpdateSubmodules: true,
 		},
 		wantCmds: []string{
 			`git "fetch" "--depth=1" "origin" "refs/pull/5/head"`,
@@ -423,6 +426,7 @@ var testCases = [...]struct {
 			CloneDepth:            1,
 			ManualMerge:           false,
 			ShouldMergePR:         false,
+			UpdateSubmodules:      true,
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
 		wantErr:     nil,
@@ -443,6 +447,7 @@ var testCases = [...]struct {
 			CloneDepth:            1,
 			ManualMerge:           false,
 			ShouldMergePR:         false,
+			UpdateSubmodules:      true,
 			BuildURL:              "dummy_url",
 		},
 		patchSource: MockPatchSource{"diff_path", nil},
