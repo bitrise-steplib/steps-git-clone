@@ -59,17 +59,17 @@ type checkoutStrategy interface {
 // X: required parameter
 // !: used to identify checkout strategy
 // _: optional parameter
-// |==========================================================================================================================|
-// | params\strat| commit | tag | branch | manualMR | manualPR | autoMerge | autoDiff | noMergeHeadBranch | noMergeForkBranch |
-// | commit      |  X  !  |     |        |  X       |          |           |          |                   |                   |
-// | tag         |        |  X !|        |          |          |           |          |                   |                   |
-// | branch      |  _     |  _  |  X !   |  X       |  X       |  X        |          |                   |  X                |
-// | branchDest  |        |     |        |  X       |  X       |           |  X       |                   |                   |
-// | PRRepoURL   |        |     |        |      !   |  X !     |    !      |    !     |                   |  X !              |
-// | PRID        |        |     |        |          |          |           |    !     |                   |    !              |
-// | mergeBranch |        |     |        |          |          |  X !      |          |    !              |                   |
-// | headBranch  |        |     |        |          |          |           |          |  X !              |                   |
-// |==========================================================================================================================|
+// |=========================================================================|
+// | params\strat| commit | tag | branch | manualMR | headBranch | diffFile  |
+// | commit      |  X  !  |     |        |  _/X     |  _/X       |           |
+// | tag         |        |  X !|        |          |            |           |
+// | branch      |  _     |  _  |  X !   |  X       |            |           |
+// | branchDest  |        |     |        |  X  !    |  X !       |  X  !     |
+// | PRRepoURL   |        |     |        |  _       |            |           |
+// | PRID        |        |     |        |          |            |           |
+// | mergeBranch |        |     |        |          |    !       |           |
+// | headBranch  |        |     |        |          |  X         |           |
+// |=========================================================================|
 
 func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string) {
 	isPR := cfg.PRSourceRepositoryURL != "" || cfg.PRDestBranch != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
@@ -159,7 +159,12 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 		}
 	case CheckoutCommitMethod:
 		{
-			params, err := NewCommitParams(cfg.Commit, cfg.Branch)
+			branchRef := ""
+			if cfg.Branch != "" {
+				branchRef = refsHeadsPrefix + cfg.Branch
+			}
+
+			params, err := NewCommitParams(cfg.Commit, branchRef, "")
 			if err != nil {
 				return nil, err
 			}
@@ -236,23 +241,25 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 		}
 	case CheckoutHeadBranchCommitMethod:
 		{
-			params, err := NewCheckoutHeadBranchCommitParams(cfg.PRHeadBranch, cfg.Commit)
+			headBranchRef := refsPrefix + cfg.PRHeadBranch // ref/pull/2/head
+			params, err := NewCommitParams(cfg.Commit, headBranchRef, "")
 			if err != nil {
 				return nil, err
 			}
 
-			return checkoutHeadBranchCommit{
+			return checkoutCommit{
 				params: *params,
 			}, nil
 		}
 	case CheckoutForkCommitMethod:
 		{
-			params, err := NewCheckoutForkCommitParams(cfg.Branch, cfg.PRSourceRepositoryURL, cfg.Commit)
+			sourceBranchRef := refsHeadsPrefix + cfg.Branch
+			params, err := NewCommitParams(cfg.Commit, sourceBranchRef, cfg.PRSourceRepositoryURL)
 			if err != nil {
 				return nil, err
 			}
 
-			return checkoutForkCommit{
+			return checkoutCommit{
 				params: *params,
 			}, nil
 		}

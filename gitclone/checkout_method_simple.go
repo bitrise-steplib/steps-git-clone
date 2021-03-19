@@ -1,6 +1,7 @@
 package gitclone
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
@@ -17,19 +18,21 @@ func (c checkoutNone) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fal
 //
 // CommitParams are parameters to check out a given commit (In addition to the repository URL)
 type CommitParams struct {
-	Commit string
-	Branch string
+	Commit        string
+	BranchRef     string
+	SourceRepoURL string // optional
 }
 
 // NewCommitParams validates and returns a new CommitParams
-func NewCommitParams(commit, branch string) (*CommitParams, error) {
+func NewCommitParams(commit, branchRef, sourceRepoURL string) (*CommitParams, error) {
 	if strings.TrimSpace(commit) == "" {
 		return nil, NewParameterValidationError("commit checkout strategy can not be used: no commit hash specified")
 	}
 
 	return &CommitParams{
-		Commit: commit,
-		Branch: branch,
+		Commit:        commit,
+		BranchRef:     branchRef,
+		SourceRepoURL: sourceRepoURL,
 	}, nil
 }
 
@@ -39,12 +42,15 @@ type checkoutCommit struct {
 }
 
 func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	branchRefParam := ""
-	if c.params.Branch != "" {
-		branchRefParam = refsHeadsPrefix + c.params.Branch
+	remote := originRemoteName
+	if c.params.SourceRepoURL != "" {
+		remote = forkRemoteName
+		if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.params.SourceRepoURL)); err != nil {
+			return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.SourceRepoURL, err)
+		}
 	}
 
-	if err := fetch(gitCmd, originRemoteName, branchRefParam, fetchOptions); err != nil {
+	if err := fetch(gitCmd, remote, c.params.BranchRef, fetchOptions); err != nil {
 		return err
 	}
 
