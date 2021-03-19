@@ -124,7 +124,7 @@ inputs:
     opts:
       category: "Checkout options"
       title: "Merge the Pull Request source branch into destination"
-      summary: "Allows to validate a temporary merged state. Optional if source branch is required to be up-to-date before merging."
+      summary: "Allows to validate a temporary merged state."
       description: |-
         Disables merging the source and destination branches.
         - `yes`: The default setting. Merges the source branch into the destination branch.
