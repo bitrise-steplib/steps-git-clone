@@ -124,12 +124,11 @@ inputs:
     opts:
       category: "Checkout options"
       title: "Merge the Pull Request source branch into target"
-      summary: "Allows to validate a temporary merged state. Optional if head branch is required to be up-to-date before merging."
+      summary: "Allows to validate a temporary merged state. Optional if source branch is required to be up-to-date before merging."
       description: |-
-        Disables merging the head and base branches if the the git provider has an option
-        to require the Pull Request branch to be up-to-date.
-        - `yes`: The default setting. Merges the head branch into the base branch.
-        - `no`: Treats Pull Request events as Push events on the head (source) branch.
+        Disables merging the source and destination branches.
+        - `yes`: The default setting. Merges the source branch into the destination branch.
+        - `no`: Treats Pull Request events as Push events on the source branch.
       value_options:
       - "yes"
       - "no"
