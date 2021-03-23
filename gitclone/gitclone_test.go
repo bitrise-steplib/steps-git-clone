@@ -513,7 +513,7 @@ var testCases = [...]struct {
 			`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
 			// fatal: reference is not a tree: cfba2b01332e31cb1568dbf3f22edce063118bae
 			// Checkout failed, error: fatal: reference is not a tree: cfba2b01332e31cb1568dbf3f22edce063118bae
-			`git "fetch" "--unshallow"`,
+			`git "fetch" "--unshallow" "--no-tags"`,
 			`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
 		},
 	},
@@ -554,7 +554,7 @@ var testCases = [...]struct {
 			`git "clean" "-x" "-d" "-f"`,
 			`git "submodule" "foreach" "git" "reset" "--hard" "HEAD"`,
 			`git "submodule" "foreach" "git" "clean" "-x" "-d" "-f"`,
-			`git "fetch" "--unshallow"`,
+			`git "fetch" "--unshallow" "--no-tags" "--no-recurse-submodules"`,
 			`git "merge" "pull/5"`,
 			`git "checkout" "--detach"`,
 		},

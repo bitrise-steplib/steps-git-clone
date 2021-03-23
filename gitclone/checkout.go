@@ -282,14 +282,23 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 		return nil
 	}
 
+	unshallowFetchOpts := unshallowFetchOptions{
+		tags:            fetchOpts.tags,
+		fetchSubmodules: fetchOpts.fetchSubmodules,
+	}
+
 	switch checkoutStrategy {
 	case CheckoutBranchMethod:
 		// the given branch's tip will be checked out, no need to unshallow
 		return nil
 	case CheckoutCommitMethod, CheckoutTagMethod, CheckoutHeadBranchCommitMethod, CheckoutForkCommitMethod:
-		return simpleUnshallow{}
+		return simpleUnshallow{
+			traits: unshallowFetchOpts,
+		}
 	case CheckoutPRMergeBranchMethod, CheckoutPRManualMergeMethod, CheckoutPRDiffFileMethod:
-		return resetUnshallow{}
+		return resetUnshallow{
+			traits: unshallowFetchOpts,
+		}
 	default:
 		return nil
 	}
