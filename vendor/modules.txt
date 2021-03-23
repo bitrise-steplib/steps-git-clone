@@ -11,7 +11,7 @@ github.com/bitrise-io/envman/models
 github.com/bitrise-io/go-steputils/input
 github.com/bitrise-io/go-steputils/stepconf
 github.com/bitrise-io/go-steputils/tools
-# github.com/bitrise-io/go-utils v0.0.0-20210318101856-947ef8d6c529
+# github.com/bitrise-io/go-utils v0.0.0-20210316133228-449620935158
 ## explicit
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command

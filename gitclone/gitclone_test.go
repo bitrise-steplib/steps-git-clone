@@ -34,7 +34,7 @@ var testCases = [...]struct {
 			CloneDepth: 1,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules"`,
 			`git "checkout" "76a934a"`,
 		},
 	},
@@ -45,7 +45,7 @@ var testCases = [...]struct {
 			Branch: "hcnarb",
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -56,8 +56,8 @@ var testCases = [...]struct {
 		},
 		mockRunner: givenMockRunnerSucceedsAfter(1),
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--no-recurse-submodules"`,
-			`git "fetch" "--jobs=10" "--no-recurse-submodules"`,
+			`git "fetch" "--no-recurse-submodules"`,
+			`git "fetch" "--no-recurse-submodules"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -68,7 +68,7 @@ var testCases = [...]struct {
 			CloneDepth: 1,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "hcnarb"`,
 			`git "merge" "origin/hcnarb"`,
 		},
@@ -80,7 +80,7 @@ var testCases = [...]struct {
 			CloneDepth: 1,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "--tags" "--no-recurse-submodules"`,
+			`git "fetch" "--depth=1" "--tags" "--no-recurse-submodules"`,
 			`git "checkout" "gat"`,
 		},
 	},
@@ -91,7 +91,7 @@ var testCases = [...]struct {
 			Branch: "hcnarb",
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "gat"`,
 		},
 	},
@@ -102,7 +102,7 @@ var testCases = [...]struct {
 			Branch: "gat",
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--tags" "--no-recurse-submodules" "origin" "refs/heads/gat"`,
+			`git "fetch" "--tags" "--no-recurse-submodules" "origin" "refs/heads/gat"`,
 			`git "checkout" "gat"`,
 		},
 	},
@@ -114,7 +114,7 @@ var testCases = [...]struct {
 			Branch: "hcnarb",
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -125,7 +125,7 @@ var testCases = [...]struct {
 			Tag:    "gat",
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--tags" "--no-recurse-submodules"`,
+			`git "fetch" "--tags" "--no-recurse-submodules"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -143,11 +143,11 @@ var testCases = [...]struct {
 			ShouldMergePR: true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,     // Already on 'master'
 			`git "merge" "origin/master"`, // Already up to date.
 			`git "log" "-1" "--format=%H"`,
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
 			`git "merge" "76a934ae"`,
 			`git "checkout" "--detach"`,
 		},
@@ -162,11 +162,11 @@ var testCases = [...]struct {
 			ShouldMergePR: true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
 			`git "merge" "76a934ae"`,
 			`git "checkout" "--detach"`,
 		},
@@ -184,12 +184,12 @@ var testCases = [...]struct {
 			ShouldMergePR:         true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
 			`git "remote" "add" "fork" "https://github.com/bitrise-io/other-repo.git"`,
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "fork" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "fork" "refs/heads/test/commit-messages"`,
 			`git "merge" "fork/test/commit-messages"`,
 			`git "checkout" "--detach"`,
 		},
@@ -207,11 +207,11 @@ var testCases = [...]struct {
 			ShouldMergePR:         true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
 			`git "merge" "76a934ae"`,
 			`git "checkout" "--detach"`,
 		},
@@ -228,8 +228,8 @@ var testCases = [...]struct {
 			ShouldMergePR: true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/pull/5/head:pull/5"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "origin" "refs/pull/5/head:pull/5"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "merge" "pull/5"`,
@@ -244,8 +244,8 @@ var testCases = [...]struct {
 			ShouldMergePR: true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/master"`,
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/pr_test:pr_test"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/pr_test:pr_test"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "merge" "pr_test"`, // warning: refname 'pr_test' is ambiguous.
@@ -265,8 +265,8 @@ var testCases = [...]struct {
 			ShouldMergePR:         true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/master"`,
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/pull/7/head:pull/7"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/pull/7/head:pull/7"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "merge" "pull/7"`,
@@ -291,10 +291,10 @@ var testCases = [...]struct {
 			GivenRunWithRetryFailsAfter(2).
 			GivenRunSucceeds(),
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "origin" "refs/heads/master"`,
-			`git "fetch" "--jobs=10" "origin" "refs/heads/master"`,
-			`git "fetch" "--jobs=10" "origin" "refs/heads/master"`,
-			`git "fetch" "--jobs=10"`,
+			`git "fetch" "origin" "refs/heads/master"`,
+			`git "fetch" "origin" "refs/heads/master"`,
+			`git "fetch" "origin" "refs/heads/master"`,
+			`git "fetch"`,
 			`git "branch" "-r"`,
 		},
 		wantErrType: &step.Error{},
@@ -314,7 +314,7 @@ var testCases = [...]struct {
 		patchSource: MockPatchSource{"diff_path", nil},
 		wantErr:     nil,
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "apply" "--index" "diff_path"`,
 			`git "checkout" "--detach"`,
@@ -338,14 +338,14 @@ var testCases = [...]struct {
 			GivenRunWithRetrySucceeds().
 			GivenRunSucceeds(),
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "apply" "--index" "diff_path"`,
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
 			`git "merge" "76a934ae"`,
 			`git "checkout" "--detach"`,
 		},
@@ -368,15 +368,15 @@ var testCases = [...]struct {
 			GivenRunWithRetrySucceeds().
 			GivenRunSucceeds(),
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "apply" "--index" "diff_path"`,
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "log" "-1" "--format=%H"`,
 			`git "remote" "add" "fork" "git@github.com:bitrise-io/other-repo.git"`,
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "fork" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--no-recurse-submodules" "fork" "refs/heads/test/commit-messages"`,
 			`git "merge" "fork/test/commit-messages"`,
 			`git "checkout" "--detach"`,
 		},
@@ -395,7 +395,7 @@ var testCases = [...]struct {
 			UpdateSubmodules: true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--depth=1" "origin" "refs/heads/test/commit-messages"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -411,7 +411,7 @@ var testCases = [...]struct {
 			UpdateSubmodules: true,
 		},
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/pull/5/head"`,
+			`git "fetch" "--depth=1" "origin" "refs/pull/5/head"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -432,7 +432,7 @@ var testCases = [...]struct {
 		wantErr:     nil,
 		wantCmds: []string{
 			`git "remote" "add" "fork" "https://github.com/bitrise-io/git-clone-test2.git"`,
-			`git "fetch" "--jobs=10" "--depth=1" "fork" "refs/heads/test/commit-messages"`,
+			`git "fetch" "--depth=1" "fork" "refs/heads/test/commit-messages"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -453,7 +453,7 @@ var testCases = [...]struct {
 		patchSource: MockPatchSource{"diff_path", nil},
 		wantErr:     nil,
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "origin" "refs/heads/master"`,
 			`git "checkout" "master"`,
 			`git "apply" "--index" "diff_path"`,
 			`git "checkout" "--detach"`,
@@ -470,10 +470,10 @@ var testCases = [...]struct {
 			GivenRunWithRetryFailsAfter(2).
 			GivenRunSucceeds(),
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
-			`git "fetch" "--jobs=10" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
-			`git "fetch" "--jobs=10"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
+			`git "fetch" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
+			`git "fetch"`,
 			`git "branch" "-r"`,
 		},
 		wantErr: newStepErrorWithBranchRecommendations(
@@ -510,11 +510,11 @@ var testCases = [...]struct {
 			GivenRunWithRetrySucceeds().
 			GivenRunSucceeds(),
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1"`,
+			`git "fetch" "--depth=1"`,
 			`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
 			// fatal: reference is not a tree: cfba2b01332e31cb1568dbf3f22edce063118bae
 			// Checkout failed, error: fatal: reference is not a tree: cfba2b01332e31cb1568dbf3f22edce063118bae
-			`git "fetch" "--jobs=10" "--unshallow"`,
+			`git "fetch" "--unshallow"`,
 			`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
 		},
 	},
@@ -544,8 +544,8 @@ var testCases = [...]struct {
 			GivenRunSucceeds().
 			GivenRunWithRetrySucceeds(),
 		wantCmds: []string{
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
-			`git "fetch" "--jobs=10" "--depth=1" "--no-recurse-submodules" "origin" "refs/pull/5/head:pull/5"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+			`git "fetch" "--depth=1" "--no-recurse-submodules" "origin" "refs/pull/5/head:pull/5"`,
 			`git "checkout" "master"`,
 			`git "merge" "origin/master"`,
 			`git "merge" "pull/5"`,
@@ -555,7 +555,7 @@ var testCases = [...]struct {
 			`git "clean" "-x" "-d" "-f"`,
 			`git "submodule" "foreach" "git" "reset" "--hard" "HEAD"`,
 			`git "submodule" "foreach" "git" "clean" "-x" "-d" "-f"`,
-			`git "fetch" "--jobs=10" "--unshallow"`,
+			`git "fetch" "--unshallow"`,
 			`git "merge" "pull/5"`,
 			`git "checkout" "--detach"`,
 		},
@@ -603,7 +603,7 @@ var submoduleTestCases = [...]struct {
 			LimitSubmoduleUpdateDepth: true,
 		},
 		wantCmds: []string{
-			`git "submodule" "update" "--init" "--recursive" "--jobs=10" "--depth=1"`,
+			`git "submodule" "update" "--init" "--recursive" "--depth=1"`,
 		},
 	},
 	{
@@ -612,7 +612,7 @@ var submoduleTestCases = [...]struct {
 			LimitSubmoduleUpdateDepth: false,
 		},
 		wantCmds: []string{
-			`git "submodule" "update" "--init" "--recursive" "--jobs=10"`,
+			`git "submodule" "update" "--init" "--recursive"`,
 		},
 	},
 }
