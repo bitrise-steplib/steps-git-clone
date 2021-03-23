@@ -14,7 +14,6 @@ import (
 const (
 	checkoutFailedTag = "checkout_failed"
 	fetchFailedTag    = "fetch_failed"
-	jobsFlag          = "--jobs=10"
 )
 
 var runner CommandRunner = DefaultRunner{}
@@ -123,7 +122,7 @@ type getAvailableBranches func() (map[string][]string, error)
 
 func listBranches(gitCmd git.Git) getAvailableBranches {
 	return func() (map[string][]string, error) {
-		if err := runner.Run(gitCmd.Fetch(jobsFlag)); err != nil {
+		if err := runner.Run(gitCmd.Fetch()); err != nil {
 			return nil, err
 		}
 		out, err := runner.RunForOutput(gitCmd.Branch("-r"))
