@@ -16,14 +16,8 @@ type simpleUnshallow struct{}
 
 func (s simpleUnshallow) do(gitCmd git.Git) error {
 	log.Infof("Fetch with unshallow...")
+	return unshallowFetch(gitCmd)
 
-	if err := runner.RunWithRetry(func() *command.Model {
-		return gitCmd.Fetch("--unshallow")
-	}); err != nil {
-		return fmt.Errorf("fetch failed: %v", err)
-	}
-
-	return nil
 }
 
 type resetUnshallow struct{}
@@ -34,8 +28,13 @@ func (r resetUnshallow) do(gitCmd git.Git) error {
 	if err := resetRepo(gitCmd); err != nil {
 		return fmt.Errorf("reset repository: %v", err)
 	}
+
+	return unshallowFetch(gitCmd)
+}
+
+func unshallowFetch(gitCmd git.Git) error {
 	if err := runner.RunWithRetry(func() *command.Model {
-		return gitCmd.Fetch("--unshallow")
+		return gitCmd.Fetch(jobsFlag, "--unshallow")
 	}); err != nil {
 		return fmt.Errorf("fetch failed: %v", err)
 	}

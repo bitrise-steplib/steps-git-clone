@@ -89,7 +89,7 @@ func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) error {
 }
 
 func updateSubmodules(gitCmd git.Git, cfg Config) error {
-	if err := runner.Run(gitCmd.SubmoduleUpdate(cfg.LimitSubmoduleUpdateDepth)); err != nil {
+	if err := runner.Run(gitCmd.SubmoduleUpdate(cfg.LimitSubmoduleUpdateDepth, jobsFlag)); err != nil {
 		return newStepError(
 			updateSubmodelFailedTag,
 			fmt.Errorf("submodule update: %v", err),
