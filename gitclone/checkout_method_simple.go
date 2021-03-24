@@ -95,19 +95,17 @@ func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallback
 //
 // TagParams are parameters to check out a given tag
 type TagParams struct {
-	Tag    string
-	Branch string
+	Tag string
 }
 
 // NewTagParams validates and returns a new TagParams
-func NewTagParams(tag, branch string) (*TagParams, error) {
+func NewTagParams(tag string) (*TagParams, error) {
 	if strings.TrimSpace(tag) == "" {
 		return nil, NewParameterValidationError("tag checkout strategy can not be used: no tag specified")
 	}
 
 	return &TagParams{
-		Tag:    tag,
-		Branch: branch,
+		Tag: tag,
 	}, nil
 }
 
@@ -117,12 +115,8 @@ type checkoutTag struct {
 }
 
 func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	branchRefParam := ""
-	if c.params.Branch != "" {
-		branchRefParam = refsHeadsPrefix + c.params.Branch
-	}
-
-	if err := fetch(gitCmd, originRemoteName, branchRefParam, fetchOptions); err != nil {
+	ref := fmt.Sprintf("refs/tags/%s:refs/tags/%s", c.params.Tag, c.params.Tag)
+	if err := fetch(gitCmd, originRemoteName, ref, fetchOptions); err != nil {
 		return err
 	}
 

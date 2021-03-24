@@ -25,6 +25,7 @@ type Config struct {
 
 	ResetRepository           bool `env:"reset_repository,opt[Yes,No]"`
 	CloneDepth                int  `env:"clone_depth"`
+	FetchTags                 bool `env:"fetch_tags,opt[yes,no]"`
 	LimitSubmoduleUpdateDepth bool `env:"limit_submodule_update_depth,opt[yes,no]"`
 	ShouldMergePR             bool `env:"merge_pr,opt[yes,no]"`
 
@@ -37,6 +38,7 @@ type Config struct {
 const (
 	trimEnding              = "..."
 	originRemoteName        = "origin"
+	forkRemoteName          = "fork"
 	updateSubmodelFailedTag = "update_submodule_failed"
 )
 
@@ -70,7 +72,7 @@ func getMaxEnvLength() (int, error) {
 
 func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) error {
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
-	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.Tag != "", cfg.UpdateSubmodules)
+	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules)
 
 	checkoutStrategy, err := createCheckoutStrategy(checkoutMethod, cfg, diffFile)
 	if err != nil {

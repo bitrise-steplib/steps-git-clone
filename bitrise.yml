@@ -39,6 +39,7 @@ workflows:
     - activate-ssh-key:
         run_if: true
     after_run:
+    - _test_generate_changelog
     - _test_error
     - _test_submodule
     - _test_no_checkout
@@ -68,6 +69,85 @@ workflows:
     - errcheck:
     - go-test:
 
+  _test_generate_changelog:
+    after_run:
+    - _test_generate_changelog_by_commit
+    - _test_generate_changelog_by_tag
+
+  _test_generate_changelog_by_commit:
+    envs:
+    - BITRISE_GIT_COMMIT: a409478
+    - NEW_VERSON: "0.1.1"
+    before_run:
+    - _create_tmpdir
+    after_run:
+    - _assert_changelog
+    steps:
+    - path::./:
+        run_if: true
+        inputs:
+        - clone_into_dir: $CLONE_INTO_DIR
+        - commit: $BITRISE_GIT_COMMIT
+        - tag: ""
+        - branch: "test/generate-changelog"
+        - fetch_tags: "yes"
+        - update_submodules: "no"
+        # clear unrelated inputs
+        - branch_dest: ""
+        - pull_request_id: ""
+        - pull_request_repository_url: ""
+        - pull_request_merge_branch: ""
+        - pull_request_head_branch: ""
+
+  _test_generate_changelog_by_tag:
+    envs:
+    - BITRISE_GIT_TAG: "0.1.1"
+    - NEW_VERSON: $BITRISE_GIT_TAG
+    before_run:
+    - _create_tmpdir
+    after_run:
+    - _assert_changelog
+    steps:
+    - path::./:
+        run_if: true
+        inputs:
+        - clone_into_dir: $CLONE_INTO_DIR
+        - commit: ""
+        - tag: $BITRISE_GIT_TAG
+        - branch: "test/generate-changelog"
+        - fetch_tags: "yes"
+        - update_submodules: "no"
+        # clear unrelated inputs
+        - branch_dest: ""
+        - pull_request_id: ""
+        - pull_request_repository_url: ""
+        - pull_request_merge_branch: ""
+        - pull_request_head_branch: ""
+
+  _assert_changelog:
+    steps:
+    - generate-changelog:
+        inputs:
+        - new_version: "$NEW_VERSON"
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -ex
+            
+            EXPECTED_CHANGELOG="* [a409478] Add newline to the description.
+            * [b002ab7] Add repository description.
+            * [996fa77] Add newline to README.md.
+            "
+
+            if [ "$BITRISE_CHANGELOG" = "$EXPECTED_CHANGELOG" ]; then
+                echo "Expected changelog generated."
+            else
+                echo "Invalid changelog generated:"
+                echo "$BITRISE_CHANGELOG"
+                exit 1
+            fi
+
   _test_submodule:
     before_run:
     - _create_tmpdir
@@ -87,7 +167,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -115,7 +195,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -152,7 +232,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -178,7 +258,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -203,7 +283,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -225,10 +305,11 @@ workflows:
         - pull_request_repository_url: ""
         - branch_dest: ""
         - clone_depth: ""
+        - fetch_tags: "no"
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -249,11 +330,12 @@ workflows:
             - pull_request_merge_branch: ""
             - pull_request_repository_url: ""
             - branch_dest: ""
-            - clone_depth: ""
+            - clone_depth: "1"
+            - fetch_tags: "yes"
       - script:
           inputs:
             - content: |-
-                #!/bin/bash
+                #!/bin/env bash
                 eval "$EVAL_SCRIPT"
       - ensure-clean-git:
           inputs:
@@ -278,7 +360,7 @@ workflows:
       - script:
           inputs:
             - content: |-
-                #!/bin/bash
+                #!/bin/env bash
                 eval "$EVAL_SCRIPT"
       - ensure-clean-git:
           inputs:
@@ -303,7 +385,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -331,7 +413,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -357,7 +439,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -410,7 +492,7 @@ workflows:
       - script:
           inputs:
             - content: |-
-                #!/bin/bash
+                #!/bin/env bash
                 eval "$EVAL_SCRIPT"
       - ensure-clean-git:
           inputs:
@@ -436,7 +518,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -461,7 +543,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -486,7 +568,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -555,7 +637,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -581,7 +663,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -607,7 +689,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             eval "$EVAL_SCRIPT"
     - ensure-clean-git:
         inputs:
@@ -672,7 +754,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             set -ex
             eval "$EVAL_SCRIPT"
             diff ${CLONE_INTO_DIR}/README.md ${PR_REPOSITORY_URL}/README.md
@@ -696,7 +778,7 @@ workflows:
       - script:
           inputs:
             - content: |-
-                #!/bin/bash
+                #!/bin/env bash
                 eval "$EVAL_SCRIPT"
                 # --- This test only works for default 20kbyte env sizes, if altered, test should be modified accordingly.
                 if [ ${#GIT_CLONE_COMMIT_MESSAGE_BODY} -gt "20480" ]; then
@@ -727,6 +809,6 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/bin/env bash
             set -ex
             stepman audit --step-yml ./step.yml

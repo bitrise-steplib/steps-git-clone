@@ -8,8 +8,6 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
-const forkRemoteName = "fork"
-
 // PRManualMergeParams are parameters to check out a Merge Request using manual merge
 type PRManualMergeParams struct {
 	SourceBranch      string
