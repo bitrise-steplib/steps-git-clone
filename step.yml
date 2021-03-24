@@ -132,6 +132,16 @@ inputs:
       value_options:
       - "yes"
       - "no"
+  - sparse_directories: ""
+    opts:
+      category: "Checkout options"
+      title: "Specify which directories to clone."
+      description: |-
+        Limit which directories should be cloned during the build. This could be useful if a repository contains multiple platforms, so called monorepo, and the build is only targeting a single platform.
+        For example, specifying "src/android" the step will only clone:
+        - contents of the root directory and
+        - contents of the "src/android" directory and all subdirectories of "src/android".
+        On the other hand, "src/ios" and any other directories will not be cloned.
   - reset_repository: "No"
     opts:
       category: Debug

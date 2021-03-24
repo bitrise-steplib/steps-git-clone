@@ -23,11 +23,12 @@ type Config struct {
 	PRMergeBranch         string `env:"pull_request_merge_branch"`
 	PRHeadBranch          string `env:"pull_request_head_branch"`
 
-	ResetRepository           bool `env:"reset_repository,opt[Yes,No]"`
-	CloneDepth                int  `env:"clone_depth"`
-	FetchTags                 bool `env:"fetch_tags,opt[yes,no]"`
-	LimitSubmoduleUpdateDepth bool `env:"limit_submodule_update_depth,opt[yes,no]"`
-	ShouldMergePR             bool `env:"merge_pr,opt[yes,no]"`
+	ResetRepository           bool     `env:"reset_repository,opt[Yes,No]"`
+	CloneDepth                int      `env:"clone_depth"`
+	FetchTags                 bool     `env:"fetch_tags,opt[yes,no]"`
+	LimitSubmoduleUpdateDepth bool     `env:"limit_submodule_update_depth,opt[yes,no]"`
+	ShouldMergePR             bool     `env:"merge_pr,opt[yes,no]"`
+	SparseDirectories         []string `env:"sparse_directories,multiline"`
 
 	BuildURL         string `env:"build_url"`
 	BuildAPIToken    string `env:"build_api_token"`
