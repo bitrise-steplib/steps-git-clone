@@ -41,6 +41,7 @@ const (
 	originRemoteName        = "origin"
 	forkRemoteName          = "fork"
 	updateSubmodelFailedTag = "update_submodule_failed"
+	sparseCheckoutFailedTag = "sparse_checkout_failed"
 )
 
 func printLogAndExportEnv(gitCmd git.Git, format, env string, maxEnvLength int) error {
@@ -73,7 +74,7 @@ func getMaxEnvLength() (int, error) {
 
 func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) error {
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
-	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules)
+	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 
 	checkoutStrategy, err := createCheckoutStrategy(checkoutMethod, cfg, diffFile)
 	if err != nil {
@@ -97,6 +98,32 @@ func updateSubmodules(gitCmd git.Git, cfg Config) error {
 			updateSubmodelFailedTag,
 			fmt.Errorf("submodule update: %v", err),
 			"Updating submodules has failed",
+		)
+	}
+
+	return nil
+}
+
+func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
+	if len(sparseDirectories) == 0 {
+		return nil
+	}
+
+	initCommand := gitCmd.SparseCheckoutInit(true)
+	if err := runner.Run(initCommand); err != nil {
+		return newStepError(
+			sparseCheckoutFailedTag,
+			fmt.Errorf("initializing sparse-checkout config failed: %v", err),
+			"Initializing sparse-checkout config has failed",
+		)
+	}
+
+	sparseSetCommand := gitCmd.SparseCheckoutSet(sparseDirectories...)
+	if err := runner.Run(sparseSetCommand); err != nil {
+		return newStepError(
+			sparseCheckoutFailedTag,
+			fmt.Errorf("updating sparse-checkout config failed: %v", err),
+			"Updating sparse-checkout config has failed",
 		)
 	}
 
@@ -156,6 +183,10 @@ func Execute(cfg Config) error {
 				"Adding remote repository failed",
 			)
 		}
+	}
+
+	if err := setupSparseCheckout(gitCmd, cfg.SparseDirectories); err != nil {
+		return err
 	}
 
 	if err := checkoutState(gitCmd, cfg, defaultPatchSource{}); err != nil {

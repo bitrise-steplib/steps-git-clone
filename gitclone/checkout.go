@@ -269,12 +269,31 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 
 }
 
-func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchTags, fetchSubmodules bool) fetchOptions {
-	return fetchOptions{
+func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchTags, fetchSubmodules bool, filterTree bool) fetchOptions {
+	opts := fetchOptions{
 		depth:           cloneDepth,
 		tags:            fetchTags,
 		fetchSubmodules: fetchSubmodules,
 	}
+
+	opts = selectFilterTreeFetchOption(checkoutStrategy, opts, filterTree)
+
+	return opts
+}
+
+func selectFilterTreeFetchOption(checkoutStrategy CheckoutMethod, opts fetchOptions, filterTree bool) fetchOptions {
+	if !filterTree {
+		return opts
+	}
+
+	switch checkoutStrategy {
+	case CheckoutCommitMethod, CheckoutTagMethod, CheckoutBranchMethod:
+		opts.filterTree = true
+		opts.depth = 0
+	default:
+	}
+
+	return opts
 }
 
 func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fallbackRetry {
