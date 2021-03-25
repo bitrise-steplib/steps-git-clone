@@ -803,7 +803,14 @@ workflows:
           inputs:
             - repository_url: "https://github.com/bitrise-io/git-clone-test.git"
             - clone_into_dir: $CLONE_INTO_DIR
+            - commit: ""
+            - tag: ""
             - branch: "master"
+            - pull_request_id: ""
+            - pull_request_merge_branch: ""
+            - pull_request_repository_url: ""
+            - branch_dest: ""
+            - clone_depth: ""
             - sparse_directories: |-
                 git-clone-sample
       - script:
