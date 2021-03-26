@@ -62,6 +62,7 @@ workflows:
       - _test_hosted_git_ssh_prefix
       - _test_sparse_checkout_branch
       - _test_sparse_checkout_commit_on_branch
+      - _test_sparse_checkout_unshallow
       - test_diff_file
 
   go-tests:
@@ -839,6 +840,33 @@ workflows:
             - pull_request_repository_url: ""
             - branch_dest: ""
             - clone_depth: ""
+            - sparse_directories: |-
+                git-clone-sample
+      - script:
+          inputs:
+            - content: |-
+                #!/bin/env bash
+                eval "$EVAL_SCRIPT"
+      - ensure-clean-git:
+          inputs:
+            - dir_to_check: $CLONE_INTO_DIR
+
+  _test_sparse_checkout_unshallow:
+    before_run:
+      - _create_tmpdir
+    steps:
+      - path::./:
+          run_if: true
+          inputs:
+            - clone_into_dir: $CLONE_INTO_DIR
+            - commit: cfba2b01332e31cb1568dbf3f22edce063118bae
+            - clone_depth: 1
+            - tag: ""
+            - branch: ""
+            - pull_request_id: ""
+            - pull_request_merge_branch: ""
+            - pull_request_repository_url: ""
+            - branch_dest: ""
             - sparse_directories: |-
                 git-clone-sample
       - script:
