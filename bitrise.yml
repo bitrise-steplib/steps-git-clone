@@ -60,7 +60,8 @@ workflows:
       - _test_hosted_git_notfork
       - _test_unrelated_histories
       - _test_hosted_git_ssh_prefix
-      - _test_sparse_repo
+      - _test_sparse_checkout_branch
+      - _test_sparse_checkout_commit_on_branch
       - test_diff_file
 
   go-tests:
@@ -794,7 +795,7 @@ workflows:
           inputs:
             - dir_to_check: $CLONE_INTO_DIR
 
-  _test_sparse_repo:
+  _test_sparse_checkout_branch:
     before_run:
       - _create_tmpdir
     steps:
@@ -804,6 +805,33 @@ workflows:
             - repository_url: "https://github.com/bitrise-io/git-clone-test.git"
             - clone_into_dir: $CLONE_INTO_DIR
             - commit: ""
+            - tag: ""
+            - branch: "master"
+            - pull_request_id: ""
+            - pull_request_merge_branch: ""
+            - pull_request_repository_url: ""
+            - branch_dest: ""
+            - clone_depth: ""
+            - sparse_directories: |-
+                git-clone-sample
+      - script:
+          inputs:
+            - content: |-
+                #!/bin/env bash
+                eval "$EVAL_SCRIPT"
+      - ensure-clean-git:
+          inputs:
+            - dir_to_check: $CLONE_INTO_DIR
+
+  _test_sparse_checkout_commit_on_branch:
+    before_run:
+      - _create_tmpdir
+    steps:
+      - path::./:
+          run_if: true
+          inputs:
+            - clone_into_dir: $CLONE_INTO_DIR
+            - commit: 7a93251a9bf08fb8c6b19fc02f6d94618de6b386
             - tag: ""
             - branch: "master"
             - pull_request_id: ""
