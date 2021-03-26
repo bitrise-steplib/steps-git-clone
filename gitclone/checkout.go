@@ -287,7 +287,7 @@ func selectFilterTreeFetchOption(checkoutStrategy CheckoutMethod, opts fetchOpti
 	}
 
 	switch checkoutStrategy {
-	case CheckoutCommitMethod, CheckoutTagMethod, CheckoutBranchMethod, CheckoutPRMergeBranchMethod, CheckoutPRManualMergeMethod:
+	case CheckoutCommitMethod, CheckoutTagMethod, CheckoutBranchMethod:
 		opts.filterTree = true
 		opts.depth = 0
 	default:

@@ -60,9 +60,7 @@ workflows:
       - _test_hosted_git_notfork
       - _test_unrelated_histories
       - _test_hosted_git_ssh_prefix
-      - _test_sparse_checkout_branch
-      - _test_sparse_checkout_manual_merge_unshallow
-      - _test_sparse_checkout_pull_request_standard_branch
+      - _test_sparse_repo
       - test_diff_file
 
   go-tests:
@@ -796,7 +794,7 @@ workflows:
           inputs:
             - dir_to_check: $CLONE_INTO_DIR
 
-  _test_sparse_checkout_branch:
+  _test_sparse_repo:
     before_run:
       - _create_tmpdir
     steps:
@@ -813,59 +811,6 @@ workflows:
             - pull_request_repository_url: ""
             - branch_dest: ""
             - clone_depth: ""
-            - sparse_directories: |-
-                git-clone-sample
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$EVAL_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $CLONE_INTO_DIR
-
-  _test_sparse_checkout_manual_merge_unshallow:
-    before_run:
-      - _create_tmpdir
-    steps:
-      - path::./:
-          run_if: true
-          inputs:
-            - clone_into_dir: $CLONE_INTO_DIR
-            - pull_request_id: 7
-            - pull_request_merge_branch: "pull/7/merge"
-            - pull_request_repository_url: ""
-            - branch_dest: "master"
-            - commit: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
-            - tag: ""
-            - branch: "test/commit-messages"
-            - sparse_directories: |-
-                git-clone-sample
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$EVAL_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $CLONE_INTO_DIR
-
-  _test_sparse_checkout_pull_request_standard_branch:
-    before_run:
-      - _create_tmpdir
-    steps:
-      - path::./:
-          run_if: true
-          inputs:
-            - clone_into_dir: $CLONE_INTO_DIR
-            - pull_request_merge_branch: "pr_test"
-            - pull_request_repository_url: ""
-            - branch_dest: "master"
-            - commit: ""
-            - tag: ""
-            - branch: ""
-            - clone_depth: ""
-            - manual_merge: "no"
             - sparse_directories: |-
                 git-clone-sample
       - script:

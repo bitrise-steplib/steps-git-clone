@@ -610,47 +610,6 @@ var testCases = [...]struct {
 			`git "checkout" "gat"`,
 		},
 	},
-	{
-		name: "PR - no fork - manual merge: branch and commit - sparse",
-		cfg: Config{
-			Commit:            "76a934ae",
-			Branch:            "test/commit-messages",
-			PRMergeBranch:     "pull/7/merge",
-			PRDestBranch:      "master",
-			CloneDepth:        1,
-			ManualMerge:       true,
-			ShouldMergePR:     true,
-			SparseDirectories: []string{"client/android"},
-		},
-		wantCmds: []string{
-			`git "fetch" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
-			`git "checkout" "master"`,     // Already on 'master'
-			`git "merge" "origin/master"`, // Already up to date.
-			`git "log" "-1" "--format=%H"`,
-			`git "fetch" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
-			`git "merge" "76a934ae"`,
-			`git "checkout" "--detach"`,
-		},
-	},
-	{
-		name: "PR - no fork - auto merge - merge branch (GitHub format) - sparse",
-		cfg: Config{
-			PRDestBranch:      "master",
-			PRMergeBranch:     "pull/5/merge",
-			PRHeadBranch:      "pull/5/head",
-			CloneDepth:        1,
-			ShouldMergePR:     true,
-			SparseDirectories: []string{"client/android"},
-		},
-		wantCmds: []string{
-			`git "fetch" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
-			`git "fetch" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/5/head:pull/5"`,
-			`git "checkout" "master"`,
-			`git "merge" "origin/master"`,
-			`git "merge" "pull/5"`,
-			`git "checkout" "--detach"`,
-		},
-	},
 }
 
 func Test_checkoutState(t *testing.T) {
