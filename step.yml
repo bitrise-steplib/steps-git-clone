@@ -155,7 +155,7 @@ inputs:
     opts:
       category: Clone Config
       title: Should the Step fetch tags?
-      descriptions: |-
+      description: |-
         yes - fetches all the tags (add `--tags` to git fetch calls)
         no - does not fetch any tags (add `--no-tags` to git fetch calls)
       value_options:
