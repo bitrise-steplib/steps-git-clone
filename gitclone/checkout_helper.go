@@ -22,6 +22,9 @@ type fetchOptions struct {
 	// Sets '--no-recurse-submodules' flag
 	// More info: https://git-scm.com/docs/git-fetch#Documentation/git-fetch.txt---no-recurse-submodules
 	fetchSubmodules bool
+	// Sets `--filter=tree:0` flag
+	// More info: https://github.blog/2020-12-21-get-up-to-speed-with-partial-clone-and-shallow-clone/#user-content-treeless-clones
+	filterTree bool
 }
 
 func (t fetchOptions) IsFullDepth() bool {
@@ -37,6 +40,9 @@ func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error
 	var opts []string
 	if traits.depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(traits.depth))
+	}
+	if traits.filterTree {
+		opts = append(opts, `--filter=tree:0`)
 	}
 
 	if traits.tags {

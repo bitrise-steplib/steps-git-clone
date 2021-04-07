@@ -6,12 +6,12 @@ github.com/bitrise-io/bitrise-init/step
 ## explicit
 github.com/bitrise-io/envman/envman
 github.com/bitrise-io/envman/models
-# github.com/bitrise-io/go-steputils v0.0.0-20201016102104-03ae3a6ded35
+# github.com/bitrise-io/go-steputils v0.0.0-20210324082442-21a1b8f2b237
 ## explicit
 github.com/bitrise-io/go-steputils/input
 github.com/bitrise-io/go-steputils/stepconf
 github.com/bitrise-io/go-steputils/tools
-# github.com/bitrise-io/go-utils v0.0.0-20210316133228-449620935158
+# github.com/bitrise-io/go-utils v0.0.0-20210323091856-00429d8e1e87
 ## explicit
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
@@ -34,9 +34,9 @@ github.com/bitrise-steplib/bitrise-step-export-universal-apk/filedownloader
 github.com/davecgh/go-spew/spew
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
-# github.com/stretchr/objx v0.1.0
+# github.com/stretchr/objx v0.3.0
 github.com/stretchr/objx
-# github.com/stretchr/testify v1.5.1
+# github.com/stretchr/testify v1.6.1
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
@@ -54,3 +54,5 @@ golang.org/x/term
 # gopkg.in/yaml.v2 v2.3.0
 ## explicit
 gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
+gopkg.in/yaml.v3

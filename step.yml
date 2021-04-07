@@ -130,8 +130,18 @@ inputs:
         - `yes`: The default setting. Merges the source branch into the destination branch.
         - `no`: Treats Pull Request events as Push events on the source branch.
       value_options:
-      - "yes"
-      - "no"
+        - "yes"
+        - "no"
+  - sparse_directories: ""
+    opts:
+      category: "Checkout options"
+      title: "Specify which directories to clone."
+      description: |-
+        Limit which directories should be cloned during the build. This could be useful if a repository contains multiple platforms, so called monorepositories, and the build is only targeting a single platform.
+        For example, specifying "src/android" the Step will only clone:
+        - contents of the root directory and
+        - contents of the "src/android" directory and all subdirectories of "src/android".
+        On the other hand, "src/ios" and any other directories will not be cloned.
   - reset_repository: "No"
     opts:
       category: Debug
@@ -149,8 +159,8 @@ inputs:
         Prefer to do a manual `git merge` by default.
         When the Pull Request is from a GitHub or Bitbucket private fork repository set this to `no`.
       value_options:
-      - "yes"
-      - "no"
+        - "yes"
+        - "no"
   - fetch_tags: "no"
     opts:
       category: Clone Config
@@ -159,8 +169,8 @@ inputs:
         yes - fetch all tags from the remote by adding `--tags` flag to git fetch calls  
         no - disable automatic tag following by adding `--no-tags` flag to git fetch calls
       value_options:
-      - "yes"
-      - "no"
+        - "yes"
+        - "no"
   - build_url: "$BITRISE_BUILD_URL"
     opts:
       category: Debug

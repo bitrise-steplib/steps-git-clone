@@ -559,6 +559,57 @@ var testCases = [...]struct {
 			`git "checkout" "--detach"`,
 		},
 	},
+
+	// ** Sparse-checkout **
+	{
+		name: "Checkout commit - sparse",
+		cfg: Config{
+			Commit:            "76a934a",
+			CloneDepth:        1,
+			SparseDirectories: []string{"client/android"},
+		},
+		wantCmds: []string{
+			`git "fetch" "--filter=tree:0" "--no-tags" "--no-recurse-submodules"`,
+			`git "checkout" "76a934a"`,
+		},
+	},
+	{
+		name: "Checkout commit, branch specified - sparse",
+		cfg: Config{
+			Commit:            "76a934ae",
+			Branch:            "hcnarb",
+			SparseDirectories: []string{"client/android"},
+		},
+		wantCmds: []string{
+			`git "fetch" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+			`git "checkout" "76a934ae"`,
+		},
+	},
+	{
+		name: "Checkout branch - sparse",
+		cfg: Config{
+			Branch:            "hcnarb",
+			CloneDepth:        1,
+			SparseDirectories: []string{"client/android"},
+		},
+		wantCmds: []string{
+			`git "fetch" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+			`git "checkout" "hcnarb"`,
+			`git "merge" "origin/hcnarb"`,
+		},
+	},
+	{
+		name: "Checkout tag - sparse",
+		cfg: Config{
+			Tag:               "gat",
+			CloneDepth:        1,
+			SparseDirectories: []string{"client/android"},
+		},
+		wantCmds: []string{
+			`git "fetch" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/tags/gat:refs/tags/gat"`,
+			`git "checkout" "gat"`,
+		},
+	},
 }
 
 func Test_checkoutState(t *testing.T) {
@@ -625,6 +676,47 @@ func Test_SubmoduleUpdate(t *testing.T) {
 
 			// When
 			actualErr := updateSubmodules(git.Git{}, tt.cfg)
+
+			// Then
+			assert.NoError(t, actualErr)
+			assert.Equal(t, tt.wantCmds, mockRunner.Cmds())
+		})
+	}
+}
+
+// SetupSparseCechkout
+var sparseCheckoutTestCases = [...]struct {
+	name              string
+	sparseDirectories []string
+	wantCmds          []string
+}{
+	{
+		name:              "Sparse-checkout single directory",
+		sparseDirectories: []string{"client/android"},
+		wantCmds: []string{
+			`git "sparse-checkout" "init" "--cone"`,
+			`git "sparse-checkout" "set" "client/android"`,
+		},
+	},
+	{
+		name:              "Sparse-checkout multiple directory",
+		sparseDirectories: []string{"client/android", "client/ios"},
+		wantCmds: []string{
+			`git "sparse-checkout" "init" "--cone"`,
+			`git "sparse-checkout" "set" "client/android" "client/ios"`,
+		},
+	},
+}
+
+func Test_SetupSparseCheckout(t *testing.T) {
+	for _, tt := range sparseCheckoutTestCases {
+		t.Run(tt.name, func(t *testing.T) {
+			// Given
+			mockRunner := givenMockRunnerSucceeds()
+			runner = mockRunner
+
+			// When
+			actualErr := setupSparseCheckout(git.Git{}, tt.sparseDirectories)
 
 			// Then
 			assert.NoError(t, actualErr)
