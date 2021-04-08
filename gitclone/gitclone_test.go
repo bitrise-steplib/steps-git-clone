@@ -569,7 +569,7 @@ var testCases = [...]struct {
 			SparseDirectories: []string{"client/android"},
 		},
 		wantCmds: []string{
-			`git "fetch" "--filter=tree:0" "--no-tags" "--no-recurse-submodules"`,
+			`git "fetch" "--jobs=10" "--filter=tree:0" "--no-tags" "--no-recurse-submodules"`,
 			`git "checkout" "76a934a"`,
 		},
 	},
@@ -581,7 +581,7 @@ var testCases = [...]struct {
 			SparseDirectories: []string{"client/android"},
 		},
 		wantCmds: []string{
-			`git "fetch" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--jobs=10" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "76a934ae"`,
 		},
 	},
@@ -593,7 +593,7 @@ var testCases = [...]struct {
 			SparseDirectories: []string{"client/android"},
 		},
 		wantCmds: []string{
-			`git "fetch" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+			`git "fetch" "--jobs=10" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 			`git "checkout" "hcnarb"`,
 			`git "merge" "origin/hcnarb"`,
 		},
@@ -606,7 +606,7 @@ var testCases = [...]struct {
 			SparseDirectories: []string{"client/android"},
 		},
 		wantCmds: []string{
-			`git "fetch" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/tags/gat:refs/tags/gat"`,
+			`git "fetch" "--jobs=10" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/tags/gat:refs/tags/gat"`,
 			`git "checkout" "gat"`,
 		},
 	},
