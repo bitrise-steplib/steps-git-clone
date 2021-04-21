@@ -37,11 +37,11 @@ run_becnhmark() {
 
     export CURRENT_STEP_DIR="$step_dir"
 
-    go test -run=XXX -bench="BenchmarkCommitCheckout$" -count="$count" | tee -a "$bench_output"
-    go test -run=XXX -bench="BenchmarkCommitCheckout_branch_specified$" -count="$count" | tee -a "$bench_output"
-    go test -run=XXX -bench="BenchmarkBranchCheckout$" -count="$count" | tee -a "$bench_output"
-    go test -run=XXX -bench="BenchmarkTagCheckout$" -count="$count" | tee -a "$bench_output"
-    go test -run=XXX -bench="BenchmarkTagCheckout_branch_specified$" -count="$count" | tee -a "$bench_output"
+    [ ! -z "$BENCH_COMMIT" ] &&                                     go test -run=XXX -bench="BenchmarkCommitCheckout$" -count="$count" | tee -a "$bench_output"
+    [ ! -z "$BENCH_COMMIT" ] && [ ! -z "$BENCH_COMMIT_BRANCH" ] &&  go test -run=XXX -bench="BenchmarkCommitCheckout_branch_specified$" -count="$count" | tee -a "$bench_output"
+    [ ! -z "$BENCH_BRANCH" ] &&                                     go test -run=XXX -bench="BenchmarkBranchCheckout$" -count="$count" | tee -a "$bench_output"
+    [ ! -z "$BENCH_TAG" ] &&                                        go test -run=XXX -bench="BenchmarkTagCheckout$" -count="$count" | tee -a "$bench_output"
+    [ ! -z "$BENCH_TAG" ] && [ ! -z "$BENCH_TAG_BRANCH" ] &&        go test -run=XXX -bench="BenchmarkTagCheckout_branch_specified$" -count="$count" | tee -a "$bench_output"
 
     eval $__resultvar="'$bench_output'"
 }
@@ -59,8 +59,8 @@ export BENCH_TAG_BRANCH="release/5.4"
 export BENCH_BRANCH="next"
 
 current_version="local"
-previous_version="4.0.25"
-bench_count="1"
+previous_version=""
+bench_count="3"
 
 #
 # Run benchmark against local version
@@ -69,19 +69,25 @@ run_becnhmark "$current_version" "$bench_count" current_bench_output
 
 #
 # Run benchmark against previous version
-previous_bench_output=""
-run_becnhmark "$previous_version" "$bench_count" previous_bench_output
+if [[ ! -z "$previous_version" ]] ; then
+    previous_bench_output=""
+    run_becnhmark "$previous_version" "$bench_count" previous_bench_output
+fi
 
 #
 # Compare benchmarks
-echo
-echo "$previous_version benchmark:"
-benchstat "$previous_bench_output"
+if [[ ! -z "$previous_version" ]] ; then
+    echo
+    echo "$previous_version benchmark:"
+    benchstat "$previous_bench_output"
+fi
 
 echo
 echo "$current_version benchmark:"
 benchstat "$current_bench_output"
 
-echo
-echo "$previous_version <-> $current_version comparison:"
-benchstat "$previous_bench_output" "$current_bench_output"
+if [[ ! -z "$previous_version" ]] ; then
+    echo
+    echo "$previous_version <-> $current_version comparison:"
+    benchstat "$previous_bench_output" "$current_bench_output"
+fi
