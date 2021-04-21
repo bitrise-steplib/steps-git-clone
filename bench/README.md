@@ -2,8 +2,11 @@
 
 Run benchmark
 
-`cd ./bench`
-`bash bench.sh`
+
+```
+cd ./bench
+bash bench.sh
+```
 
 Configuration
 
