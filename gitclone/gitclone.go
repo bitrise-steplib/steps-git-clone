@@ -5,6 +5,7 @@ import (
 
 	"github.com/bitrise-io/envman/envman"
 	"github.com/bitrise-io/go-steputils/tools"
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 )
@@ -124,6 +125,26 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 			sparseCheckoutFailedTag,
 			fmt.Errorf("updating sparse-checkout config failed: %v", err),
 			"Updating sparse-checkout config has failed",
+		)
+	}
+
+	// Enable partial clone support for the remote
+	spareConfigCmd := gitCmd.Config("extensions.partialClone", originRemoteName)
+	args := spareConfigCmd.GetCmd().Args
+	args = append(args, "--local")
+	cmd, err := command.NewFromSlice(args)
+	if err != nil {
+		return newStepError(
+			sparseCheckoutFailedTag,
+			fmt.Errorf("create command for enableing partial clone support for the remote has failed: %v", err),
+			"Create command for enableing partial clone support for the remote has failed",
+		)
+	}
+	if err := runner.Run(cmd); err != nil {
+		return newStepError(
+			sparseCheckoutFailedTag,
+			fmt.Errorf("enable partial clone support for the remote has failed: %v", err),
+			"Enable partial clone support for the remote has failed",
 		)
 	}
 
