@@ -696,6 +696,7 @@ var sparseCheckoutTestCases = [...]struct {
 		wantCmds: []string{
 			`git "sparse-checkout" "init" "--cone"`,
 			`git "sparse-checkout" "set" "client/android"`,
+			`git "config" "extensions.partialClone" "origin" "--local"`,
 		},
 	},
 	{
@@ -704,6 +705,7 @@ var sparseCheckoutTestCases = [...]struct {
 		wantCmds: []string{
 			`git "sparse-checkout" "init" "--cone"`,
 			`git "sparse-checkout" "set" "client/android" "client/ios"`,
+			`git "config" "extensions.partialClone" "origin" "--local"`,
 		},
 	},
 }

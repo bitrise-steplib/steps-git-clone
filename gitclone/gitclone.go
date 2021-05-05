@@ -127,6 +127,16 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 		)
 	}
 
+	// Enable partial clone support for the remote
+	sparseConfigCmd := gitCmd.Config("extensions.partialClone", originRemoteName, "--local")
+	if err := runner.Run(sparseConfigCmd); err != nil {
+		return newStepError(
+			sparseCheckoutFailedTag,
+			fmt.Errorf("enable partial clone support for the remote has failed: %v", err),
+			"Enable partial clone support for the remote has failed",
+		)
+	}
+
 	return nil
 }
 

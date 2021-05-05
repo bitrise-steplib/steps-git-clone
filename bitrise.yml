@@ -15,7 +15,7 @@ app:
       opts:
         is_expand: false
     # define these envs in your .bitrise.secrets.yml
-    - SSH_RSA_PRIVATE_KEY: $SSH_RSA_PRIVATE_KEY
+    - GIT_CLONE_SSH_PRIVATE_KEY: $GIT_CLONE_SSH_PRIVATE_KEY
 
 workflows:
   test:
@@ -27,6 +27,8 @@ workflows:
     steps:
       - activate-ssh-key:
           run_if: true
+          inputs:
+          - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
 
   ci:
     envs:
@@ -38,6 +40,8 @@ workflows:
     steps:
       - activate-ssh-key:
           # run_if: true
+          inputs:
+          - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
     after_run:
       - _test_generate_changelog
       - _test_error
