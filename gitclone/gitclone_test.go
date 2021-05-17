@@ -648,19 +648,35 @@ var submoduleTestCases = [...]struct {
 	wantCmds []string
 }{
 	{
-		name: "Limiting submodule depth",
-		cfg: Config{
-			LimitSubmoduleUpdateDepth: true,
-		},
+		name: "Given submodule update depth is 1 when the submodules are updated then expect the --depth=1 flag on the command",
+		cfg:  Config{SubmoduleUpdateDepth: 1},
 		wantCmds: []string{
 			`git "submodule" "update" "--init" "--recursive" "--jobs=10" "--depth=1"`,
 		},
 	},
 	{
-		name: "Not limiting submodule depth",
-		cfg: Config{
-			LimitSubmoduleUpdateDepth: false,
+		name: "Given submodule update depth is 10 when the submodules are updated then expect the --depth=10 flag on the command",
+		cfg:  Config{SubmoduleUpdateDepth: 10},
+		wantCmds: []string{
+			`git "submodule" "update" "--init" "--recursive" "--jobs=10" "--depth=10"`,
 		},
+	},
+	{
+		name: "Given no submodule update depth is provided when the submodules are updated then expect the --depth flag missing from the command",
+		wantCmds: []string{
+			`git "submodule" "update" "--init" "--recursive" "--jobs=10"`,
+		},
+	},
+	{
+		name: "Given submodule update depth is 0 when the submodules are updated then expect the --depth flag missing from the command",
+		cfg:  Config{SubmoduleUpdateDepth: 0},
+		wantCmds: []string{
+			`git "submodule" "update" "--init" "--recursive" "--jobs=10"`,
+		},
+	},
+	{
+		name: "Given submodule update depth is -1 when the submodules are updated then expect the --depth flag missing from the command",
+		cfg:  Config{SubmoduleUpdateDepth: -1},
 		wantCmds: []string{
 			`git "submodule" "update" "--init" "--recursive" "--jobs=10"`,
 		},
