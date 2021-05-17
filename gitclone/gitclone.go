@@ -95,7 +95,7 @@ func updateSubmodules(gitCmd git.Git, cfg Config) error {
 	var opts []string
 	opts = append(opts, jobsFlag)
 
-	if cfg.SubmoduleUpdateDepth != 0 {
+	if cfg.SubmoduleUpdateDepth > 0 {
 		opts = append(opts, fmt.Sprintf("--depth=%d", cfg.SubmoduleUpdateDepth))
 	}
 
