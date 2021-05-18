@@ -2,7 +2,6 @@ package gitclone
 
 import (
 	"fmt"
-
 	"github.com/bitrise-io/envman/envman"
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command/git"
@@ -23,12 +22,12 @@ type Config struct {
 	PRMergeBranch         string `env:"pull_request_merge_branch"`
 	PRHeadBranch          string `env:"pull_request_head_branch"`
 
-	ResetRepository           bool     `env:"reset_repository,opt[Yes,No]"`
-	CloneDepth                int      `env:"clone_depth"`
-	FetchTags                 bool     `env:"fetch_tags,opt[yes,no]"`
-	LimitSubmoduleUpdateDepth bool     `env:"limit_submodule_update_depth,opt[yes,no]"`
-	ShouldMergePR             bool     `env:"merge_pr,opt[yes,no]"`
-	SparseDirectories         []string `env:"sparse_directories,multiline"`
+	ResetRepository      bool     `env:"reset_repository,opt[Yes,No]"`
+	CloneDepth           int      `env:"clone_depth"`
+	FetchTags            bool     `env:"fetch_tags,opt[yes,no]"`
+	SubmoduleUpdateDepth int      `env:"submodule_update_depth"`
+	ShouldMergePR        bool     `env:"merge_pr,opt[yes,no]"`
+	SparseDirectories    []string `env:"sparse_directories,multiline"`
 
 	BuildURL         string `env:"build_url"`
 	BuildAPIToken    string `env:"build_api_token"`
@@ -93,7 +92,14 @@ func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) error {
 }
 
 func updateSubmodules(gitCmd git.Git, cfg Config) error {
-	if err := runner.Run(gitCmd.SubmoduleUpdate(cfg.LimitSubmoduleUpdateDepth, jobsFlag)); err != nil {
+	var opts []string
+	opts = append(opts, jobsFlag)
+
+	if cfg.SubmoduleUpdateDepth > 0 {
+		opts = append(opts, fmt.Sprintf("--depth=%d", cfg.SubmoduleUpdateDepth))
+	}
+
+	if err := runner.Run(gitCmd.SubmoduleUpdate(opts...)); err != nil {
 		return newStepError(
 			updateSubmodelFailedTag,
 			fmt.Errorf("submodule update: %v", err),

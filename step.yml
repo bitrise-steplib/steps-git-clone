@@ -112,14 +112,13 @@ inputs:
       description: |-
         Limit fetching to the specified number of commits.
         The value should be a decimal number, for example `10`.
-  - limit_submodule_update_depth: "yes"
+  - submodule_update_depth:
     opts:
       category: "Checkout options"
-      title: "Shallow update submodules"
-      summary: "Should submodules be shallow cloned with a history truncated to the latest revisions."
-      value_options:
-        - "yes"
-        - "no"
+      title: "Submodule update depth"
+      description: |-
+        Truncate the history to the specified number of revisions.
+        The value should be a decimal number, for example `10`.
   - merge_pr: "yes"
     opts:
       category: "Checkout options"
