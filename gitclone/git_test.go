@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/bitrise-io/bitrise-init/errormapper"
-	"github.com/bitrise-io/bitrise-init/step"
+	"github.com/bitrise-io/go-steputils/step"
 )
 
 func TestFetchArg(t *testing.T) {

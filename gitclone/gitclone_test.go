@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bitrise-io/bitrise-init/step"
+	"github.com/bitrise-io/go-steputils/step"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/stretchr/testify/assert"
 )

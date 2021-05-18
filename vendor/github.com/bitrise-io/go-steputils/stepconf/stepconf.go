@@ -86,7 +86,7 @@ func toString(config interface{}) string {
 		t = t.Elem()
 	}
 
-	str := fmt.Sprintf(colorstring.Bluef("%s:\n", strings.Title(t.Name())))
+	str := fmt.Sprint(colorstring.Bluef("%s:\n", strings.Title(t.Name())))
 	for i := 0; i < t.NumField(); i++ {
 		str += fmt.Sprintf("- %s: %s\n", t.Field(i).Name, valueString(v.Field(i)))
 	}
@@ -174,6 +174,7 @@ func setField(field reflect.Value, value, constraint string) error {
 		}
 		field.SetInt(n)
 	case reflect.Float64:
+		value = strings.TrimSpace(value)
 		f, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return errors.New("can't convert to float")
