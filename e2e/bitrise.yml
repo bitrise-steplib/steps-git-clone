@@ -30,7 +30,7 @@ workflows:
       - BITRISE_GIT_COMMIT: a409478
       - NEW_VERSON: "0.1.1"
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -38,16 +38,9 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
             - commit: $BITRISE_GIT_COMMIT
-            - tag: ""
             - branch: "test/generate-changelog"
             - fetch_tags: "yes"
             - update_submodules: "no"
-            # clear unrelated inputs
-            - branch_dest: ""
-            - pull_request_id: ""
-            - pull_request_repository_url: ""
-            - pull_request_merge_branch: ""
-            - pull_request_head_branch: ""
     after_run:
       - _assert_changelog
 
@@ -56,24 +49,17 @@ workflows:
       - BITRISE_GIT_TAG: "0.1.1"
       - NEW_VERSON: $BITRISE_GIT_TAG
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
           inputs:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
-            - commit: ""
             - tag: $BITRISE_GIT_TAG
             - branch: "test/generate-changelog"
             - fetch_tags: "yes"
             - update_submodules: "no"
-            # clear unrelated inputs
-            - branch_dest: ""
-            - pull_request_id: ""
-            - pull_request_repository_url: ""
-            - pull_request_merge_branch: ""
-            - pull_request_head_branch: ""
     after_run:
       - _assert_changelog
 
@@ -103,21 +89,16 @@ workflows:
 
   test_submodule:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
           inputs:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
-            - commit: ""
-            - tag: ""
             - branch: "master"
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
             - clone_depth: ""
+            - update_submodules: "yes"
       - script:
           inputs:
             - content: |-
@@ -129,21 +110,14 @@ workflows:
 
   utility_error_test:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
           inputs:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
-            - commit: ""
-            - tag: ""
             - branch: "fake"
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
-            - clone_depth: ""
       - script:
           inputs:
             - content: |-
@@ -167,7 +141,7 @@ workflows:
 
   test_no_checkout:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -177,11 +151,6 @@ workflows:
             - commit: ""
             - tag: ""
             - branch: ""
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
-            - clone_depth: ""
       - script:
           inputs:
             - content: |-
@@ -193,7 +162,7 @@ workflows:
 
   test_checkout_commit:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -201,12 +170,6 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
             - commit: 7a93251a9bf08fb8c6b19fc02f6d94618de6b386
-            - tag: ""
-            - branch: ""
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
             - clone_depth: ""
             - update_submodules: "no"
       - script:
@@ -220,7 +183,7 @@ workflows:
 
   test_checkout_commit_on_branch:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -228,12 +191,7 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
             - commit: 7a93251a9bf08fb8c6b19fc02f6d94618de6b386
-            - tag: ""
             - branch: "master"
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
             - clone_depth: ""
       - script:
           inputs:
@@ -246,7 +204,7 @@ workflows:
 
   test_checkout_tag:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -254,12 +212,6 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
             - tag: 0.9.2
-            - commit: ""
-            - branch: ""
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
             - clone_depth: ""
             - fetch_tags: "no"
       - script:
@@ -273,7 +225,7 @@ workflows:
 
   test_checkout_tag_with_other_branch:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -281,12 +233,7 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
             - tag: 0.9.2
-            - commit: ""
             - branch: "carthage"
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
             - clone_depth: "1"
             - fetch_tags: "yes"
       - script:
@@ -300,7 +247,7 @@ workflows:
 
   test_checkout_tag_with_equally_named_branch:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -308,12 +255,7 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
             - tag: pr_test_new
-            - commit: ""
             - branch: "pr_test_new"
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
             - clone_depth: ""
       - script:
           inputs:
@@ -326,7 +268,7 @@ workflows:
 
   test_checkout_branch:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -334,12 +276,6 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
             - branch: master
-            - commit: ""
-            - tag: ""
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
             - clone_depth: ""
       - script:
           inputs:
@@ -352,7 +288,7 @@ workflows:
 
   test_checkout_different_dir:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - script:
           inputs:
@@ -363,13 +299,6 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $STEP_TMPDIR_NEW
             - branch: master
-            - commit: ""
-            - tag: ""
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
-            - clone_depth: ""
       - script:
           inputs:
             - content: |-
@@ -379,9 +308,9 @@ workflows:
           inputs:
             - dir_to_check: $STEP_TMPDIR_NEW
 
-  test_checkout_pull_request:
+  test_checkout_gtihub_pull_request:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -390,12 +319,9 @@ workflows:
             - clone_into_dir: $WORKDIR
             - pull_request_id: 5
             - pull_request_merge_branch: "pull/5/merge"
+            - pull_request_head_branch: "pull/5/head"
             - pull_request_repository_url: ""
             - branch_dest: "master"
-            - commit: ""
-            - tag: ""
-            - branch: ""
-            - clone_depth: ""
             - manual_merge: "no"
       - script:
           inputs:
@@ -408,7 +334,7 @@ workflows:
 
   test_checkout_pull_request_no_merge:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: "true"
@@ -421,9 +347,6 @@ workflows:
             - pull_request_repository_url: ""
             - branch_dest: "master"
             - commit: "4301a9b8499ed3e87778dd053c55fd698d0a3b7e"
-            - tag: ""
-            - branch: ""
-            - clone_depth: ""
             - manual_merge: "no"
             - merge_pr: "no"
       - script:
@@ -437,7 +360,7 @@ workflows:
 
   test_checkout_pull_request_standard_branch:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -447,10 +370,6 @@ workflows:
             - pull_request_merge_branch: "pr_test"
             - pull_request_repository_url: ""
             - branch_dest: "master"
-            - commit: ""
-            - tag: ""
-            - branch: ""
-            - clone_depth: ""
             - manual_merge: "no"
       - script:
           inputs:
@@ -463,7 +382,7 @@ workflows:
 
   test_checkout_pull_request_with_depth:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -472,11 +391,9 @@ workflows:
             - clone_into_dir: $WORKDIR
             - pull_request_id: 5
             - pull_request_merge_branch: "pull/5/merge"
+            - pull_request_head_branch: "pull/5/head"
             - pull_request_repository_url: ""
             - branch_dest: "master"
-            - commit: ""
-            - tag: ""
-            - branch: ""
             - clone_depth: 1
             - manual_merge: "no"
       - script:
@@ -490,7 +407,7 @@ workflows:
 
   test_manual_merge_unshallow:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -499,10 +416,10 @@ workflows:
             - clone_into_dir: $WORKDIR
             - pull_request_id: 7
             - pull_request_merge_branch: "pull/7/merge"
+            - pull_request_head_branch: "pull/7/head"
             - pull_request_repository_url: ""
             - branch_dest: "master"
             - commit: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
-            - tag: ""
             - branch: "test/commit-messages"
             - clone_depth: "1"
       - script:
@@ -516,7 +433,7 @@ workflows:
 
   test_unshallow:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -525,12 +442,6 @@ workflows:
             - clone_into_dir: $WORKDIR
             - commit: cfba2b01332e31cb1568dbf3f22edce063118bae
             - clone_depth: 1
-            - tag: ""
-            - branch: ""
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
       - script:
           inputs:
             - content: |-
@@ -542,7 +453,7 @@ workflows:
 
   test_commit_logs:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -550,13 +461,7 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
             - commit: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
-            - tag: ""
             - branch: "test/commit-messages"
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
-            - clone_depth: ""
       - script:
           inputs:
             - content: |-
@@ -586,22 +491,20 @@ workflows:
 
   test_hosted_git_ssh_prefix:
     before_run:
-      # - _activate_ssh_key
-      - _create_tmpdir
+      - _activate_ssh_key
+      - _prepare
     steps:
       - path::./:
           run_if: true
           inputs:
             - repository_url: "ssh://git@gitlab.com:22/bitrise/git-clone-test.git"
             - clone_into_dir: $WORKDIR
-            - pull_request_id:
-            - pull_request_merge_branch:
+            - pull_request_id: ""
+            - pull_request_merge_branch: ""
             - pull_request_repository_url: "git@gitlab.com:bitrise/git-clone-test.git"
             - branch_dest: "master"
             - commit: "8d558357cf085bc26af23b88f6bc4c07e175b8ac"
-            - tag: ""
             - branch: "develop"
-            - clone_depth: ""
       - script:
           inputs:
             - content: |-
@@ -614,7 +517,7 @@ workflows:
   test_hosted_git_notfork:
     before_run:
       - _activate_ssh_key
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -626,9 +529,7 @@ workflows:
             - pull_request_repository_url: "git@github.com:bitrise-io/git-clone-test.git"
             - branch_dest: "master"
             - commit: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
-            - tag: ""
             - branch: "test/commit-messages"
-            - clone_depth: ""
       - script:
           inputs:
             - content: |-
@@ -640,7 +541,7 @@ workflows:
 
   test_unrelated_histories:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -652,8 +553,6 @@ workflows:
             - pull_request_repository_url: $TEST_REPO_URL
             - branch_dest: "unrelated-histories/master"
             - commit: "62af44590c7a2b937726f2c3024a88a129b330b5"
-            - tag: ""
-            - branch: ""
             - clone_depth: "1"
             - manual_merge: "no"
       - script:
@@ -667,7 +566,7 @@ workflows:
 
   test_diff_file:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - script:
           inputs:
@@ -718,7 +617,6 @@ workflows:
             - branch_dest: "master"
             - branch: "master"
             - commit: "c6810e6"
-            - tag: ""
             - clone_depth: "1"
             - manual_merge: "no"
       - script:
@@ -731,21 +629,14 @@ workflows:
 
   test_sparse_checkout_branch:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
           inputs:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
-            - commit: ""
-            - tag: ""
             - branch: "master"
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
-            - clone_depth: ""
             - sparse_directories: |-
                 git-clone-sample
       - script:
@@ -759,7 +650,7 @@ workflows:
 
   test_sparse_checkout_commit_on_branch:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -767,13 +658,7 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
             - commit: 7a93251a9bf08fb8c6b19fc02f6d94618de6b386
-            - tag: ""
             - branch: "master"
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
-            - clone_depth: ""
             - sparse_directories: |-
                 git-clone-sample
       - script:
@@ -787,7 +672,7 @@ workflows:
 
   test_sparse_checkout_unshallow:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -796,12 +681,6 @@ workflows:
             - clone_into_dir: $WORKDIR
             - commit: cfba2b01332e31cb1568dbf3f22edce063118bae
             - clone_depth: 1
-            - tag: ""
-            - branch: ""
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
             - sparse_directories: |-
                 git-clone-sample
       - script:
@@ -816,7 +695,7 @@ workflows:
   # Run this test last to avoid overriding env
   test_too_long_commit_message:
     before_run:
-      - _create_tmpdir
+      - _prepare
     steps:
       - path::./:
           run_if: true
@@ -824,13 +703,6 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
             - commit: "2e8cb1e06cda054e6eb861e56761acd52441cd86"
-            - branch: ""
-            - tag: ""
-            - pull_request_id: ""
-            - pull_request_merge_branch: ""
-            - pull_request_repository_url: ""
-            - branch_dest: ""
-            - clone_depth: ""
       - script:
           inputs:
             - content: |-
@@ -849,16 +721,38 @@ workflows:
           inputs:
             - dir_to_check: $WORKDIR
 
-  _create_tmpdir:
+  _prepare:
     steps:
       - script:
           inputs:
-            - content: envman add --key STEP_TMPDIR --value $(mktemp -d -t step-git-cloneXXXXXX)
+            - title: Create temporary dir
+            - content: |-
+                #!/bin/env bash
+                set -ex
+                envman add --key STEP_TMPDIR --value $(mktemp -d -t step-git-cloneXXXXXX)
       - change-workdir:
           title: Change directory to a temporary directory
           is_always_run: true
           inputs:
             - path: $STEP_TMPDIR
+      - script:
+          title: Clear environment variables set by bitrise.io, to not interfere with tests
+          inputs:
+            - content: |-
+                #!/bin/env bash
+                set -ex
+                envman unset --key GIT_REPOSITORY_URL
+                envman unset --key BITRISE_SOURCE_DIR
+                envman unset --key BITRISE_GIT_COMMIT
+                envman unset --key BITRISE_GIT_TAG
+                envman unset --key BITRISE_GIT_BRANCH
+                envman unset --key BITRISEIO_GIT_BRANCH_DEST
+                envman unset --key PULL_REQUEST_ID
+                envman unset --key BITRISEIO_PULL_REQUEST_REPOSITORY_URL
+                envman unset --key BITRISEIO_PULL_REQUEST_MERGE_BRANCH
+                envman unset --key BITRISEIO_PULL_REQUEST_HEAD_BRANCH
+                envman unset --key BITRISE_BUILD_URL
+                envman unset --key BITRISE_BUILD_API_TOKEN
 
   _activate_ssh_key:
     steps:
