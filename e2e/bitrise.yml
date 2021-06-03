@@ -56,7 +56,7 @@ workflows:
     steps:
       - generate-changelog:
           inputs:
-            - workdir: $WORKDIR
+            - working_dir: $WORKDIR
             - new_version: "$NEW_VERSON"
       - script:
           inputs:
@@ -463,10 +463,10 @@ workflows:
             - content: |-
                 #!/bin/env bash
                 set -ex
-                DIFF_DIR=$(pwd)/diff_dir
-                GIT_DIR=$(pwd)/repoA
-                PR_GIT_DIR=$(pwd)/repoB
-                CLONE_DIR=$(pwd)/cloneDir
+                DIFF_DIR=$WORKDIR/diff_dir
+                GIT_DIR=$WORKDIR/repoA
+                PR_GIT_DIR=$WORKDIR/repoB
+                CLONE_DIR=$WORKDIR/cloneDir
                 mkdir ${GIT_DIR}
                 mkdir ${PR_GIT_DIR}
                 mkdir ${DIFF_DIR}
@@ -500,7 +500,7 @@ workflows:
           run_if: true
           inputs:
             - repository_url: $TEST_REPO_URL
-            - clone_into_dir: $WORKDIR
+            - clone_into_dir: $CLONE_INTO_DIR
             - pull_request_id: 8
             - pull_request_repository_url: $PR_REPOSITORY_URL
             - pull_request_merge_branch: ""
@@ -616,6 +616,7 @@ workflows:
             - content: |-
                 #!/bin/env bash
                 set -ex
+                # Inputs
                 envman unset --key GIT_REPOSITORY_URL
                 envman unset --key BITRISE_SOURCE_DIR
                 envman unset --key BITRISE_GIT_COMMIT
@@ -628,6 +629,15 @@ workflows:
                 envman unset --key BITRISEIO_PULL_REQUEST_HEAD_BRANCH
                 envman unset --key BITRISE_BUILD_URL
                 envman unset --key BITRISE_BUILD_API_TOKEN
+                # Outputs
+                envman unset --key GIT_CLONE_COMMIT_HASH
+                envman unset --key GIT_CLONE_COMMIT_MESSAGE_SUBJECT
+                envman unset --key GIT_CLONE_COMMIT_MESSAGE_BODY
+                envman unset --key GIT_CLONE_COMMIT_COUNT
+                envman unset --key GIT_CLONE_COMMIT_AUTHOR_NAME
+                envman unset --key GIT_CLONE_COMMIT_AUTHOR_EMAIL
+                envman unset --key GIT_CLONE_COMMIT_COMMITER_NAME
+                envman unset --key GIT_CLONE_COMMIT_COMMITER_EMAIL
 
   _log_outputs:
     steps:  
