@@ -56,6 +56,7 @@ workflows:
     steps:
       - generate-changelog:
           inputs:
+            - workdir: $WORKDIR
             - new_version: "$NEW_VERSON"
       - script:
           inputs:
@@ -651,3 +652,4 @@ workflows:
       - activate-ssh-key:
           inputs:
           - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
+
