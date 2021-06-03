@@ -5,17 +5,6 @@ app:
   envs:
     - WORKDIR: .
     - TEST_REPO_URL: https://github.com/bitrise-io/git-clone-test.git
-    - LOG_OUTPUTS_SCRIPT: |-
-        echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
-        echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
-        echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
-        echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
-        echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
-        echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
-        echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
-        echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
-      opts:
-        is_expand: false
     # define these envs in your .bitrise.secrets.yml
     - GIT_CLONE_SSH_PRIVATE_KEY: $GIT_CLONE_SSH_PRIVATE_KEY
 
@@ -100,14 +89,8 @@ workflows:
             - branch: "master"
             - clone_depth: ""
             - update_submodules: "yes"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   utility_error_test:
     before_run:
@@ -119,14 +102,8 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
             - branch: "fake"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_error:
     steps:
@@ -152,14 +129,8 @@ workflows:
             - commit: ""
             - tag: ""
             - branch: ""
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_checkout_commit:
     before_run:
@@ -173,14 +144,8 @@ workflows:
             - commit: 7a93251a9bf08fb8c6b19fc02f6d94618de6b386
             - clone_depth: ""
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_checkout_commit_on_branch:
     before_run:
@@ -195,14 +160,8 @@ workflows:
             - branch: "master"
             - clone_depth: ""
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_checkout_tag:
     before_run:
@@ -217,14 +176,8 @@ workflows:
             - clone_depth: ""
             - fetch_tags: "no"
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_checkout_tag_with_other_branch:
     before_run:
@@ -240,14 +193,8 @@ workflows:
             - clone_depth: "1"
             - fetch_tags: "yes"
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_checkout_tag_with_equally_named_branch:
     before_run:
@@ -262,14 +209,8 @@ workflows:
             - branch: "pr_test_new"
             - clone_depth: ""
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_checkout_branch:
     before_run:
@@ -283,14 +224,8 @@ workflows:
             - branch: master
             - clone_depth: ""
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_checkout_different_dir:
     before_run:
@@ -306,14 +241,8 @@ workflows:
             - clone_into_dir: $STEP_TMPDIR_NEW
             - branch: master
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $STEP_TMPDIR_NEW
+    after_run:
+      - _log_outputs
 
   test_checkout_gtihub_pull_request:
     before_run:
@@ -331,14 +260,8 @@ workflows:
             - branch_dest: "master"
             - manual_merge: "no"
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_checkout_pull_request_no_merge:
     before_run:
@@ -358,14 +281,8 @@ workflows:
             - manual_merge: "no"
             - merge_pr: "no"
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_checkout_pull_request_standard_branch:
     before_run:
@@ -381,14 +298,8 @@ workflows:
             - branch_dest: "master"
             - manual_merge: "no"
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_checkout_pull_request_with_depth:
     before_run:
@@ -407,14 +318,8 @@ workflows:
             - branch_dest: "master"
             - clone_depth: 1
             - manual_merge: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_manual_merge_unshallow:
     before_run:
@@ -434,14 +339,8 @@ workflows:
             - branch: "test/commit-messages"
             - clone_depth: "1"
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_unshallow:
     before_run:
@@ -455,14 +354,8 @@ workflows:
             - commit: cfba2b01332e31cb1568dbf3f22edce063118bae
             - clone_depth: 1
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_commit_logs:
     before_run:
@@ -498,7 +391,6 @@ workflows:
                 check "GIT_CLONE_COMMIT_AUTHOR_EMAIL" "krisztian.dobmayer@bitrise.io"
                 check "GIT_CLONE_COMMIT_COMMITER_NAME" "Krisztian Dobmayer"
                 check "GIT_CLONE_COMMIT_COMMITER_EMAIL" "krisztian.dobmayer@bitrise.io"
-
       - ensure-clean-git:
           inputs:
             - dir_to_check: $WORKDIR
@@ -519,14 +411,8 @@ workflows:
             - branch_dest: "master"
             - commit: "8d558357cf085bc26af23b88f6bc4c07e175b8ac"
             - branch: "develop"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_hosted_git_notfork:
     before_run:
@@ -544,14 +430,8 @@ workflows:
             - branch_dest: "master"
             - commit: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
             - branch: "test/commit-messages"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_unrelated_histories:
     before_run:
@@ -570,14 +450,8 @@ workflows:
             - clone_depth: "1"
             - manual_merge: "no"
             - update_submodules: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_diff_file:
     before_run:
@@ -655,14 +529,8 @@ workflows:
             - branch: "master"
             - sparse_directories: |-
                 git-clone-sample
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_sparse_checkout_commit_on_branch:
     before_run:
@@ -678,14 +546,8 @@ workflows:
             - branch: "master"
             - sparse_directories: |-
                 git-clone-sample
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
   test_sparse_checkout_unshallow:
     before_run:
@@ -701,16 +563,9 @@ workflows:
             - clone_depth: 1
             - sparse_directories: |-
                 git-clone-sample
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                eval "$LOG_OUTPUTS_SCRIPT"
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR
+    after_run:
+      - _log_outputs
 
-  # Run this test last to avoid overriding env
   test_too_long_commit_message:
     before_run:
       - _prepare
@@ -772,6 +627,24 @@ workflows:
                 envman unset --key BITRISEIO_PULL_REQUEST_HEAD_BRANCH
                 envman unset --key BITRISE_BUILD_URL
                 envman unset --key BITRISE_BUILD_API_TOKEN
+
+  _log_outputs:
+    steps:  
+      - script:
+          inputs:
+            - content: |-
+                #!/bin/env bash
+                echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+                echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+                echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+                echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
+                echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+                echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+                echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+                echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+      - ensure-clean-git:
+          inputs:
+            - dir_to_check: $WORKDIR
 
   _activate_ssh_key:
     steps:
