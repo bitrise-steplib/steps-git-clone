@@ -89,6 +89,7 @@ workflows:
 
   test_submodule:
     before_run:
+      - _activate_ssh_key
       - _prepare
     steps:
       - path::./:
@@ -193,6 +194,7 @@ workflows:
             - commit: 7a93251a9bf08fb8c6b19fc02f6d94618de6b386
             - branch: "master"
             - clone_depth: ""
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -214,6 +216,7 @@ workflows:
             - tag: 0.9.2
             - clone_depth: ""
             - fetch_tags: "no"
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -236,6 +239,7 @@ workflows:
             - branch: "carthage"
             - clone_depth: "1"
             - fetch_tags: "yes"
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -257,6 +261,7 @@ workflows:
             - tag: pr_test_new
             - branch: "pr_test_new"
             - clone_depth: ""
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -277,6 +282,7 @@ workflows:
             - clone_into_dir: $WORKDIR
             - branch: master
             - clone_depth: ""
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -299,6 +305,7 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $STEP_TMPDIR_NEW
             - branch: master
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -323,6 +330,7 @@ workflows:
             - pull_request_repository_url: ""
             - branch_dest: "master"
             - manual_merge: "no"
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -349,6 +357,7 @@ workflows:
             - commit: "4301a9b8499ed3e87778dd053c55fd698d0a3b7e"
             - manual_merge: "no"
             - merge_pr: "no"
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -371,6 +380,7 @@ workflows:
             - pull_request_repository_url: ""
             - branch_dest: "master"
             - manual_merge: "no"
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -382,6 +392,7 @@ workflows:
 
   test_checkout_pull_request_with_depth:
     before_run:
+      - _activate_ssh_key
       - _prepare
     steps:
       - path::./:
@@ -422,6 +433,7 @@ workflows:
             - commit: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
             - branch: "test/commit-messages"
             - clone_depth: "1"
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -442,6 +454,7 @@ workflows:
             - clone_into_dir: $WORKDIR
             - commit: cfba2b01332e31cb1568dbf3f22edce063118bae
             - clone_depth: 1
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -462,6 +475,7 @@ workflows:
             - clone_into_dir: $WORKDIR
             - commit: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
             - branch: "test/commit-messages"
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -555,6 +569,7 @@ workflows:
             - commit: "62af44590c7a2b937726f2c3024a88a129b330b5"
             - clone_depth: "1"
             - manual_merge: "no"
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
@@ -629,6 +644,7 @@ workflows:
 
   test_sparse_checkout_branch:
     before_run:
+      - _activate_ssh_key
       - _prepare
     steps:
       - path::./:
@@ -650,6 +666,7 @@ workflows:
 
   test_sparse_checkout_commit_on_branch:
     before_run:
+      - _activate_ssh_key
       - _prepare
     steps:
       - path::./:
@@ -672,6 +689,7 @@ workflows:
 
   test_sparse_checkout_unshallow:
     before_run:
+      - _activate_ssh_key
       - _prepare
     steps:
       - path::./:
@@ -703,6 +721,7 @@ workflows:
             - repository_url: $TEST_REPO_URL
             - clone_into_dir: $WORKDIR
             - commit: "2e8cb1e06cda054e6eb861e56761acd52441cd86"
+            - update_submodules: "no"
       - script:
           inputs:
             - content: |-
