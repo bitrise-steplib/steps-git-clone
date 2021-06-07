@@ -13,6 +13,12 @@ workflows:
     steps:
     - git::https://github.com/bitrise-steplib/steps-check.git: {}
 
+  e2e:
+    steps:
+    - git::https://github.com/bitrise-steplib/steps-check.git:
+        inputs:
+        - workflow: e2e
+
   sample:
     steps:
       - activate-ssh-key:
