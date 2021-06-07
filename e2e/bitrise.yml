@@ -3,6 +3,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
+    - ORIG_WORDIR: $BITRISE_SOURCE_DIR
     - WORKDIR: .
     - TEST_REPO_URL: https://github.com/bitrise-io/git-clone-test.git
     # define these envs in your .bitrise.secrets.yml
@@ -228,20 +229,22 @@ workflows:
     after_run:
       - _log_outputs
 
-  test_checkout_different_dir:
+  test_checkout_current_dir:
     before_run:
       - _prepare
     steps:
-      - script:
+      - change-workdir:
           inputs:
-            - content: envman add --key STEP_TMPDIR_NEW --value $(mktemp -d -t step-git-cloneXXXXXX)
+            - path: $WORKDIR
       - path::./:
           run_if: true
           inputs:
             - repository_url: $TEST_REPO_URL
-            - clone_into_dir: $STEP_TMPDIR_NEW
             - branch: master
             - update_submodules: "no"
+      - change-workdir:
+          inputs:
+            - path: $ORIG_WORDIR
     after_run:
       - _log_outputs
 
@@ -604,12 +607,12 @@ workflows:
             - content: |-
                 #!/bin/env bash
                 set -ex
-                envman add --key STEP_TMPDIR --value $(mktemp -d -t step-git-cloneXXXXXX)
-      - change-workdir:
-          title: Change directory to a temporary directory
-          is_always_run: true
-          inputs:
-            - path: $STEP_TMPDIR
+                envman add --key WORKDIR --value $(mktemp -d -t step-git-cloneXXXXXX)
+      # - change-workdir:
+      #     title: Change directory to a temporary directory
+      #     is_always_run: true
+      #     inputs:
+      #       - path: $STEP_TMPDIR
       - script:
           title: Clear environment variables set by bitrise.io, to not interfere with tests
           inputs:
@@ -618,7 +621,6 @@ workflows:
                 set -ex
                 # Inputs
                 envman unset --key GIT_REPOSITORY_URL
-                envman unset --key BITRISE_SOURCE_DIR
                 envman unset --key BITRISE_GIT_COMMIT
                 envman unset --key BITRISE_GIT_TAG
                 envman unset --key BITRISE_GIT_BRANCH
