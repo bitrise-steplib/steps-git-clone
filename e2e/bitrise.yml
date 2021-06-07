@@ -245,7 +245,7 @@ workflows:
     after_run:
       - _log_outputs
 
-  test_checkout_gtihub_pull_request:
+  test_checkout_github_pull_request:
     before_run:
       - _prepare
     steps:
@@ -660,6 +660,7 @@ workflows:
   _activate_ssh_key:
     steps:
       - activate-ssh-key:
+          run_if: true
           inputs:
           - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
 
