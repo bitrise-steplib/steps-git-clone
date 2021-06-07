@@ -495,17 +495,17 @@ workflows:
                 cd -
 
                 # Set envs
-                envman add --key CLONE_INTO_DIR --value ${CLONE_DIR}
-                envman add --key TEST_REPO_URL --value ${GIT_DIR}
-                envman add --key PR_REPOSITORY_URL --value ${PR_GIT_DIR}
+                envman add --key TEST_DIFF_CLONE_DIR --value ${CLONE_DIR}
+                envman add --key TEST_DIFF_REPO_URL --value ${GIT_DIR}
+                envman add --key TEST_DIFF_PR_REPOSITORY_URL --value ${PR_GIT_DIR}
                 envman add --key BITRISE_BUILD_URL --value "file://${DIFF_DIR}"
       - path::./:
           run_if: true
           inputs:
-            - repository_url: $TEST_REPO_URL
-            - clone_into_dir: $CLONE_INTO_DIR
+            - repository_url: $TEST_DIFF_REPO_URL
+            - clone_into_dir: $TEST_DIFF_CLONE_DIR
             - pull_request_id: 8
-            - pull_request_repository_url: $PR_REPOSITORY_URL
+            - pull_request_repository_url: $TEST_DIFF_PR_REPOSITORY_URL
             - pull_request_merge_branch: ""
             - branch_dest: "master"
             - branch: "master"
@@ -608,11 +608,6 @@ workflows:
                 #!/bin/env bash
                 set -ex
                 envman add --key WORKDIR --value $(mktemp -d -t step-git-cloneXXXXXX)
-      # - change-workdir:
-      #     title: Change directory to a temporary directory
-      #     is_always_run: true
-      #     inputs:
-      #       - path: $STEP_TMPDIR
       - script:
           title: Clear environment variables set by bitrise.io, to not interfere with tests
           inputs:
@@ -621,6 +616,7 @@ workflows:
                 set -ex
                 # Inputs
                 envman unset --key GIT_REPOSITORY_URL
+                envman set --key BITRISE_SOURCE_DIR --value $ORIG_WORDIR
                 envman unset --key BITRISE_GIT_COMMIT
                 envman unset --key BITRISE_GIT_TAG
                 envman unset --key BITRISE_GIT_BRANCH
@@ -662,7 +658,7 @@ workflows:
   _activate_ssh_key:
     steps:
       - activate-ssh-key:
-          run_if: true
+          run_if: '{{getenv "GIT_CLONE_SSH_PRIVATE_KEY" | ne ""}}'
           inputs:
           - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
 
