@@ -5,26 +5,14 @@ app:
   envs:
     - TEST_APP_URL: https://github.com/bitrise-io/git-clone-test.git
     - TEST_APP_BRANCH: master
-    - SHOULD_ACTIVATE_SSH_KEY: true # Set to true to test with private repository
-    - GIT_CLONE_SSH_PRIVATE_KEY: $GIT_CLONE_SSH_PRIVATE_KEY # Define in your .bitrise.secrets.yml to test with private repository
-
 workflows:
   check:
     steps:
     - git::https://github.com/bitrise-steplib/steps-check.git: {}
 
-  e2e:
-    steps:
-    - git::https://github.com/bitrise-steplib/steps-check.git:
-        inputs:
-        - workflow: e2e
 
   sample:
     steps:
-      - activate-ssh-key:
-          run_if: '{{getenv "SHOULD_ACTIVATE_SSH_KEY"}}'
-          inputs:
-            - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
       - script:
           inputs:
             - content: envman add --key STEP_TMPDIR --value $(mktemp -d -t step-git-cloneXXXXXX)
@@ -38,16 +26,9 @@ workflows:
             - clone_into_dir: .
             - repository_url: $TEST_APP_URL
             - branch: $TEST_APP_BRANCH
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
-                echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
-                echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
-                echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
-                echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
-                echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
-                echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
-                echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
 
+  e2e:
+    steps:
+    - git::https://github.com/bitrise-steplib/steps-check.git:
+        inputs:
+        - workflow: e2e

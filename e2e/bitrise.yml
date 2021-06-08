@@ -20,7 +20,7 @@ workflows:
       - BITRISE_GIT_COMMIT: a409478
       - NEW_VERSON: "0.1.1"
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -32,14 +32,14 @@ workflows:
             - fetch_tags: "yes"
             - update_submodules: "no"
     after_run:
-      - _assert_changelog
+      - _check_changelog
 
   utility_test_generate_changelog_by_tag:
     envs:
       - BITRISE_GIT_TAG: "0.1.1"
       - NEW_VERSON: $BITRISE_GIT_TAG
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -51,9 +51,9 @@ workflows:
             - fetch_tags: "yes"
             - update_submodules: "no"
     after_run:
-      - _assert_changelog
+      - _check_changelog
 
-  _assert_changelog:
+  _check_changelog:
     steps:
       - generate-changelog:
           inputs:
@@ -81,7 +81,7 @@ workflows:
   test_submodule:
     before_run:
       - _activate_ssh_key
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -92,12 +92,12 @@ workflows:
             - clone_depth: ""
             - update_submodules: "yes"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   utility_error_test:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -106,8 +106,8 @@ workflows:
             - clone_into_dir: $WORKDIR
             - branch: "fake"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_error:
     steps:
@@ -123,7 +123,7 @@ workflows:
 
   test_no_checkout:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -134,12 +134,12 @@ workflows:
             - tag: ""
             - branch: ""
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_checkout_commit:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -150,12 +150,12 @@ workflows:
             - clone_depth: ""
             - update_submodules: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_checkout_commit_on_branch:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -167,12 +167,12 @@ workflows:
             - clone_depth: ""
             - update_submodules: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_checkout_tag:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -184,12 +184,12 @@ workflows:
             - fetch_tags: "no"
             - update_submodules: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_checkout_tag_with_other_branch:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -202,12 +202,12 @@ workflows:
             - fetch_tags: "yes"
             - update_submodules: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_checkout_tag_with_equally_named_branch:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -219,12 +219,12 @@ workflows:
             - clone_depth: ""
             - update_submodules: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_checkout_branch:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -235,12 +235,12 @@ workflows:
             - clone_depth: ""
             - update_submodules: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_checkout_current_dir:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - change-workdir:
           inputs:
@@ -255,12 +255,12 @@ workflows:
           inputs:
             - path: $ORIG_WORDIR
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_checkout_github_pull_request:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -275,12 +275,12 @@ workflows:
             - manual_merge: "no"
             - update_submodules: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_checkout_pull_request_no_merge:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: "true"
@@ -297,12 +297,12 @@ workflows:
             - merge_pr: "no"
             - update_submodules: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_checkout_pull_request_standard_branch:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -315,13 +315,13 @@ workflows:
             - manual_merge: "no"
             - update_submodules: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_checkout_pull_request_with_depth:
     before_run:
       - _activate_ssh_key
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -336,12 +336,12 @@ workflows:
             - clone_depth: 1
             - manual_merge: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_manual_merge_unshallow:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -358,12 +358,12 @@ workflows:
             - clone_depth: "1"
             - update_submodules: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_unshallow:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -374,12 +374,12 @@ workflows:
             - clone_depth: 1
             - update_submodules: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_commit_logs:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -412,12 +412,12 @@ workflows:
                 check "GIT_CLONE_COMMIT_COMMITER_NAME" "Krisztian Dobmayer"
                 check "GIT_CLONE_COMMIT_COMMITER_EMAIL" "krisztian.dobmayer@bitrise.io"
     after_run:
-      - _ensure_clean_git
+      - _check_no_extra_commits
 
   test_hosted_git_ssh_prefix:
     before_run:
       - _activate_ssh_key
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -431,13 +431,13 @@ workflows:
             - commit: "8d558357cf085bc26af23b88f6bc4c07e175b8ac"
             - branch: "develop"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_hosted_git_notfork:
     before_run:
       - _activate_ssh_key
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -451,12 +451,12 @@ workflows:
             - commit: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
             - branch: "test/commit-messages"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_unrelated_histories:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -472,12 +472,12 @@ workflows:
             - manual_merge: "no"
             - update_submodules: "no"
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_diff_file:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - script:
           inputs:
@@ -537,12 +537,12 @@ workflows:
                 set -ex
                 diff ${TEST_DIFF_CLONE_DIR}/README.md ${TEST_DIFF_PR_REPOSITORY_URL}/README.md
     after_run:
-      - _log_outputs
+      - _check_outputs
 
   test_sparse_checkout_branch:
     before_run:
       - _activate_ssh_key
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -553,13 +553,13 @@ workflows:
             - sparse_directories: |-
                 git-clone-sample
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_sparse_checkout_commit_on_branch:
     before_run:
       - _activate_ssh_key
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -571,13 +571,13 @@ workflows:
             - sparse_directories: |-
                 git-clone-sample
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_sparse_checkout_unshallow:
     before_run:
       - _activate_ssh_key
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -589,12 +589,12 @@ workflows:
             - sparse_directories: |-
                 git-clone-sample
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
   test_too_long_commit_message:
     before_run:
-      - _prepare
+      - _setup_wordir_and_clear_envs
     steps:
       - path::./:
           run_if: true
@@ -617,10 +617,10 @@ workflows:
                   exit 1
                 fi
     after_run:
-      - _log_outputs
-      - _ensure_clean_git
+      - _check_outputs
+      - _check_no_extra_commits
 
-  _prepare:
+  _setup_wordir_and_clear_envs:
     steps:
       - script:
           inputs:
@@ -658,7 +658,7 @@ workflows:
                 envman unset --key GIT_CLONE_COMMIT_COMMITER_NAME
                 envman unset --key GIT_CLONE_COMMIT_COMMITER_EMAIL
 
-  _log_outputs:
+  _check_outputs:
     steps:  
       - script:
           inputs:
@@ -673,7 +673,7 @@ workflows:
                 echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
                 echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
 
-  _ensure_clean_git:
+  _check_no_extra_commits:
     steps:
       - ensure-clean-git:
           inputs:
