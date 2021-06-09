@@ -17,6 +17,8 @@ workflows:
       - check
       - e2e
 
+  test: { }
+
   sample:
     envs:
       - TEST_APP_URL: https://github.com/bitrise-io/git-clone-test.git
