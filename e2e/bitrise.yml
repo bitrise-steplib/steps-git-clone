@@ -390,7 +390,6 @@ workflows:
                 diff ${TEST_DIFF_CLONE_DIR}/README.md ${TEST_DIFF_PR_REPOSITORY_URL}/README.md
     after_run:
       - _check_outputs
-      - _teardown
 
   test_sparse_checkout_branch:
     envs:
