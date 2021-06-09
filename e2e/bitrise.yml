@@ -73,8 +73,6 @@ workflows:
       - _setup
     after_run:
       - _run
-      - _check_outputs
-      - _teardown
 
   test_no_checkout:
     before_run:
