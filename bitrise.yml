@@ -12,13 +12,6 @@ workflows:
           inputs:
             - workflow: e2e
 
-  ci:
-    after_run:
-      - check
-      - e2e
-
-  test: { }
-
   sample:
     envs:
       - TEST_APP_URL: https://github.com/bitrise-io/git-clone-test.git
