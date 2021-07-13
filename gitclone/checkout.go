@@ -58,8 +58,8 @@ type commitInfoRef struct {
 // checkoutStrategy is the interface an actual checkout strategy implements
 type checkoutStrategy interface {
 	do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error
-	// commitInfoRef retruns a git ref, this will be used to get commit info (for example commit author)
-	commitInfoRef() *commitInfoRef
+	// getCommitInfoRef returns a git ref which is used to get commit info like commit author
+	getCommitInfoRef() *commitInfoRef
 }
 
 // X: required parameter

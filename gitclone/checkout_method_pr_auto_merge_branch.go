@@ -67,7 +67,7 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	return detachHead(gitCmd)
 }
 
-func (c checkoutPRMergeBranch) commitInfoRef() *commitInfoRef {
+func (c checkoutPRMergeBranch) getCommitInfoRef() *commitInfoRef {
 	_, localRef := headBranchRefs(c.params.MergeBranch)
 	return &commitInfoRef{
 		ref: localRef,
