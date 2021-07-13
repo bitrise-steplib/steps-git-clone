@@ -72,24 +72,24 @@ func getMaxEnvLength() (int, error) {
 	return configs.EnvBytesLimitInKB * 1024, nil
 }
 
-func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, err error) {
+func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, isPR bool, err error) {
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
 	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 
 	checkoutStrategy, err := createCheckoutStrategy(checkoutMethod, cfg, diffFile)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	if checkoutStrategy == nil {
-		return nil, fmt.Errorf("failed to select a checkout stategy")
+		return nil, false, fmt.Errorf("failed to select a checkout stategy")
 	}
 
 	if err := checkoutStrategy.do(gitCmd, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
 		log.Infof("Checkout strategy used: %T", checkoutStrategy)
-		return nil, err
+		return nil, false, err
 	}
 
-	return checkoutStrategy, nil
+	return checkoutStrategy, isPRCheckout(checkoutMethod), nil
 }
 
 func updateSubmodules(gitCmd git.Git, cfg Config) error {
@@ -206,7 +206,7 @@ func Execute(cfg Config) error {
 		return err
 	}
 
-	checkoutStrategy, err := checkoutState(gitCmd, cfg, defaultPatchSource{})
+	checkoutStrategy, isPR, err := checkoutState(gitCmd, cfg, defaultPatchSource{})
 	if err != nil {
 		return err
 	}
@@ -220,16 +220,21 @@ func Execute(cfg Config) error {
 	log.Infof("\nExporting git logs\n")
 	commitInfoRef := checkoutStrategy.commitInfoRef()
 	if commitInfoRef != "" {
-		infoParamAndExportName := map[string]string{
+		const commiterNameEnvKey = "GIT_CLONE_COMMIT_COMMITER_NAME"
+		const commiterEmailEnvKey = "GIT_CLONE_COMMIT_COMMITER_EMAIL"
+		infoParamAndExportEnvKey := map[string]string{
 			`%H`:  "GIT_CLONE_COMMIT_HASH",
 			`%s`:  "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
 			`%b`:  "GIT_CLONE_COMMIT_MESSAGE_BODY",
 			`%an`: "GIT_CLONE_COMMIT_AUTHOR_NAME",
 			`%ae`: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
-			`%cn`: "GIT_CLONE_COMMIT_COMMITER_NAME",
-			`%ce`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
 		}
-		for format, env := range infoParamAndExportName {
+		if !isPR {
+			infoParamAndExportEnvKey[`%cn`] = commiterNameEnvKey
+			infoParamAndExportEnvKey[`%ce`] = commiterEmailEnvKey
+		}
+
+		for format, env := range infoParamAndExportEnvKey {
 			if err := printLogAndExportEnv(gitCmd, commitInfoRef, format, env, maxEnvLength); err != nil {
 				return newStepError(
 					"export_envs_failed",
@@ -237,6 +242,14 @@ func Execute(cfg Config) error {
 					"Exporting envs failed",
 				)
 			}
+		}
+
+		const commitCountEnnKey = "GIT_CLONE_COMMIT_COUNT"
+		if isPR {
+			log.Printf("Git commiter info (%s and %s) is not exported for PRs.", commiterNameEnvKey, commiterEmailEnvKey)
+			log.Printf("Commit count (%s) is not exorted for PR s.", commitCountEnnKey)
+
+			return nil
 		}
 
 		count, err := runner.RunForOutput(gitCmd.RevList("HEAD", "--count"))

@@ -327,3 +327,21 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 		return nil
 	}
 }
+
+func isPRCheckout(checkoutMethod CheckoutMethod) bool {
+	switch checkoutMethod {
+	case CheckoutNoneMethod,
+		CheckoutCommitMethod,
+		CheckoutTagMethod,
+		CheckoutBranchMethod:
+		return false
+	case CheckoutPRMergeBranchMethod,
+		CheckoutPRDiffFileMethod,
+		CheckoutPRManualMergeMethod,
+		CheckoutHeadBranchCommitMethod,
+		CheckoutForkCommitMethod:
+		return true
+	default:
+		return true
+	}
+}
