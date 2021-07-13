@@ -65,7 +65,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 		return err
 	}
 
-	commitHash, err := runner.RunForOutput(gitCmd.Log("%H", c.params.DestinationBranch))
+	commitHash, err := runner.RunForOutput(gitCmd.Log("%H"))
 	if err != nil {
 		log.Errorf("log commit hash: %v", err)
 	}
