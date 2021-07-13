@@ -612,7 +612,7 @@ var checkoutStateTestCases = [...]struct {
 	},
 }
 
-func Test_checkoutState_Do(t *testing.T) {
+func Test_checkoutState(t *testing.T) {
 	for _, tt := range checkoutStateTestCases {
 		t.Run(tt.name, func(t *testing.T) {
 			// Given
