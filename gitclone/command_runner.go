@@ -27,6 +27,7 @@ type DefaultRunner struct {
 
 // RunForOutput ...
 func (r DefaultRunner) RunForOutput(c *command.Model) (string, error) {
+	fmt.Println()
 	log.Infof("$ %s &> out", c.PrintableCommandArgs())
 
 	out, err := c.RunAndReturnTrimmedCombinedOutput()

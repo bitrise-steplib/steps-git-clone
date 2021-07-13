@@ -5,6 +5,7 @@ import (
 
 	"github.com/bitrise-io/envman/envman"
 	"github.com/bitrise-io/go-steputils/tools"
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 )
@@ -44,56 +45,68 @@ const (
 	sparseCheckoutFailedTag = "sparse_checkout_failed"
 )
 
+type commitInfo struct {
+	envKey string
+	cmd    *command.Model
+}
+
 func exportCommitInfo(gitCmd git.Git, gitRef string, isPR bool, maxEnvLength int) error {
-	const (
-		commiterNameEnvKey  = "GIT_CLONE_COMMIT_COMMITER_NAME"
-		commiterEmailEnvKey = "GIT_CLONE_COMMIT_COMMITER_EMAIL"
-		commitCountEnvKey   = "GIT_CLONE_COMMIT_COUNT"
-	)
-	if isPR {
-		log.Printf("Git commiter info (%s and %s) is not exported for Pull Requests.", commiterNameEnvKey, commiterEmailEnvKey)
-		log.Printf("Commit count (%s) is not exorted for Pull Requests.", commitCountEnvKey)
+	commitInfos := []commitInfo{
+		{
+			envKey: "GIT_CLONE_COMMIT_HASH",
+			cmd:    gitCmd.Log(`%H`, gitRef),
+		},
+		{
+			envKey: "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
+			cmd:    gitCmd.Log(`%s`, gitRef),
+		},
+		{
+			envKey: "GIT_CLONE_COMMIT_MESSAGE_BODY",
+			cmd:    gitCmd.Log(`%b`, gitRef),
+		},
+		{
+			envKey: "GIT_CLONE_COMMIT_AUTHOR_NAME",
+			cmd:    gitCmd.Log(`%an`, gitRef),
+		},
+		{
+			envKey: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
+			cmd:    gitCmd.Log(`%ae`, gitRef),
+		},
+	}
+	simpleCheckoutOnlyInfos := []commitInfo{
+		{
+			envKey: "GIT_CLONE_COMMIT_COMMITER_NAME",
+			cmd:    gitCmd.Log(`%cn`, gitRef),
+		},
+		{
+			envKey: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
+			cmd:    gitCmd.Log(`%ce`, gitRef),
+		},
+		{
+			envKey: "GIT_CLONE_COMMIT_COUNT",
+			cmd:    gitCmd.RevList("HEAD", "--count"),
+		},
 	}
 
-	infoParamAndExportEnvKey := map[string]string{
-		`%H`:  "GIT_CLONE_COMMIT_HASH",
-		`%s`:  "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
-		`%b`:  "GIT_CLONE_COMMIT_MESSAGE_BODY",
-		`%an`: "GIT_CLONE_COMMIT_AUTHOR_NAME",
-		`%ae`: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
-	}
 	if !isPR {
-		infoParamAndExportEnvKey[`%cn`] = commiterNameEnvKey
-		infoParamAndExportEnvKey[`%ce`] = commiterEmailEnvKey
+		commitInfos = append(commitInfos, simpleCheckoutOnlyInfos...)
+	} else {
+		log.Printf("Git commiter name/email and commit count is not exported for Pull Requests.")
 	}
 
-	for format, env := range infoParamAndExportEnvKey {
-		if err := printLogAndExportEnv(gitCmd, gitRef, format, env, maxEnvLength); err != nil {
+	for _, commitInfo := range commitInfos {
+		if err := printLogAndExportEnv(commitInfo.cmd, commitInfo.envKey, maxEnvLength); err != nil {
 			return err
 		}
-	}
-
-	if isPR {
-		return nil
-	}
-
-	count, err := runner.RunForOutput(gitCmd.RevList("HEAD", "--count"))
-	if err != nil {
-		return fmt.Errorf("counting commits using rev-list failed: %v", err)
-	}
-
-	log.Printf("=> %s\n   value: %s\n", "GIT_CLONE_COMMIT_COUNT", count)
-	if err := tools.ExportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", count); err != nil {
-		return fmt.Errorf("envman export failed: %v", err)
 	}
 
 	return nil
 }
 
-func printLogAndExportEnv(gitCmd git.Git, gitRef, format, env string, maxEnvLength int) error {
-	l, err := runner.RunForOutput(gitCmd.Log(format, gitRef))
+func printLogAndExportEnv(command *command.Model, env string, maxEnvLength int) error {
+	l, err := runner.RunForOutput(command)
 	if err != nil {
-		return fmt.Errorf("git log command failed: %s", err)
+		return fmt.Errorf("command failed: %s", err)
 	}
 
 	if (env == "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" || env == "GIT_CLONE_COMMIT_MESSAGE_BODY") && len(l) > maxEnvLength {
@@ -102,9 +115,9 @@ func printLogAndExportEnv(gitCmd git.Git, gitRef, format, env string, maxEnvLeng
 		l = tv
 	}
 
-	log.Printf("=> %s\n   value: %s\n", env, l)
+	log.Printf("=> %s\n   value: %s", env, l)
 	if err := tools.ExportEnvironmentWithEnvman(env, l); err != nil {
-		return fmt.Errorf("envman export: %v", err)
+		return fmt.Errorf("envman export failed: %v", err)
 	}
 	return nil
 }
@@ -265,7 +278,8 @@ func Execute(cfg Config) error {
 
 	commitInfoRef := checkoutStrategy.commitInfoRef()
 	if commitInfoRef != "" {
-		log.Infof("\nExporting git logs\n")
+		fmt.Println()
+		log.Infof("Exporting commit details")
 		if err := exportCommitInfo(gitCmd, commitInfoRef, isPR, maxEnvLength); err != nil {
 			return newStepError("export_envs_failed", err, "Exporting envs failed")
 		}
