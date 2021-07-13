@@ -15,8 +15,8 @@ func (c checkoutNone) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fal
 	return nil
 }
 
-func (c checkoutNone) getAuthorInfo() authorInfo {
-	return authorInfo{}
+func (c checkoutNone) commitInfoRef() string {
+	return ""
 }
 
 //
@@ -65,10 +65,8 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 	return nil
 }
 
-func (c checkoutCommit) getAuthorInfo() authorInfo {
-	return authorInfo{
-		gitRevision: c.params.Commit,
-	}
+func (c checkoutCommit) commitInfoRef() string {
+	return c.params.Commit
 }
 
 //
@@ -94,18 +92,19 @@ type checkoutBranch struct {
 }
 
 func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallbackRetry) error {
-	branchRef := refsHeadsPrefix + c.params.Branch
-	if err := fetchInitialBranch(gitCmd, originRemoteName, branchRef, fetchOptions); err != nil {
+	if err := fetchInitialBranch(gitCmd, originRemoteName, c.refspec(), fetchOptions); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c checkoutBranch) getAuthorInfo() authorInfo {
-	return authorInfo{
-		gitRevision: c.params.Branch,
-	}
+func (c checkoutBranch) commitInfoRef() string {
+	return c.refspec()
+}
+
+func (c checkoutBranch) refspec() string {
+	return refsHeadsPrefix + c.params.Branch
 }
 
 //
@@ -131,7 +130,7 @@ type checkoutTag struct {
 }
 
 func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	ref := fmt.Sprintf("refs/tags/%s:refs/tags/%s", c.params.Tag, c.params.Tag)
+	ref := fmt.Sprintf("%s:%s", c.refspec(), c.refspec())
 	if err := fetch(gitCmd, originRemoteName, ref, fetchOptions); err != nil {
 		return err
 	}
@@ -143,8 +142,10 @@ func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fall
 	return nil
 }
 
-func (c checkoutTag) getAuthorInfo() authorInfo {
-	return authorInfo{
-		gitRevision: fmt.Sprintf("refs/tags/%s", c.params.Tag),
-	}
+func (c checkoutTag) commitInfoRef() string {
+	return c.refspec()
+}
+
+func (c checkoutTag) refspec() string {
+	return fmt.Sprintf("refs/tags/%s", c.params.Tag)
 }

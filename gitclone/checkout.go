@@ -51,17 +51,11 @@ func NewParameterValidationError(msg string) error {
 	return ParameterValidationError{ErrorString: msg}
 }
 
-// authorInfo ...
-type authorInfo struct {
-	isAvailable bool
-	// git revision to source auther information from (e.g. a branch or commit)
-	gitRevision string
-}
-
 // checkoutStrategy is the interface an actual checkout strategy implements
 type checkoutStrategy interface {
 	do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error
-	getAuthorInfo() authorInfo
+	// commitInfoRef retruns a git ref, this will be used to get commit info (for example commit author)
+	commitInfoRef() string
 }
 
 // X: required parameter

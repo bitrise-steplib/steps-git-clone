@@ -43,8 +43,8 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	}
 
 	// `git "fetch" "origin" "refs/pull/7/head:pull/7"`
-	headBranchRef := fetchArg(c.params.MergeBranch)
-	if err := fetch(gitCmd, originRemoteName, headBranchRef, fetchOpts); err != nil {
+	remoteRef, localRef := fetchArg(c.params.MergeBranch)
+	if err := fetch(gitCmd, originRemoteName, fmt.Sprintf("%s:%s", remoteRef, localRef), fetchOpts); err != nil {
 		return err
 	}
 
@@ -60,15 +60,15 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	}
 
 	// `git "merge" "pull/7"`
-	if err := mergeWithCustomRetry(gitCmd, mergeArg(c.params.MergeBranch), fallback); err != nil {
+	if err := mergeWithCustomRetry(gitCmd, localRef, fallback); err != nil {
 		return err
 	}
 
 	return detachHead(gitCmd)
 }
 
-func (c checkoutPRMergeBranch) getAuthorInfo() authorInfo {
-	return authorInfo{
-		gitRevision: mergeArg(c.params.MergeBranch),
-	}
+func (c checkoutPRMergeBranch) commitInfoRef() string {
+	_, localRef := fetchArg(c.params.MergeBranch)
+
+	return localRef
 }
