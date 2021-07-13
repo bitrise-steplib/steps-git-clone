@@ -66,3 +66,9 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 
 	return detachHead(gitCmd)
 }
+
+func (c checkoutPRMergeBranch) getAuthorInfo() authorInfo {
+	return authorInfo{
+		gitRevision: mergeArg(c.params.MergeBranch),
+	}
+}

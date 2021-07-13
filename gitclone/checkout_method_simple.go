@@ -15,6 +15,10 @@ func (c checkoutNone) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fal
 	return nil
 }
 
+func (c checkoutNone) getAuthorInfo() authorInfo {
+	return authorInfo{}
+}
+
 //
 // CommitParams are parameters to check out a given commit (In addition to the repository URL)
 type CommitParams struct {
@@ -61,6 +65,12 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 	return nil
 }
 
+func (c checkoutCommit) getAuthorInfo() authorInfo {
+	return authorInfo{
+		gitRevision: c.params.Commit,
+	}
+}
+
 //
 // BranchParams are parameters to check out a given branch (In addition to the repository URL)
 type BranchParams struct {
@@ -90,6 +100,12 @@ func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallback
 	}
 
 	return nil
+}
+
+func (c checkoutBranch) getAuthorInfo() authorInfo {
+	return authorInfo{
+		gitRevision: c.params.Branch,
+	}
 }
 
 //
@@ -125,4 +141,10 @@ func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fall
 	}
 
 	return nil
+}
+
+func (c checkoutTag) getAuthorInfo() authorInfo {
+	return authorInfo{
+		gitRevision: fmt.Sprintf("refs/tags/%s", c.params.Tag),
+	}
 }

@@ -65,7 +65,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 		return err
 	}
 
-	commitHash, err := runner.RunForOutput(gitCmd.Log("%H"))
+	commitHash, err := runner.RunForOutput(gitCmd.Log("%H", c.params.DestinationBranch))
 	if err != nil {
 		log.Errorf("log commit hash: %v", err)
 	}
@@ -95,4 +95,10 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 	}
 
 	return detachHead(gitCmd)
+}
+
+func (c checkoutPRManualMerge) getAuthorInfo() authorInfo {
+	return authorInfo{
+		gitRevision: c.params.SourceMergeArg,
+	}
 }

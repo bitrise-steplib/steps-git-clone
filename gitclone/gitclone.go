@@ -2,6 +2,7 @@ package gitclone
 
 import (
 	"fmt"
+
 	"github.com/bitrise-io/envman/envman"
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command/git"
@@ -43,8 +44,8 @@ const (
 	sparseCheckoutFailedTag = "sparse_checkout_failed"
 )
 
-func printLogAndExportEnv(gitCmd git.Git, format, env string, maxEnvLength int) error {
-	l, err := runner.RunForOutput(gitCmd.Log(format))
+func printLogAndExportEnv(gitCmd git.Git, ref, format, env string, maxEnvLength int) error {
+	l, err := runner.RunForOutput(gitCmd.Log(format, ref))
 	if err != nil {
 		return err
 	}
@@ -71,24 +72,24 @@ func getMaxEnvLength() (int, error) {
 	return configs.EnvBytesLimitInKB * 1024, nil
 }
 
-func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) error {
+func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, isPR bool, err error) {
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
 	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 
 	checkoutStrategy, err := createCheckoutStrategy(checkoutMethod, cfg, diffFile)
 	if err != nil {
-		return err
+		return nil, false, err
 	}
 	if checkoutStrategy == nil {
-		return fmt.Errorf("failed to select a checkout stategy")
+		return nil, false, fmt.Errorf("failed to select a checkout stategy")
 	}
 
 	if err := checkoutStrategy.do(gitCmd, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
 		log.Infof("Checkout strategy used: %T", checkoutStrategy)
-		return err
+		return nil, false, err
 	}
 
-	return nil
+	return checkoutStrategy, isPRCheckout(checkoutMethod), nil
 }
 
 func updateSubmodules(gitCmd git.Git, cfg Config) error {
@@ -205,7 +206,8 @@ func Execute(cfg Config) error {
 		return err
 	}
 
-	if err := checkoutState(gitCmd, cfg, defaultPatchSource{}); err != nil {
+	checkoutStrategy, isPR, err := checkoutState(gitCmd, cfg, defaultPatchSource{})
+	if err != nil {
 		return err
 	}
 
@@ -215,28 +217,28 @@ func Execute(cfg Config) error {
 		}
 	}
 
-	checkoutArg := getCheckoutArg(cfg.Commit, cfg.Tag, cfg.Branch)
-	if checkoutArg != "" {
-		log.Infof("\nExporting git logs\n")
-
-		for format, env := range map[string]string{
-			`%H`:  "GIT_CLONE_COMMIT_HASH",
-			`%s`:  "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
-			`%b`:  "GIT_CLONE_COMMIT_MESSAGE_BODY",
-			`%an`: "GIT_CLONE_COMMIT_AUTHOR_NAME",
-			`%ae`: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
-			`%cn`: "GIT_CLONE_COMMIT_COMMITER_NAME",
-			`%ce`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
-		} {
-			if err := printLogAndExportEnv(gitCmd, format, env, maxEnvLength); err != nil {
-				return newStepError(
-					"export_envs_failed",
-					fmt.Errorf("gitCmd log failed: %v", err),
-					"Exporting envs failed",
-				)
-			}
+	log.Infof("\nExporting git logs\n")
+	authorInfo := checkoutStrategy.getAuthorInfo()
+	infoParamAndExportName := map[string]string{
+		`%H`:  "GIT_CLONE_COMMIT_HASH",
+		`%s`:  "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
+		`%b`:  "GIT_CLONE_COMMIT_MESSAGE_BODY",
+		`%an`: "GIT_CLONE_COMMIT_AUTHOR_NAME",
+		`%ae`: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
+		`%cn`: "GIT_CLONE_COMMIT_COMMITER_NAME",
+		`%ce`: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
+	}
+	for format, env := range infoParamAndExportName {
+		if err := printLogAndExportEnv(gitCmd, authorInfo.gitRevision, format, env, maxEnvLength); err != nil {
+			return newStepError(
+				"export_envs_failed",
+				fmt.Errorf("gitCmd log failed: %v", err),
+				"Exporting envs failed",
+			)
 		}
+	}
 
+	if !isPR {
 		count, err := runner.RunForOutput(gitCmd.RevList("HEAD", "--count"))
 		if err != nil {
 			return newStepError(

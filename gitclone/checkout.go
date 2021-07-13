@@ -51,9 +51,17 @@ func NewParameterValidationError(msg string) error {
 	return ParameterValidationError{ErrorString: msg}
 }
 
+// authorInfo ...
+type authorInfo struct {
+	isAvailable bool
+	// git revision to source auther information from (e.g. a branch or commit)
+	gitRevision string
+}
+
 // checkoutStrategy is the interface an actual checkout strategy implements
 type checkoutStrategy interface {
 	do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error
+	getAuthorInfo() authorInfo
 }
 
 // X: required parameter
@@ -266,7 +274,24 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 	default:
 		return nil, fmt.Errorf("invalid checkout strategy selected")
 	}
+}
 
+func isPRCheckout(checkoutMethod CheckoutMethod) bool {
+	switch checkoutMethod {
+	case CheckoutNoneMethod,
+		CheckoutCommitMethod,
+		CheckoutTagMethod,
+		CheckoutBranchMethod:
+		return false
+	case CheckoutPRMergeBranchMethod,
+		CheckoutPRDiffFileMethod,
+		CheckoutPRManualMergeMethod,
+		CheckoutHeadBranchCommitMethod,
+		CheckoutForkCommitMethod:
+		return true
+	default:
+		return true
+	}
 }
 
 func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchTags, fetchSubmodules bool, filterTree bool) fetchOptions {

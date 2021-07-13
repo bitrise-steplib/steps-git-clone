@@ -56,19 +56,6 @@ func resetRepo(gitCmd git.Git) error {
 	return runner.Run(gitCmd.SubmoduleForeach(gitCmd.Clean("-x", "-d", "-f")))
 }
 
-func getCheckoutArg(commit, tag, branch string) string {
-	switch {
-	case commit != "":
-		return commit
-	case tag != "":
-		return tag
-	case branch != "":
-		return branch
-	default:
-		return ""
-	}
-}
-
 func isFork(repoURL, prRepoURL string) bool {
 	return prRepoURL != "" && getRepo(repoURL) != getRepo(prRepoURL)
 }
