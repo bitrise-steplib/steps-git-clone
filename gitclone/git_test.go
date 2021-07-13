@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFetchArg(t *testing.T) {
+func Test_headBranchRefs(t *testing.T) {
 	tests := []struct {
 		name           string
 		mergeBranchArg string
@@ -61,7 +61,7 @@ func TestFetchArg(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		gotRemoteRef, gotLocalRef := fetchArg(tt.mergeBranchArg)
+		gotRemoteRef, gotLocalRef := headBranchRefs(tt.mergeBranchArg)
 
 		assert.Equal(t, tt.wantRemoteRef, gotRemoteRef)
 		assert.Equal(t, tt.wantLocalRef, gotLocalRef)

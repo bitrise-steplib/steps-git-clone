@@ -92,9 +92,10 @@ func isPrivate(repoURL string) bool {
 	return strings.HasPrefix(repoURL, "git")
 }
 
-// If incoming branch matches to pull/x/merge pattern fetchArg
-// converts it to pull/x/head:pull/x otherwise original name is kept.
-func fetchArg(mergeBranch string) (remoteRef, localRef string) {
+// If incoming branch matches to pull/x/merge pattern headBranchRefs
+// converts it to remote ref (pull/x/head) and local ref (pull/x)
+// If it does not match it keeps original name.
+func headBranchRefs(mergeBranch string) (remoteRef, localRef string) {
 	var re = regexp.MustCompile("^pull/(.*)/merge$")
 	if re.MatchString(mergeBranch) {
 		branchID := re.ReplaceAllString(mergeBranch, "$1")

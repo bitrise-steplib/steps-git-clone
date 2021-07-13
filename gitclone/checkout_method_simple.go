@@ -92,7 +92,7 @@ type checkoutBranch struct {
 }
 
 func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallbackRetry) error {
-	if err := fetchInitialBranch(gitCmd, originRemoteName, c.refspec(), fetchOptions); err != nil {
+	if err := fetchInitialBranch(gitCmd, originRemoteName, c.localRef(), fetchOptions); err != nil {
 		return err
 	}
 
@@ -100,10 +100,10 @@ func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallback
 }
 
 func (c checkoutBranch) commitInfoRef() string {
-	return c.refspec()
+	return c.localRef()
 }
 
-func (c checkoutBranch) refspec() string {
+func (c checkoutBranch) localRef() string {
 	return refsHeadsPrefix + c.params.Branch
 }
 
@@ -130,7 +130,7 @@ type checkoutTag struct {
 }
 
 func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	ref := fmt.Sprintf("%s:%s", c.refspec(), c.refspec())
+	ref := fmt.Sprintf("%s:%s", c.ref(), c.ref())
 	if err := fetch(gitCmd, originRemoteName, ref, fetchOptions); err != nil {
 		return err
 	}
@@ -143,9 +143,9 @@ func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fall
 }
 
 func (c checkoutTag) commitInfoRef() string {
-	return c.refspec()
+	return c.ref()
 }
 
-func (c checkoutTag) refspec() string {
+func (c checkoutTag) ref() string {
 	return fmt.Sprintf("refs/tags/%s", c.params.Tag)
 }

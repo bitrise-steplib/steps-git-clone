@@ -625,7 +625,7 @@ func Test_checkoutState(t *testing.T) {
 			runner = mockRunner
 
 			// When
-			_, _, actualErr := checkoutState(git.Git{}, tt.cfg, tt.patchSource)
+			_, actualErr := checkoutState(git.Git{}, tt.cfg, tt.patchSource)
 
 			// Then
 			if tt.wantErrType != nil {

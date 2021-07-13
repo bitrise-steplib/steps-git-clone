@@ -44,8 +44,8 @@ const (
 	sparseCheckoutFailedTag = "sparse_checkout_failed"
 )
 
-func printLogAndExportEnv(gitCmd git.Git, ref, format, env string, maxEnvLength int) error {
-	l, err := runner.RunForOutput(gitCmd.Log(format, ref))
+func printLogAndExportEnv(gitCmd git.Git, gitRef, format, env string, maxEnvLength int) error {
+	l, err := runner.RunForOutput(gitCmd.Log(format, gitRef))
 	if err != nil {
 		return err
 	}
