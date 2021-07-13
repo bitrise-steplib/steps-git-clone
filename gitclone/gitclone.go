@@ -72,24 +72,24 @@ func getMaxEnvLength() (int, error) {
 	return configs.EnvBytesLimitInKB * 1024, nil
 }
 
-func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, isPR bool, err error) {
+func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, err error) {
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
 	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 
 	checkoutStrategy, err := createCheckoutStrategy(checkoutMethod, cfg, diffFile)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 	if checkoutStrategy == nil {
-		return nil, false, fmt.Errorf("failed to select a checkout stategy")
+		return nil, fmt.Errorf("failed to select a checkout stategy")
 	}
 
 	if err := checkoutStrategy.do(gitCmd, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
 		log.Infof("Checkout strategy used: %T", checkoutStrategy)
-		return nil, false, err
+		return nil, err
 	}
 
-	return checkoutStrategy, isPRCheckout(checkoutMethod), nil
+	return checkoutStrategy, nil
 }
 
 func updateSubmodules(gitCmd git.Git, cfg Config) error {
@@ -206,7 +206,7 @@ func Execute(cfg Config) error {
 		return err
 	}
 
-	checkoutStrategy, isPR, err := checkoutState(gitCmd, cfg, defaultPatchSource{})
+	checkoutStrategy, err := checkoutState(gitCmd, cfg, defaultPatchSource{})
 	if err != nil {
 		return err
 	}
@@ -239,24 +239,22 @@ func Execute(cfg Config) error {
 			}
 		}
 
-		if !isPR {
-			count, err := runner.RunForOutput(gitCmd.RevList("HEAD", "--count"))
-			if err != nil {
-				return newStepError(
-					"count_commits_failed",
-					fmt.Errorf("get rev-list failed: %v", err),
-					"Counting commits failed",
-				)
-			}
+		count, err := runner.RunForOutput(gitCmd.RevList("HEAD", "--count"))
+		if err != nil {
+			return newStepError(
+				"count_commits_failed",
+				fmt.Errorf("get rev-list failed: %v", err),
+				"Counting commits failed",
+			)
+		}
 
-			log.Printf("=> %s\n   value: %s\n", "GIT_CLONE_COMMIT_COUNT", count)
-			if err := tools.ExportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", count); err != nil {
-				return newStepError(
-					"export_envs_commit_count_failed",
-					fmt.Errorf("envman export failed: %v", err),
-					"Exporting commit count env failed",
-				)
-			}
+		log.Printf("=> %s\n   value: %s\n", "GIT_CLONE_COMMIT_COUNT", count)
+		if err := tools.ExportEnvironmentWithEnvman("GIT_CLONE_COMMIT_COUNT", count); err != nil {
+			return newStepError(
+				"export_envs_commit_count_failed",
+				fmt.Errorf("envman export failed: %v", err),
+				"Exporting commit count env failed",
+			)
 		}
 	}
 

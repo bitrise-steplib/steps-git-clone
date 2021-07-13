@@ -270,24 +270,6 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 	}
 }
 
-func isPRCheckout(checkoutMethod CheckoutMethod) bool {
-	switch checkoutMethod {
-	case CheckoutNoneMethod,
-		CheckoutCommitMethod,
-		CheckoutTagMethod,
-		CheckoutBranchMethod:
-		return false
-	case CheckoutPRMergeBranchMethod,
-		CheckoutPRDiffFileMethod,
-		CheckoutPRManualMergeMethod,
-		CheckoutHeadBranchCommitMethod,
-		CheckoutForkCommitMethod:
-		return true
-	default:
-		return true
-	}
-}
-
 func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchTags, fetchSubmodules bool, filterTree bool) fetchOptions {
 	opts := fetchOptions{
 		depth:           cloneDepth,
