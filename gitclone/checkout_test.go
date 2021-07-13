@@ -1,6 +1,11 @@
 package gitclone
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func Test_selectCheckoutMethod(t *testing.T) {
 	tests := []struct {
@@ -248,6 +253,87 @@ func Test_selectCheckoutMethod(t *testing.T) {
 			if got, _ := selectCheckoutMethod(tt.cfg, tt.patchSource); got != tt.want {
 				t.Errorf("selectCheckoutMethod() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func Test_commitInfoRef(t *testing.T) {
+	tests := []struct {
+		name     string
+		strategy checkoutStrategy
+		wantRef  string
+	}{
+		{
+			strategy: checkoutNone{},
+			wantRef:  "",
+		},
+		{
+			strategy: checkoutCommit{
+				params: CommitParams{
+					Commit: "abcdef",
+				},
+			},
+			wantRef: "abcdef",
+		},
+		{
+			strategy: checkoutBranch{
+				params: BranchParams{
+					Branch: "hcnarb",
+				},
+			},
+			wantRef: "refs/heads/hcnarb",
+		},
+		{
+			strategy: checkoutTag{
+				params: TagParams{
+					Tag: "gat",
+				},
+			},
+			wantRef: "refs/tags/gat",
+		},
+		{
+			name:     "Does not support commit info",
+			strategy: checkoutPRDiffFile{},
+			wantRef:  "",
+		},
+		{
+			name: "Non-fork",
+			strategy: checkoutPRManualMerge{
+				params: PRManualMergeParams{
+					SourceBranch:      "source",
+					SourceMergeArg:    "abcdef",
+					DestinationBranch: "destBranch",
+				},
+			},
+			wantRef: "abcdef",
+		},
+		{
+			name: "Fork",
+			strategy: checkoutPRManualMerge{
+				params: PRManualMergeParams{
+					SourceBranch:      "source",
+					SourceMergeArg:    "remote/source",
+					DestinationBranch: "destbranch",
+					SourceRepoURL:     ".",
+				},
+			},
+			wantRef: "remote/source",
+		},
+		{
+			strategy: checkoutPRMergeBranch{
+				params: PRMergeBranchParams{
+					DestinationBranch: "dest",
+					MergeBranch:       "pull/2/merge",
+				},
+			},
+			wantRef: "pull/2",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%T %s", tt.strategy, tt.name), func(t *testing.T) {
+			gotRef := tt.strategy.commitInfoRef()
+
+			assert.Equal(t, tt.wantRef, gotRef)
 		})
 	}
 }
