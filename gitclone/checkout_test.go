@@ -261,11 +261,11 @@ func Test_commitInfoRef(t *testing.T) {
 	tests := []struct {
 		name     string
 		strategy checkoutStrategy
-		wantRef  string
+		wantRef  *commitInfoRef
 	}{
 		{
 			strategy: checkoutNone{},
-			wantRef:  "",
+			wantRef:  nil,
 		},
 		{
 			strategy: checkoutCommit{
@@ -273,7 +273,9 @@ func Test_commitInfoRef(t *testing.T) {
 					Commit: "abcdef",
 				},
 			},
-			wantRef: "abcdef",
+			wantRef: &commitInfoRef{
+				ref: "abcdef",
+			},
 		},
 		{
 			strategy: checkoutBranch{
@@ -281,7 +283,9 @@ func Test_commitInfoRef(t *testing.T) {
 					Branch: "hcnarb",
 				},
 			},
-			wantRef: "refs/heads/hcnarb",
+			wantRef: &commitInfoRef{
+				ref: "refs/heads/hcnarb",
+			},
 		},
 		{
 			strategy: checkoutTag{
@@ -289,12 +293,14 @@ func Test_commitInfoRef(t *testing.T) {
 					Tag: "gat",
 				},
 			},
-			wantRef: "refs/tags/gat",
+			wantRef: &commitInfoRef{
+				ref: "refs/tags/gat",
+			},
 		},
 		{
 			name:     "Does not support commit info",
 			strategy: checkoutPRDiffFile{},
-			wantRef:  "",
+			wantRef:  nil,
 		},
 		{
 			name: "Non-fork",
@@ -305,7 +311,9 @@ func Test_commitInfoRef(t *testing.T) {
 					DestinationBranch: "destBranch",
 				},
 			},
-			wantRef: "abcdef",
+			wantRef: &commitInfoRef{
+				ref: "abcdef",
+			},
 		},
 		{
 			name: "Fork",
@@ -317,7 +325,9 @@ func Test_commitInfoRef(t *testing.T) {
 					SourceRepoURL:     ".",
 				},
 			},
-			wantRef: "remote/source",
+			wantRef: &commitInfoRef{
+				ref: "remote/source",
+			},
 		},
 		{
 			strategy: checkoutPRMergeBranch{
@@ -326,7 +336,9 @@ func Test_commitInfoRef(t *testing.T) {
 					MergeBranch:       "pull/2/merge",
 				},
 			},
-			wantRef: "pull/2",
+			wantRef: &commitInfoRef{
+				ref: "pull/2",
+			},
 		},
 	}
 	for _, tt := range tests {

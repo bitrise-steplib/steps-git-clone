@@ -51,11 +51,15 @@ func NewParameterValidationError(msg string) error {
 	return ParameterValidationError{ErrorString: msg}
 }
 
+type commitInfoRef struct {
+	ref string
+}
+
 // checkoutStrategy is the interface an actual checkout strategy implements
 type checkoutStrategy interface {
 	do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error
 	// commitInfoRef retruns a git ref, this will be used to get commit info (for example commit author)
-	commitInfoRef() string
+	commitInfoRef() *commitInfoRef
 }
 
 // X: required parameter

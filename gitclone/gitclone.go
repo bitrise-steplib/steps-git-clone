@@ -277,10 +277,10 @@ func Execute(cfg Config) error {
 	}
 
 	commitInfoRef := checkoutStrategy.commitInfoRef()
-	if commitInfoRef != "" {
+	if commitInfoRef != nil {
 		fmt.Println()
 		log.Infof("Exporting commit details")
-		if err := exportCommitInfo(gitCmd, commitInfoRef, isPR, maxEnvLength); err != nil {
+		if err := exportCommitInfo(gitCmd, commitInfoRef.ref, isPR, maxEnvLength); err != nil {
 			return newStepError("export_envs_failed", err, "Exporting envs failed")
 		}
 	} else {

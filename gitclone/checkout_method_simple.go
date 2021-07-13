@@ -15,8 +15,8 @@ func (c checkoutNone) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fal
 	return nil
 }
 
-func (c checkoutNone) commitInfoRef() string {
-	return ""
+func (c checkoutNone) commitInfoRef() *commitInfoRef {
+	return nil
 }
 
 //
@@ -65,8 +65,10 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 	return nil
 }
 
-func (c checkoutCommit) commitInfoRef() string {
-	return c.params.Commit
+func (c checkoutCommit) commitInfoRef() *commitInfoRef {
+	return &commitInfoRef{
+		ref: c.params.Commit,
+	}
 }
 
 //
@@ -99,8 +101,10 @@ func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallback
 	return nil
 }
 
-func (c checkoutBranch) commitInfoRef() string {
-	return c.localRef()
+func (c checkoutBranch) commitInfoRef() *commitInfoRef {
+	return &commitInfoRef{
+		ref: c.localRef(),
+	}
 }
 
 func (c checkoutBranch) localRef() string {
@@ -142,8 +146,10 @@ func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fall
 	return nil
 }
 
-func (c checkoutTag) commitInfoRef() string {
-	return c.ref()
+func (c checkoutTag) commitInfoRef() *commitInfoRef {
+	return &commitInfoRef{
+		ref: c.ref(),
+	}
 }
 
 func (c checkoutTag) ref() string {

@@ -65,8 +65,8 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 	return detachHead(gitCmd)
 }
 
-func (c checkoutPRDiffFile) commitInfoRef() string {
-	return ""
+func (c checkoutPRDiffFile) commitInfoRef() *commitInfoRef {
+	return nil
 }
 
 type patchSource interface {
