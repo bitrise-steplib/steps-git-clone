@@ -73,7 +73,7 @@ func exportCommitInfo(gitCmd git.Git, gitRef string, isPR bool, maxEnvLength int
 			cmd:    gitCmd.Log(`%b`, gitRef),
 		},
 	}
-	simpleCheckoutOnlyInfos := []commitInfo{
+	nonPROnlyInfos := []commitInfo{
 		{
 			envKey: "GIT_CLONE_COMMIT_COMMITER_NAME",
 			cmd:    gitCmd.Log(`%cn`, gitRef),
@@ -89,7 +89,7 @@ func exportCommitInfo(gitCmd git.Git, gitRef string, isPR bool, maxEnvLength int
 	}
 
 	if !isPR {
-		commitInfos = append(commitInfos, simpleCheckoutOnlyInfos...)
+		commitInfos = append(commitInfos, nonPROnlyInfos...)
 	} else {
 		log.Printf("Git commiter name/email and commit count is not exported for Pull Requests.")
 	}
