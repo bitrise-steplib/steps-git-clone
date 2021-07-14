@@ -54,8 +54,8 @@ func NewParameterValidationError(msg string) error {
 // checkoutStrategy is the interface an actual checkout strategy implements
 type checkoutStrategy interface {
 	do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error
-	// getCommitInfoRef returns a git ref which is used to get commit info like commit author
-	getCommitInfoRef() string
+	// getRefToBuildTriggerCommit returns a git ref which is used to get commit info like commit author
+	getRefToBuildTriggerCommit() string
 }
 
 // X: required parameter

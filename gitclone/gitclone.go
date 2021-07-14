@@ -276,7 +276,7 @@ func Execute(cfg Config) error {
 		}
 	}
 
-	if ref := checkoutStrategy.getCommitInfoRef(); ref != "" {
+	if ref := checkoutStrategy.getRefToBuildTriggerCommit(); ref != "" {
 		fmt.Println()
 		log.Infof("Exporting commit details")
 		if err := exportCommitInfo(gitCmd, ref, isPR, maxEnvLength); err != nil {

@@ -65,7 +65,7 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 	return detachHead(gitCmd)
 }
 
-func (c checkoutPRDiffFile) getCommitInfoRef() string {
+func (c checkoutPRDiffFile) getRefToBuildTriggerCommit() string {
 	return ""
 }
 
