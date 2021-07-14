@@ -97,7 +97,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 	return detachHead(gitCmd)
 }
 
-func (c checkoutPRManualMerge) getCommitInfoRef() *commitInfoRef {
+func (c checkoutPRManualMerge) commitInfoRef() *commitInfoRef {
 	return &commitInfoRef{
 		ref: c.params.SourceMergeArg,
 	}

@@ -53,14 +53,6 @@ type commitInfo struct {
 func exportCommitInfo(gitCmd git.Git, gitRef string, isPR bool, maxEnvLength int) error {
 	commitInfos := []commitInfo{
 		{
-			envKey: "GIT_CLONE_COMMIT_AUTHOR_NAME",
-			cmd:    gitCmd.Log(`%an`, gitRef),
-		},
-		{
-			envKey: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
-			cmd:    gitCmd.Log(`%ae`, gitRef),
-		},
-		{
 			envKey: "GIT_CLONE_COMMIT_HASH",
 			cmd:    gitCmd.Log(`%H`, gitRef),
 		},
@@ -71,6 +63,14 @@ func exportCommitInfo(gitCmd git.Git, gitRef string, isPR bool, maxEnvLength int
 		{
 			envKey: "GIT_CLONE_COMMIT_MESSAGE_BODY",
 			cmd:    gitCmd.Log(`%b`, gitRef),
+		},
+		{
+			envKey: "GIT_CLONE_COMMIT_AUTHOR_NAME",
+			cmd:    gitCmd.Log(`%an`, gitRef),
+		},
+		{
+			envKey: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
+			cmd:    gitCmd.Log(`%ae`, gitRef),
 		},
 	}
 	nonPROnlyInfos := []commitInfo{
@@ -276,7 +276,8 @@ func Execute(cfg Config) error {
 		}
 	}
 
-	if commitInfoRef := checkoutStrategy.getCommitInfoRef(); commitInfoRef != nil {
+	commitInfoRef := checkoutStrategy.commitInfoRef()
+	if commitInfoRef != nil {
 		fmt.Println()
 		log.Infof("Exporting commit details")
 		if err := exportCommitInfo(gitCmd, commitInfoRef.ref, isPR, maxEnvLength); err != nil {

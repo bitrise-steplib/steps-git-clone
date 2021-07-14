@@ -257,7 +257,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 	}
 }
 
-func Test_getCommitInfoRef(t *testing.T) {
+func Test_commitInfoRef(t *testing.T) {
 	tests := []struct {
 		name     string
 		strategy checkoutStrategy
@@ -343,7 +343,7 @@ func Test_getCommitInfoRef(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%T %s", tt.strategy, tt.name), func(t *testing.T) {
-			gotRef := tt.strategy.getCommitInfoRef()
+			gotRef := tt.strategy.commitInfoRef()
 
 			assert.Equal(t, tt.wantRef, gotRef)
 		})
