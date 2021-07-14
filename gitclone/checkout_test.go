@@ -331,7 +331,7 @@ func Test_getCommitInfoRef(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%T %s", tt.strategy, tt.name), func(t *testing.T) {
-			gotRef := tt.strategy.getRefToBuildTriggerCommit()
+			gotRef := tt.strategy.getBuildTriggerRef()
 
 			assert.Equal(t, tt.wantRef, gotRef)
 		})
