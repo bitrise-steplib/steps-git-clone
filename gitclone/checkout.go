@@ -346,7 +346,7 @@ func selectFallbacks(method CheckoutMethod, fetchOpts fetchOptions) fallbackRetr
 			return resetUnshallow{
 				traits: unshallowFetchOpts,
 			}
-		}git reset --soft HEAD@{1}
+		}
 	default:
 		panic(fmt.Sprintf("implementation missing for enum value %T", method))
 	}
