@@ -257,7 +257,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 	}
 }
 
-func Test_getCommitInfoRef(t *testing.T) {
+func Test_getBuildTriggerRef(t *testing.T) {
 	tests := []struct {
 		name     string
 		strategy checkoutStrategy

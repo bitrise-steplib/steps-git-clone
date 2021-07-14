@@ -285,7 +285,7 @@ func Execute(cfg Config) error {
 	} else {
 		fmt.Println()
 		log.Warnf(`Can not export commit information like commit message and author as it is not available.
-This may happen when using Bitbucket with the "Manual merge" Input set to 'yes' (using a Diff file).`)
+This may happen when using Bitbucket with the "Manual merge" input set to 'yes' (using a Diff file).`)
 	}
 
 	return nil

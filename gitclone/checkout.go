@@ -54,6 +54,7 @@ func NewParameterValidationError(msg string) error {
 // checkoutStrategy is the interface an actual checkout strategy implements
 type checkoutStrategy interface {
 	do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error
+
 	// getBuildTriggerRef returns ref to the commit/branch/tag that triggered the build.
 	// For simple checkout strategies the returned ref will be HEAD (after running 'do').
 	// However a PR checkout strategy may create a (temporary) merge commit, so the merged state can be tested.
