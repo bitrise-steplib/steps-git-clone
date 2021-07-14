@@ -274,38 +274,47 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 	}
 }
 
-func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchTags, fetchSubmodules bool, filterTree bool) fetchOptions {
+func selectFetchOptions(method CheckoutMethod, cloneDepth int, fetchTags, fetchSubmodules bool, filterTree bool) fetchOptions {
 	opts := fetchOptions{
 		depth:           cloneDepth,
 		tags:            fetchTags,
 		fetchSubmodules: fetchSubmodules,
 	}
 
-	opts = selectFilterTreeFetchOption(checkoutStrategy, opts, filterTree)
+	opts = selectFilterTreeFetchOption(method, opts, filterTree)
 
 	return opts
 }
 
-func selectFilterTreeFetchOption(checkoutStrategy CheckoutMethod, opts fetchOptions, filterTree bool) fetchOptions {
+func selectFilterTreeFetchOption(method CheckoutMethod, opts fetchOptions, filterTree bool) fetchOptions {
 	if !filterTree {
 		return opts
 	}
 
-	switch checkoutStrategy {
+	switch method {
 	case CheckoutCommitMethod,
 		CheckoutTagMethod,
 		CheckoutBranchMethod,
 		CheckoutHeadBranchCommitMethod,
 		CheckoutForkCommitMethod:
-		opts.filterTree = true
-		opts.depth = 0
+		{
+			opts.filterTree = true
+			opts.depth = 0
+			return opts
+		}
+	case CheckoutNoneMethod,
+		CheckoutPRMergeBranchMethod,
+		CheckoutPRManualMergeMethod,
+		CheckoutPRDiffFileMethod:
+		{
+			return opts
+		}
 	default:
+		panic(fmt.Sprintf("implementation missing for enum value %T", method))
 	}
-
-	return opts
 }
 
-func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fallbackRetry {
+func selectFallbacks(method CheckoutMethod, fetchOpts fetchOptions) fallbackRetry {
 	if fetchOpts.IsFullDepth() {
 		return nil
 	}
@@ -315,37 +324,52 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 		fetchSubmodules: fetchOpts.fetchSubmodules,
 	}
 
-	switch checkoutStrategy {
-	case CheckoutBranchMethod:
-		// the given branch's tip will be checked out, no need to unshallow
-		return nil
-	case CheckoutCommitMethod, CheckoutTagMethod, CheckoutHeadBranchCommitMethod, CheckoutForkCommitMethod:
-		return simpleUnshallow{
-			traits: unshallowFetchOpts,
+	switch method {
+	case CheckoutNoneMethod,
+		CheckoutBranchMethod: // the given branch's tip will be checked out, no need to unshallow
+		{
+			return nil
 		}
-	case CheckoutPRMergeBranchMethod, CheckoutPRManualMergeMethod, CheckoutPRDiffFileMethod:
-		return resetUnshallow{
-			traits: unshallowFetchOpts,
+	case CheckoutCommitMethod,
+		CheckoutTagMethod,
+		CheckoutHeadBranchCommitMethod,
+		CheckoutForkCommitMethod:
+		{
+			return simpleUnshallow{
+				traits: unshallowFetchOpts,
+			}
 		}
+	case CheckoutPRMergeBranchMethod,
+		CheckoutPRManualMergeMethod,
+		CheckoutPRDiffFileMethod:
+		{
+			return resetUnshallow{
+				traits: unshallowFetchOpts,
+			}
+		}git reset --soft HEAD@{1}
 	default:
-		return nil
+		panic(fmt.Sprintf("implementation missing for enum value %T", method))
 	}
 }
 
-func isPRCheckout(checkoutMethod CheckoutMethod) bool {
-	switch checkoutMethod {
+func isPRCheckout(method CheckoutMethod) bool {
+	switch method {
 	case CheckoutNoneMethod,
 		CheckoutCommitMethod,
 		CheckoutTagMethod,
 		CheckoutBranchMethod:
-		return false
+		{
+			return false
+		}
 	case CheckoutPRMergeBranchMethod,
 		CheckoutPRDiffFileMethod,
 		CheckoutPRManualMergeMethod,
 		CheckoutHeadBranchCommitMethod,
 		CheckoutForkCommitMethod:
-		return true
+		{
+			return true
+		}
 	default:
-		return true
+		panic(fmt.Sprintf("implementation missing for enum value %T", method))
 	}
 }
