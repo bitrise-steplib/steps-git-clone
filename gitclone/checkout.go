@@ -54,6 +54,12 @@ func NewParameterValidationError(msg string) error {
 // checkoutStrategy is the interface an actual checkout strategy implements
 type checkoutStrategy interface {
 	do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error
+
+	// getBuildTriggerRef returns ref to the commit/branch/tag that triggered the build.
+	// For simple checkout strategies the returned ref will be HEAD (after running 'do').
+	// However a PR checkout strategy may create a (temporary) merge commit, so the merged state can be tested.
+	// In this case the returned ref will point to the Source branch (or a commit on the Source branch).
+	getBuildTriggerRef() string
 }
 
 // X: required parameter
@@ -266,41 +272,49 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 	default:
 		return nil, fmt.Errorf("invalid checkout strategy selected")
 	}
-
 }
 
-func selectFetchOptions(checkoutStrategy CheckoutMethod, cloneDepth int, fetchTags, fetchSubmodules bool, filterTree bool) fetchOptions {
+func selectFetchOptions(method CheckoutMethod, cloneDepth int, fetchTags, fetchSubmodules bool, filterTree bool) fetchOptions {
 	opts := fetchOptions{
 		depth:           cloneDepth,
 		tags:            fetchTags,
 		fetchSubmodules: fetchSubmodules,
 	}
 
-	opts = selectFilterTreeFetchOption(checkoutStrategy, opts, filterTree)
+	opts = selectFilterTreeFetchOption(method, opts, filterTree)
 
 	return opts
 }
 
-func selectFilterTreeFetchOption(checkoutStrategy CheckoutMethod, opts fetchOptions, filterTree bool) fetchOptions {
+func selectFilterTreeFetchOption(method CheckoutMethod, opts fetchOptions, filterTree bool) fetchOptions {
 	if !filterTree {
 		return opts
 	}
 
-	switch checkoutStrategy {
+	switch method {
 	case CheckoutCommitMethod,
 		CheckoutTagMethod,
 		CheckoutBranchMethod,
 		CheckoutHeadBranchCommitMethod,
 		CheckoutForkCommitMethod:
-		opts.filterTree = true
-		opts.depth = 0
+		{
+			opts.filterTree = true
+			opts.depth = 0
+			return opts
+		}
+	case CheckoutNoneMethod,
+		CheckoutPRMergeBranchMethod,
+		CheckoutPRManualMergeMethod,
+		CheckoutPRDiffFileMethod:
+		{
+			return opts
+		}
 	default:
+		panic(fmt.Sprintf("implementation missing for enum value %T", method))
 	}
-
-	return opts
 }
 
-func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fallbackRetry {
+func selectFallbacks(method CheckoutMethod, fetchOpts fetchOptions) fallbackRetry {
 	if fetchOpts.IsFullDepth() {
 		return nil
 	}
@@ -310,19 +324,52 @@ func selectFallbacks(checkoutStrategy CheckoutMethod, fetchOpts fetchOptions) fa
 		fetchSubmodules: fetchOpts.fetchSubmodules,
 	}
 
-	switch checkoutStrategy {
-	case CheckoutBranchMethod:
-		// the given branch's tip will be checked out, no need to unshallow
-		return nil
-	case CheckoutCommitMethod, CheckoutTagMethod, CheckoutHeadBranchCommitMethod, CheckoutForkCommitMethod:
-		return simpleUnshallow{
-			traits: unshallowFetchOpts,
+	switch method {
+	case CheckoutNoneMethod,
+		CheckoutBranchMethod: // the given branch's tip will be checked out, no need to unshallow
+		{
+			return nil
 		}
-	case CheckoutPRMergeBranchMethod, CheckoutPRManualMergeMethod, CheckoutPRDiffFileMethod:
-		return resetUnshallow{
-			traits: unshallowFetchOpts,
+	case CheckoutCommitMethod,
+		CheckoutTagMethod,
+		CheckoutHeadBranchCommitMethod,
+		CheckoutForkCommitMethod:
+		{
+			return simpleUnshallow{
+				traits: unshallowFetchOpts,
+			}
+		}
+	case CheckoutPRMergeBranchMethod,
+		CheckoutPRManualMergeMethod,
+		CheckoutPRDiffFileMethod:
+		{
+			return resetUnshallow{
+				traits: unshallowFetchOpts,
+			}
 		}
 	default:
-		return nil
+		panic(fmt.Sprintf("implementation missing for enum value %T", method))
+	}
+}
+
+func isPRCheckout(method CheckoutMethod) bool {
+	switch method {
+	case CheckoutNoneMethod,
+		CheckoutCommitMethod,
+		CheckoutTagMethod,
+		CheckoutBranchMethod:
+		{
+			return false
+		}
+	case CheckoutPRMergeBranchMethod,
+		CheckoutPRDiffFileMethod,
+		CheckoutPRManualMergeMethod,
+		CheckoutHeadBranchCommitMethod,
+		CheckoutForkCommitMethod:
+		{
+			return true
+		}
+	default:
+		panic(fmt.Sprintf("implementation missing for enum value %T", method))
 	}
 }

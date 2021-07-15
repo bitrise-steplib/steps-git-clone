@@ -4,7 +4,6 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 app:
   envs:
     - ORIGINAL_WORKDIR: $BITRISE_SOURCE_DIR
-    - WORKDIR: .
     - TEST_REPO_URL: https://github.com/bitrise-io/git-clone-test.git
     - FETCH_TAGS: "no"
     - UPDATE_SUBMODULES: "yes"
@@ -118,6 +117,7 @@ workflows:
 
   test_checkout_tag_with_other_branch:
     envs:
+      - TAG: 0.9.2
       - BRANCH: "carthage"
       - CLONE_DEPTH: "1"
       - FETCH_TAGS: "yes"
@@ -156,12 +156,20 @@ workflows:
     envs:
       - BRANCH: "master"
       - UPDATE_SUBMODULES: "no"
+      - WORKDIR: "."
     before_run:
       - _setup
     steps:
+      - script:
+          inputs:
+            - content: |-
+                set -ex
+                WD=$(mktemp -d -t step-git-cloneXXXXXX)
+                envman add --key CURRENT_DIR --value $WD
+                envman add --key WORKDIR_ABSOLUTE --value $WD
       - change-workdir:
           inputs:
-            - path: $WORKDIR
+            - path: $CURRENT_DIR
     after_run:
       - _run
       - utility_reset_workdir
@@ -272,6 +280,7 @@ workflows:
       - _setup
     after_run:
       - _run
+      - _check_outputs
       - _check_commit_logs
       - _teardown
 
@@ -297,6 +306,38 @@ workflows:
       - BITRISEIO_GIT_BRANCH_DEST: "master"
       - COMMIT: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
       - BRANCH: "test/commit-messages"
+    before_run:
+      - _setup
+    after_run:
+      - _run
+      - _check_outputs
+      - _teardown
+
+  test_fork_manual_merge:
+    envs:
+      # Alternate URL for repository, the difference causes the Step to handle it as a fork
+      - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: "https://github.com/bitrise-samples/git-clone-test/"
+      - BITRISEIO_GIT_BRANCH_DEST: "master"
+      - BRANCH: "test/commit-messages"
+      - COMMIT: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
+    before_run:
+      - _setup
+    after_run:
+      - _run
+      - _check_outputs
+      - _teardown
+
+  test_fork_with_head_branch:
+    envs:
+      - PULL_REQUEST_ID: 7
+      # Alternate URL for repository, the difference causes the Step to handle it as a fork
+      - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: "https://github.com/bitrise-samples/git-clone-test/"
+      - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: "pull/7/merge"
+      - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: "pull/7/head"
+      - BITRISEIO_GIT_BRANCH_DEST: "master"
+      - COMMIT: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
+      - BRANCH: "test/commit-messages"
+      - MANUAL_MERGE: "no"
     before_run:
       - _setup
     after_run:
@@ -565,7 +606,12 @@ workflows:
             - content: |-
                 #!/bin/env bash
                 set -ex
-                envman add --key WORKDIR --value $(mktemp -d -t step-git-cloneXXXXXX)
+                # If WORKDIR is not empty, preserve value
+                if [[ -z "$WORKDIR" ]]; then
+                  WD=$(mktemp -d -t step-git-cloneXXXXXX)
+                  envman add --key WORKDIR --value $WD
+                  envman add --key WORKDIR_ABSOLUTE --value $WD
+                fi
       - path::./:
           run_if: "true"
           inputs:
@@ -585,4 +631,4 @@ workflows:
     steps:
       - ensure-clean-git:
           inputs:
-            - dir_to_check: $WORKDIR
+            - dir_to_check: $WORKDIR_ABSOLUTE

@@ -65,6 +65,10 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 	return detachHead(gitCmd)
 }
 
+func (c checkoutPRDiffFile) getBuildTriggerRef() string {
+	return ""
+}
+
 type patchSource interface {
 	getDiffPath(buildURL, apiToken string) (string, error)
 }

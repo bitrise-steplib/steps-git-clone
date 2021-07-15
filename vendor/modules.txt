@@ -11,7 +11,7 @@ github.com/bitrise-io/go-steputils/input
 github.com/bitrise-io/go-steputils/step
 github.com/bitrise-io/go-steputils/stepconf
 github.com/bitrise-io/go-steputils/tools
-# github.com/bitrise-io/go-utils v0.0.0-20210517140706-aa64fd88ca49
+# github.com/bitrise-io/go-utils v0.0.0-20210713111255-08be784d45d0
 ## explicit
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
@@ -37,8 +37,6 @@ github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-retryablehttp v0.7.0
 ## explicit
 github.com/hashicorp/go-retryablehttp
-# github.com/kisielk/errcheck v1.2.0
-## explicit
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/objx v0.3.0
@@ -49,8 +47,6 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
 # golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/lint v0.0.0-20200130185559-910be7a94367
-## explicit
 # golang.org/x/sys v0.0.0-20210514084401-e8d321eab015
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
@@ -58,8 +54,6 @@ golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/term v0.0.0-20210503060354-a79de5458b56
 golang.org/x/term
-# golang.org/x/tools v0.0.0-20200220224806-8a925fa4c0df
-## explicit
 # gopkg.in/yaml.v2 v2.4.0
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b

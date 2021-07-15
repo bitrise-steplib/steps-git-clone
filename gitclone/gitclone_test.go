@@ -12,7 +12,7 @@ import (
 
 const rawCmdError = "dummy_cmd_error"
 
-var testCases = [...]struct {
+var checkoutStateTestCases = [...]struct {
 	name        string
 	cfg         Config
 	patchSource patchSource
@@ -613,7 +613,7 @@ var testCases = [...]struct {
 }
 
 func Test_checkoutState(t *testing.T) {
-	for _, tt := range testCases {
+	for _, tt := range checkoutStateTestCases {
 		t.Run(tt.name, func(t *testing.T) {
 			// Given
 			var mockRunner *MockRunner
@@ -625,7 +625,7 @@ func Test_checkoutState(t *testing.T) {
 			runner = mockRunner
 
 			// When
-			actualErr := checkoutState(git.Git{}, tt.cfg, tt.patchSource)
+			_, _, actualErr := checkoutState(git.Git{}, tt.cfg, tt.patchSource)
 
 			// Then
 			if tt.wantErrType != nil {

@@ -15,6 +15,10 @@ func (c checkoutNone) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fal
 	return nil
 }
 
+func (c checkoutNone) getBuildTriggerRef() string {
+	return ""
+}
+
 //
 // CommitParams are parameters to check out a given commit (In addition to the repository URL)
 type CommitParams struct {
@@ -61,6 +65,10 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 	return nil
 }
 
+func (c checkoutCommit) getBuildTriggerRef() string {
+	return c.params.Commit
+}
+
 //
 // BranchParams are parameters to check out a given branch (In addition to the repository URL)
 type BranchParams struct {
@@ -84,12 +92,19 @@ type checkoutBranch struct {
 }
 
 func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallbackRetry) error {
-	branchRef := refsHeadsPrefix + c.params.Branch
-	if err := fetchInitialBranch(gitCmd, originRemoteName, branchRef, fetchOptions); err != nil {
+	if err := fetchInitialBranch(gitCmd, originRemoteName, c.localRef(), fetchOptions); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (c checkoutBranch) getBuildTriggerRef() string {
+	return c.localRef()
+}
+
+func (c checkoutBranch) localRef() string {
+	return refsHeadsPrefix + c.params.Branch
 }
 
 //
@@ -115,7 +130,7 @@ type checkoutTag struct {
 }
 
 func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	ref := fmt.Sprintf("refs/tags/%s:refs/tags/%s", c.params.Tag, c.params.Tag)
+	ref := fmt.Sprintf("%s:%s", c.ref(), c.ref())
 	if err := fetch(gitCmd, originRemoteName, ref, fetchOptions); err != nil {
 		return err
 	}
@@ -125,4 +140,12 @@ func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fall
 	}
 
 	return nil
+}
+
+func (c checkoutTag) getBuildTriggerRef() string {
+	return c.ref()
+}
+
+func (c checkoutTag) ref() string {
+	return fmt.Sprintf("refs/tags/%s", c.params.Tag)
 }

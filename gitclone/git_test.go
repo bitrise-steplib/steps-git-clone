@@ -7,22 +7,64 @@ import (
 
 	"github.com/bitrise-io/bitrise-init/errormapper"
 	"github.com/bitrise-io/go-steputils/step"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestFetchArg(t *testing.T) {
-	for input, expected := range map[string]string{
-		"pull/1/merge":       "refs/pull/1/head:pull/1",
-		"pull/22/merge":      "refs/pull/22/head:pull/22",
-		"pull/224/qux/merge": "refs/pull/224/qux/head:pull/224/qux",
-		"pull/22/baz":        "refs/heads/pull/22/baz:pull/22/baz",
-		"pull/22/merge/foo":  "refs/heads/pull/22/merge/foo:pull/22/merge/foo",
-		"feature/bar":        "refs/heads/feature/bar:feature/bar",
-		"feature/qux/baz":    "refs/heads/feature/qux/baz:feature/qux/baz",
-	} {
-		actual := fetchArg(input)
-		if actual != expected {
-			t.Errorf("fetchArg(%q), expected %q, actual %q", input, expected, actual)
-		}
+func Test_headBranchRefs(t *testing.T) {
+	tests := []struct {
+		name           string
+		mergeBranchArg string
+		wantRemoteRef  string
+		wantLocalRef   string
+	}{
+		{
+			name:           "PR ID short",
+			mergeBranchArg: "pull/1/merge",
+			wantRemoteRef:  "refs/pull/1/head",
+			wantLocalRef:   "pull/1",
+		},
+		{
+			name:           "PR ID long",
+			mergeBranchArg: "pull/22/merge",
+			wantRemoteRef:  "refs/pull/22/head",
+			wantLocalRef:   "pull/22",
+		},
+		{
+			name:           "Extra path element prefixed",
+			mergeBranchArg: "pull/224/qux/merge",
+			wantRemoteRef:  "refs/pull/224/qux/head",
+			wantLocalRef:   "pull/224/qux",
+		},
+		{
+			name:           "Alternate suffix",
+			mergeBranchArg: "pull/22/baz",
+			wantRemoteRef:  "refs/heads/pull/22/baz",
+			wantLocalRef:   "pull/22/baz",
+		},
+		{
+			name:           "Extra path element suffficed",
+			mergeBranchArg: "pull/22/merge/foo",
+			wantRemoteRef:  "refs/heads/pull/22/merge/foo",
+			wantLocalRef:   "pull/22/merge/foo",
+		},
+		{
+			name:           "Non GitHub convention, PR ID missing",
+			mergeBranchArg: "feature/bar",
+			wantRemoteRef:  "refs/heads/feature/bar",
+			wantLocalRef:   "feature/bar",
+		},
+		{
+			name:           "Non GitHub convention, PR ID missing, has extra path elemnent",
+			mergeBranchArg: "feature/qux/baz",
+			wantRemoteRef:  "refs/heads/feature/qux/baz",
+			wantLocalRef:   "feature/qux/baz",
+		},
+	}
+	for _, tt := range tests {
+		gotRemoteRef, gotLocalRef := headBranchRefs(tt.mergeBranchArg)
+
+		assert.Equal(t, tt.wantRemoteRef, gotRemoteRef)
+		assert.Equal(t, tt.wantLocalRef, gotLocalRef)
 	}
 }
 

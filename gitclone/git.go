@@ -56,19 +56,6 @@ func resetRepo(gitCmd git.Git) error {
 	return runner.Run(gitCmd.SubmoduleForeach(gitCmd.Clean("-x", "-d", "-f")))
 }
 
-func getCheckoutArg(commit, tag, branch string) string {
-	switch {
-	case commit != "":
-		return commit
-	case tag != "":
-		return tag
-	case branch != "":
-		return branch
-	default:
-		return ""
-	}
-}
-
 func isFork(repoURL, prRepoURL string) bool {
 	return prRepoURL != "" && getRepo(repoURL) != getRepo(prRepoURL)
 }
@@ -105,18 +92,21 @@ func isPrivate(repoURL string) bool {
 	return strings.HasPrefix(repoURL, "git")
 }
 
-// If incoming branch matches to pull/x/merge pattern fetchArg
-// converts it to pull/x/head:pull/x otherwise original name is kept.
-func fetchArg(mergeBranch string) string {
+// If incoming branch matches to pull/x/merge pattern headBranchRefs
+// converts it to remote ref (pull/x/head) and local ref (pull/x)
+// If it does not match it keeps original name.
+func headBranchRefs(mergeBranch string) (remoteRef, localRef string) {
 	var re = regexp.MustCompile("^pull/(.*)/merge$")
 	if re.MatchString(mergeBranch) {
-		return re.ReplaceAllString(mergeBranch, "refs/pull/$1/head:pull/$1")
+		branchID := re.ReplaceAllString(mergeBranch, "$1")
+		remoteRef = fmt.Sprintf("refs/pull/%s/head", branchID)
+		localRef = fmt.Sprintf("pull/%s", branchID)
+		return
 	}
-	return "refs/heads/" + mergeBranch + ":" + mergeBranch
-}
 
-func mergeArg(mergeBranch string) string {
-	return strings.TrimSuffix(mergeBranch, "/merge")
+	remoteRef = "refs/heads/" + mergeBranch
+	localRef = mergeBranch
+	return
 }
 
 type getAvailableBranches func() (map[string][]string, error)

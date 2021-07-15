@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
@@ -21,7 +22,9 @@ func main() {
 	stepconf.Print(cfg)
 
 	if err := gitclone.Execute(cfg); err != nil {
-		failf("ERROR: %v", err)
+		failf("Error: %v", err)
 	}
-	log.Donef("\nSuccess")
+
+	fmt.Println()
+	log.Donef("Success")
 }
