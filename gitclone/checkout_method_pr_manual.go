@@ -87,7 +87,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 	// Fetch and merge
 	sourceBranchRef := refsHeadsPrefix + c.params.SourceBranch
 	if err := fetch(gitCmd, remoteName, sourceBranchRef, fetchOptions); err != nil {
-		return nil
+		return err
 	}
 
 	if err := mergeWithCustomRetry(gitCmd, c.params.SourceMergeArg, fallback); err != nil {
