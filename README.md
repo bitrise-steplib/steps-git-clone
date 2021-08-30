@@ -1,96 +1,100 @@
-# Git clone step
+# Git Clone Repository
 
-Clones a specified git repository to the desired local path.
+[![Step changelog](https://shields.io/github/v/release/bitrise-steplib/steps-git-clone?include_prereleases&label=changelog&color=blueviolet)](https://github.com/bitrise-steplib/steps-git-clone/releases)
 
-## How to use this Step
+The Step checks out the defined repository state, optionally updates the repository submodules and exports the achieved git repository state properties.
 
-Can be run directly with the [bitrise CLI](https://github.com/bitrise-io/bitrise),
-just `git clone` this repository, `cd` into it's folder in your Terminal/Command Line
-and call `bitrise run test`.
+<details>
+<summary>Description</summary>
 
-*Check the `bitrise.yml` file for required inputs which have to be
-added to your `.bitrise.secrets.yml` file!*
+The checkout process depends on the checkout properties: the Step either checks out a repository state defined by a git commit or a git tag, or achieves a merged state of a pull / merge request.
+The Step uses two solutions to achieve the merged state of the pull / merge request: auto merge in the case of a merge branch or diff file (provided by the Git service) and manual merge otherwise.
+Once the desired state is checked out, the Step optionally updates the submodules. In the case of pull / merge request, the Step checks out a detach head and exports the achieved git state properties.
 
-Step by step:
+### Configuring the Step
 
-1. Open up your Terminal / Command Line
-2. `git clone` the repository
-3. `cd` into the directory of the step (the one you just `git clone`d)
-5. Create a `.bitrise.secrets.yml` file in the same directory of `bitrise.yml` - the `.bitrise.secrets.yml` is a git ignored file, you can store your secrets in
-6. Check the `bitrise.yml` file for any secret you should set in `.bitrise.secrets.yml`
-  * Best practice is to mark these options with something like `# define these in your .bitrise.secrets.yml`, in the `app:envs` section.
-7. Once you have all the required secret parameters in your `.bitrise.secrets.yml` you can just run this step with the [bitrise CLI](https://github.com/bitrise-io/bitrise): `bitrise run test`
+1. The **Git repository URL** and the ** Clone destination (local)directory path** fields are required fields and are automatically filled out based on your project settings.
+Optionally, you can modify the following fields in the **Clone Config** section:
+1. You can set the **Update the registered submodules?** option to `yes` to pull the most up-to-date version of the submodule from the submodule's repository.
+2. You can set the number of commits you want the Step to fetch in the **Limit fetching to the specified number of commits** option. Make sure you set a decimal number.
 
-An example `.bitrise.secrets.yml` file:
+Other **Clone config** inputs are not editable unless you go to the **bitrise.yml** tab, however, to avoid issues, we suggest you to contact our Support team instead.
 
-```
-envs:
-- A_SECRET_PARAM_ONE: the value for secret one
-- A_SECRET_PARAM_TWO: the value for secret two
-```
+### Troubleshooting
+If you have GitHub Enterprise set up, it works slightly differently on [bitrise.io](https://www.bitrise.io) than on [github.com](https://github.com). You have to manually set the git clone URL, register the SSH key and the webhook.
+If you face network issues in the case of self-hosted git servers, we advise you to contact our Support Team to help you out.
+If you face slow clone speed, set the **Limit fetching to the specified number of commits** to the number of commits you want to clone instead of cloning the whole commit history or you can use the Git LFS solution provided by the git provider.
+ 
+### Useful links
 
-## How to create your own step
+- [How to register a GitHub Enterprise repository](https://discuss.bitrise.io/t/how-to-register-a-github-enterprise-repository/218)
+- [Code security](https://devcenter.bitrise.io/getting-started/code-security/)
 
-1. Create a new git repository for your step (**don't fork** the *step template*, create a *new* repository)
-2. Copy the [step template](https://github.com/bitrise-steplib/step-template) files into your repository
-3. Fill the `main.go` with your functionality
-4. Wire out your inputs to `step.yml` (`inputs` section)
-5. Fill out the other parts of the `step.yml` too
-6. Provide test values for the inputs in the `bitrise.yml`
-7. Run your step with `bitrise run test` - if it works, you're ready
+### Related Steps
+ 
+- [Activate SSH key (RSA private key)](https://www.bitrise.io/integrations/steps/activate-ssh-key)
+- [Bitrise.io Cache:Pull](https://www.bitrise.io/integrations/steps/cache-pull)
+- [Bitrise.io Cache:Push](https://www.bitrise.io/integrations/steps/cache-push)
 
-__For Step development guidelines & best practices__ check this documentation: [https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md](https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md).
+</details>
 
-**NOTE:**
+## 🧩 Get started
 
-If you want to use your step in your project's `bitrise.yml`:
+Add this step directly to your workflow in the [Bitrise Workflow Editor](https://devcenter.bitrise.io/steps-and-workflows/steps-and-workflows-index/).
 
-1. git push the step into it's repository
-2. reference it in your `bitrise.yml` with the `git::PUBLIC-GIT-CLONE-URL@BRANCH` step reference style:
+You can also run this step directly with [Bitrise CLI](https://github.com/bitrise-io/bitrise).
 
-```
-- git::https://github.com/user/my-step.git@branch:
-   title: My step
-   inputs:
-   - my_input_1: "my value 1"
-   - my_input_2: "my value 2"
-```
+## ⚙️ Configuration
 
-You can find more examples of step reference styles
-in the [bitrise CLI repository](https://github.com/bitrise-io/bitrise/blob/master/_examples/tutorials/steps-and-workflows/bitrise.yml#L65).
+<details>
+<summary>Inputs</summary>
 
-## How to contribute to this Step
+| Key | Description | Flags | Default |
+| --- | --- | --- | --- |
+| `repository_url` |  | required | `$GIT_REPOSITORY_URL` |
+| `clone_into_dir` |  | required | `$BITRISE_SOURCE_DIR` |
+| `commit` |  |  | `$BITRISE_GIT_COMMIT` |
+| `tag` |  |  | `$BITRISE_GIT_TAG` |
+| `branch` |  |  | `$BITRISE_GIT_BRANCH` |
+| `branch_dest` |  |  | `$BITRISEIO_GIT_BRANCH_DEST` |
+| `pull_request_id` |  |  | `$PULL_REQUEST_ID` |
+| `pull_request_repository_url` |  |  | `$BITRISEIO_PULL_REQUEST_REPOSITORY_URL` |
+| `pull_request_merge_branch` |  |  | `$BITRISEIO_PULL_REQUEST_MERGE_BRANCH` |
+| `pull_request_head_branch` | If the Git hosting provider system supports and provides this,  this special git ref should point to the source of the pull request. |  | `$BITRISEIO_PULL_REQUEST_HEAD_BRANCH` |
+| `update_submodules` | Update the registered submodules to match what the superproject expects by cloning missing submodules, fetching missing commits in submodules and updating the working tree of the submodules.   If set to "no" `git fetch` calls will get the `--no-recurse-submodules` flag. |  | `yes` |
+| `clone_depth` | Limit fetching to the specified number of commits. The value should be a decimal number, for example `10`. |  |  |
+| `submodule_update_depth` | Truncate the history to the specified number of revisions. The value should be a decimal number, for example `10`. |  |  |
+| `merge_pr` | Disables merging the source and destination branches. - `yes`: The default setting. Merges the source branch into the destination branch. - `no`: Treats Pull Request events as Push events on the source branch. |  | `yes` |
+| `sparse_directories` | Limit which directories should be cloned during the build. This could be useful if a repository contains multiple platforms, so called monorepositories, and the build is only targeting a single platform. For example, specifying "src/android" the Step will only clone: - contents of the root directory and - contents of the "src/android" directory and all subdirectories of "src/android". On the other hand, "src/ios" and any other directories will not be cloned. |  |  |
+| `reset_repository` |  |  | `No` |
+| `manual_merge` | Prefer to do a manual `git merge` by default. When the Pull Request is from a GitHub or Bitbucket private fork repository set this to `no`. |  | `yes` |
+| `fetch_tags` | yes - fetch all tags from the remote by adding `--tags` flag to git fetch calls   no - disable automatic tag following by adding `--no-tags` flag to git fetch calls |  | `no` |
+| `build_url` | Unique build URL of this build on Bitrise.io |  | `$BITRISE_BUILD_URL` |
+| `build_api_token` | The build's API Token for the build on Bitrise.io | sensitive | `$BITRISE_BUILD_API_TOKEN` |
+</details>
 
-1. Fork this repository
-2. `git clone` it
-3. Create a branch you'll work on
-4. To use/test the step just follow the **How to use this Step** section
-5. Do the changes you want to
-6. Run/test the step before sending your contribution
-  * You can also test the step in your `bitrise` project, either on your Mac or on [bitrise.io](https://www.bitrise.io)
-  * You just have to replace the step ID in your project's `bitrise.yml` with either a relative path, or with a git URL format
-  * (relative) path format: instead of `- original-step-id:` use `- path::./relative/path/of/script/on/your/Mac:`
-  * direct git URL format: instead of `- original-step-id:` use `- git::https://github.com/user/step.git@branch:`
-  * You can find more example of alternative step referencing at: https://github.com/bitrise-io/bitrise/blob/master/_examples/tutorials/steps-and-workflows/bitrise.yml
-7. Once you're done just commit your changes & create a Pull Request
+<details>
+<summary>Outputs</summary>
 
+| Environment Variable | Description |
+| --- | --- |
+| `GIT_CLONE_COMMIT_HASH` |  |
+| `GIT_CLONE_COMMIT_MESSAGE_SUBJECT` |  |
+| `GIT_CLONE_COMMIT_MESSAGE_BODY` |  |
+| `GIT_CLONE_COMMIT_COUNT` | Count will only work properly if no `--depth` option is set.  If `--depth` is set then the history truncated to the specified number of commits. Count will **not** fail but will be the clone depth. |
+| `GIT_CLONE_COMMIT_AUTHOR_NAME` |  |
+| `GIT_CLONE_COMMIT_AUTHOR_EMAIL` |  |
+| `GIT_CLONE_COMMIT_COMMITER_NAME` |  |
+| `GIT_CLONE_COMMIT_COMMITER_EMAIL` |  |
+</details>
 
-## Share your own Step
+## 🙋 Contributing
 
-You can share your Step or step version with the [bitrise CLI](https://github.com/bitrise-io/bitrise). If you use the `bitrise.yml` included in this repository, all you have to do is:
+We welcome [pull requests](https://github.com/bitrise-steplib/steps-git-clone/pulls) and [issues](https://github.com/bitrise-steplib/steps-git-clone/issues) against this repository.
 
-1. In your Terminal / Command Line `cd` into this directory (where the `bitrise.yml` of the step is located)
-1. Run: `bitrise run test` to test the step
-1. Run: `bitrise run audit-this-step` to audit the `step.yml`
-1. Check the `share-this-step` workflow in the `bitrise.yml`, and fill out the
-   `envs` if you haven't done so already (don't forget to bump the version number if this is an update
-   of your step!)
-1. Then run: `bitrise run share-this-step` to share the step (version) you specified in the `envs`
-1. Send the Pull Request, as described in the logs of `bitrise run share-this-step`
+For pull requests, work on your changes in a forked repository and use the Bitrise CLI to [run step tests locally](https://devcenter.bitrise.io/bitrise-cli/run-your-first-build/).
 
-That's all ;)
+Learn more about developing steps:
 
-## Trigger a new release
-
-- __merge every code changes__ to the `master` branch
-- __push the new version tag__ to the `master` branch
+- [Create your own step](https://devcenter.bitrise.io/contributors/create-your-own-step/)
+- [Testing your Step](https://devcenter.bitrise.io/contributors/testing-and-versioning-your-steps/)
