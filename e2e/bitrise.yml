@@ -3,632 +3,632 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-    - ORIGINAL_WORKDIR: $BITRISE_SOURCE_DIR
-    - TEST_REPO_URL: https://github.com/bitrise-io/git-clone-test.git
-    - FETCH_TAGS: "no"
-    - UPDATE_SUBMODULES: "yes"
-    - MERGE_PR: "yes"
-    - CLONE_DEPTH: ""
-    - SPARSE_DIRECTORIES: ""
-    - MANUAL_MERGE: "yes"
-    # define these envs in your .bitrise.secrets.yml
-    - GIT_CLONE_SSH_PRIVATE_KEY: $GIT_CLONE_SSH_PRIVATE_KEY
+  - ORIGINAL_WORKDIR: $BITRISE_SOURCE_DIR
+  - TEST_REPO_URL: https://github.com/bitrise-io/git-clone-test.git
+  - FETCH_TAGS: "no"
+  - UPDATE_SUBMODULES: "yes"
+  - MERGE_PR: "yes"
+  - CLONE_DEPTH: ""
+  - SPARSE_DIRECTORIES: ""
+  - MANUAL_MERGE: "yes"
+  # define these envs in your .bitrise.secrets.yml
+  - GIT_CLONE_SSH_PRIVATE_KEY: $GIT_CLONE_SSH_PRIVATE_KEY
 
 workflows:
   test_generate_changelog_by_commit:
     envs:
-      - COMMIT: "a409478"
-      - NEW_VERSION: "0.1.1"
-      - BRANCH: "test/generate-changelog"
-      - FETCH_TAGS: "yes"
-      - UPDATE_SUBMODULES: "no"
+    - COMMIT: a409478
+    - NEW_VERSION: 0.1.1
+    - BRANCH: test/generate-changelog
+    - FETCH_TAGS: "yes"
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_changelog
-      - _teardown
+    - _run
+    - _check_changelog
+    - _teardown
 
   test_generate_changelog_by_tag:
     envs:
-      - TAG: "0.1.1"
-      - NEW_VERSION: $TAG
-      - BRANCH: "test/generate-changelog"
-      - FETCH_TAGS: "yes"
-      - UPDATE_SUBMODULES: "no"
+    - TAG: 0.1.1
+    - NEW_VERSION: $TAG
+    - BRANCH: test/generate-changelog
+    - FETCH_TAGS: "yes"
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_changelog
-      - _teardown
+    - _run
+    - _check_changelog
+    - _teardown
 
   test_submodule:
     envs:
-      - BRANCH: "master"
+    - BRANCH: master
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_error:
     steps:
-      - script:
-          inputs:
-            - content: |-
-                #/bin/env bash
-                set -x
-                bitrise run --config=./e2e/bitrise.yml utility_error_test
-                if [ $? == 0 ]; then
-                  exit 1
-                fi
+    - script:
+        inputs:
+        - content: |-
+            #/bin/env bash
+            set -x
+            bitrise run --config=./e2e/bitrise.yml utility_error_test
+            if [ $? == 0 ]; then
+              exit 1
+            fi
 
   utility_error_test:
     envs:
-      - BRANCH: "fake"
+    - BRANCH: fake
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
+    - _run
 
   test_no_checkout:
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_checkout_commit:
     envs:
-      - COMMIT: "7a93251a9bf08fb8c6b19fc02f6d94618de6b386"
-      - UPDATE_SUBMODULES: "no"
+    - COMMIT: 7a93251a9bf08fb8c6b19fc02f6d94618de6b386
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_checkout_commit_on_branch:
     envs:
-      - COMMIT: "7a93251a9bf08fb8c6b19fc02f6d94618de6b386"
-      - BRANCH: "master"
-      - UPDATE_SUBMODULES: "no"
+    - COMMIT: 7a93251a9bf08fb8c6b19fc02f6d94618de6b386
+    - BRANCH: master
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_checkout_tag:
     envs:
-      - TAG: "0.9.2"
-      - UPDATE_SUBMODULES: "no"
+    - TAG: 0.9.2
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_checkout_tag_with_other_branch:
     envs:
-      - TAG: 0.9.2
-      - BRANCH: "carthage"
-      - CLONE_DEPTH: "1"
-      - FETCH_TAGS: "yes"
-      - UPDATE_SUBMODULES: "no"
+    - TAG: 0.9.2
+    - BRANCH: carthage
+    - CLONE_DEPTH: 1
+    - FETCH_TAGS: "yes"
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_checkout_tag_with_equally_named_branch:
     envs:
-      - TAG: "pr_test_new"
-      - BRANCH: "pr_test_new"
-      - UPDATE_SUBMODULES: "no"
+    - TAG: pr_test_new
+    - BRANCH: pr_test_new
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_checkout_branch:
     envs:
-      - BRANCH: master
-      - UPDATE_SUBMODULES: "no"
+    - BRANCH: master
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_checkout_current_dir:
     envs:
-      - BRANCH: "master"
-      - UPDATE_SUBMODULES: "no"
-      - WORKDIR: "."
+    - BRANCH: master
+    - UPDATE_SUBMODULES: "no"
+    - WORKDIR: .
     before_run:
-      - _setup
+    - _setup
     steps:
-      - script:
-          inputs:
-            - content: |-
-                set -ex
-                WD=$(mktemp -d -t step-git-cloneXXXXXX)
-                envman add --key CURRENT_DIR --value $WD
-                envman add --key WORKDIR_ABSOLUTE --value $WD
-      - change-workdir:
-          inputs:
-            - path: $CURRENT_DIR
+    - script:
+        inputs:
+        - content: |-
+            set -ex
+            WD=$(mktemp -d -t step-git-cloneXXXXXX)
+            envman add --key CURRENT_DIR --value $WD
+            envman add --key WORKDIR_ABSOLUTE --value $WD
+    - change-workdir:
+        inputs:
+        - path: $CURRENT_DIR
     after_run:
-      - _run
-      - utility_reset_workdir
-      - _check_outputs
-      - _teardown
+    - _run
+    - utility_reset_workdir
+    - _check_outputs
+    - _teardown
 
   utility_reset_workdir:
     steps:
-      - change-workdir:
-          inputs:
-            - path: $ORIGINAL_WORKDIR
+    - change-workdir:
+        inputs:
+        - path: $ORIGINAL_WORKDIR
 
   test_checkout_github_pull_request:
     envs:
-      - PULL_REQUEST_ID: 5
-      - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: "pull/5/merge"
-      - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: "pull/5/head"
-      - BITRISEIO_GIT_BRANCH_DEST: "master"
-      - MANUAL_MERGE: "no"
-      - UPDATE_SUBMODULES: "no"
+    - PULL_REQUEST_ID: 5
+    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
+    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/5/head
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - MANUAL_MERGE: "no"
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_checkout_pull_request_no_merge:
     envs:
-      - PULL_REQUEST_ID: 5
-      - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: "pull/5/merge"
-      - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: "pull/5/head"
-      - BITRISEIO_GIT_BRANCH_DEST: "master"
-      - COMMIT: "4301a9b8499ed3e87778dd053c55fd698d0a3b7e"
-      - MANUAL_MERGE: "no"
-      - MERGE_PR: "no"
-      - UPDATE_SUBMODULES: "no"
+    - PULL_REQUEST_ID: 5
+    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
+    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/5/head
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - COMMIT: 4301a9b8499ed3e87778dd053c55fd698d0a3b7e
+    - MANUAL_MERGE: "no"
+    - MERGE_PR: "no"
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_checkout_pull_request_standard_branch:
     envs:
-      - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: "pr_test"
-      - BITRISEIO_GIT_BRANCH_DEST: "master"
-      - MANUAL_MERGE: "no"
-      - UPDATE_SUBMODULES: "no"
+    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pr_test
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - MANUAL_MERGE: "no"
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_checkout_pull_request_with_depth:
     envs:
-      - PULL_REQUEST_ID: 5
-      - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: "pull/5/merge"
-      - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: "pull/5/head"
-      - BITRISEIO_GIT_BRANCH_DEST: "master"
-      - CLONE_DEPTH: "1"
-      - MANUAL_MERGE: "no"
+    - PULL_REQUEST_ID: 5
+    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
+    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/5/head
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - CLONE_DEPTH: 1
+    - MANUAL_MERGE: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_manual_merge_unshallow:
     envs:
-      - PULL_REQUEST_ID: 5
-      - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: "pull/7/merge"
-      - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: "pull/7/head"
-      - BITRISEIO_GIT_BRANCH_DEST: "master"
-      - COMMIT: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
-      - BRANCH: "test/commit-messages"
-      - CLONE_DEPTH: "1"
-      - UPDATE_SUBMODULES: "no"
+    - PULL_REQUEST_ID: 5
+    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/7/merge
+    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/7/head
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - COMMIT: 76a934ae80f12bb9b504bbc86f64a1d310e5db64
+    - BRANCH: test/commit-messages
+    - CLONE_DEPTH: 1
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_unshallow:
     envs:
-      - COMMIT: "cfba2b01332e31cb1568dbf3f22edce063118bae"
-      - CLONE_DEPTH: "1"
-      - UPDATE_SUBMODULES: "no"
+    - COMMIT: cfba2b01332e31cb1568dbf3f22edce063118bae
+    - CLONE_DEPTH: 1
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_commit_logs:
     envs:
-      - COMMIT: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
-      - BRANCH: "test/commit-messages"
-      - UPDATE_SUBMODULES: "no"
+    - COMMIT: 76a934ae80f12bb9b504bbc86f64a1d310e5db64
+    - BRANCH: test/commit-messages
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _check_commit_logs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _check_commit_logs
+    - _teardown
 
   test_hosted_git_ssh_prefix:
     envs:
-      - TEST_REPO_URL: "ssh://git@gitlab.com:22/bitrise/git-clone-test.git"
-      - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: "git@gitlab.com:bitrise/git-clone-test.git"
-      - BITRISEIO_GIT_BRANCH_DEST: "master"
-      - COMMIT: "8d558357cf085bc26af23b88f6bc4c07e175b8ac"
-      - BRANCH: "develop"
+    - TEST_REPO_URL: ssh://git@gitlab.com:22/bitrise/git-clone-test.git
+    - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: git@gitlab.com:bitrise/git-clone-test.git
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - COMMIT: 8d558357cf085bc26af23b88f6bc4c07e175b8ac
+    - BRANCH: develop
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_hosted_git_notfork:
     envs:
-      - PULL_REQUEST_ID: 7
-      - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: "git@github.com:bitrise-io/git-clone-test.git"
-      - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: "pull/7/merge"
-      - BITRISEIO_GIT_BRANCH_DEST: "master"
-      - COMMIT: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
-      - BRANCH: "test/commit-messages"
+    - PULL_REQUEST_ID: 7
+    - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: git@github.com:bitrise-io/git-clone-test.git
+    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/7/merge
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - COMMIT: 76a934ae80f12bb9b504bbc86f64a1d310e5db64
+    - BRANCH: test/commit-messages
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_fork_manual_merge:
     envs:
-      # Alternate URL for repository, the difference causes the Step to handle it as a fork
-      - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: "https://github.com/bitrise-samples/git-clone-test/"
-      - BITRISEIO_GIT_BRANCH_DEST: "master"
-      - BRANCH: "test/commit-messages"
-      - COMMIT: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
+    # Alternate URL for repository, the difference causes the Step to handle it as a fork
+    - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: https://github.com/bitrise-samples/git-clone-test/
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - BRANCH: test/commit-messages
+    - COMMIT: 76a934ae80f12bb9b504bbc86f64a1d310e5db64
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_fork_with_head_branch:
     envs:
-      - PULL_REQUEST_ID: 7
-      # Alternate URL for repository, the difference causes the Step to handle it as a fork
-      - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: "https://github.com/bitrise-samples/git-clone-test/"
-      - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: "pull/7/merge"
-      - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: "pull/7/head"
-      - BITRISEIO_GIT_BRANCH_DEST: "master"
-      - COMMIT: "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
-      - BRANCH: "test/commit-messages"
-      - MANUAL_MERGE: "no"
+    - PULL_REQUEST_ID: 7
+    # Alternate URL for repository, the difference causes the Step to handle it as a fork
+    - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: https://github.com/bitrise-samples/git-clone-test/
+    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/7/merge
+    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/7/head
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - COMMIT: 76a934ae80f12bb9b504bbc86f64a1d310e5db64
+    - BRANCH: test/commit-messages
+    - MANUAL_MERGE: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_unrelated_histories:
     envs:
-      - PULL_REQUEST_ID: 8
-      - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: "pull/8/merge"
-      - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: $TEST_REPO_URL
-      - BITRISEIO_GIT_BRANCH_DEST: "unrelated-histories/master"
-      - COMMIT: "62af44590c7a2b937726f2c3024a88a129b330b5"
-      - CLONE_DEPTH: "1"
-      - MANUAL_MERGE: "no"
-      - UPDATE_SUBMODULES: "no"
+    - PULL_REQUEST_ID: 8
+    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/8/merge
+    - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: $TEST_REPO_URL
+    - BITRISEIO_GIT_BRANCH_DEST: unrelated-histories/master
+    - COMMIT: 62af44590c7a2b937726f2c3024a88a129b330b5
+    - CLONE_DEPTH: 1
+    - MANUAL_MERGE: "no"
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_diff_file:
     before_run:
-      - _setup
+    - _setup
     steps:
-      - script:
-          inputs:
-            - title: Create temporary dir
-            - content: |-
-                #!/bin/env bash
-                set -ex
-                envman add --key WORKDIR --value $(mktemp -d -t step-git-cloneXXXXXX)
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                set -ex
-                DIFF_DIR=$WORKDIR/diff_dir
-                GIT_DIR=$WORKDIR/repoA
-                PR_GIT_DIR=$WORKDIR/repoB
-                CLONE_DIR=$WORKDIR/cloneDir
-                mkdir ${GIT_DIR}
-                mkdir ${PR_GIT_DIR}
-                mkdir ${DIFF_DIR}
-                mkdir ${CLONE_DIR}
+    - script:
+        inputs:
+        - title: Create temporary dir
+        - content: |-
+            #!/bin/env bash
+            set -ex
+            envman add --key WORKDIR --value $(mktemp -d -t step-git-cloneXXXXXX)
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -ex
+            DIFF_DIR=$WORKDIR/diff_dir
+            GIT_DIR=$WORKDIR/repoA
+            PR_GIT_DIR=$WORKDIR/repoB
+            CLONE_DIR=$WORKDIR/cloneDir
+            mkdir ${GIT_DIR}
+            mkdir ${PR_GIT_DIR}
+            mkdir ${DIFF_DIR}
+            mkdir ${CLONE_DIR}
 
-                # Repo A
-                cd ${GIT_DIR}
-                git init
-                echo "aabbccdd" > README.md
-                git add .
-                git commit -m "Initial commit A"
-                cd -
+            # Repo A
+            cd ${GIT_DIR}
+            git init
+            echo "aabbccdd" > README.md
+            git add .
+            git commit -m "Initial commit A"
+            cd -
 
-                # Repo B (clone of Repo A)
-                cd ${PR_GIT_DIR}
-                git clone ${GIT_DIR} .
-                echo "eeffgghh" >>README.md
-                git add .
-                git commit -m "PR commit B"
+            # Repo B (clone of Repo A)
+            cd ${PR_GIT_DIR}
+            git clone ${GIT_DIR} .
+            echo "eeffgghh" >>README.md
+            git add .
+            git commit -m "PR commit B"
 
-                # Diff files
-                git diff HEAD^ HEAD | tee -a ${DIFF_DIR}/diff.txt
-                cd -
+            # Diff files
+            git diff HEAD^ HEAD | tee -a ${DIFF_DIR}/diff.txt
+            cd -
 
-                # Set envs
-                envman add --key TEST_DIFF_CLONE_DIR --value ${CLONE_DIR}
-                envman add --key TEST_DIFF_REPO_URL --value ${GIT_DIR}
-                envman add --key TEST_DIFF_PR_REPOSITORY_URL --value ${PR_GIT_DIR}
-                envman add --key BITRISE_BUILD_URL --value "file://${DIFF_DIR}"
-      - path::./:
-          run_if: "true"
-          inputs:
-            - repository_url: $TEST_DIFF_REPO_URL
-            - clone_into_dir: $TEST_DIFF_CLONE_DIR
-            - pull_request_id: 8
-            - pull_request_repository_url: $TEST_DIFF_PR_REPOSITORY_URL
-            - branch_dest: "master"
-            - branch: "master"
-            - commit: "c6810e6"
-            - clone_depth: "1"
-            - manual_merge: "no"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                set -ex
-                diff ${TEST_DIFF_CLONE_DIR}/README.md ${TEST_DIFF_PR_REPOSITORY_URL}/README.md
+            # Set envs
+            envman add --key TEST_DIFF_CLONE_DIR --value ${CLONE_DIR}
+            envman add --key TEST_DIFF_REPO_URL --value ${GIT_DIR}
+            envman add --key TEST_DIFF_PR_REPOSITORY_URL --value ${PR_GIT_DIR}
+            envman add --key BITRISE_BUILD_URL --value "file://${DIFF_DIR}"
+    - path::./:
+        run_if: "true"
+        inputs:
+        - repository_url: $TEST_DIFF_REPO_URL
+        - clone_into_dir: $TEST_DIFF_CLONE_DIR
+        - pull_request_id: 8
+        - pull_request_repository_url: $TEST_DIFF_PR_REPOSITORY_URL
+        - branch_dest: master
+        - branch: master
+        - commit: c6810e6
+        - clone_depth: 1
+        - manual_merge: "no"
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -ex
+            diff ${TEST_DIFF_CLONE_DIR}/README.md ${TEST_DIFF_PR_REPOSITORY_URL}/README.md
     after_run:
-      - _check_outputs
+    - _check_outputs
 
   test_sparse_checkout_branch:
     envs:
-      - BRANCH: "master"
-      - SPARSE_DIRECTORIES: |-
-          git-clone-sample
+    - BRANCH: master
+    - SPARSE_DIRECTORIES: |-
+        git-clone-sample
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_sparse_checkout_commit_on_branch:
     envs:
-      - COMMIT: "7a93251a9bf08fb8c6b19fc02f6d94618de6b386"
-      - BRANCH: "master"
-      - SPARSE_DIRECTORIES: |-
-          git-clone-sample
+    - COMMIT: 7a93251a9bf08fb8c6b19fc02f6d94618de6b386
+    - BRANCH: master
+    - SPARSE_DIRECTORIES: |-
+        git-clone-sample
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_sparse_checkout_unshallow:
     envs:
-      - COMMIT: "cfba2b01332e31cb1568dbf3f22edce063118bae"
-      - CLONE_DEPTH: "1"
-      - SPARSE_DIRECTORIES: |-
-          git-clone-sample
+    - COMMIT: cfba2b01332e31cb1568dbf3f22edce063118bae
+    - CLONE_DEPTH: 1
+    - SPARSE_DIRECTORIES: |-
+        git-clone-sample
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _teardown
+    - _run
+    - _check_outputs
+    - _teardown
 
   test_too_long_commit_message:
     envs:
-      - COMMIT: "2e8cb1e06cda054e6eb861e56761acd52441cd86"
-      - UPDATE_SUBMODULES: "no"
+    - COMMIT: 2e8cb1e06cda054e6eb861e56761acd52441cd86
+    - UPDATE_SUBMODULES: "no"
     before_run:
-      - _setup
+    - _setup
     after_run:
-      - _run
-      - _check_outputs
-      - _check_too_long_message
-      - _teardown
+    - _run
+    - _check_outputs
+    - _check_too_long_message
+    - _teardown
 
   _check_changelog:
     steps:
-      - generate-changelog:
-          inputs:
-            - working_dir: $WORKDIR
-            - new_version: "$NEW_VERSION"
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                set -ex
+    - generate-changelog:
+        inputs:
+        - working_dir: $WORKDIR
+        - new_version: $NEW_VERSION
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -ex
 
-                EXPECTED_CHANGELOG="* [a409478] Add newline to the description.
-                * [b002ab7] Add repository description.
-                * [996fa77] Add newline to README.md.
-                "
+            EXPECTED_CHANGELOG="* [a409478] Add newline to the description.
+            * [b002ab7] Add repository description.
+            * [996fa77] Add newline to README.md.
+            "
 
-                if [ "$BITRISE_CHANGELOG" = "$EXPECTED_CHANGELOG" ]; then
-                    echo "Expected changelog generated."
-                else
-                    echo "Invalid changelog generated:"
-                    echo "$BITRISE_CHANGELOG"
-                    exit 1
-                fi
+            if [ "$BITRISE_CHANGELOG" = "$EXPECTED_CHANGELOG" ]; then
+                echo "Expected changelog generated."
+            else
+                echo "Invalid changelog generated:"
+                echo "$BITRISE_CHANGELOG"
+                exit 1
+            fi
 
   _check_commit_logs:
     steps:
-      - script:
-          inputs:
-            - content: |-
-                #!/usr/bin/env bash
-                check() {
-                  local env=$1
-                  local get=${!1}
-                  local expected=$2
-                  if [[ "${get}" != "${expected}" ]]; then
-                    printf "Error: for env var '%s' expected: '%s', get: '%s'\n" "${env}" "${expected}" "${get}"
-                    exit 1
-                  fi
-                }
+    - script:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            check() {
+              local env=$1
+              local get=${!1}
+              local expected=$2
+              if [[ "${get}" != "${expected}" ]]; then
+                printf "Error: for env var '%s' expected: '%s', get: '%s'\n" "${env}" "${expected}" "${get}"
+                exit 1
+              fi
+            }
 
-                check "GIT_CLONE_COMMIT_HASH" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
-                check "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" "Sample commit message subject"
-                check "GIT_CLONE_COMMIT_MESSAGE_BODY" "Sample commit message body"
-                check "GIT_CLONE_COMMIT_COUNT" "25"
-                check "GIT_CLONE_COMMIT_AUTHOR_NAME" "Krisztian Dobmayer"
-                check "GIT_CLONE_COMMIT_AUTHOR_EMAIL" "krisztian.dobmayer@bitrise.io"
-                check "GIT_CLONE_COMMIT_COMMITER_NAME" "Krisztian Dobmayer"
-                check "GIT_CLONE_COMMIT_COMMITER_EMAIL" "krisztian.dobmayer@bitrise.io"
+            check "GIT_CLONE_COMMIT_HASH" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
+            check "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" "Sample commit message subject"
+            check "GIT_CLONE_COMMIT_MESSAGE_BODY" "Sample commit message body"
+            check "GIT_CLONE_COMMIT_COUNT" "25"
+            check "GIT_CLONE_COMMIT_AUTHOR_NAME" "Krisztian Dobmayer"
+            check "GIT_CLONE_COMMIT_AUTHOR_EMAIL" "krisztian.dobmayer@bitrise.io"
+            check "GIT_CLONE_COMMIT_COMMITER_NAME" "Krisztian Dobmayer"
+            check "GIT_CLONE_COMMIT_COMMITER_EMAIL" "krisztian.dobmayer@bitrise.io"
 
   _check_too_long_message:
     steps:
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                # --- This test only works for default 20kbyte env sizes, if altered, test should be modified accordingly.
-                if [ ${#GIT_CLONE_COMMIT_MESSAGE_BODY} -gt "20480" ]; then
-                  echo "Message body is bigger than 20480 chars"
-                  exit 1
-                fi
-                if [ ${#GIT_CLONE_COMMIT_MESSAGE_SUBJECT} -gt "20480" ]; then
-                  echo "Message subject is bigger than 20480 chars"
-                  exit 1
-                fi
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            # --- This test only works for default 20kbyte env sizes, if altered, test should be modified accordingly.
+            if [ ${#GIT_CLONE_COMMIT_MESSAGE_BODY} -gt "20480" ]; then
+              echo "Message body is bigger than 20480 chars"
+              exit 1
+            fi
+            if [ ${#GIT_CLONE_COMMIT_MESSAGE_SUBJECT} -gt "20480" ]; then
+              echo "Message subject is bigger than 20480 chars"
+              exit 1
+            fi
 
   _check_outputs:
     steps:
-      - script:
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
-                echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
-                echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
-                echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
-                echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
-                echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
-                echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
-                echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            echo "GIT_CLONE_COMMIT_HASH: ${GIT_CLONE_COMMIT_HASH}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_SUBJECT: ${GIT_CLONE_COMMIT_MESSAGE_SUBJECT}"
+            echo "GIT_CLONE_COMMIT_MESSAGE_BODY: ${GIT_CLONE_COMMIT_MESSAGE_BODY}"
+            echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
+            echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
 
   _setup:
     steps:
-      - script:
-          title: Clear environment variables set by bitrise.io, to not interfere with tests
-          inputs:
-            - content: |-
-                #!/bin/env bash
-                set -ex
-                # Inputs
-                envman unset --key GIT_REPOSITORY_URL
-                envman add --key BITRISE_SOURCE_DIR --value $ORIGINAL_WORKDIR
-                envman unset --key BITRISE_GIT_COMMIT
-                envman unset --key BITRISE_GIT_TAG
-                envman unset --key BITRISE_GIT_BRANCH
-                envman unset --key BITRISEIO_GIT_BRANCH_DEST
-                envman unset --key PULL_REQUEST_ID
-                envman unset --key BITRISEIO_PULL_REQUEST_REPOSITORY_URL
-                envman unset --key BITRISEIO_PULL_REQUEST_MERGE_BRANCH
-                envman unset --key BITRISEIO_PULL_REQUEST_HEAD_BRANCH
-                envman unset --key BITRISE_BUILD_URL
-                envman unset --key BITRISE_BUILD_API_TOKEN
-                # Outputs
-                envman unset --key GIT_CLONE_COMMIT_HASH
-                envman unset --key GIT_CLONE_COMMIT_MESSAGE_SUBJECT
-                envman unset --key GIT_CLONE_COMMIT_MESSAGE_BODY
-                envman unset --key GIT_CLONE_COMMIT_COUNT
-                envman unset --key GIT_CLONE_COMMIT_AUTHOR_NAME
-                envman unset --key GIT_CLONE_COMMIT_AUTHOR_EMAIL
-                envman unset --key GIT_CLONE_COMMIT_COMMITER_NAME
-                envman unset --key GIT_CLONE_COMMIT_COMMITER_EMAIL
+    - script:
+        title: Clear environment variables set by bitrise.io, to not interfere with tests
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -ex
+            # Inputs
+            envman unset --key GIT_REPOSITORY_URL
+            envman add --key BITRISE_SOURCE_DIR --value $ORIGINAL_WORKDIR
+            envman unset --key BITRISE_GIT_COMMIT
+            envman unset --key BITRISE_GIT_TAG
+            envman unset --key BITRISE_GIT_BRANCH
+            envman unset --key BITRISEIO_GIT_BRANCH_DEST
+            envman unset --key PULL_REQUEST_ID
+            envman unset --key BITRISEIO_PULL_REQUEST_REPOSITORY_URL
+            envman unset --key BITRISEIO_PULL_REQUEST_MERGE_BRANCH
+            envman unset --key BITRISEIO_PULL_REQUEST_HEAD_BRANCH
+            envman unset --key BITRISE_BUILD_URL
+            envman unset --key BITRISE_BUILD_API_TOKEN
+            # Outputs
+            envman unset --key GIT_CLONE_COMMIT_HASH
+            envman unset --key GIT_CLONE_COMMIT_MESSAGE_SUBJECT
+            envman unset --key GIT_CLONE_COMMIT_MESSAGE_BODY
+            envman unset --key GIT_CLONE_COMMIT_COUNT
+            envman unset --key GIT_CLONE_COMMIT_AUTHOR_NAME
+            envman unset --key GIT_CLONE_COMMIT_AUTHOR_EMAIL
+            envman unset --key GIT_CLONE_COMMIT_COMMITER_NAME
+            envman unset --key GIT_CLONE_COMMIT_COMMITER_EMAIL
 
   _run:
     steps:
-      - activate-ssh-key:
-          run_if: '{{getenv "GIT_CLONE_SSH_PRIVATE_KEY" | ne ""}}'
-          inputs:
-            - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
-      - script:
-          inputs:
-            - title: Create temporary dir
-            - content: |-
-                #!/bin/env bash
-                set -ex
-                # If WORKDIR is not empty, preserve value
-                if [[ -z "$WORKDIR" ]]; then
-                  WD=$(mktemp -d -t step-git-cloneXXXXXX)
-                  envman add --key WORKDIR --value $WD
-                  envman add --key WORKDIR_ABSOLUTE --value $WD
-                fi
-      - path::./:
-          run_if: "true"
-          inputs:
-            - repository_url: $TEST_REPO_URL
-            - clone_into_dir: $WORKDIR
-            - commit: $COMMIT
-            - branch: $BRANCH
-            - tag: $TAG
-            - fetch_tags: $FETCH_TAGS
-            - update_submodules: $UPDATE_SUBMODULES
-            - merge_pr: $MERGE_PR
-            - clone_depth: $CLONE_DEPTH
-            - sparse_directories: $SPARSE_DIRECTORIES
-            - manual_merge: $MANUAL_MERGE
+    - activate-ssh-key:
+        run_if: |-
+          {{ getenv "GIT_CLONE_SSH_PRIVATE_KEY" | ne "" }}
+        inputs:
+        - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
+    - script:
+        inputs:
+        - title: Create temporary dir
+        - content: |-
+            #!/bin/env bash
+            set -ex
+            # If WORKDIR is not empty, preserve value
+            if [[ -z "$WORKDIR" ]]; then
+              WD=$(mktemp -d -t step-git-cloneXXXXXX)
+              envman add --key WORKDIR --value $WD
+              envman add --key WORKDIR_ABSOLUTE --value $WD
+            fi
+    - path::./:
+        inputs:
+        - repository_url: $TEST_REPO_URL
+        - clone_into_dir: $WORKDIR
+        - commit: $COMMIT
+        - branch: $BRANCH
+        - tag: $TAG
+        - fetch_tags: $FETCH_TAGS
+        - update_submodules: $UPDATE_SUBMODULES
+        - merge_pr: $MERGE_PR
+        - clone_depth: $CLONE_DEPTH
+        - sparse_directories: $SPARSE_DIRECTORIES
+        - manual_merge: $MANUAL_MERGE
 
   _teardown:
     steps:
-      - ensure-clean-git:
-          inputs:
-            - dir_to_check: $WORKDIR_ABSOLUTE
+    - ensure-clean-git:
+        inputs:
+        - dir_to_check: $WORKDIR_ABSOLUTE
