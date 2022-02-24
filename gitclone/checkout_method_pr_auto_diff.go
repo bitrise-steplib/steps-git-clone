@@ -9,8 +9,8 @@ import (
 
 	"github.com/bitrise-io/go-steputils/input"
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-io/go-utils/filedownloader"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-steplib/bitrise-step-export-universal-apk/filedownloader"
 )
 
 //
