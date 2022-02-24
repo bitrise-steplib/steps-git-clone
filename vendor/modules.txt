@@ -17,6 +17,7 @@ github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
 github.com/bitrise-io/go-utils/command/git
 github.com/bitrise-io/go-utils/errorutil
+github.com/bitrise-io/go-utils/filedownloader
 github.com/bitrise-io/go-utils/fileutil
 github.com/bitrise-io/go-utils/log
 github.com/bitrise-io/go-utils/parseutil
@@ -26,9 +27,6 @@ github.com/bitrise-io/go-utils/retry
 github.com/bitrise-io/go-utils/sliceutil
 # github.com/bitrise-io/goinp v0.0.0-20210504152833-8559b0680ab1
 github.com/bitrise-io/goinp/goinp
-# github.com/bitrise-steplib/bitrise-step-export-universal-apk v0.0.0-20210505160226-751d4bb4627c
-## explicit
-github.com/bitrise-steplib/bitrise-step-export-universal-apk/filedownloader
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/hashicorp/go-cleanhttp v0.5.2
