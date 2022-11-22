@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
@@ -30,7 +31,9 @@ func (r DefaultRunner) RunForOutput(c *command.Model) (string, error) {
 	fmt.Println()
 	log.Infof("$ %s &> out", c.PrintableCommandArgs())
 
+	startTime := time.Now()
 	out, err := c.RunAndReturnTrimmedCombinedOutput()
+	log.Printf("Command execution took %s", time.Since(startTime).Round(time.Second))
 	if err != nil && errorutil.IsExitStatusError(err) {
 		return out, errors.New(out)
 	}
@@ -44,7 +47,9 @@ func (r DefaultRunner) Run(c *command.Model) error {
 	log.Infof("$ %s", c.PrintableCommandArgs())
 	var buffer bytes.Buffer
 
+	startTime := time.Now()
 	err := c.SetStdout(os.Stdout).SetStderr(io.MultiWriter(os.Stderr, &buffer)).Run()
+	log.Printf("Command execution took %s", time.Since(startTime).Round(time.Second))
 	if err != nil {
 		if errorutil.IsExitStatusError(err) {
 			return errors.New(strings.TrimSpace(buffer.String()))
