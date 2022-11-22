@@ -59,7 +59,7 @@ func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error
 		opts = append(opts, remote, ref)
 	}
 
-	// Not neccessarily a branch, can be tag too
+	// Not necessarily a branch, can be tag too
 	branch := ""
 	if strings.HasPrefix(ref, refsHeadsPrefix) {
 		branch = strings.TrimPrefix(ref, refsHeadsPrefix)

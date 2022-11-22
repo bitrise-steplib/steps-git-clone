@@ -44,9 +44,7 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 
 	// `git "fetch" "origin" "refs/pull/7/head:pull/7"`
 	//remoteRef, localRef := headBranchRefs(c.params.MergeBranch)
-	remoteRef := fmt.Sprintf("refs/%s", c.params.MergeBranch)
-	localRef := fmt.Sprintf("refs/remotes/%s", c.params.MergeBranch)
-	if err := fetch(gitCmd, originRemoteName, fmt.Sprintf("%s:%s", remoteRef, localRef), fetchOpts); err != nil {
+	if err := fetch(gitCmd, originRemoteName, fmt.Sprintf("%s:%s", c.remoteRef(), c.localRef()), fetchOpts); err != nil {
 		return err
 	}
 
@@ -67,7 +65,7 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	//}
 
 	// `git checkout refs/remotes/pull/7/merge`
-	err := checkoutWithCustomRetry(gitCmd, localRef, nil)
+	err := checkoutWithCustomRetry(gitCmd, c.localRef(), nil)
 	if err != nil {
 		return err
 	}
@@ -77,7 +75,15 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 }
 
 func (c checkoutPRMergeBranch) getBuildTriggerRef() string {
-	_, localRef := headBranchRefs(c.params.MergeBranch)
+	//_, localRef := headBranchRefs(c.params.MergeBranch)
 
-	return localRef
+	return c.localRef()
+}
+
+func (c checkoutPRMergeBranch) localRef() string {
+	return fmt.Sprintf("refs/remotes/%s", c.params.MergeBranch)
+}
+
+func (c checkoutPRMergeBranch) remoteRef() string {
+	return fmt.Sprintf("refs/%s", c.params.MergeBranch)
 }
