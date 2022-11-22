@@ -37,13 +37,15 @@ type checkoutPRMergeBranch struct {
 func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
 	// Check out initial branch (fetchInitialBranch part1)
 	// `git "fetch" "origin" "refs/heads/master"`
-	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
-	if err := fetch(gitCmd, originRemoteName, destBranchRef, fetchOpts); err != nil {
-		return err
-	}
+	//destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
+	//if err := fetch(gitCmd, originRemoteName, destBranchRef, fetchOpts); err != nil {
+	//	return err
+	//}
 
 	// `git "fetch" "origin" "refs/pull/7/head:pull/7"`
-	remoteRef, localRef := headBranchRefs(c.params.MergeBranch)
+	//remoteRef, localRef := headBranchRefs(c.params.MergeBranch)
+	remoteRef := fmt.Sprintf("refs/%s", c.params.MergeBranch)
+	localRef := fmt.Sprintf("refs/remotes/%s", c.params.MergeBranch)
 	if err := fetch(gitCmd, originRemoteName, fmt.Sprintf("%s:%s", remoteRef, localRef), fetchOpts); err != nil {
 		return err
 	}
@@ -51,20 +53,27 @@ func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallba
 	// Check out initial branch (fetchInitialBranch part2)
 	// `git "checkout" "master"`
 	// `git "merge" "origin/master"`
-	if err := checkoutWithCustomRetry(gitCmd, c.params.DestinationBranch, nil); err != nil {
-		return err
-	}
-	destBranchWithRemote := fmt.Sprintf("%s/%s", originRemoteName, c.params.DestinationBranch)
-	if err := runner.Run(gitCmd.Merge(destBranchWithRemote)); err != nil {
-		return err
-	}
+	//if err := checkoutWithCustomRetry(gitCmd, c.params.DestinationBranch, nil); err != nil {
+	//	return err
+	//}
+	//destBranchWithRemote := fmt.Sprintf("%s/%s", originRemoteName, c.params.DestinationBranch)
+	//if err := runner.Run(gitCmd.Merge(destBranchWithRemote)); err != nil {
+	//	return err
+	//}
 
 	// `git "merge" "pull/7"`
-	if err := mergeWithCustomRetry(gitCmd, localRef, fallback); err != nil {
+	//if err := mergeWithCustomRetry(gitCmd, localRef, fallback); err != nil {
+	//	return err
+	//}
+
+	// `git checkout refs/remotes/pull/7/merge`
+	err := checkoutWithCustomRetry(gitCmd, localRef, nil)
+	if err != nil {
 		return err
 	}
 
-	return detachHead(gitCmd)
+	//return detachHead(gitCmd)
+	return nil
 }
 
 func (c checkoutPRMergeBranch) getBuildTriggerRef() string {
