@@ -39,6 +39,7 @@ const (
 func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error {
 	var opts []string
 	opts = append(opts, jobsFlag)
+	opts = append(opts, "--progress")
 
 	if traits.depth != 0 {
 		opts = append(opts, "--depth="+strconv.Itoa(traits.depth))
