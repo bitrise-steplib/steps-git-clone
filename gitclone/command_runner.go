@@ -33,7 +33,10 @@ func (r DefaultRunner) RunForOutput(c *command.Model) (string, error) {
 
 	startTime := time.Now()
 	out, err := c.RunAndReturnTrimmedCombinedOutput()
-	log.Printf("Command execution took %s", time.Since(startTime).Round(time.Second))
+	execTime := time.Since(startTime).Round(time.Second)
+	if execTime >= time.Second {
+		log.Printf("Command execution took %s", execTime)
+	}
 	if err != nil && errorutil.IsExitStatusError(err) {
 		return out, errors.New(out)
 	}
@@ -49,7 +52,10 @@ func (r DefaultRunner) Run(c *command.Model) error {
 
 	startTime := time.Now()
 	err := c.SetStdout(os.Stdout).SetStderr(io.MultiWriter(os.Stderr, &buffer)).Run()
-	log.Printf("Command execution took %s", time.Since(startTime).Round(time.Second))
+	execTime := time.Since(startTime).Round(time.Second)
+	if execTime >= time.Second {
+		log.Printf("Command execution took %s", execTime)
+	}
 	if err != nil {
 		if errorutil.IsExitStatusError(err) {
 			return errors.New(strings.TrimSpace(buffer.String()))
