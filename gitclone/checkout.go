@@ -1,3 +1,5 @@
+//go:generate stringer -type=CheckoutMethod
+
 package gitclone
 
 import (

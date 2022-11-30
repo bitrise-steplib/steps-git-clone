@@ -2,12 +2,14 @@ package gitclone
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/bitrise-io/envman/envman"
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
-	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/v2/env"
+	"github.com/bitrise-io/go-utils/v2/log"
 )
 
 // Config is the git clone step configuration
@@ -50,6 +52,9 @@ type commitInfo struct {
 	cmd    *command.Model
 }
 
+var logger = log.NewLogger()
+var tracker = newStepTracker(env.NewRepository(), logger)
+
 func exportCommitInfo(gitCmd git.Git, gitRef string, isPR bool, maxEnvLength int) error {
 	commitInfos := []commitInfo{
 		{
@@ -91,7 +96,7 @@ func exportCommitInfo(gitCmd git.Git, gitRef string, isPR bool, maxEnvLength int
 	if !isPR {
 		commitInfos = append(commitInfos, nonPROnlyInfos...)
 	} else {
-		log.Printf("Git commiter name/email and commit count is not exported for Pull Requests.")
+		logger.Printf("Commit author name/email and commit count is not exported for Pull Requests.")
 	}
 
 	for _, commitInfo := range commitInfos {
@@ -111,11 +116,11 @@ func printLogAndExportEnv(command *command.Model, env string, maxEnvLength int) 
 
 	if (env == "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" || env == "GIT_CLONE_COMMIT_MESSAGE_BODY") && len(l) > maxEnvLength {
 		tv := l[:maxEnvLength-len(trimEnding)] + trimEnding
-		log.Printf("Value %s  is bigger than maximum env variable size, trimming", env)
+		logger.Printf("Value %s  is bigger than maximum env variable size, trimming", env)
 		l = tv
 	}
 
-	log.Printf("=> %s\n   value: %s", env, l)
+	logger.Printf("=> %s\n   value: %s", env, l)
 	if err := tools.ExportEnvironmentWithEnvman(env, l); err != nil {
 		return fmt.Errorf("envman export failed: %v", err)
 	}
@@ -132,6 +137,7 @@ func getMaxEnvLength() (int, error) {
 }
 
 func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, isPR bool, err error) {
+	checkoutStartTime := time.Now()
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
 	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 
@@ -144,9 +150,14 @@ func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy chec
 	}
 
 	if err := checkoutStrategy.do(gitCmd, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
-		log.Infof("Checkout strategy used: %T", checkoutStrategy)
+		logger.Infof("Checkout strategy used: %T", checkoutStrategy)
 		return nil, false, err
 	}
+
+	checkoutDuration := time.Since(checkoutStartTime).Round(time.Second)
+	logger.Println()
+	logger.Infof("Fetch and checkout took %s", checkoutDuration)
+	tracker.logCheckout(checkoutDuration, checkoutMethod, cfg.RepositoryURL)
 
 	return checkoutStrategy, isPRCheckout(checkoutMethod), nil
 }
@@ -208,6 +219,8 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 
 // Execute is the entry point of the git clone process
 func Execute(cfg Config) error {
+	defer tracker.wait()
+
 	maxEnvLength, err := getMaxEnvLength()
 	if err != nil {
 		return newStepError(
@@ -271,20 +284,25 @@ func Execute(cfg Config) error {
 	}
 
 	if cfg.UpdateSubmodules {
+		startTime := time.Now()
 		if err := updateSubmodules(gitCmd, cfg); err != nil {
 			return err
 		}
+		updateTime := time.Since(startTime).Round(time.Second)
+		logger.Println()
+		logger.Infof("Updating submodules took %s", updateTime)
+		tracker.logSubmoduleUpdate(updateTime)
 	}
 
 	if ref := checkoutStrategy.getBuildTriggerRef(); ref != "" {
 		fmt.Println()
-		log.Infof("Exporting commit details")
+		logger.Infof("Exporting commit details")
 		if err := exportCommitInfo(gitCmd, ref, isPR, maxEnvLength); err != nil {
 			return newStepError("export_envs_failed", err, "Exporting envs failed")
 		}
 	} else {
 		fmt.Println()
-		log.Warnf(`Can not export commit information like commit message and author as it is not available.
+		logger.Warnf(`Can not export commit information like commit message and author as it is not available.
 This may happen when using Bitbucket with the "Manual merge" input set to 'yes' (using a Diff file).`)
 	}
 
