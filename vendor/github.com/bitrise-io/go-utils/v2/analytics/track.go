@@ -42,9 +42,7 @@ func NewTracker(client Client, waitTimeout time.Duration, properties ...Properti
 // Enqueue ...
 func (t tracker) Enqueue(eventName string, properties ...Properties) {
 	var b bytes.Buffer
-	e := newEvent(eventName, append(t.properties, properties...))
-	e.toJSON(&b)
-	log.NewLogger().Printf("%+v", e)
+	newEvent(eventName, append(t.properties, properties...)).toJSON(&b)
 	t.jobs <- &b
 	t.waitGroup.Add(1)
 }
