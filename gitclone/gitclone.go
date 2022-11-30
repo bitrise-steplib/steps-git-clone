@@ -155,7 +155,8 @@ func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy chec
 	}
 
 	checkoutDuration := time.Since(checkoutStartTime).Round(time.Second)
-	logger.Printf("Checkout took %s", checkoutDuration)
+	logger.Println()
+	logger.Infof("Fetch and checkout took %s", checkoutDuration)
 	tracker.logCheckout(checkoutDuration, checkoutMethod, cfg.RepositoryURL)
 
 	return checkoutStrategy, isPRCheckout(checkoutMethod), nil
@@ -288,6 +289,7 @@ func Execute(cfg Config) error {
 			return err
 		}
 		updateTime := time.Since(startTime).Round(time.Second)
+		logger.Println()
 		logger.Infof("Updating submodules took %s", updateTime)
 		tracker.logSubmoduleUpdate(updateTime)
 	}

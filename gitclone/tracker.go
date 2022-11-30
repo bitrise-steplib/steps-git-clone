@@ -40,7 +40,7 @@ func (t *stepTracker) logCheckout(duration time.Duration, method CheckoutMethod,
 		"method":      method.String(),
 		"remote_type": remoteType,
 	}
-	t.tracker.Enqueue("step_git_clone_checkout", p)
+	t.tracker.Enqueue("step_git_clone_fetch_and_checkout", p)
 }
 
 func (t *stepTracker) logSubmoduleUpdate(duration time.Duration) {
