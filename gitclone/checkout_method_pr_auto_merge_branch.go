@@ -7,68 +7,61 @@ import (
 	"github.com/bitrise-io/go-utils/command/git"
 )
 
-// PRMergeBranchParams are parameters to check out a Merge/Pull Request (when a merge branch is available)
-type PRMergeBranchParams struct {
+// PRMergeRefParams are parameters to check out a Merge/Pull Request's merge ref (the result of merging the 2 branches)
+// When available, the merge ref is created by the git server and passed in the webhook.
+// Using a merge ref is preferred over a manual merge because we can shallow-fetch the merge ref only.
+type PRMergeRefParams struct {
 	DestinationBranch string
-	// Merge branch contains the changes premerged by the Git provider
-	MergeBranch string
+	// MergeRef contains the changes pre-merged by the git provider (eg. pull/7/merge)
+	MergeRef string
 }
 
-// NewPRMergeBranchParams validates and returns a new PRMergeBranchParams
-func NewPRMergeBranchParams(destBranch, mergeBranch string) (*PRMergeBranchParams, error) {
+// NewPRMergeRefParams validates and returns a new PRMergeRefParams
+func NewPRMergeRefParams(destBranch, mergeRef string) (*PRMergeRefParams, error) {
 	if strings.TrimSpace(destBranch) == "" {
-		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used: no destination branch specified")
+		return nil, NewParameterValidationError("Can't checkout PR: no destination branch specified")
 	}
-	if strings.TrimSpace(mergeBranch) == "" {
-		return nil, NewParameterValidationError("PR merge branch based checkout strategy can not be used: no merge branch specified")
+	if strings.TrimSpace(mergeRef) == "" {
+		return nil, NewParameterValidationError("Can't checkout PR: no merge ref specified")
 	}
 
-	return &PRMergeBranchParams{
+	return &PRMergeRefParams{
 		DestinationBranch: destBranch,
-		MergeBranch:       mergeBranch,
+		MergeRef:          mergeRef,
 	}, nil
 }
 
-// checkoutPRMergeBranch
-type checkoutPRMergeBranch struct {
-	params PRMergeBranchParams
+type checkoutPRMergeRef struct {
+	params PRMergeRefParams
 }
 
-func (c checkoutPRMergeBranch) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
-	// Check out initial branch (fetchInitialBranch part1)
-	// `git "fetch" "origin" "refs/heads/master"`
-	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
-	if err := fetch(gitCmd, originRemoteName, destBranchRef, fetchOpts); err != nil {
+func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
+	// https://git-scm.com/book/en/v2/Git-Internals-The-Refspec
+	refSpec := fmt.Sprintf("%s:%s", c.remoteRef(), c.localRef())
+
+	// $ git fetch origin refs/remotes/pull/7/merge:refs/pull/7/merge
+	err := fetch(gitCmd, originRemoteName, refSpec, fetchOpts)
+	if err != nil {
 		return err
 	}
 
-	// `git "fetch" "origin" "refs/pull/7/head:pull/7"`
-	remoteRef, localRef := headBranchRefs(c.params.MergeBranch)
-	if err := fetch(gitCmd, originRemoteName, fmt.Sprintf("%s:%s", remoteRef, localRef), fetchOpts); err != nil {
+	// $ git checkout refs/remotes/pull/7/merge
+	err = checkoutWithCustomRetry(gitCmd, c.localRef(), nil)
+	if err != nil {
 		return err
 	}
 
-	// Check out initial branch (fetchInitialBranch part2)
-	// `git "checkout" "master"`
-	// `git "merge" "origin/master"`
-	if err := checkoutWithCustomRetry(gitCmd, c.params.DestinationBranch, nil); err != nil {
-		return err
-	}
-	destBranchWithRemote := fmt.Sprintf("%s/%s", originRemoteName, c.params.DestinationBranch)
-	if err := runner.Run(gitCmd.Merge(destBranchWithRemote)); err != nil {
-		return err
-	}
-
-	// `git "merge" "pull/7"`
-	if err := mergeWithCustomRetry(gitCmd, localRef, fallback); err != nil {
-		return err
-	}
-
-	return detachHead(gitCmd)
+	return nil
 }
 
-func (c checkoutPRMergeBranch) getBuildTriggerRef() string {
-	_, localRef := headBranchRefs(c.params.MergeBranch)
+func (c checkoutPRMergeRef) getBuildTriggerRef() string {
+	return c.localRef()
+}
 
-	return localRef
+func (c checkoutPRMergeRef) localRef() string {
+	return fmt.Sprintf("refs/remotes/%s", c.params.MergeRef)
+}
+
+func (c checkoutPRMergeRef) remoteRef() string {
+	return fmt.Sprintf("refs/%s", c.params.MergeRef)
 }

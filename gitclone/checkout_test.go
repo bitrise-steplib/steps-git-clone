@@ -320,10 +320,10 @@ func Test_getBuildTriggerRef(t *testing.T) {
 			wantRef: "remote/source",
 		},
 		{
-			strategy: checkoutPRMergeBranch{
-				params: PRMergeBranchParams{
+			strategy: checkoutPRMergeRef{
+				params: PRMergeRefParams{
 					DestinationBranch: "dest",
-					MergeBranch:       "pull/2/merge",
+					MergeRef:          "pull/2/merge",
 				},
 			},
 			wantRef: "pull/2",
