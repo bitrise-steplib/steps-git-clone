@@ -326,7 +326,7 @@ func Test_getBuildTriggerRef(t *testing.T) {
 					MergeRef:          "pull/2/merge",
 				},
 			},
-			wantRef: "pull/2",
+			wantRef: "refs/remotes/pull/2/merge",
 		},
 	}
 	for _, tt := range tests {
