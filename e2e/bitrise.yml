@@ -205,20 +205,8 @@ workflows:
     - BITRISEIO_GIT_BRANCH_DEST: master
     - COMMIT: 4301a9b8499ed3e87778dd053c55fd698d0a3b7e
     - MANUAL_MERGE: "no"
+    - CLONE_DEPTH: 1
     - MERGE_PR: "no"
-    - UPDATE_SUBMODULES: "no"
-    before_run:
-    - _setup
-    after_run:
-    - _run
-    - _check_outputs
-    - _teardown
-
-  test_checkout_pull_request_standard_branch:
-    envs:
-    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pr_test
-    - BITRISEIO_GIT_BRANCH_DEST: master
-    - MANUAL_MERGE: "no"
     - UPDATE_SUBMODULES: "no"
     before_run:
     - _setup
