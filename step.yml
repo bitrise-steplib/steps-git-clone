@@ -89,7 +89,7 @@ inputs:
     summary: URL of the source repository of a pull request.
     description: |-
       URL of the source repository of a pull request.
-      
+
       This points to the fork repository in builds triggered by pull requests.
     is_dont_change_value: true
 - pull_request_merge_branch: $BITRISEIO_PULL_REQUEST_MERGE_BRANCH
