@@ -75,7 +75,7 @@ inputs:
 - branch_dest: $BITRISEIO_GIT_BRANCH_DEST
   opts:
     category: Clone arguments
-    title: Destination git branch, used for pull requests
+    title: Pull request destination branch
     is_dont_change_value: true
 - pull_request_id: $PULL_REQUEST_ID
   opts:
@@ -85,7 +85,12 @@ inputs:
 - pull_request_repository_url: $BITRISEIO_PULL_REQUEST_REPOSITORY_URL
   opts:
     category: Clone arguments
-    title: Pull request git URL
+    title: Pull request source repository
+    summary: URL of the source repository of a pull request.
+    description: |-
+      URL of the source repository of a pull request.
+      
+      This points to the fork repository in builds triggered by pull requests.
     is_dont_change_value: true
 - pull_request_merge_branch: $BITRISEIO_PULL_REQUEST_MERGE_BRANCH
   opts:
