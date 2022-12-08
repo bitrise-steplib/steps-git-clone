@@ -51,36 +51,43 @@ inputs:
 - repository_url: $GIT_REPOSITORY_URL
   opts:
     title: Git repository URL
+    description: SSH or HTTPS URL of the repository to clone
     is_required: true
     is_dont_change_value: true
 - clone_into_dir: $BITRISE_SOURCE_DIR
   opts:
-    title: Clone destination (local) directory path
+    title: Clone destination directory
+    description: Local directory where the repository is cloned
     is_required: true
 - commit: $BITRISE_GIT_COMMIT
   opts:
     category: Clone arguments
-    title: Git Commit to clone
+    title: Git commit to checkout
+    description: Commit SHA to checkout
     is_dont_change_value: true
 - tag: $BITRISE_GIT_TAG
   opts:
     category: Clone arguments
-    title: Git Tag to clone
+    title: Git tag
+    description: Git tag to checkout
     is_dont_change_value: true
 - branch: $BITRISE_GIT_BRANCH
   opts:
     category: Clone arguments
-    title: Git branch to clone
+    title: Git branch
+    description: Git branch to checkout
     is_dont_change_value: true
 - branch_dest: $BITRISEIO_GIT_BRANCH_DEST
   opts:
     category: Clone arguments
     title: Pull request destination branch
+    description: The branch that the pull request targets, such as `main`
     is_dont_change_value: true
 - pull_request_id: $PULL_REQUEST_ID
   opts:
     category: Clone arguments
-    title: Pull request ID on GitHub
+    title: Pull request ID
+    description: Pull request number, coming from the Git provider
     is_dont_change_value: true
 - pull_request_repository_url: $BITRISEIO_PULL_REQUEST_REPOSITORY_URL
   opts:
@@ -95,15 +102,24 @@ inputs:
 - pull_request_merge_branch: $BITRISEIO_PULL_REQUEST_MERGE_BRANCH
   opts:
     category: Clone arguments
-    title: Merged pull request branch
+    title: Pull request merge ref
+    description: |-
+      Git ref pointing to the result of merging the PR branch into the destination branch. Even if the source of the PR is a fork, this is a reference to the destination repository.
+      
+      Example: `refs/pull/14/merge`
+      
+      Note: not all Git services provide this value.
     is_dont_change_value: true
 - pull_request_head_branch: $BITRISEIO_PULL_REQUEST_HEAD_BRANCH
   opts:
     category: Clone arguments
-    title: Pull request head branch
+    title: Pull request head ref
     description: |-
-      If the Git hosting provider system supports and provides this,
-      this special git ref should point to the source of the pull request.
+      Git ref pointing to the head of the PR branch. Even if the source of the PR is a fork, this is a reference to the destination repository.
+      
+      Example: `refs/pull/14/head`
+      
+      Note: not all Git services provide this value.
     is_dont_change_value: true
 - update_submodules: "yes"
   opts:
@@ -154,8 +170,9 @@ inputs:
 - reset_repository: "No"
   opts:
     category: Debug
-    summary: Reset repository contents with git reset --hard HEAD and git clean -f after repository updated.
     title: Reset repository
+    summary: Reset repository before fetching.
+    description: Reset repository contents with `git reset --hard HEAD` and `git clean -f` before fetching.
     value_options:
     - "No"
     - "Yes"
@@ -173,7 +190,7 @@ inputs:
 - fetch_tags: "no"
   opts:
     category: Clone Config
-    title: Should the Step fetch tags?
+    title: Fetch tags
     description: |-
       yes - fetch all tags from the remote by adding `--tags` flag to git fetch calls
       no - disable automatic tag following by adding `--no-tags` flag to git fetch calls
@@ -202,29 +219,28 @@ inputs:
 outputs:
 - GIT_CLONE_COMMIT_HASH:
   opts:
-    title: Cloned git commit's commit hash
+    description: SHA hash of the checked-out commit.
 - GIT_CLONE_COMMIT_MESSAGE_SUBJECT:
   opts:
-    title: Cloned git commit's message subject
+    description: Commit message of the checked-out commit.
 - GIT_CLONE_COMMIT_MESSAGE_BODY:
   opts:
-    title: Cloned git commit's message body
+    description: Commit message body of the checked-out commit.
 - GIT_CLONE_COMMIT_COUNT:
   opts:
-    title: Cloned git commit counts
     description: |-
-      Count will only work properly if no `--depth` option is set.
-
-      If `--depth` is set then the history truncated to the specified number of commits. Count will **not** fail but will be the clone depth.
+      Commit count after checkout.
+      
+      Count will only work properly if no `--depth` option is set. If `--depth` is set then the history truncated to the specified number of commits. Count will **not** fail but will be the clone depth.
 - GIT_CLONE_COMMIT_AUTHOR_NAME:
   opts:
-    title: Cloned git commit's author name
+    description: Author of the checked-out commit.
 - GIT_CLONE_COMMIT_AUTHOR_EMAIL:
   opts:
-    title: Cloned git commit's author email address
+    description: Email of the checked-out commit.
 - GIT_CLONE_COMMIT_COMMITER_NAME:
   opts:
-    title: Cloned git commit's committer name
+    description: Committer name of the checked-out commit.
 - GIT_CLONE_COMMIT_COMMITER_EMAIL:
   opts:
-    title: Cloned git commit's committer email
+    description: Email of the checked-out commit.
