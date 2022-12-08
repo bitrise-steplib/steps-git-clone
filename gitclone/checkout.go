@@ -15,23 +15,32 @@ type CheckoutMethod int
 const (
 	// InvalidCheckoutMethod ...
 	InvalidCheckoutMethod CheckoutMethod = iota
+
 	// CheckoutNoneMethod only adds remote, resets repo, updates submodules
 	CheckoutNoneMethod
-	// CheckoutCommitMethod checks out a given commit
+
+	// CheckoutCommitMethod checks out a given commit on a given branch
 	CheckoutCommitMethod
+
 	// CheckoutTagMethod checks out a given tag
 	CheckoutTagMethod
-	// CheckoutBranchMethod checks out a given branch
+
+	// CheckoutBranchMethod checks out a given branch's head when a commit hash is not available
 	CheckoutBranchMethod
-	// CheckoutPRMergeBranchMethod checks out a MR/PR (when merge branch is available)
+
+	// CheckoutPRMergeBranchMethod creates the merge result by fetching the merge ref from the destination repo (if available)
 	CheckoutPRMergeBranchMethod
-	// CheckoutPRDiffFileMethod  checks out a MR/PR (when a diff file is available)
+
+	// CheckoutPRDiffFileMethod  creates the merge result of a PR/MR by applying the diff manually (if available)
 	CheckoutPRDiffFileMethod
-	// CheckoutPRManualMergeMethod check out a Merge Request using manual merge
+
+	// CheckoutPRManualMergeMethod creates the merge result by merging the PR/MR branch into the destination branch
 	CheckoutPRManualMergeMethod
-	// CheckoutHeadBranchCommitMethod checks out a MR/PR head branch only, without merging into base branch
+
+	// CheckoutHeadBranchCommitMethod checks out the PR/MR branch head without merging it into the destination branch
 	CheckoutHeadBranchCommitMethod
-	// CheckoutForkCommitMethod checks out a PR source branch, without merging
+
+	// CheckoutForkCommitMethod checks out the PR from the fork repo (if accessible)
 	CheckoutForkCommitMethod
 )
 
@@ -102,19 +111,26 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 	isPrivateFork := isFork && isPrivateSourceRepo
 	isPublicFork := isFork && !isPrivateSourceRepo
 
+	// PR: check out the head of the PR branch
 	if !cfg.ShouldMergePR {
 		if cfg.PRHeadBranch != "" {
+			// Git server provides a head ref (e.g. refs/pull/2/head), so even if this is a true Pull Request
+			// from a fork (which we might not be able to access), we can check out the PR head through the destination repo
 			return CheckoutHeadBranchCommitMethod, ""
 		}
 
 		if !isFork {
+			// It's a Merge Request, we have access to the MR branch
 			return CheckoutCommitMethod, ""
 		}
 
 		if isPublicFork {
+			// Even though it's not an MR, we can access the source branch
 			return CheckoutForkCommitMethod, ""
 		}
 
+		// Fallback (Bitbucket only): it's a PR from a fork we can't access, so we fetch the PR patch file through
+		// the API and apply the diff manually
 		if cfg.BuildURL != "" {
 			patchFile := getPatchFile(patch, cfg.BuildURL, cfg.BuildAPIToken)
 			if patchFile != "" {
@@ -127,11 +143,15 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 		return CheckoutForkCommitMethod, ""
 	}
 
+	// PR: check out the merge result (merging the PR branch into the destination branch)
 	if !cfg.ManualMerge || isPrivateFork {
 		if cfg.PRMergeBranch != "" {
+			// Merge ref (such as refs/pull/2/merge) is available in the destination repo, we can access that
+			// even if the PR source is a private repo
 			return CheckoutPRMergeBranchMethod, ""
 		}
 
+		// Fallback (Bitbucket only): fetch the PR patch file through the API and apply the diff manually
 		if cfg.BuildURL != "" {
 			patchFile := getPatchFile(patch, cfg.BuildURL, cfg.BuildAPIToken)
 			if patchFile != "" {
@@ -143,6 +163,7 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 		return CheckoutPRManualMergeMethod, ""
 	}
 
+	// PR: merge the PR branch into the destination branch manually
 	return CheckoutPRManualMergeMethod, ""
 }
 
