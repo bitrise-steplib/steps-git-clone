@@ -105,9 +105,9 @@ inputs:
     title: Pull request merge ref
     description: |-
       Git ref pointing to the result of merging the PR branch into the destination branch. Even if the source of the PR is a fork, this is a reference to the destination repository.
-      
+
       Example: `refs/pull/14/merge`
-      
+
       Note: not all Git services provide this value.
     is_dont_change_value: true
 - pull_request_head_branch: $BITRISEIO_PULL_REQUEST_HEAD_BRANCH
@@ -116,9 +116,9 @@ inputs:
     title: Pull request head ref
     description: |-
       Git ref pointing to the head of the PR branch. Even if the source of the PR is a fork, this is a reference to the destination repository.
-      
+
       Example: `refs/pull/14/head`
-      
+
       Note: not all Git services provide this value.
     is_dont_change_value: true
 - update_submodules: "yes"
@@ -230,7 +230,7 @@ outputs:
   opts:
     description: |-
       Commit count after checkout.
-      
+
       Count will only work properly if no `--depth` option is set. If `--depth` is set then the history truncated to the specified number of commits. Count will **not** fail but will be the clone depth.
 - GIT_CLONE_COMMIT_AUTHOR_NAME:
   opts:
