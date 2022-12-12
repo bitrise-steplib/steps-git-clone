@@ -176,17 +176,6 @@ inputs:
     value_options:
     - "No"
     - "Yes"
-- manual_merge: "yes"
-  opts:
-    category: Debug
-    title: Manual merge
-    summary: Prefer to do a manual `git merge` by default.
-    description: |-
-      Prefer to do a manual `git merge` by default.
-      When the Pull Request is from a GitHub or Bitbucket private fork repository set this to `no`.
-    value_options:
-    - "yes"
-    - "no"
 - fetch_tags: "no"
   opts:
     category: Clone Config
