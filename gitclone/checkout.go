@@ -108,7 +108,6 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 
 	isFork := isFork(cfg.RepositoryURL, cfg.PRSourceRepositoryURL)
 	isPrivateSourceRepo := isPrivate(cfg.PRSourceRepositoryURL)
-	isPrivateFork := isFork && isPrivateSourceRepo
 	isPublicFork := isFork && !isPrivateSourceRepo
 
 	// PR: check out the head of the PR branch
@@ -144,26 +143,23 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 	}
 
 	// PR: check out the merge result (merging the PR branch into the destination branch)
-	if !cfg.ManualMerge || isPrivateFork {
-		if cfg.PRMergeBranch != "" {
-			// Merge ref (such as refs/pull/2/merge) is available in the destination repo, we can access that
-			// even if the PR source is a private repo
-			return CheckoutPRMergeBranchMethod, ""
-		}
-
-		// Fallback (Bitbucket only): fetch the PR patch file through the API and apply the diff manually
-		if cfg.BuildURL != "" {
-			patchFile := getPatchFile(patch, cfg.BuildURL, cfg.BuildAPIToken)
-			if patchFile != "" {
-				return CheckoutPRDiffFileMethod, patchFile
-			}
-		}
-
-		log.Warnf(privateForkAuthWarning)
-		return CheckoutPRManualMergeMethod, ""
+	if cfg.PRMergeBranch != "" {
+		// Merge ref (such as refs/pull/2/merge) is available in the destination repo, we can access that
+		// even if the PR source is a private repo
+		return CheckoutPRMergeBranchMethod, ""
 	}
 
-	// PR: merge the PR branch into the destination branch manually
+	// Fallback (Bitbucket only): fetch the PR patch file through the API and apply the diff manually
+	if cfg.BuildURL != "" {
+		patchFile := getPatchFile(patch, cfg.BuildURL, cfg.BuildAPIToken)
+		if patchFile != "" {
+			return CheckoutPRDiffFileMethod, patchFile
+		}
+	}
+
+	// As a last resort, fetch target + PR branches and do a manual merge
+	// This is not ideal because the merge requires fetched branch histories. If the fetch is too shallow,
+	// the merge is going to fail with "refusing to merge unrelated histories"
 	return CheckoutPRManualMergeMethod, ""
 }
 
