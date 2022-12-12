@@ -9,9 +9,11 @@ github.com/bitrise-io/envman/models
 ## explicit; go 1.15
 github.com/bitrise-io/go-steputils/input
 github.com/bitrise-io/go-steputils/step
-github.com/bitrise-io/go-steputils/stepconf
 github.com/bitrise-io/go-steputils/tools
-# github.com/bitrise-io/go-utils v0.0.0-20210713111255-08be784d45d0
+# github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.15
+## explicit; go 1.17
+github.com/bitrise-io/go-steputils/v2/stepconf
+# github.com/bitrise-io/go-utils v1.0.1
 ## explicit; go 1.13
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
@@ -60,7 +62,7 @@ github.com/stretchr/objx
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
-# golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
+# golang.org/x/crypto v0.0.0-20211202192323-5770296d904e
 ## explicit; go 1.17
 golang.org/x/crypto/ssh/terminal
 # golang.org/x/sys v0.0.0-20220712014510-0a85c31ab51e
@@ -69,9 +71,19 @@ golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.0.0-20210503060354-a79de5458b56
+# golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 ## explicit; go 1.17
 golang.org/x/term
+# golang.org/x/text v0.3.7
+## explicit; go 1.17
+golang.org/x/text/cases
+golang.org/x/text/internal
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
+golang.org/x/text/internal/tag
+golang.org/x/text/language
+golang.org/x/text/transform
+golang.org/x/text/unicode/norm
 # gopkg.in/yaml.v2 v2.4.0
 ## explicit; go 1.15
 gopkg.in/yaml.v2
