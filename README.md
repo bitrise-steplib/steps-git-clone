@@ -67,7 +67,6 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 | `merge_pr` | Disables merging the source and destination branches. - `yes`: The default setting. Merges the source branch into the destination branch. - `no`: Treats Pull Request events as Push events on the source branch. |  | `yes` |
 | `sparse_directories` | Limit which directories should be cloned during the build. This could be useful if a repository contains multiple platforms, so called monorepositories, and the build is only targeting a single platform. For example, specifying "src/android" the Step will only clone: - contents of the root directory and - contents of the "src/android" directory and all subdirectories of "src/android". On the other hand, "src/ios" and any other directories will not be cloned. |  |  |
 | `reset_repository` | Reset repository contents with `git reset --hard HEAD` and `git clean -f` before fetching. |  | `No` |
-| `manual_merge` | Prefer to do a manual `git merge` by default. When the Pull Request is from a GitHub or Bitbucket private fork repository set this to `no`. |  | `yes` |
 | `fetch_tags` | yes - fetch all tags from the remote by adding `--tags` flag to git fetch calls no - disable automatic tag following by adding `--no-tags` flag to git fetch calls |  | `no` |
 | `build_url` | Unique build URL of this build on Bitrise.io |  | `$BITRISE_BUILD_URL` |
 | `build_api_token` | The build's API Token for the build on Bitrise.io | sensitive | `$BITRISE_BUILD_API_TOKEN` |
