@@ -130,96 +130,9 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 
-		// ** PRs manual merge
+		// ** PRs **
 		{
-			name: "PR - no fork - manual merge: branch and commit",
-			cfg: Config{
-				Commit:        "76a934ae",
-				Branch:        "test/commit-messages",
-				PRMergeBranch: "pull/7/merge",
-				PRDestBranch:  "master",
-				CloneDepth:    1,
-				ManualMerge:   true,
-				ShouldMergePR: true,
-			},
-			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
-				`git "checkout" "master"`,     // Already on 'master'
-				`git "merge" "origin/master"`, // Already up to date.
-				`git "log" "-1" "--format=%H"`,
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
-				`git "merge" "76a934ae"`,
-				`git "checkout" "--detach"`,
-			},
-		},
-		{
-			name: "PR - no fork - manual merge: branch and commit, no PRRepoURL or PRID",
-			cfg: Config{
-				Commit:        "76a934ae",
-				Branch:        "test/commit-messages",
-				PRDestBranch:  "master",
-				ManualMerge:   true,
-				ShouldMergePR: true,
-			},
-			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
-				`git "checkout" "master"`,
-				`git "merge" "origin/master"`,
-				`git "log" "-1" "--format=%H"`,
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
-				`git "merge" "76a934ae"`,
-				`git "checkout" "--detach"`,
-			},
-		},
-		{
-			name: "PR - fork - manual merge",
-			cfg: Config{
-				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
-				PRSourceRepositoryURL: "https://github.com/bitrise-io/other-repo.git",
-				Branch:                "test/commit-messages",
-				PRDestBranch:          "master",
-				Commit:                "76a934ae",
-				CloneDepth:            1,
-				ManualMerge:           true,
-				ShouldMergePR:         true,
-			},
-			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
-				`git "checkout" "master"`,
-				`git "merge" "origin/master"`,
-				`git "log" "-1" "--format=%H"`,
-				`git "remote" "add" "fork" "https://github.com/bitrise-io/other-repo.git"`,
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "fork" "refs/heads/test/commit-messages"`,
-				`git "merge" "fork/test/commit-messages"`,
-				`git "checkout" "--detach"`,
-			},
-		},
-		{
-			name: "PR - no fork - manual merge: repo is the same with different scheme",
-			cfg: Config{
-				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
-				PRSourceRepositoryURL: "git@github.com:bitrise-io/git-clone-test.git",
-				Branch:                "test/commit-messages",
-				PRDestBranch:          "master",
-				PRMergeBranch:         "pull/7/merge",
-				Commit:                "76a934ae",
-				ManualMerge:           true,
-				ShouldMergePR:         true,
-			},
-			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
-				`git "checkout" "master"`,
-				`git "merge" "origin/master"`,
-				`git "log" "-1" "--format=%H"`,
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
-				`git "merge" "76a934ae"`,
-				`git "checkout" "--detach"`,
-			},
-		},
-
-		// ** PRs auto merge **
-		{
-			name: "PR - no fork - auto merge - merge ref (GitHub format)",
+			name: "PR - no fork - merge ref (GitHub format)",
 			cfg: Config{
 				PRDestBranch:  "master",
 				PRMergeBranch: "pull/5/merge",
@@ -233,7 +146,7 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
-			name: "PR - no fork - auto merge - merge ref (standard branch format)",
+			name: "PR - no fork - merge ref (standard branch format)",
 			cfg: Config{
 				PRDestBranch:  "master",
 				PRMergeBranch: "pr_test",
@@ -245,7 +158,7 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
-			name: "PR - fork - auto merge - merge ref: private fork overrides manual merge flag",
+			name: "PR - fork - merge ref: private fork",
 			cfg: Config{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
@@ -253,7 +166,6 @@ func Test_checkoutState(t *testing.T) {
 				PRDestBranch:          "master",
 				PRMergeBranch:         "pull/7/merge",
 				Commit:                "76a934ae",
-				ManualMerge:           true,
 				ShouldMergePR:         true,
 			},
 			wantCmds: []string{
@@ -262,14 +174,13 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
-			name: "PR - fork - auto merge - diff file: private fork overrides manual merge flag, Fails",
+			name: "PR - fork - diff file: private fork overrides manual merge flag, Fails",
 			cfg: Config{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 				Branch:                "test/commit-messages",
 				PRDestBranch:          "master",
 				Commit:                "76a934ae",
-				ManualMerge:           true,
 				ShouldMergePR:         true,
 				BuildURL:              "dummy_url",
 				UpdateSubmodules:      true,
@@ -288,14 +199,14 @@ func Test_checkoutState(t *testing.T) {
 			wantErrType: &step.Error{},
 		},
 		{
-			name: "PR - fork - auto merge - diff file: private fork overrides manual merge flag",
+			name: "PR - fork - no merge ref - diff file available",
 			cfg: Config{
 				RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 				Branch:        "test/commit-messages",
 				PRDestBranch:  "master",
 				Commit:        "76a934ae",
 				CloneDepth:    1,
-				ManualMerge:   false,
+				//ManualMerge:   false,
 				ShouldMergePR: true,
 				BuildURL:      "dummy_url",
 			},
@@ -309,14 +220,13 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
-			name: "PR - no fork - auto merge - diff file: fallback to manual merge if unable to apply patch",
+			name: "PR - no fork - diff file: fallback to manual merge if unable to apply patch",
 			cfg: Config{
 				RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 				Branch:        "test/commit-messages",
 				PRDestBranch:  "master",
 				Commit:        "76a934ae",
 				CloneDepth:    1,
-				ManualMerge:   false,
 				ShouldMergePR: true,
 				BuildURL:      "dummy_url",
 			},
@@ -339,14 +249,13 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
-			name: "PR - fork - auto merge - diff file: fallback to manual merge if unable to apply patch",
+			name: "PR - fork - diff file: fallback to manual merge if unable to apply patch",
 			cfg: Config{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 				Branch:                "test/commit-messages",
 				PRDestBranch:          "master",
 				Commit:                "76a934ae",
-				ManualMerge:           true,
 				ShouldMergePR:         true,
 				BuildURL:              "dummy_url",
 			},
@@ -372,13 +281,12 @@ func Test_checkoutState(t *testing.T) {
 
 		// PRs no merge
 		{
-			name: "PR - no merge - no fork - manual merge: branch and commit",
+			name: "PR - no merge - no fork: branch and commit",
 			cfg: Config{
 				Commit:           "76a934ae",
 				Branch:           "test/commit-messages",
 				PRDestBranch:     "master",
 				CloneDepth:       1,
-				ManualMerge:      true,
 				ShouldMergePR:    false,
 				UpdateSubmodules: true,
 			},
@@ -388,7 +296,7 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
-			name: "PR - no merge - no fork - auto merge - head branch",
+			name: "PR - no merge - no fork - merge ref - head branch",
 			cfg: Config{
 				Commit:           "76a934ae",
 				PRDestBranch:     "master",
@@ -404,7 +312,7 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
-			name: "PR - no merge - no fork - auto merge - diff file: public fork",
+			name: "PR - no merge - no fork - diff file: public fork",
 			cfg: Config{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "https://github.com/bitrise-io/git-clone-test2.git",
@@ -412,7 +320,6 @@ func Test_checkoutState(t *testing.T) {
 				PRDestBranch:          "master",
 				Commit:                "76a934ae",
 				CloneDepth:            1,
-				ManualMerge:           false,
 				ShouldMergePR:         false,
 				UpdateSubmodules:      true,
 			},
@@ -425,7 +332,7 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
-			name: "PR - no merge - fork - auto merge - diff file: private fork",
+			name: "PR - no merge - fork - diff file: private fork",
 			cfg: Config{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
@@ -433,7 +340,6 @@ func Test_checkoutState(t *testing.T) {
 				PRDestBranch:          "master",
 				Commit:                "76a934ae",
 				CloneDepth:            1,
-				ManualMerge:           false,
 				ShouldMergePR:         false,
 				UpdateSubmodules:      true,
 				BuildURL:              "dummy_url",
@@ -507,16 +413,17 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
-			name: "PR - no fork - manual merge: branch, no commit (ignore depth) UNSUPPORTED?",
+			name: "PR - no fork: branch, no commit (ignore depth)",
 			cfg: Config{
 				Branch:        "test/commit-messages",
 				PRMergeBranch: "pull/7/merge",
 				PRDestBranch:  "master",
-				ManualMerge:   true,
 				ShouldMergePR: true,
 			},
-			wantErrType: ParameterValidationError{},
-			wantCmds:    nil,
+			wantCmds: []string{
+				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/merge:refs/remotes/pull/7/merge"`,
+				`git "checkout" "refs/remotes/pull/7/merge"`,
+			},
 		},
 		// ** Sparse-checkout **
 		{
@@ -598,50 +505,49 @@ func Test_checkoutState(t *testing.T) {
 	}
 }
 
-// SubmoduleUpdate
-var submoduleTestCases = [...]struct {
-	name     string
-	cfg      Config
-	wantCmds []string
-}{
-	{
-		name: "Given submodule update depth is 1 when the submodules are updated then expect the --depth=1 flag on the command",
-		cfg:  Config{SubmoduleUpdateDepth: 1},
-		wantCmds: []string{
-			`git "submodule" "update" "--init" "--recursive" "--jobs=10" "--depth=1"`,
-		},
-	},
-	{
-		name: "Given submodule update depth is 10 when the submodules are updated then expect the --depth=10 flag on the command",
-		cfg:  Config{SubmoduleUpdateDepth: 10},
-		wantCmds: []string{
-			`git "submodule" "update" "--init" "--recursive" "--jobs=10" "--depth=10"`,
-		},
-	},
-	{
-		name: "Given no submodule update depth is provided when the submodules are updated then expect the --depth flag missing from the command",
-		wantCmds: []string{
-			`git "submodule" "update" "--init" "--recursive" "--jobs=10"`,
-		},
-	},
-	{
-		name: "Given submodule update depth is 0 when the submodules are updated then expect the --depth flag missing from the command",
-		cfg:  Config{SubmoduleUpdateDepth: 0},
-		wantCmds: []string{
-			`git "submodule" "update" "--init" "--recursive" "--jobs=10"`,
-		},
-	},
-	{
-		name: "Given submodule update depth is -1 when the submodules are updated then expect the --depth flag missing from the command",
-		cfg:  Config{SubmoduleUpdateDepth: -1},
-		wantCmds: []string{
-			`git "submodule" "update" "--init" "--recursive" "--jobs=10"`,
-		},
-	},
-}
-
 func Test_SubmoduleUpdate(t *testing.T) {
-	for _, tt := range submoduleTestCases {
+	var tests = [...]struct {
+		name     string
+		cfg      Config
+		wantCmds []string
+	}{
+		{
+			name: "Given submodule update depth is 1 when the submodules are updated then expect the --depth=1 flag on the command",
+			cfg:  Config{SubmoduleUpdateDepth: 1},
+			wantCmds: []string{
+				`git "submodule" "update" "--init" "--recursive" "--jobs=10" "--depth=1"`,
+			},
+		},
+		{
+			name: "Given submodule update depth is 10 when the submodules are updated then expect the --depth=10 flag on the command",
+			cfg:  Config{SubmoduleUpdateDepth: 10},
+			wantCmds: []string{
+				`git "submodule" "update" "--init" "--recursive" "--jobs=10" "--depth=10"`,
+			},
+		},
+		{
+			name: "Given no submodule update depth is provided when the submodules are updated then expect the --depth flag missing from the command",
+			wantCmds: []string{
+				`git "submodule" "update" "--init" "--recursive" "--jobs=10"`,
+			},
+		},
+		{
+			name: "Given submodule update depth is 0 when the submodules are updated then expect the --depth flag missing from the command",
+			cfg:  Config{SubmoduleUpdateDepth: 0},
+			wantCmds: []string{
+				`git "submodule" "update" "--init" "--recursive" "--jobs=10"`,
+			},
+		},
+		{
+			name: "Given submodule update depth is -1 when the submodules are updated then expect the --depth flag missing from the command",
+			cfg:  Config{SubmoduleUpdateDepth: -1},
+			wantCmds: []string{
+				`git "submodule" "update" "--init" "--recursive" "--jobs=10"`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Given
 			mockRunner := givenMockRunnerSucceeds()
@@ -657,34 +563,33 @@ func Test_SubmoduleUpdate(t *testing.T) {
 	}
 }
 
-// SetupSparseCechkout
-var sparseCheckoutTestCases = [...]struct {
-	name              string
-	sparseDirectories []string
-	wantCmds          []string
-}{
-	{
-		name:              "Sparse-checkout single directory",
-		sparseDirectories: []string{"client/android"},
-		wantCmds: []string{
-			`git "sparse-checkout" "init" "--cone"`,
-			`git "sparse-checkout" "set" "client/android"`,
-			`git "config" "extensions.partialClone" "origin" "--local"`,
-		},
-	},
-	{
-		name:              "Sparse-checkout multiple directory",
-		sparseDirectories: []string{"client/android", "client/ios"},
-		wantCmds: []string{
-			`git "sparse-checkout" "init" "--cone"`,
-			`git "sparse-checkout" "set" "client/android" "client/ios"`,
-			`git "config" "extensions.partialClone" "origin" "--local"`,
-		},
-	},
-}
-
 func Test_SetupSparseCheckout(t *testing.T) {
-	for _, tt := range sparseCheckoutTestCases {
+	var tests = [...]struct {
+		name              string
+		sparseDirectories []string
+		wantCmds          []string
+	}{
+		{
+			name:              "Sparse-checkout single directory",
+			sparseDirectories: []string{"client/android"},
+			wantCmds: []string{
+				`git "sparse-checkout" "init" "--cone"`,
+				`git "sparse-checkout" "set" "client/android"`,
+				`git "config" "extensions.partialClone" "origin" "--local"`,
+			},
+		},
+		{
+			name:              "Sparse-checkout multiple directory",
+			sparseDirectories: []string{"client/android", "client/ios"},
+			wantCmds: []string{
+				`git "sparse-checkout" "init" "--cone"`,
+				`git "sparse-checkout" "set" "client/android" "client/ios"`,
+				`git "config" "extensions.partialClone" "origin" "--local"`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Given
 			mockRunner := givenMockRunnerSucceeds()

@@ -36,7 +36,6 @@ type Config struct {
 	BuildURL         string `env:"build_url"`
 	BuildAPIToken    string `env:"build_api_token"`
 	UpdateSubmodules bool   `env:"update_submodules,opt[yes,no]"`
-	ManualMerge      bool   `env:"manual_merge,opt[yes,no]"`
 }
 
 const (
