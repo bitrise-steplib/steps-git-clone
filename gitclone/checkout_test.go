@@ -145,35 +145,6 @@ func Test_selectCheckoutMethod(t *testing.T) {
 			patchSource: MockPatchSource{diffFilePath: "dummy_path"},
 			want:        CheckoutPRDiffFileMethod,
 		},
-		//{
-		//	name: "PR - fork - merge ref: private fork overrides manual merge flag",
-		//	cfg: Config{
-		//		RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
-		//		PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
-		//		Branch:                "test/commit-messages",
-		//		PRDestBranch:          "master",
-		//		PRMergeBranch:         "pull/7/merge",
-		//		PRID:                  7,
-		//		Commit:                "76a934ae",
-		//		ShouldMergePR: true,
-		//	},
-		//	want: CheckoutPRMergeBranchMethod,
-		//},
-		//{
-		//	name: "PR - fork - auto merge: private fork overrides manual merge flag",
-		//	cfg: Config{
-		//		RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
-		//		PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
-		//		Branch:                "test/commit-messages",
-		//		PRDestBranch:          "master",
-		//		Commit:                "76a934ae",
-		//		BuildURL:              "dummy_url",
-		//		//ManualMerge:           true,
-		//		ShouldMergePR: true,
-		//	},
-		//	patchSource: MockPatchSource{diffFilePath: "dummy_path"},
-		//	want:        CheckoutPRDiffFileMethod,
-		//},
 		{
 			name: "PR - no merge - no fork - head branch",
 			cfg: Config{
