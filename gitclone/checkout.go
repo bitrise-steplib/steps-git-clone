@@ -332,6 +332,8 @@ func selectFilterTreeFetchOption(method CheckoutMethod, opts fetchOptions, filte
 }
 
 func idealDefaultCloneDepth(method CheckoutMethod) int {
+	const defaultCloneDepth = 50
+
 	switch method {
 	case CheckoutNoneMethod,
 		CheckoutPRMergeBranchMethod,
@@ -345,7 +347,6 @@ func idealDefaultCloneDepth(method CheckoutMethod) int {
 		CheckoutForkCommitMethod:
 		fallthrough
 	default:
-		const defaultCloneDepth = 50
 		return defaultCloneDepth
 	}
 }
