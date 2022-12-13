@@ -434,7 +434,7 @@ func Test_checkoutState(t *testing.T) {
 				SparseDirectories: []string{"client/android"},
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--filter=tree:0" "--no-tags" "--no-recurse-submodules"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--filter=tree:0" "--no-tags" "--no-recurse-submodules"`,
 				`git "checkout" "76a934a"`,
 			},
 		},
@@ -458,7 +458,7 @@ func Test_checkoutState(t *testing.T) {
 				SparseDirectories: []string{"client/android"},
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 				`git "checkout" "hcnarb"`,
 				`git "merge" "origin/hcnarb"`,
 			},
@@ -471,7 +471,7 @@ func Test_checkoutState(t *testing.T) {
 				SparseDirectories: []string{"client/android"},
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/tags/gat:refs/tags/gat"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/tags/gat:refs/tags/gat"`,
 				`git "checkout" "gat"`,
 			},
 		},
