@@ -37,11 +37,11 @@ type Config struct {
 }
 
 const (
-	trimEnding              = "..."
-	originRemoteName        = "origin"
-	forkRemoteName          = "fork"
-	updateSubmodelFailedTag = "update_submodule_failed"
-	sparseCheckoutFailedTag = "sparse_checkout_failed"
+	trimEnding               = "..."
+	originRemoteName         = "origin"
+	forkRemoteName           = "fork"
+	updateSubmoduleFailedTag = "update_submodule_failed"
+	sparseCheckoutFailedTag  = "sparse_checkout_failed"
 )
 
 var logger = log.NewLogger()
@@ -50,6 +50,13 @@ var tracker = newStepTracker(env.NewRepository(), logger)
 func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, isPR bool, err error) {
 	checkoutStartTime := time.Now()
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
+
+	// If CloneDepth is -1, that means the user did not set a value for it,
+	// so we will determine the correct value based on the checkout method.
+	if cfg.CloneDepth == -1 {
+		cfg.CloneDepth = idealDefaultCloneDepth(checkoutMethod)
+	}
+
 	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 
 	checkoutStrategy, err := createCheckoutStrategy(checkoutMethod, cfg, diffFile)
@@ -83,7 +90,7 @@ func updateSubmodules(gitCmd git.Git, cfg Config) error {
 
 	if err := runner.Run(gitCmd.SubmoduleUpdate(opts...)); err != nil {
 		return newStepError(
-			updateSubmodelFailedTag,
+			updateSubmoduleFailedTag,
 			fmt.Errorf("submodule update: %v", err),
 			"Updating submodules has failed",
 		)
