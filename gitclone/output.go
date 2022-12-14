@@ -32,6 +32,21 @@ func newOutputExporter(cmdFactory command.Factory, gitCmd git.Git) outputExporte
 }
 
 func (e *outputExporter) exportCommitInfo(gitRef string, isPR bool) error {
+	maxEnvLength, err := getMaxEnvLength()
+	if err != nil {
+		return err
+	}
+
+	for _, commitInfo := range e.gitOutputs(gitRef, isPR) {
+		if err := e.printLogAndExportEnv(commitInfo.gitCmd, commitInfo.envKey, maxEnvLength); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (e *outputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 	outputs := []gitOutput{
 		{
 			envKey: "GIT_CLONE_COMMIT_AUTHOR_NAME",
@@ -77,17 +92,7 @@ func (e *outputExporter) exportCommitInfo(gitRef string, isPR bool) error {
 		outputs = append(outputs, extraOutputs...)
 	}
 
-	maxEnvLength, err := getMaxEnvLength()
-	if err != nil {
-		return err
-	}
-	for _, commitInfo := range outputs {
-		if err := e.printLogAndExportEnv(commitInfo.gitCmd, commitInfo.envKey, maxEnvLength); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return outputs
 }
 
 func (e *outputExporter) printLogAndExportEnv(command *v1command.Model, env string, maxEnvLength int) error {
