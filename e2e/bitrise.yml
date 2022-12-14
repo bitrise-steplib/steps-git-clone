@@ -521,7 +521,7 @@ workflows:
             check "GIT_CLONE_COMMIT_HASH" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
             check "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" "Sample commit message subject"
             check "GIT_CLONE_COMMIT_MESSAGE_BODY" "Sample commit message body"
-            check "GIT_CLONE_COMMIT_COUNT" "25"
+            check "GIT_CLONE_COMMIT_COUNT" "1"
             check "GIT_CLONE_COMMIT_AUTHOR_NAME" "Krisztian Dobmayer"
             check "GIT_CLONE_COMMIT_AUTHOR_EMAIL" "krisztian.dobmayer@bitrise.io"
             check "GIT_CLONE_COMMIT_COMMITTER_NAME" "Krisztian Dobmayer"
