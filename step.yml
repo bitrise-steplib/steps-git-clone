@@ -233,11 +233,11 @@ outputs:
   opts:
     title: Commit author email
     description: Email of the checked-out commit.
-- GIT_CLONE_COMMIT_COMMITER_NAME:
+- GIT_CLONE_COMMIT_COMMITTER_NAME:
   opts:
     title: Committer name
     description: Committer name of the checked-out commit.
-- GIT_CLONE_COMMIT_COMMITER_EMAIL:
+- GIT_CLONE_COMMIT_COMMITTER_EMAIL:
   opts:
     title: Committer email
     description: Email of the checked-out commit.

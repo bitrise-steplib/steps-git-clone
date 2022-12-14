@@ -75,16 +75,16 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 <details>
 <summary>Outputs</summary>
 
-| Environment Variable | Description |
-| --- | --- |
-| `GIT_CLONE_COMMIT_HASH` | SHA hash of the checked-out commit. |
-| `GIT_CLONE_COMMIT_MESSAGE_SUBJECT` | Commit message of the checked-out commit. |
-| `GIT_CLONE_COMMIT_MESSAGE_BODY` | Commit message body of the checked-out commit. |
-| `GIT_CLONE_COMMIT_COUNT` | Commit count after checkout.  Count will only work properly if no `--depth` option is set. If `--depth` is set then the history truncated to the specified number of commits. Count will **not** fail but will be the clone depth. |
-| `GIT_CLONE_COMMIT_AUTHOR_NAME` | Author of the checked-out commit. |
-| `GIT_CLONE_COMMIT_AUTHOR_EMAIL` | Email of the checked-out commit. |
-| `GIT_CLONE_COMMIT_COMMITER_NAME` | Committer name of the checked-out commit. |
-| `GIT_CLONE_COMMIT_COMMITER_EMAIL` | Email of the checked-out commit. |
+| Environment Variable               | Description                                                                                                                                                                                                                        |
+|------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `GIT_CLONE_COMMIT_HASH`            | SHA hash of the checked-out commit.                                                                                                                                                                                                |
+| `GIT_CLONE_COMMIT_MESSAGE_SUBJECT` | Commit message of the checked-out commit.                                                                                                                                                                                          |
+| `GIT_CLONE_COMMIT_MESSAGE_BODY`    | Commit message body of the checked-out commit.                                                                                                                                                                                     |
+| `GIT_CLONE_COMMIT_COUNT`           | Commit count after checkout.  Count will only work properly if no `--depth` option is set. If `--depth` is set then the history truncated to the specified number of commits. Count will **not** fail but will be the clone depth. |
+| `GIT_CLONE_COMMIT_AUTHOR_NAME`     | Author of the checked-out commit.                                                                                                                                                                                                  |
+| `GIT_CLONE_COMMIT_AUTHOR_EMAIL`    | Email of the checked-out commit.                                                                                                                                                                                                   |
+| `GIT_CLONE_COMMIT_COMMITTER_NAME`  | Committer name of the checked-out commit.                                                                                                                                                                                          |
+| `GIT_CLONE_COMMIT_COMMITTER_EMAIL` | Email of the checked-out commit.                                                                                                                                                                                                   |
 </details>
 
 ## 🙋 Contributing
