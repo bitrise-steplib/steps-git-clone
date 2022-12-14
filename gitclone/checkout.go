@@ -333,21 +333,12 @@ func selectFilterTreeFetchOption(method CheckoutMethod, opts fetchOptions, filte
 
 func idealDefaultCloneDepth(method CheckoutMethod) int {
 	const defaultCloneDepth = 50
+	const shallowCloneDepth = 1
 
-	switch method {
-	case CheckoutNoneMethod,
-		CheckoutPRMergeBranchMethod,
-		CheckoutPRManualMergeMethod,
-		CheckoutPRDiffFileMethod:
-		return 1
-	case CheckoutCommitMethod,
-		CheckoutTagMethod,
-		CheckoutBranchMethod,
-		CheckoutHeadBranchCommitMethod,
-		CheckoutForkCommitMethod:
-		fallthrough
-	default:
+	if method == CheckoutPRManualMergeMethod {
 		return defaultCloneDepth
+	} else {
+		return shallowCloneDepth
 	}
 }
 

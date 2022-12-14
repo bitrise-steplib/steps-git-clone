@@ -131,7 +131,7 @@ inputs:
     value_options:
     - "yes"
     - "no"
-- clone_depth: -1
+- clone_depth:
   opts:
     category: Checkout options
     title: Limit fetching to the specified number of commits

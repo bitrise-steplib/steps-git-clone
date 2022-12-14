@@ -47,7 +47,7 @@ func Test_checkoutState(t *testing.T) {
 				FetchTags: true,
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
@@ -58,8 +58,8 @@ func Test_checkoutState(t *testing.T) {
 			},
 			mockRunner: givenMockRunnerSucceedsAfter(1),
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules"`,
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
@@ -87,45 +87,45 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
-			name: "Checkout tag, branch specifed",
+			name: "Checkout tag, branch specified",
 			cfg: Config{
 				Tag: "gat",
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/tags/gat:refs/tags/gat"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/tags/gat:refs/tags/gat"`,
 				`git "checkout" "gat"`,
 			},
 		},
 		{
-			name: "Checkout tag, branch specifed has same name as tag",
+			name: "Checkout tag, branch specified has same name as tag",
 			cfg: Config{
 				Tag: "gat",
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/tags/gat:refs/tags/gat"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/tags/gat:refs/tags/gat"`,
 				`git "checkout" "gat"`,
 			},
 		},
 		{
-			name: "UNSUPPORTED Checkout commit, tag, branch specifed",
+			name: "UNSUPPORTED Checkout commit, tag, branch specified",
 			cfg: Config{
 				Commit: "76a934ae",
 				Tag:    "gat",
 				Branch: "hcnarb",
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
 		{
-			name: "UNSUPPORTED Checkout commit, tag specifed",
+			name: "UNSUPPORTED Checkout commit, tag specified",
 			cfg: Config{
 				Commit: "76a934ae",
 				Tag:    "gat",
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
@@ -153,7 +153,7 @@ func Test_checkoutState(t *testing.T) {
 				ShouldMergePR: true,
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/pr_test:refs/remotes/pr_test"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pr_test:refs/remotes/pr_test"`,
 				`git "checkout" "refs/remotes/pr_test"`,
 			},
 		},
@@ -169,7 +169,7 @@ func Test_checkoutState(t *testing.T) {
 				ShouldMergePR:         true,
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/merge:refs/remotes/pull/7/merge"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/merge:refs/remotes/pull/7/merge"`,
 				`git "checkout" "refs/remotes/pull/7/merge"`,
 			},
 		},
@@ -190,9 +190,9 @@ func Test_checkoutState(t *testing.T) {
 				GivenRunWithRetryFailsAfter(2).
 				GivenRunSucceeds(),
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "origin" "refs/heads/master"`,
-				`git "fetch" "--jobs=10" "--no-tags" "origin" "refs/heads/master"`,
-				`git "fetch" "--jobs=10" "--no-tags" "origin" "refs/heads/master"`,
+				`git "fetch" "--jobs=10" "--depth=50" "--no-tags" "origin" "refs/heads/master"`,
+				`git "fetch" "--jobs=10" "--depth=50" "--no-tags" "origin" "refs/heads/master"`,
+				`git "fetch" "--jobs=10" "--depth=50" "--no-tags" "origin" "refs/heads/master"`,
 				`git "fetch" "--jobs=10"`,
 				`git "branch" "-r"`,
 			},
@@ -265,15 +265,15 @@ func Test_checkoutState(t *testing.T) {
 				GivenRunWithRetrySucceeds().
 				GivenRunSucceeds(),
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 				`git "checkout" "master"`,
 				`git "apply" "--index" "diff_path"`,
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
 				`git "checkout" "master"`,
 				`git "merge" "origin/master"`,
 				`git "log" "-1" "--format=%H"`,
 				`git "remote" "add" "fork" "git@github.com:bitrise-io/other-repo.git"`,
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "fork" "refs/heads/test/commit-messages"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "fork" "refs/heads/test/commit-messages"`,
 				`git "merge" "fork/test/commit-messages"`,
 				`git "checkout" "--detach"`,
 			},
@@ -364,9 +364,9 @@ func Test_checkoutState(t *testing.T) {
 				GivenRunWithRetryFailsAfter(2).
 				GivenRunSucceeds(),
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
 				`git "fetch" "--jobs=10"`,
 				`git "branch" "-r"`,
 			},
@@ -421,7 +421,7 @@ func Test_checkoutState(t *testing.T) {
 				ShouldMergePR: true,
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/merge:refs/remotes/pull/7/merge"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/merge:refs/remotes/pull/7/merge"`,
 				`git "checkout" "refs/remotes/pull/7/merge"`,
 			},
 		},
@@ -446,7 +446,7 @@ func Test_checkoutState(t *testing.T) {
 				SparseDirectories: []string{"client/android"},
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},

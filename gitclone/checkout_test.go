@@ -330,7 +330,7 @@ func Test_idealDefaultCloneDepth(t *testing.T) {
 		},
 		{
 			method: CheckoutPRManualMergeMethod,
-			want:   1,
+			want:   50,
 		},
 		{
 			method: CheckoutPRDiffFileMethod,
@@ -338,23 +338,23 @@ func Test_idealDefaultCloneDepth(t *testing.T) {
 		},
 		{
 			method: CheckoutCommitMethod,
-			want:   50,
+			want:   1,
 		},
 		{
 			method: CheckoutTagMethod,
-			want:   50,
+			want:   1,
 		},
 		{
 			method: CheckoutBranchMethod,
-			want:   50,
+			want:   1,
 		},
 		{
 			method: CheckoutHeadBranchCommitMethod,
-			want:   50,
+			want:   1,
 		},
 		{
 			method: CheckoutForkCommitMethod,
-			want:   50,
+			want:   1,
 		},
 	}
 	for _, tt := range tests {
