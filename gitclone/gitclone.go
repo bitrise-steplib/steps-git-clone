@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bitrise-io/envman/envman"
-	"github.com/bitrise-io/go-steputils/tools"
-	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/log"
 )
@@ -46,94 +44,8 @@ const (
 	sparseCheckoutFailedTag = "sparse_checkout_failed"
 )
 
-type commitInfo struct {
-	envKey string
-	cmd    *command.Model
-}
-
 var logger = log.NewLogger()
 var tracker = newStepTracker(env.NewRepository(), logger)
-
-func exportCommitInfo(gitCmd git.Git, gitRef string, isPR bool, maxEnvLength int) error {
-	commitInfos := []commitInfo{
-		{
-			envKey: "GIT_CLONE_COMMIT_AUTHOR_NAME",
-			cmd:    gitCmd.Log(`%an`, gitRef),
-		},
-		{
-			envKey: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
-			cmd:    gitCmd.Log(`%ae`, gitRef),
-		},
-		{
-			envKey: "GIT_CLONE_COMMIT_HASH",
-			cmd:    gitCmd.Log(`%H`, gitRef),
-		},
-		{
-			envKey: "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
-			cmd:    gitCmd.Log(`%s`, gitRef),
-		},
-		{
-			envKey: "GIT_CLONE_COMMIT_MESSAGE_BODY",
-			cmd:    gitCmd.Log(`%b`, gitRef),
-		},
-	}
-	nonPROnlyInfos := []commitInfo{
-		{
-			envKey: "GIT_CLONE_COMMIT_COMMITER_NAME",
-			cmd:    gitCmd.Log(`%cn`, gitRef),
-		},
-		{
-			envKey: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
-			cmd:    gitCmd.Log(`%ce`, gitRef),
-		},
-		{
-			envKey: "GIT_CLONE_COMMIT_COUNT",
-			cmd:    gitCmd.RevList("HEAD", "--count"),
-		},
-	}
-
-	if !isPR {
-		commitInfos = append(commitInfos, nonPROnlyInfos...)
-	} else {
-		logger.Printf("Commit author name/email and commit count is not exported for Pull Requests.")
-	}
-
-	for _, commitInfo := range commitInfos {
-		if err := printLogAndExportEnv(commitInfo.cmd, commitInfo.envKey, maxEnvLength); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func printLogAndExportEnv(command *command.Model, env string, maxEnvLength int) error {
-	l, err := runner.RunForOutput(command)
-	if err != nil {
-		return fmt.Errorf("command failed: %s", err)
-	}
-
-	if (env == "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" || env == "GIT_CLONE_COMMIT_MESSAGE_BODY") && len(l) > maxEnvLength {
-		tv := l[:maxEnvLength-len(trimEnding)] + trimEnding
-		logger.Printf("Value %s  is bigger than maximum env variable size, trimming", env)
-		l = tv
-	}
-
-	logger.Printf("=> %s\n   value: %s", env, l)
-	if err := tools.ExportEnvironmentWithEnvman(env, l); err != nil {
-		return fmt.Errorf("envman export failed: %v", err)
-	}
-	return nil
-}
-
-func getMaxEnvLength() (int, error) {
-	configs, err := envman.GetConfigs()
-	if err != nil {
-		return 0, err
-	}
-
-	return configs.EnvBytesLimitInKB * 1024, nil
-}
 
 func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, isPR bool, err error) {
 	checkoutStartTime := time.Now()
@@ -220,14 +132,7 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 func Execute(cfg Config) error {
 	defer tracker.wait()
 
-	maxEnvLength, err := getMaxEnvLength()
-	if err != nil {
-		return newStepError(
-			"get_max_commit_msg_length_failed",
-			fmt.Errorf("failed to set commit message length: %s", err),
-			"Getting allowed commit message length failed",
-		)
-	}
+	cmdFactory := command.NewFactory(env.NewRepository())
 
 	gitCmd, err := git.New(cfg.CloneIntoDir)
 	if err != nil {
@@ -293,16 +198,19 @@ func Execute(cfg Config) error {
 		tracker.logSubmoduleUpdate(updateTime)
 	}
 
-	if ref := checkoutStrategy.getBuildTriggerRef(); ref != "" {
-		fmt.Println()
-		logger.Infof("Exporting commit details")
-		if err := exportCommitInfo(gitCmd, ref, isPR, maxEnvLength); err != nil {
-			return newStepError("export_envs_failed", err, "Exporting envs failed")
-		}
-	} else {
-		fmt.Println()
-		logger.Warnf(`Can not export commit information like commit message and author as it is not available.
-This may happen when using Bitbucket with the "Manual merge" input set to 'yes' (using a Diff file).`)
+	fmt.Println()
+	logger.Infof("Exporting commit details")
+	ref := checkoutStrategy.getBuildTriggerRef()
+	if ref == "" {
+		logger.Warnf(`Can't export commit information (commit message and author) as it is not available.
+This is a limitation of Bitbucket webhooks when the PR source repo (a fork) is not accessible.
+Try using the env vars based on the webhook contents instead, such as $BITRISE_GIT_COMMIT and $BITRISE_GIT_MESSAGE`)
+		return nil
+	}
+
+	exporter := newOutputExporter(cmdFactory, gitCmd)
+	if err := exporter.exportCommitInfo(ref, isPR); err != nil {
+		return newStepError("export_envs_failed", err, "Exporting envs failed")
 	}
 
 	return nil
