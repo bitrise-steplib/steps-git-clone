@@ -22,6 +22,7 @@ workflows:
     - BRANCH: test/generate-changelog
     - FETCH_TAGS: "yes"
     - UPDATE_SUBMODULES: "no"
+    - CLONE_DEPTH: 50
     before_run:
     - _setup
     after_run:
@@ -36,6 +37,7 @@ workflows:
     - BRANCH: test/generate-changelog
     - FETCH_TAGS: "yes"
     - UPDATE_SUBMODULES: "no"
+    - CLONE_DEPTH: 50
     before_run:
     - _setup
     after_run:
@@ -480,7 +482,7 @@ workflows:
         inputs:
         - content: |-
             #!/bin/env bash
-            set -ex
+            set -e
 
             EXPECTED_CHANGELOG="* [a409478] Add newline to the description.
             * [b002ab7] Add repository description.
@@ -491,6 +493,11 @@ workflows:
                 echo "Expected changelog generated."
             else
                 echo "Invalid changelog generated:"
+                echo ""
+                echo "Expected changelog:"
+                echo "$EXPECTED_CHANGELOG"
+                echo ""
+                echo "Generated changelog:"
                 echo "$BITRISE_CHANGELOG"
                 exit 1
             fi
@@ -602,6 +609,7 @@ workflows:
               envman add --key WORKDIR_ABSOLUTE --value $WD
             fi
     - path::./:
+        run_if: "true"
         inputs:
         - repository_url: $TEST_REPO_URL
         - clone_into_dir: $WORKDIR
