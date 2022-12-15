@@ -293,6 +293,7 @@ workflows:
     - PULL_REQUEST_ID: 7
     - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: git@github.com:bitrise-io/git-clone-test.git
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/7/merge
+    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/7/head
     - BITRISEIO_GIT_BRANCH_DEST: master
     - COMMIT: 76a934ae80f12bb9b504bbc86f64a1d310e5db64
     - BRANCH: test/commit-messages
@@ -339,6 +340,7 @@ workflows:
     envs:
     - PULL_REQUEST_ID: 8
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/8/merge
+    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/8/head
     - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: $TEST_REPO_URL
     - BITRISEIO_GIT_BRANCH_DEST: unrelated-histories/master
     - COMMIT: 62af44590c7a2b937726f2c3024a88a129b330b5
