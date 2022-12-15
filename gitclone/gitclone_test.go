@@ -142,6 +142,7 @@ func Test_checkoutState(t *testing.T) {
 			},
 			wantCmds: []string{
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/5/merge:refs/remotes/pull/5/merge"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/5/head:refs/remotes/pull/5/head"`,
 				`git "checkout" "refs/remotes/pull/5/merge"`,
 			},
 		},
@@ -152,10 +153,7 @@ func Test_checkoutState(t *testing.T) {
 				PRMergeBranch: "pr_test",
 				ShouldMergePR: true,
 			},
-			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pr_test:refs/remotes/pr_test"`,
-				`git "checkout" "refs/remotes/pr_test"`,
-			},
+			wantErrType: ParameterValidationError{},
 		},
 		{
 			name: "PR - fork - merge ref: private fork",
@@ -165,11 +163,13 @@ func Test_checkoutState(t *testing.T) {
 				Branch:                "test/commit-messages",
 				PRDestBranch:          "master",
 				PRMergeBranch:         "pull/7/merge",
+				PRHeadBranch:          "pull/7/head",
 				Commit:                "76a934ae",
 				ShouldMergePR:         true,
 			},
 			wantCmds: []string{
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/merge:refs/remotes/pull/7/merge"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/head:refs/remotes/pull/7/head"`,
 				`git "checkout" "refs/remotes/pull/7/merge"`,
 			},
 		},
@@ -417,11 +417,13 @@ func Test_checkoutState(t *testing.T) {
 			cfg: Config{
 				Branch:        "test/commit-messages",
 				PRMergeBranch: "pull/7/merge",
+				PRHeadBranch:  "pull/7/head",
 				PRDestBranch:  "master",
 				ShouldMergePR: true,
 			},
 			wantCmds: []string{
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/merge:refs/remotes/pull/7/merge"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/head:refs/remotes/pull/7/head"`,
 				`git "checkout" "refs/remotes/pull/7/merge"`,
 			},
 		},

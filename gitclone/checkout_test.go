@@ -299,11 +299,11 @@ func Test_getBuildTriggerRef(t *testing.T) {
 		{
 			strategy: checkoutPRMergeRef{
 				params: PRMergeRefParams{
-					DestinationBranch: "dest",
-					MergeRef:          "pull/2/merge",
+					MergeRef: "pull/2/merge",
+					HeadRef:  "pull/2/head",
 				},
 			},
-			wantRef: "refs/remotes/pull/2/merge",
+			wantRef: "refs/remotes/pull/2/head",
 		},
 	}
 	for _, tt := range tests {

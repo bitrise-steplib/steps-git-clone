@@ -222,7 +222,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 		}
 	case CheckoutPRMergeBranchMethod:
 		{
-			params, err := NewPRMergeRefParams(cfg.PRDestBranch, cfg.PRMergeBranch)
+			params, err := NewPRMergeRefParams(cfg.PRMergeBranch, cfg.PRHeadBranch)
 			if err != nil {
 				return nil, err
 			}
