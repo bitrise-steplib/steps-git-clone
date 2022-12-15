@@ -299,7 +299,6 @@ func selectFetchOptions(method CheckoutMethod, cloneDepth int, fetchTags, fetchS
 		tags:            fetchTags,
 		fetchSubmodules: fetchSubmodules,
 	}
-
 	opts = selectFilterTreeFetchOption(method, opts, filterTree)
 
 	return opts
@@ -318,7 +317,6 @@ func selectFilterTreeFetchOption(method CheckoutMethod, opts fetchOptions, filte
 		CheckoutForkCommitMethod:
 		{
 			opts.filterTree = true
-			opts.depth = 0
 			return opts
 		}
 	case CheckoutNoneMethod,
@@ -330,6 +328,17 @@ func selectFilterTreeFetchOption(method CheckoutMethod, opts fetchOptions, filte
 		}
 	default:
 		panic(fmt.Sprintf("implementation missing for enum value %T", method))
+	}
+}
+
+func idealDefaultCloneDepth(method CheckoutMethod) int {
+	const defaultCloneDepth = 50
+	const shallowCloneDepth = 1
+
+	if method == CheckoutPRManualMergeMethod {
+		return defaultCloneDepth
+	} else {
+		return shallowCloneDepth
 	}
 }
 
