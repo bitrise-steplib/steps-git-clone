@@ -10,8 +10,8 @@ import (
 	"github.com/bitrise-io/go-utils/v2/command"
 )
 
-const outputCommitterName = "GIT_CLONE_COMMIT_COMMITER_NAME"
-const outputCommitterEmail = "GIT_CLONE_COMMIT_COMMITER_EMAIL"
+const outputCommitterName = "GIT_CLONE_COMMIT_COMMITTER_NAME"
+const outputCommitterEmail = "GIT_CLONE_COMMIT_COMMITTER_EMAIL"
 const outputCommitCount = "GIT_CLONE_COMMIT_COUNT"
 
 type gitOutput struct {
