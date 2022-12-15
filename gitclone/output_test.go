@@ -49,11 +49,11 @@ func Test_gitOutputs(t *testing.T) {
 					gitCmd: gitCmd.Log("%b", "ref/tags/1.0.0"),
 				},
 				{
-					envKey: "GIT_CLONE_COMMIT_COMMITER_NAME",
+					envKey: "GIT_CLONE_COMMIT_COMMITTER_NAME",
 					gitCmd: gitCmd.Log("%cn", "ref/tags/1.0.0"),
 				},
 				{
-					envKey: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
+					envKey: "GIT_CLONE_COMMIT_COMMITTER_EMAIL",
 					gitCmd: gitCmd.Log("%ce", "ref/tags/1.0.0"),
 				},
 				{

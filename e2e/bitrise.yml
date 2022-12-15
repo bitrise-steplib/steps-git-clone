@@ -517,8 +517,8 @@ workflows:
             check "GIT_CLONE_COMMIT_COUNT" "25"
             check "GIT_CLONE_COMMIT_AUTHOR_NAME" "Krisztian Dobmayer"
             check "GIT_CLONE_COMMIT_AUTHOR_EMAIL" "krisztian.dobmayer@bitrise.io"
-            check "GIT_CLONE_COMMIT_COMMITER_NAME" "Krisztian Dobmayer"
-            check "GIT_CLONE_COMMIT_COMMITER_EMAIL" "krisztian.dobmayer@bitrise.io"
+            check "GIT_CLONE_COMMIT_COMMITTER_NAME" "Krisztian Dobmayer"
+            check "GIT_CLONE_COMMIT_COMMITTER_EMAIL" "krisztian.dobmayer@bitrise.io"
 
   _check_too_long_message:
     steps:
@@ -548,8 +548,8 @@ workflows:
             echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
             echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
-            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
-            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITTER_NAME: ${GIT_CLONE_COMMIT_COMMITTER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITTER_EMAIL: ${GIT_CLONE_COMMIT_COMMITTER_EMAIL}"
 
   _setup:
     steps:
@@ -579,8 +579,8 @@ workflows:
             envman unset --key GIT_CLONE_COMMIT_COUNT
             envman unset --key GIT_CLONE_COMMIT_AUTHOR_NAME
             envman unset --key GIT_CLONE_COMMIT_AUTHOR_EMAIL
-            envman unset --key GIT_CLONE_COMMIT_COMMITER_NAME
-            envman unset --key GIT_CLONE_COMMIT_COMMITER_EMAIL
+            envman unset --key GIT_CLONE_COMMIT_COMMITTER_NAME
+            envman unset --key GIT_CLONE_COMMIT_COMMITTER_EMAIL
 
   _run:
     steps:
