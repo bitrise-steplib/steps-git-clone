@@ -602,6 +602,7 @@ workflows:
               envman add --key WORKDIR_ABSOLUTE --value $WD
             fi
     - path::./:
+        run_if: "true"
         inputs:
         - repository_url: $TEST_REPO_URL
         - clone_into_dir: $WORKDIR
