@@ -11,7 +11,6 @@ import (
 // When available, the merge ref is created by the git server and passed in the webhook.
 // Using a merge ref is preferred over a manual merge because we can shallow-fetch the merge ref only.
 type PRMergeRefParams struct {
-	DestinationBranch string
 	// MergeRef contains the changes pre-merged by the git provider (eg. pull/7/merge)
 	MergeRef string
 	// HeadRef is the head of the PR branch (eg. pull/7/head)
@@ -19,10 +18,7 @@ type PRMergeRefParams struct {
 }
 
 // NewPRMergeRefParams validates and returns a new PRMergeRefParams
-func NewPRMergeRefParams(destBranch, mergeRef, headRef string) (*PRMergeRefParams, error) {
-	if strings.TrimSpace(destBranch) == "" {
-		return nil, NewParameterValidationError("Can't checkout PR: no destination branch specified")
-	}
+func NewPRMergeRefParams(mergeRef, headRef string) (*PRMergeRefParams, error) {
 	if strings.TrimSpace(mergeRef) == "" {
 		return nil, NewParameterValidationError("Can't checkout PR: no merge ref specified")
 	}
@@ -31,9 +27,8 @@ func NewPRMergeRefParams(destBranch, mergeRef, headRef string) (*PRMergeRefParam
 	}
 
 	return &PRMergeRefParams{
-		DestinationBranch: destBranch,
-		MergeRef:          mergeRef,
-		HeadRef:           headRef,
+		MergeRef: mergeRef,
+		HeadRef:  headRef,
 	}, nil
 }
 
