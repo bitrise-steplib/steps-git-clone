@@ -22,7 +22,7 @@ workflows:
     - BRANCH: test/generate-changelog
     - FETCH_TAGS: "yes"
     - UPDATE_SUBMODULES: "no"
-    - CLONE_DEPTH: 50
+    - CLONE_DEPTH: 78
     before_run:
     - _setup
     after_run:
@@ -37,7 +37,7 @@ workflows:
     - BRANCH: test/generate-changelog
     - FETCH_TAGS: "yes"
     - UPDATE_SUBMODULES: "no"
-    - CLONE_DEPTH: 50
+    - CLONE_DEPTH: 46
     before_run:
     - _setup
     after_run:
