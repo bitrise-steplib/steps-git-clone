@@ -22,6 +22,7 @@ workflows:
     - BRANCH: test/generate-changelog
     - FETCH_TAGS: "yes"
     - UPDATE_SUBMODULES: "no"
+    - CLONE_DEPTH: 78
     before_run:
     - _setup
     after_run:
@@ -36,6 +37,7 @@ workflows:
     - BRANCH: test/generate-changelog
     - FETCH_TAGS: "yes"
     - UPDATE_SUBMODULES: "no"
+    - CLONE_DEPTH: 46
     before_run:
     - _setup
     after_run:
@@ -482,7 +484,7 @@ workflows:
         inputs:
         - content: |-
             #!/bin/env bash
-            set -ex
+            set -e
 
             EXPECTED_CHANGELOG="* [a409478] Add newline to the description.
             * [b002ab7] Add repository description.
@@ -493,6 +495,11 @@ workflows:
                 echo "Expected changelog generated."
             else
                 echo "Invalid changelog generated:"
+                echo ""
+                echo "Expected changelog:"
+                echo "$EXPECTED_CHANGELOG"
+                echo ""
+                echo "Generated changelog:"
                 echo "$BITRISE_CHANGELOG"
                 exit 1
             fi
@@ -516,11 +523,11 @@ workflows:
             check "GIT_CLONE_COMMIT_HASH" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
             check "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" "Sample commit message subject"
             check "GIT_CLONE_COMMIT_MESSAGE_BODY" "Sample commit message body"
-            check "GIT_CLONE_COMMIT_COUNT" "25"
+            check "GIT_CLONE_COMMIT_COUNT" "1"
             check "GIT_CLONE_COMMIT_AUTHOR_NAME" "Krisztian Dobmayer"
             check "GIT_CLONE_COMMIT_AUTHOR_EMAIL" "krisztian.dobmayer@bitrise.io"
-            check "GIT_CLONE_COMMIT_COMMITER_NAME" "Krisztian Dobmayer"
-            check "GIT_CLONE_COMMIT_COMMITER_EMAIL" "krisztian.dobmayer@bitrise.io"
+            check "GIT_CLONE_COMMIT_COMMITTER_NAME" "Krisztian Dobmayer"
+            check "GIT_CLONE_COMMIT_COMMITTER_EMAIL" "krisztian.dobmayer@bitrise.io"
 
   _check_too_long_message:
     steps:
@@ -550,8 +557,8 @@ workflows:
             echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
             echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
-            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
-            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITTER_NAME: ${GIT_CLONE_COMMIT_COMMITTER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITTER_EMAIL: ${GIT_CLONE_COMMIT_COMMITTER_EMAIL}"
 
   _setup:
     steps:
@@ -581,8 +588,8 @@ workflows:
             envman unset --key GIT_CLONE_COMMIT_COUNT
             envman unset --key GIT_CLONE_COMMIT_AUTHOR_NAME
             envman unset --key GIT_CLONE_COMMIT_AUTHOR_EMAIL
-            envman unset --key GIT_CLONE_COMMIT_COMMITER_NAME
-            envman unset --key GIT_CLONE_COMMIT_COMMITER_EMAIL
+            envman unset --key GIT_CLONE_COMMIT_COMMITTER_NAME
+            envman unset --key GIT_CLONE_COMMIT_COMMITTER_EMAIL
 
   _run:
     steps:

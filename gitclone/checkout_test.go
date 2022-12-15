@@ -314,3 +314,54 @@ func Test_getBuildTriggerRef(t *testing.T) {
 		})
 	}
 }
+
+func Test_idealDefaultCloneDepth(t *testing.T) {
+	tests := []struct {
+		method CheckoutMethod
+		want   int
+	}{
+		{
+			method: CheckoutNoneMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutPRMergeBranchMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutPRManualMergeMethod,
+			want:   50,
+		},
+		{
+			method: CheckoutPRDiffFileMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutCommitMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutTagMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutBranchMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutHeadBranchCommitMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutForkCommitMethod,
+			want:   1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.method.String(), func(t *testing.T) {
+			if got := idealDefaultCloneDepth(tt.method); got != tt.want {
+				t.Errorf("idealDefaultCloneDepth() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
