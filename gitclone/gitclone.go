@@ -150,18 +150,6 @@ func Execute(cfg Config) error {
 		)
 	}
 
-	// Disable automatic GC as it may be triggered by other git commands (making run times nondeterministic).
-	// And we run in ephemeral VMs anyway, so GC isn't really needed.
-	// https://mirrors.edge.kernel.org/pub/software/scm/git/docs/git-gc.html
-	out, err := gitCmd.Config("gc.auto", "0").RunAndReturnTrimmedCombinedOutput()
-	if err != nil {
-		return newStepError(
-			"disable_gc",
-			fmt.Errorf("failed to disable GC: %v, output:\n%s", err, out),
-			"Failed to disable git garbage collection",
-		)
-	}
-
 	originPresent, err := isOriginPresent(gitCmd, cfg.CloneIntoDir, cfg.RepositoryURL)
 	if err != nil {
 		return newStepError(
@@ -195,6 +183,18 @@ func Execute(cfg Config) error {
 				"Adding remote repository failed",
 			)
 		}
+	}
+
+	// Disable automatic GC as it may be triggered by other git commands (making run times nondeterministic).
+	// And we run in ephemeral VMs anyway, so GC isn't really needed.
+	// https://mirrors.edge.kernel.org/pub/software/scm/git/docs/git-gc.html
+	out, err := gitCmd.Config("gc.auto", "0").RunAndReturnTrimmedCombinedOutput()
+	if err != nil {
+		return newStepError(
+			"disable_gc",
+			fmt.Errorf("failed to disable GC: %v, output:\n%s", err, out),
+			"Failed to disable git garbage collection",
+		)
 	}
 
 	if err := setupSparseCheckout(gitCmd, cfg.SparseDirectories); err != nil {
