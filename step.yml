@@ -189,13 +189,6 @@ inputs:
       Note: not all Git services provide this value.
     is_dont_change_value: true
 
-- pull_request_id: $PULL_REQUEST_ID
-  opts:
-    category: Build trigger parameters
-    title: Pull request ID
-    description: Pull request number, coming from the Git provider
-    is_dont_change_value: true
-
 # Debug
 
 - reset_repository: "No"
