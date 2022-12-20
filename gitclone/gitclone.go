@@ -12,28 +12,28 @@ import (
 
 // Config is the git clone step configuration
 type Config struct {
-	RepositoryURL string `env:"repository_url,required"`
-	CloneIntoDir  string `env:"clone_into_dir,required"`
-	Commit        string `env:"commit"`
-	Tag           string `env:"tag"`
-	Branch        string `env:"branch"`
+	ShouldMergePR bool `env:"merge_pr,opt[yes,no]"`
 
+	CloneIntoDir         string   `env:"clone_into_dir,required"`
+	CloneDepth           int      `env:"clone_depth"`
+	UpdateSubmodules     bool     `env:"update_submodules,opt[yes,no]"`
+	SubmoduleUpdateDepth int      `env:"submodule_update_depth"`
+	FetchTags            bool     `env:"fetch_tags,opt[yes,no]"`
+	SparseDirectories    []string `env:"sparse_directories,multiline"`
+
+	RepositoryURL         string `env:"repository_url,required"`
+	Commit                string `env:"commit"`
+	Tag                   string `env:"tag"`
+	Branch                string `env:"branch"`
 	PRDestBranch          string `env:"branch_dest"`
-	PRID                  int    `env:"pull_request_id"`
 	PRSourceRepositoryURL string `env:"pull_request_repository_url"`
 	PRMergeBranch         string `env:"pull_request_merge_branch"`
 	PRHeadBranch          string `env:"pull_request_head_branch"`
+	PRID                  int    `env:"pull_request_id"`
 
-	ResetRepository      bool     `env:"reset_repository,opt[Yes,No]"`
-	CloneDepth           int      `env:"clone_depth"`
-	FetchTags            bool     `env:"fetch_tags,opt[yes,no]"`
-	SubmoduleUpdateDepth int      `env:"submodule_update_depth"`
-	ShouldMergePR        bool     `env:"merge_pr,opt[yes,no]"`
-	SparseDirectories    []string `env:"sparse_directories,multiline"`
-
-	BuildURL         string `env:"build_url"`
-	BuildAPIToken    string `env:"build_api_token"`
-	UpdateSubmodules bool   `env:"update_submodules,opt[yes,no]"`
+	ResetRepository bool   `env:"reset_repository,opt[Yes,No]"`
+	BuildURL        string `env:"build_url"`
+	BuildAPIToken   string `env:"build_api_token"`
 }
 
 const (
