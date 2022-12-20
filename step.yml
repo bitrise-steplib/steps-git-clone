@@ -2,18 +2,18 @@ title: Git Clone Repository
 summary: Checks out the repository, updates submodules and exports git metadata as Step outputs.
 description: |
   The checkout process depends on the Step settings and the build trigger parameters (coming from your git server).
-  
+
   Depending on the conditions, the step can checkout:
   - the merged state of a Pull Request
   - the head of a Pull Request
   - a git tag
   - a specific commit on a branch
   - the head of a branch
-  
+
   The Step also supports more advanced features, such as updating submodules and sparse checkouts.
 
   ### Configuring the Step
-  
+
   The step should work with its default configuration if build triggers and webhooks are set up correctly.
 
   By default, the Step performs a shallow clone in most cases (fetching only the latest commit) to make the clone fast and efficient. If your workflow requires a deeper commit history, you can override this using the **Clone depth** input.
@@ -52,7 +52,7 @@ inputs:
     summary: Checkout the merged PR state instead of the PR head
     description: |-
       This only applies to builds triggered by pull requests.
-      
+
       Options:
       - `yes`: Depending on the information in the build trigger, either fetches the PR merge ref or creates the merged state locally.
       - `no`: Checks out the head of the PR branch without merging it into the destination branch.
@@ -75,11 +75,11 @@ inputs:
     summary: Number of commits to fetch
     description: |-
       Limit fetching to the specified number of commits.
-      
+
       By default, the Step tries to do a shallow clone (depth of 1) if it's possible based on the build trigger parameters. If it's not possible, it applies a low depth value, unless another value is specified here.
-      
+
       It's not recommended to define this input because a shallow clone ensures fast clone times. Examples of when you want to override the clone depth:
-      
+
       - A Step in the workflow reads the commit history in order to generate a changelog
       - A Step in the workflow runs a git diff against a previous commit
 
@@ -119,12 +119,12 @@ inputs:
     title: Sparse checkout directories
     description: |-
       Limit which directories to clone using [sparse-checkout](https://git-scm.com/docs/git-sparse-checkout). This is useful for monorepos where the current workflow only needs a subfolder.
-      
+
       For example, specifying `src/android` the Step will only clone:
       - contents of the root directory and
       - contents of the `src/android` directory and all of its subdirectories
       On the other hand, `src/ios` will not be cloned.
-      
+
       This input accepts one path per line, separate entries by a linebreak.
 
 # Build trigger parameters
