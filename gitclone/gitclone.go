@@ -29,6 +29,7 @@ type Config struct {
 	PRSourceRepositoryURL string `env:"pull_request_repository_url"`
 	PRMergeBranch         string `env:"pull_request_merge_branch"`
 	PRHeadBranch          string `env:"pull_request_head_branch"`
+	PRID                  int    `env:"pull_request_id"`
 
 	ResetRepository bool   `env:"reset_repository,opt[Yes,No]"`
 	BuildURL        string `env:"build_url"`
