@@ -48,6 +48,18 @@ toolkit:
 inputs:
 - merge_pr: "yes"
   opts:
+    category: Checkout options
+    title: Merge the Pull Request source branch into destination
+    summary: Allows to validate a temporary merged state.
+    description: |-
+      Disables merging the source and destination branches.
+      - `yes`: The default setting. Merges the source branch into the destination branch.
+      - `no`: Treats Pull Request events as Push events on the source branch.
+    value_options:
+    - "yes"
+    - "no"
+
+# Clone options
     title: Checkout merged PR state
     summary: Checkout the merged PR state instead of the PR head
     description: |-
