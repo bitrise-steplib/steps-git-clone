@@ -48,106 +48,8 @@ toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-git-clone
 inputs:
-- repository_url: $GIT_REPOSITORY_URL
-  opts:
-    title: Git repository URL
-    description: SSH or HTTPS URL of the repository to clone
-    is_required: true
-    is_dont_change_value: true
-- clone_into_dir: $BITRISE_SOURCE_DIR
-  opts:
-    title: Clone destination directory
-    description: Local directory where the repository is cloned
-    is_required: true
-- commit: $BITRISE_GIT_COMMIT
-  opts:
-    category: Clone arguments
-    title: Git commit to checkout
-    description: Commit SHA to checkout
-    is_dont_change_value: true
-- tag: $BITRISE_GIT_TAG
-  opts:
-    category: Clone arguments
-    title: Git tag
-    description: Git tag to checkout
-    is_dont_change_value: true
-- branch: $BITRISE_GIT_BRANCH
-  opts:
-    category: Clone arguments
-    title: Git branch
-    description: Git branch to checkout
-    is_dont_change_value: true
-- branch_dest: $BITRISEIO_GIT_BRANCH_DEST
-  opts:
-    category: Clone arguments
-    title: Pull request destination branch
-    description: The branch that the pull request targets, such as `main`
-    is_dont_change_value: true
-- pull_request_id: $PULL_REQUEST_ID
-  opts:
-    category: Clone arguments
-    title: Pull request ID
-    description: Pull request number, coming from the Git provider
-    is_dont_change_value: true
-- pull_request_repository_url: $BITRISEIO_PULL_REQUEST_REPOSITORY_URL
-  opts:
-    category: Clone arguments
-    title: Pull request source repository
-    summary: URL of the source repository of a pull request.
-    description: |-
-      URL of the source repository of a pull request.
-
-      This points to the fork repository in builds triggered by pull requests.
-    is_dont_change_value: true
-- pull_request_merge_branch: $BITRISEIO_PULL_REQUEST_MERGE_BRANCH
-  opts:
-    category: Clone arguments
-    title: Pull request merge ref
-    description: |-
-      Git ref pointing to the result of merging the PR branch into the destination branch. Even if the source of the PR is a fork, this is a reference to the destination repository.
-
-      Example: `refs/pull/14/merge`
-
-      Note: not all Git services provide this value.
-    is_dont_change_value: true
-- pull_request_head_branch: $BITRISEIO_PULL_REQUEST_HEAD_BRANCH
-  opts:
-    category: Clone arguments
-    title: Pull request head ref
-    description: |-
-      Git ref pointing to the head of the PR branch. Even if the source of the PR is a fork, this is a reference to the destination repository.
-
-      Example: `refs/pull/14/head`
-
-      Note: not all Git services provide this value.
-    is_dont_change_value: true
-- update_submodules: "yes"
-  opts:
-    category: Checkout options
-    title: Update the registered submodules?
-    description: |-
-      Update the registered submodules to match what the superproject expects by cloning missing submodules, fetching missing commits in submodules and updating the working tree of the submodules.
-      If set to "no" `git fetch` calls will get the `--no-recurse-submodules` flag.
-    value_options:
-    - "yes"
-    - "no"
-- clone_depth:
-  opts:
-    category: Checkout options
-    title: Limit fetching to the specified number of commits
-    description: |-
-      Limit fetching to the specified number of commits.
-      The value should be a decimal number, for example `10`.
-- submodule_update_depth:
-  opts:
-    category: Checkout options
-    title: Submodule update depth
-    description: |-
-      Truncate the history to the specified number of revisions.
-      The value should be a decimal number, for example `10`.
 - merge_pr: "yes"
   opts:
-    category: Checkout options
     title: Merge the Pull Request source branch into destination
     summary: Allows to validate a temporary merged state.
     description: |-
@@ -157,9 +59,56 @@ inputs:
     value_options:
     - "yes"
     - "no"
+
+# Clone options
+- clone_into_dir: $BITRISE_SOURCE_DIR
+  opts:
+    category: Clone options
+    title: Clone destination directory
+    description: Local directory where the repository is cloned
+    is_required: true
+
+- clone_depth:
+  opts:
+    category: Clone options
+    title: Limit fetching to the specified number of commits
+    description: |-
+      Limit fetching to the specified number of commits.
+      The value should be a decimal number, for example `10`.
+
+- update_submodules: "yes"
+  opts:
+    category: Clone options
+    title: Update the registered submodules?
+    description: |-
+      Update the registered submodules to match what the superproject expects by cloning missing submodules, fetching missing commits in submodules and updating the working tree of the submodules.
+      If set to "no" `git fetch` calls will get the `--no-recurse-submodules` flag.
+    value_options:
+    - "yes"
+    - "no"
+
+- submodule_update_depth:
+  opts:
+    category: Clone options
+    title: Submodule update depth
+    description: |-
+      Truncate the history to the specified number of revisions.
+      The value should be a decimal number, for example `10`.
+
+- fetch_tags: "no"
+  opts:
+    category: Clone options
+    title: Fetch tags
+    description: |-
+      yes - fetch all tags from the remote by adding `--tags` flag to git fetch calls
+      no - disable automatic tag following by adding `--no-tags` flag to git fetch calls
+    value_options:
+    - "yes"
+    - "no"
+
 - sparse_directories: ""
   opts:
-    category: Checkout options
+    category: Clone options
     title: Specify which directories to clone.
     description: |-
       Limit which directories should be cloned during the build. This could be useful if a repository contains multiple platforms, so called monorepositories, and the build is only targeting a single platform.
@@ -167,6 +116,88 @@ inputs:
       - contents of the root directory and
       - contents of the "src/android" directory and all subdirectories of "src/android".
       On the other hand, "src/ios" and any other directories will not be cloned.
+
+# Build trigger parameters
+
+- repository_url: $GIT_REPOSITORY_URL
+  opts:
+    category: Build trigger parameters
+    title: Git repository URL
+    description: SSH or HTTPS URL of the repository to clone
+    is_required: true
+    is_dont_change_value: true
+
+- commit: $BITRISE_GIT_COMMIT
+  opts:
+    category: Build trigger parameters
+    title: Git commit to checkout
+    description: Commit SHA to checkout
+    is_dont_change_value: true
+- tag: $BITRISE_GIT_TAG
+  opts:
+    category: Build trigger parameters
+    title: Git tag
+    description: Git tag to checkout
+    is_dont_change_value: true
+
+- branch: $BITRISE_GIT_BRANCH
+  opts:
+    category: Build trigger parameters
+    title: Git branch
+    description: Git branch to checkout
+    is_dont_change_value: true
+
+- branch_dest: $BITRISEIO_GIT_BRANCH_DEST
+  opts:
+    category: Build trigger parameters
+    title: Pull request destination branch
+    description: The branch that the pull request targets, such as `main`
+    is_dont_change_value: true
+
+- pull_request_repository_url: $BITRISEIO_PULL_REQUEST_REPOSITORY_URL
+  opts:
+    category: Build trigger parameters
+    title: Pull request source repository
+    summary: URL of the source repository of a pull request.
+    description: |-
+      URL of the source repository of a pull request.
+
+      This points to the fork repository in builds triggered by pull requests.
+    is_dont_change_value: true
+
+- pull_request_merge_branch: $BITRISEIO_PULL_REQUEST_MERGE_BRANCH
+  opts:
+    category: Build trigger parameters
+    title: Pull request merge ref
+    description: |-
+      Git ref pointing to the result of merging the PR branch into the destination branch. Even if the source of the PR is a fork, this is a reference to the destination repository.
+
+      Example: `refs/pull/14/merge`
+
+      Note: not all Git services provide this value.
+    is_dont_change_value: true
+
+- pull_request_head_branch: $BITRISEIO_PULL_REQUEST_HEAD_BRANCH
+  opts:
+    category: Build trigger parameters
+    title: Pull request head ref
+    description: |-
+      Git ref pointing to the head of the PR branch. Even if the source of the PR is a fork, this is a reference to the destination repository.
+
+      Example: `refs/pull/14/head`
+
+      Note: not all Git services provide this value.
+    is_dont_change_value: true
+
+- pull_request_id: $PULL_REQUEST_ID
+  opts:
+    category: Build trigger parameters
+    title: Pull request ID
+    description: Pull request number, coming from the Git provider
+    is_dont_change_value: true
+
+# Debug
+
 - reset_repository: "No"
   opts:
     category: Debug
@@ -176,16 +207,7 @@ inputs:
     value_options:
     - "No"
     - "Yes"
-- fetch_tags: "no"
-  opts:
-    category: Clone Config
-    title: Fetch tags
-    description: |-
-      yes - fetch all tags from the remote by adding `--tags` flag to git fetch calls
-      no - disable automatic tag following by adding `--no-tags` flag to git fetch calls
-    value_options:
-    - "yes"
-    - "no"
+
 - build_url: $BITRISE_BUILD_URL
   opts:
     category: Debug
@@ -195,6 +217,7 @@ inputs:
     description: |-
       Unique build URL of this build on Bitrise.io
     is_dont_change_value: true
+
 - build_api_token: $BITRISE_BUILD_API_TOKEN
   opts:
     category: Debug
@@ -205,6 +228,7 @@ inputs:
       The build's API Token for the build on Bitrise.io
     is_dont_change_value: true
     is_sensitive: true
+
 outputs:
 - GIT_CLONE_COMMIT_HASH:
   opts:
