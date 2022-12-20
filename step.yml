@@ -50,7 +50,6 @@ toolkit:
 inputs:
 - merge_pr: "yes"
   opts:
-    category: Checkout options
     title: Merge the Pull Request source branch into destination
     summary: Allows to validate a temporary merged state.
     description: |-
