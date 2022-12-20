@@ -48,7 +48,6 @@ toolkit:
 inputs:
 - merge_pr: "yes"
   opts:
-    category: Checkout options
     title: Checkout merged PR state
     summary: Checkout the merged PR state instead of the PR head
     description: |-
