@@ -89,7 +89,7 @@ type checkoutStrategy interface {
 // |=========================================================================|
 
 func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string) {
-	isPR := cfg.PRSourceRepositoryURL != "" || cfg.PRDestBranch != "" || cfg.PRMergeBranch != "" || cfg.PRID != 0
+	isPR := cfg.PRSourceRepositoryURL != "" || cfg.PRDestBranch != "" || cfg.PRMergeBranch != ""
 	if !isPR {
 		if cfg.Commit != "" {
 			return CheckoutCommitMethod, ""
