@@ -294,7 +294,14 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 }
 
 func selectFetchOptions(method CheckoutMethod, cloneDepth int, fetchTags, fetchSubmodules bool, filterTree bool) fetchOptions {
+	// If cloneDepth is 0, that means the user did not set a value for it,
+	// so we will determine the correct value based on the checkout method.
+	if cloneDepth == 0 {
+		cloneDepth = idealDefaultCloneDepth(method)
+	}
+
 	opts := fetchOptions{
+		limitDepth:      cloneDepth > 0,
 		depth:           cloneDepth,
 		tags:            fetchTags,
 		fetchSubmodules: fetchSubmodules,

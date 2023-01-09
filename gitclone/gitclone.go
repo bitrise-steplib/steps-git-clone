@@ -50,12 +50,6 @@ func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy chec
 	checkoutStartTime := time.Now()
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
 
-	// If CloneDepth is 0, that means the user did not set a value for it,
-	// so we will determine the correct value based on the checkout method.
-	if cfg.CloneDepth == 0 {
-		cfg.CloneDepth = idealDefaultCloneDepth(checkoutMethod)
-	}
-
 	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 
 	checkoutStrategy, err := createCheckoutStrategy(checkoutMethod, cfg, diffFile)
