@@ -83,6 +83,7 @@ inputs:
       - A Step in the workflow reads the commit history in order to generate a changelog
       - A Step in the workflow runs a git diff against a previous commit
 
+      Use the value `-1` to disable the depth limit completely and fetch the entire repo history.
 - update_submodules: "yes"
   opts:
     category: Clone options
