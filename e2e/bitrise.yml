@@ -10,7 +10,6 @@ app:
   - MERGE_PR: "yes"
   - CLONE_DEPTH: ""
   - SPARSE_DIRECTORIES: ""
-  - MANUAL_MERGE: "yes"
   # define these envs in your .bitrise.secrets.yml
   - GIT_CLONE_SSH_PRIVATE_KEY: $GIT_CLONE_SSH_PRIVATE_KEY
 
@@ -186,11 +185,9 @@ workflows:
 
   test_checkout_github_pull_request:
     envs:
-    - PULL_REQUEST_ID: 5
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
     - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/5/head
     - BITRISEIO_GIT_BRANCH_DEST: master
-    - MANUAL_MERGE: "no"
     - UPDATE_SUBMODULES: "no"
     before_run:
     - _setup
@@ -201,12 +198,10 @@ workflows:
 
   test_checkout_pull_request_no_merge:
     envs:
-    - PULL_REQUEST_ID: 5
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
     - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/5/head
     - BITRISEIO_GIT_BRANCH_DEST: master
     - COMMIT: 4301a9b8499ed3e87778dd053c55fd698d0a3b7e
-    - MANUAL_MERGE: "no"
     - CLONE_DEPTH: 1
     - MERGE_PR: "no"
     - UPDATE_SUBMODULES: "no"
@@ -219,29 +214,10 @@ workflows:
 
   test_checkout_pull_request_with_depth:
     envs:
-    - PULL_REQUEST_ID: 5
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
     - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/5/head
     - BITRISEIO_GIT_BRANCH_DEST: master
     - CLONE_DEPTH: 1
-    - MANUAL_MERGE: "no"
-    before_run:
-    - _setup
-    after_run:
-    - _run
-    - _check_outputs
-    - _teardown
-
-  test_manual_merge_unshallow:
-    envs:
-    - PULL_REQUEST_ID: 5
-    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/7/merge
-    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/7/head
-    - BITRISEIO_GIT_BRANCH_DEST: master
-    - COMMIT: 76a934ae80f12bb9b504bbc86f64a1d310e5db64
-    - BRANCH: test/commit-messages
-    - CLONE_DEPTH: 1
-    - UPDATE_SUBMODULES: "no"
     before_run:
     - _setup
     after_run:
@@ -290,7 +266,6 @@ workflows:
 
   test_hosted_git_notfork:
     envs:
-    - PULL_REQUEST_ID: 7
     - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: git@github.com:bitrise-io/git-clone-test.git
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/7/merge
     - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/7/head
@@ -320,7 +295,6 @@ workflows:
 
   test_fork_with_head_branch:
     envs:
-    - PULL_REQUEST_ID: 7
     # Alternate URL for repository, the difference causes the Step to handle it as a fork
     - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: https://github.com/bitrise-samples/git-clone-test/
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/7/merge
@@ -328,7 +302,6 @@ workflows:
     - BITRISEIO_GIT_BRANCH_DEST: master
     - COMMIT: 76a934ae80f12bb9b504bbc86f64a1d310e5db64
     - BRANCH: test/commit-messages
-    - MANUAL_MERGE: "no"
     before_run:
     - _setup
     after_run:
@@ -338,14 +311,12 @@ workflows:
 
   test_unrelated_histories:
     envs:
-    - PULL_REQUEST_ID: 8
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/8/merge
     - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/8/head
     - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: $TEST_REPO_URL
     - BITRISEIO_GIT_BRANCH_DEST: unrelated-histories/master
     - COMMIT: 62af44590c7a2b937726f2c3024a88a129b330b5
     - CLONE_DEPTH: 1
-    - MANUAL_MERGE: "no"
     - UPDATE_SUBMODULES: "no"
     before_run:
     - _setup
@@ -408,13 +379,11 @@ workflows:
         inputs:
         - repository_url: $TEST_DIFF_REPO_URL
         - clone_into_dir: $TEST_DIFF_CLONE_DIR
-        - pull_request_id: 8
         - pull_request_repository_url: $TEST_DIFF_PR_REPOSITORY_URL
         - branch_dest: master
         - branch: master
         - commit: c6810e6
         - clone_depth: 1
-        - manual_merge: "no"
     - script:
         inputs:
         - content: |-
@@ -575,7 +544,6 @@ workflows:
             envman unset --key BITRISE_GIT_TAG
             envman unset --key BITRISE_GIT_BRANCH
             envman unset --key BITRISEIO_GIT_BRANCH_DEST
-            envman unset --key PULL_REQUEST_ID
             envman unset --key BITRISEIO_PULL_REQUEST_REPOSITORY_URL
             envman unset --key BITRISEIO_PULL_REQUEST_MERGE_BRANCH
             envman unset --key BITRISEIO_PULL_REQUEST_HEAD_BRANCH
@@ -623,7 +591,6 @@ workflows:
         - merge_pr: $MERGE_PR
         - clone_depth: $CLONE_DEPTH
         - sparse_directories: $SPARSE_DIRECTORIES
-        - manual_merge: $MANUAL_MERGE
 
   _teardown:
     steps:
