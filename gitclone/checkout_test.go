@@ -359,3 +359,75 @@ func Test_idealDefaultCloneDepth(t *testing.T) {
 		})
 	}
 }
+
+func Test_selectFetchOptions(t *testing.T) {
+	type args struct {
+		method          CheckoutMethod
+		cloneDepth      int
+		fetchTags       bool
+		fetchSubmodules bool
+		filterTree      bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want fetchOptions
+	}{
+		{
+			name: "default depth setting",
+			args: args{
+				method:          CheckoutCommitMethod,
+				cloneDepth:      0,
+				fetchTags:       false,
+				fetchSubmodules: false,
+				filterTree:      false,
+			},
+			want: fetchOptions{
+				tags:            false,
+				limitDepth:      true,
+				depth:           1,
+				fetchSubmodules: false,
+				filterTree:      false,
+			},
+		},
+		{
+			name: "custom depth setting",
+			args: args{
+				method:          CheckoutPRMergeBranchMethod,
+				cloneDepth:      115,
+				fetchTags:       false,
+				fetchSubmodules: false,
+				filterTree:      false,
+			},
+			want: fetchOptions{
+				tags:            false,
+				limitDepth:      true,
+				depth:           115,
+				fetchSubmodules: false,
+				filterTree:      false,
+			},
+		},
+		{
+			name: "disable depth limit",
+			args: args{
+				method:          CheckoutCommitMethod,
+				cloneDepth:      -1,
+				fetchTags:       false,
+				fetchSubmodules: false,
+				filterTree:      false,
+			},
+			want: fetchOptions{
+				tags:            false,
+				limitDepth:      false,
+				depth:           -1,
+				fetchSubmodules: false,
+				filterTree:      false,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, selectFetchOptions(tt.args.method, tt.args.cloneDepth, tt.args.fetchTags, tt.args.fetchSubmodules, tt.args.filterTree), "selectFetchOptions(%v, %v, %v, %v, %v)", tt.args.method, tt.args.cloneDepth, tt.args.fetchTags, tt.args.fetchSubmodules, tt.args.filterTree)
+		})
+	}
+}
