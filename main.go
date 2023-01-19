@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/bitrise-steplib/steps-git-clone/step"
+
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
@@ -20,21 +22,21 @@ func main() {
 
 func run() ExitCode {
 	logger := log.NewLogger()
-	tracker := gitclone.NewStepTracker(env.NewRepository(), logger)
 	envRepo := env.NewRepository()
+	tracker := gitclone.NewStepTracker(envRepo, logger)
 	inputParser := stepconf.NewInputParser(envRepo)
-	cmdFactory := command.NewFactory(env.NewRepository())
+	cmdFactory := command.NewFactory(envRepo)
 
-	step := gitclone.NewGitCloneStep(logger, tracker, inputParser, cmdFactory)
+	gitCloneStep := step.NewGitCloneStep(logger, tracker, inputParser, cmdFactory)
 
-	cfg, err := step.ProcessConfig()
+	cfg, err := gitCloneStep.ProcessConfig()
 	if err != nil {
 		logger.Println()
 		logger.Errorf(errorutil.FormattedError(fmt.Errorf("Failed to process Step inputs: %w", err)))
 		return Failure
 	}
 
-	if err := step.Execute(cfg); err != nil {
+	if err := gitCloneStep.Execute(cfg); err != nil {
 		logger.Println()
 		logger.Errorf(errorutil.FormattedError(fmt.Errorf("Failed to execute Step: %w", err)))
 		return Failure
