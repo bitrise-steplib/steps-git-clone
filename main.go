@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bitrise-steplib/steps-git-clone/step"
-
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
@@ -13,6 +11,7 @@ import (
 	. "github.com/bitrise-io/go-utils/v2/exitcode"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone"
+	"github.com/bitrise-steplib/steps-git-clone/step"
 )
 
 func main() {

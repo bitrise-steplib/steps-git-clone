@@ -20,33 +20,41 @@ const (
 
 // Config is the git clone step configuration
 type Config struct {
-	ShouldMergePR bool `env:"merge_pr,opt[yes,no]"`
+	ShouldMergePR bool
 
-	CloneIntoDir         string   `env:"clone_into_dir,required"`
-	CloneDepth           int      `env:"clone_depth"`
-	UpdateSubmodules     bool     `env:"update_submodules,opt[yes,no]"`
-	SubmoduleUpdateDepth int      `env:"submodule_update_depth"`
-	FetchTags            bool     `env:"fetch_tags,opt[yes,no]"`
-	SparseDirectories    []string `env:"sparse_directories,multiline"`
+	CloneIntoDir         string
+	CloneDepth           int
+	UpdateSubmodules     bool
+	SubmoduleUpdateDepth int
+	FetchTags            bool
+	SparseDirectories    []string
 
-	RepositoryURL         string `env:"repository_url,required"`
-	Commit                string `env:"commit"`
-	Tag                   string `env:"tag"`
-	Branch                string `env:"branch"`
-	PRDestBranch          string `env:"branch_dest"`
-	PRSourceRepositoryURL string `env:"pull_request_repository_url"`
-	PRMergeBranch         string `env:"pull_request_merge_branch"`
-	PRHeadBranch          string `env:"pull_request_head_branch"`
+	RepositoryURL         string
+	Commit                string
+	Tag                   string
+	Branch                string
+	PRDestBranch          string
+	PRSourceRepositoryURL string
+	PRMergeBranch         string
+	PRHeadBranch          string
 
-	ResetRepository bool   `env:"reset_repository,opt[Yes,No]"`
-	BuildURL        string `env:"build_url"`
-	BuildAPIToken   string `env:"build_api_token"`
+	ResetRepository bool
+	BuildURL        string
+	BuildAPIToken   string
 }
 
 type GitCloner struct {
 	logger     log.Logger
 	tracker    StepTracker
 	cmdFactory command.Factory
+}
+
+func NewGitCloner(logger log.Logger, tracker StepTracker, cmdFactory command.Factory) GitCloner {
+	return GitCloner{
+		logger:     logger,
+		tracker:    tracker,
+		cmdFactory: cmdFactory,
+	}
 }
 
 // CheckoutState is the entry point of the git clone process

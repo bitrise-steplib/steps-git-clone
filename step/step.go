@@ -3,6 +3,8 @@ package step
 import (
 	"fmt"
 
+	"github.com/bitrise-io/go-steputils/v2/stepconf"
+	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone"
 )
@@ -33,7 +35,7 @@ type Input struct {
 
 // Config is the git clone step configuration
 type Config struct {
-	input Input
+	Input
 }
 
 type GitCloneStep struct {
@@ -43,7 +45,7 @@ type GitCloneStep struct {
 	cmdFactory  command.Factory
 }
 
-func NewGitCloneStep(logger log.Logger, tracker StepTracker, inputParser stepconf.InputParser, cmdFactory command.Factory) GitCloneStep {
+func NewGitCloneStep(logger log.Logger, tracker gitclone.StepTracker, inputParser stepconf.InputParser, cmdFactory command.Factory) GitCloneStep {
 	return GitCloneStep{
 		logger:      logger,
 		tracker:     tracker,
@@ -63,10 +65,35 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 }
 
 func (g GitCloneStep) Execute(cfg Config) error {
-	return nil
+	gitcloneCfg := convertConfig(cfg)
+	cloner := gitclone.NewGitCloner(g.logger, g.tracker, g.cmdFactory)
+	return cloner.CheckoutState(gitcloneCfg)
 }
 
 func (g GitCloneStep) ExportOutputs() error {
 
 	return nil
+}
+
+func convertConfig(config Config) gitclone.Config {
+	return gitclone.Config{
+		ShouldMergePR:         config.ShouldMergePR,
+		CloneIntoDir:          config.CloneIntoDir,
+		CloneDepth:            config.CloneDepth,
+		UpdateSubmodules:      config.UpdateSubmodules,
+		SubmoduleUpdateDepth:  config.SubmoduleUpdateDepth,
+		FetchTags:             config.FetchTags,
+		SparseDirectories:     config.SparseDirectories,
+		RepositoryURL:         config.RepositoryURL,
+		Commit:                config.Commit,
+		Tag:                   config.Tag,
+		Branch:                config.Branch,
+		PRDestBranch:          config.PRDestBranch,
+		PRSourceRepositoryURL: config.PRSourceRepositoryURL,
+		PRMergeBranch:         config.PRMergeBranch,
+		PRHeadBranch:          config.PRHeadBranch,
+		ResetRepository:       config.ResetRepository,
+		BuildURL:              config.BuildURL,
+		BuildAPIToken:         config.BuildAPIToken,
+	}
 }

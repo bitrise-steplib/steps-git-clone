@@ -7,6 +7,9 @@ import (
 
 	"github.com/bitrise-io/go-steputils/step"
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/env"
+	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -491,7 +494,11 @@ func Test_checkoutState(t *testing.T) {
 			runner = mockRunner
 
 			// When
-			_, _, actualErr := checkoutState(git.Git{}, tt.cfg, tt.patchSource)
+			envRepo := env.NewRepository()
+			logger := log.NewLogger()
+			tracker := NewStepTracker(envRepo, logger)
+			cloner := NewGitCloner(log.NewLogger(), tracker, command.NewFactory(envRepo))
+			_, _, actualErr := cloner.checkoutState(git.Git{}, tt.cfg, tt.patchSource)
 
 			// Then
 			if tt.wantErrType != nil {
