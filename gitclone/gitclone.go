@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/log"
+
 	"github.com/bitrise-io/go-utils/command/git"
 )
 
@@ -41,10 +44,13 @@ type Config struct {
 }
 
 type GitCloner struct {
+	logger     log.Logger
+	tracker    StepTracker
+	cmdFactory command.Factory
 }
 
 // CheckoutState is the entry point of the git clone process
-func CheckoutState(cfg Config) error {
+func (g GitCloner) CheckoutState(cfg Config) error {
 	defer g.tracker.wait()
 
 	gitCmd, err := git.New(cfg.CloneIntoDir)
@@ -133,7 +139,7 @@ Try using the env vars based on the webhook contents instead, such as $BITRISE_G
 		return nil
 	}
 
-	exporter := newOutputExporter(logger, cmdFactory, gitCmd)
+	exporter := newOutputExporter(g.logger, g.cmdFactory, gitCmd)
 	if err := exporter.exportCommitInfo(ref, isPR); err != nil {
 		return newStepError("export_envs_failed", err, "Exporting envs failed")
 	}
@@ -141,7 +147,7 @@ Try using the env vars based on the webhook contents instead, such as $BITRISE_G
 	return nil
 }
 
-func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, isPR bool, err error) {
+func (g GitCloner) checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, isPR bool, err error) {
 	checkoutStartTime := time.Now()
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
 
