@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/v2/command"
-	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/log"
 )
 
@@ -43,10 +43,33 @@ const (
 	sparseCheckoutFailedTag  = "sparse_checkout_failed"
 )
 
-var logger = log.NewLogger()
-var tracker = newStepTracker(env.NewRepository(), logger)
+type GitCloneStep struct {
+	logger      log.Logger
+	tracker     StepTracker
+	inputParser stepconf.InputParser
+	cmdFactory  command.Factory
+}
 
-func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, isPR bool, err error) {
+func NewGitCloneStep(logger log.Logger, tracker StepTracker, inputParser stepconf.InputParser, cmdFactory command.Factory) GitCloneStep {
+	return GitCloneStep{
+		logger:      logger,
+		tracker:     tracker,
+		inputParser: inputParser,
+		cmdFactory:  cmdFactory,
+	}
+}
+
+func (g GitCloneStep) ProcessConfig() (Config, error) {
+	var cfg Config
+	if err := g.inputParser.Parse(&cfg); err != nil {
+		return Config{}, fmt.Errorf("Error: %s\n", err)
+	}
+	stepconf.Print(cfg)
+
+	return cfg, nil
+}
+
+func (g GitCloneStep) checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, isPR bool, err error) {
 	checkoutStartTime := time.Now()
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
 
@@ -61,14 +84,14 @@ func checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy chec
 	}
 
 	if err := checkoutStrategy.do(gitCmd, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
-		logger.Infof("Checkout strategy used: %T", checkoutStrategy)
+		g.logger.Infof("Checkout strategy used: %T", checkoutStrategy)
 		return nil, false, err
 	}
 
 	checkoutDuration := time.Since(checkoutStartTime).Round(time.Second)
-	logger.Println()
-	logger.Infof("Fetch and checkout took %s", checkoutDuration)
-	tracker.logCheckout(checkoutDuration, checkoutMethod, cfg.RepositoryURL)
+	g.logger.Println()
+	g.logger.Infof("Fetch and checkout took %s", checkoutDuration)
+	g.tracker.logCheckout(checkoutDuration, checkoutMethod, cfg.RepositoryURL)
 
 	return checkoutStrategy, isPRCheckout(checkoutMethod), nil
 }
@@ -129,10 +152,8 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 }
 
 // Execute is the entry point of the git clone process
-func Execute(cfg Config) error {
-	defer tracker.wait()
-
-	cmdFactory := command.NewFactory(env.NewRepository())
+func (g GitCloneStep) Execute(cfg Config) error {
+	defer g.tracker.wait()
 
 	gitCmd, err := git.New(cfg.CloneIntoDir)
 	if err != nil {
@@ -194,7 +215,7 @@ func Execute(cfg Config) error {
 		return err
 	}
 
-	checkoutStrategy, isPR, err := checkoutState(gitCmd, cfg, defaultPatchSource{})
+	checkoutStrategy, isPR, err := g.checkoutState(gitCmd, cfg, defaultPatchSource{})
 	if err != nil {
 		return err
 	}
@@ -205,22 +226,22 @@ func Execute(cfg Config) error {
 			return err
 		}
 		updateTime := time.Since(startTime).Round(time.Second)
-		logger.Println()
-		logger.Infof("Updating submodules took %s", updateTime)
-		tracker.logSubmoduleUpdate(updateTime)
+		g.logger.Println()
+		g.logger.Infof("Updating submodules took %s", updateTime)
+		g.tracker.logSubmoduleUpdate(updateTime)
 	}
 
 	fmt.Println()
-	logger.Infof("Exporting commit details")
+	g.logger.Infof("Exporting commit details")
 	ref := checkoutStrategy.getBuildTriggerRef()
 	if ref == "" {
-		logger.Warnf(`Can't export commit information (commit message and author) as it is not available.
+		g.logger.Warnf(`Can't export commit information (commit message and author) as it is not available.
 This is a limitation of Bitbucket webhooks when the PR source repo (a fork) is not accessible.
 Try using the env vars based on the webhook contents instead, such as $BITRISE_GIT_COMMIT and $BITRISE_GIT_MESSAGE`)
 		return nil
 	}
 
-	exporter := newOutputExporter(cmdFactory, gitCmd)
+	exporter := newOutputExporter(g.logger, g.cmdFactory, gitCmd)
 	if err := exporter.exportCommitInfo(ref, isPR); err != nil {
 		return newStepError("export_envs_failed", err, "Exporting envs failed")
 	}

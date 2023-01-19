@@ -8,6 +8,7 @@ import (
 	v1command "github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/log"
 )
 
 const outputCommitterName = "GIT_CLONE_COMMIT_COMMITTER_NAME"
@@ -20,12 +21,14 @@ type gitOutput struct {
 }
 
 type outputExporter struct {
+	logger   log.Logger
 	gitCmd   git.Git
 	exporter export.Exporter
 }
 
-func newOutputExporter(cmdFactory command.Factory, gitCmd git.Git) outputExporter {
+func newOutputExporter(logger log.Logger, cmdFactory command.Factory, gitCmd git.Git) outputExporter {
 	return outputExporter{
+		logger:   logger,
 		gitCmd:   gitCmd,
 		exporter: export.NewExporter(cmdFactory),
 	}
@@ -70,10 +73,10 @@ func (e *outputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 		},
 	}
 	if isPR {
-		logger.Printf("The following outputs are not exported for Pull Requests:")
-		logger.Printf("- %s", outputCommitterName)
-		logger.Printf("- %s", outputCommitterEmail)
-		logger.Printf("- %s", outputCommitCount)
+		e.logger.Printf("The following outputs are not exported for Pull Requests:")
+		e.logger.Printf("- %s", outputCommitterName)
+		e.logger.Printf("- %s", outputCommitterEmail)
+		e.logger.Printf("- %s", outputCommitCount)
 	} else {
 		extraOutputs := []gitOutput{
 			{
@@ -103,11 +106,11 @@ func (e *outputExporter) printLogAndExportEnv(command *v1command.Model, env stri
 
 	if (env == "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" || env == "GIT_CLONE_COMMIT_MESSAGE_BODY") && len(l) > maxEnvLength {
 		tv := l[:maxEnvLength-len(trimEnding)] + trimEnding
-		logger.Printf("Value %s  is bigger than maximum env variable size, trimming", env)
+		e.logger.Printf("Value %s  is bigger than maximum env variable size, trimming", env)
 		l = tv
 	}
 
-	logger.Printf("=> %s\n   value: %s", env, l)
+	e.logger.Printf("=> %s\n   value: %s", env, l)
 	if err := e.exporter.ExportOutput(env, l); err != nil {
 		return fmt.Errorf("envman export failed: %v", err)
 	}
