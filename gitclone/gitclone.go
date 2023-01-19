@@ -169,7 +169,7 @@ func (g GitCloneStep) Execute(cfg Config) error {
 		return newStepError(
 			"check_origin_present_failed",
 			fmt.Errorf("checking if origin is present failed: %v", err),
-			"Checking wether origin is present failed",
+			"Checking whether origin is present failed",
 		)
 	}
 
