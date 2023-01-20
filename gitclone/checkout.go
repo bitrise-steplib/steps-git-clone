@@ -62,15 +62,15 @@ func NewParameterValidationError(msg string) error {
 	return ParameterValidationError{ErrorString: msg}
 }
 
-// checkoutStrategy is the interface an actual checkout strategy implements
-type checkoutStrategy interface {
+// CheckoutStrategy is the interface an actual checkout strategy implements
+type CheckoutStrategy interface {
 	do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error
 
-	// getBuildTriggerRef returns ref to the commit/branch/tag that triggered the build.
+	// GetBuildTriggerRef returns ref to the commit/branch/tag that triggered the build.
 	// For simple checkout strategies the returned ref will be HEAD (after running 'do').
 	// However, a PR checkout strategy may create a (temporary) merge commit, so the merged state can be tested.
 	// In this case the returned ref will point to the Source branch (or a commit on the Source branch).
-	getBuildTriggerRef() string
+	GetBuildTriggerRef() string
 }
 
 // X: required parameter
@@ -176,7 +176,7 @@ func getPatchFile(patch patchSource, buildURL, buildAPIToken string) string {
 	return ""
 }
 
-func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile string) (checkoutStrategy, error) {
+func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile string) (CheckoutStrategy, error) {
 	switch checkoutMethod {
 	case CheckoutNoneMethod:
 		{

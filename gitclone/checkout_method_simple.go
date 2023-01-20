@@ -15,11 +15,10 @@ func (c checkoutNone) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fal
 	return nil
 }
 
-func (c checkoutNone) getBuildTriggerRef() string {
+func (c checkoutNone) GetBuildTriggerRef() string {
 	return ""
 }
 
-//
 // CommitParams are parameters to check out a given commit (In addition to the repository URL)
 type CommitParams struct {
 	Commit        string
@@ -65,11 +64,10 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 	return nil
 }
 
-func (c checkoutCommit) getBuildTriggerRef() string {
+func (c checkoutCommit) GetBuildTriggerRef() string {
 	return c.params.Commit
 }
 
-//
 // BranchParams are parameters to check out a given branch (In addition to the repository URL)
 type BranchParams struct {
 	Branch string
@@ -99,7 +97,7 @@ func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallback
 	return nil
 }
 
-func (c checkoutBranch) getBuildTriggerRef() string {
+func (c checkoutBranch) GetBuildTriggerRef() string {
 	return c.localRef()
 }
 
@@ -142,7 +140,7 @@ func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fall
 	return nil
 }
 
-func (c checkoutTag) getBuildTriggerRef() string {
+func (c checkoutTag) GetBuildTriggerRef() string {
 	return c.ref()
 }
 

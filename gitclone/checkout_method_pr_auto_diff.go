@@ -13,17 +13,16 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
-//
 // PRDiffFileParams are parameters to check out a Merge/Pull Request (when a diff file is available)
 type PRDiffFileParams struct {
 	DestinationBranch     string
-	PRManualMergeStrategy checkoutStrategy
+	PRManualMergeStrategy CheckoutStrategy
 }
 
 // NewPRDiffFileParams validates and returns a new PRDiffFileParams
 func NewPRDiffFileParams(
 	destBranch string,
-	prManualMergeStrategy checkoutStrategy,
+	prManualMergeStrategy CheckoutStrategy,
 ) (*PRDiffFileParams, error) {
 	if strings.TrimSpace(destBranch) == "" {
 		return nil, NewParameterValidationError("PR diff file based checkout strategy can not be used: no base branch specified")
@@ -65,7 +64,7 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 	return detachHead(gitCmd)
 }
 
-func (c checkoutPRDiffFile) getBuildTriggerRef() string {
+func (c checkoutPRDiffFile) GetBuildTriggerRef() string {
 	return ""
 }
 

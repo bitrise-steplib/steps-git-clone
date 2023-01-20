@@ -62,7 +62,7 @@ func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback 
 	return nil
 }
 
-func (c checkoutPRMergeRef) getBuildTriggerRef() string {
+func (c checkoutPRMergeRef) GetBuildTriggerRef() string {
 	return c.localHeadRef()
 }
 
