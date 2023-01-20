@@ -70,7 +70,21 @@ func (g GitCloneStep) Execute(cfg Config) (gitclone.CheckoutStateResult, error) 
 	return cloner.CheckoutState(gitcloneCfg)
 }
 
-func (g GitCloneStep) ExportOutputs() error {
+func (g GitCloneStep) ExportOutputs(runResult gitclone.CheckoutStateResult) error {
+	fmt.Println()
+	g.logger.Infof("Exporting commit details")
+	ref := runResult.CheckoutStrategy.GetBuildTriggerRef()
+	if ref == "" {
+		g.logger.Warnf(`Can't export commit information (commit message and author) as it is not available.
+This is a limitation of Bitbucket webhooks when the PR source repo (a fork) is not accessible.
+Try using the env vars based on the webhook contents instead, such as $BITRISE_GIT_COMMIT and $BITRISE_GIT_MESSAGE`)
+		return nil
+	}
+
+	exporter := gitclone.NewOutputExporter(g.logger, g.cmdFactory, runResult.GitCmd)
+	if err := exporter.ExportCommitInfo(ref, runResult.IsPR); err != nil {
+		return gitclone.NewStepError("export_envs_failed", err, "Exporting envs failed")
+	}
 
 	return nil
 }

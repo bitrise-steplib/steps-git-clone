@@ -60,6 +60,7 @@ func NewGitCloner(logger log.Logger, tracker StepTracker, cmdFactory command.Fac
 type CheckoutStateResult struct {
 	CheckoutStrategy CheckoutStrategy
 	IsPR             bool
+	GitCmd           git.Git
 }
 
 // CheckoutState is the entry point of the git clone process
@@ -145,6 +146,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	return CheckoutStateResult{
 		CheckoutStrategy: checkoutStrategy,
 		IsPR:             isPR,
+		GitCmd:           gitCmd,
 	}, nil
 }
 

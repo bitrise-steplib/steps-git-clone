@@ -20,21 +20,21 @@ type gitOutput struct {
 	gitCmd *v1command.Model
 }
 
-type outputExporter struct {
+type OutputExporter struct {
 	logger   log.Logger
 	gitCmd   git.Git
 	exporter export.Exporter
 }
 
-func newOutputExporter(logger log.Logger, cmdFactory command.Factory, gitCmd git.Git) outputExporter {
-	return outputExporter{
+func NewOutputExporter(logger log.Logger, cmdFactory command.Factory, gitCmd git.Git) OutputExporter {
+	return OutputExporter{
 		logger:   logger,
 		gitCmd:   gitCmd,
 		exporter: export.NewExporter(cmdFactory),
 	}
 }
 
-func (e *outputExporter) exportCommitInfo(gitRef string, isPR bool) error {
+func (e *OutputExporter) ExportCommitInfo(gitRef string, isPR bool) error {
 	maxEnvLength, err := getMaxEnvLength()
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func (e *outputExporter) exportCommitInfo(gitRef string, isPR bool) error {
 	return nil
 }
 
-func (e *outputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
+func (e *OutputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 	outputs := []gitOutput{
 		{
 			envKey: "GIT_CLONE_COMMIT_AUTHOR_NAME",
@@ -98,7 +98,7 @@ func (e *outputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 	return outputs
 }
 
-func (e *outputExporter) printLogAndExportEnv(command *v1command.Model, env string, maxEnvLength int) error {
+func (e *OutputExporter) printLogAndExportEnv(command *v1command.Model, env string, maxEnvLength int) error {
 	l, err := runner.RunForOutput(command)
 	if err != nil {
 		return fmt.Errorf("command failed: %s", err)

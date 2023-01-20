@@ -35,11 +35,17 @@ func run() ExitCode {
 		return Failure
 	}
 
-	err = gitCloneStep.Execute(cfg)
+	result, err := gitCloneStep.Execute(cfg)
 	if err != nil {
 		logger.Println()
 		logger.Errorf(errorutil.FormattedError(fmt.Errorf("Failed to execute Step: %w", err)))
 		return Failure
+	}
+
+	err = gitCloneStep.ExportOutputs(result)
+	if err != nil {
+		logger.Println()
+		logger.Errorf(errorutil.FormattedError(fmt.Errorf("Failed to export Step outputs: %w", err)))
 	}
 
 	fmt.Println()

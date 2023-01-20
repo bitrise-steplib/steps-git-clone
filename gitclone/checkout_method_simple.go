@@ -7,7 +7,6 @@ import (
 	"github.com/bitrise-io/go-utils/command/git"
 )
 
-//
 // checkoutNone
 type checkoutNone struct{}
 
@@ -105,7 +104,6 @@ func (c checkoutBranch) localRef() string {
 	return refsHeadsPrefix + c.params.Branch
 }
 
-//
 // TagParams are parameters to check out a given tag
 type TagParams struct {
 	Tag string
