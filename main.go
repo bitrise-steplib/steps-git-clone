@@ -21,12 +21,7 @@ func main() {
 
 func run() ExitCode {
 	logger := log.NewLogger()
-	envRepo := env.NewRepository()
-	tracker := gitclone.NewStepTracker(envRepo, logger)
-	inputParser := stepconf.NewInputParser(envRepo)
-	cmdFactory := command.NewFactory(envRepo)
-
-	gitCloneStep := step.NewGitCloneStep(logger, tracker, inputParser, cmdFactory)
+	gitCloneStep := createStep(logger)
 
 	cfg, err := gitCloneStep.ProcessConfig()
 	if err != nil {
@@ -51,4 +46,13 @@ func run() ExitCode {
 	fmt.Println()
 	logger.Donef("Success")
 	return Success
+}
+
+func createStep(logger log.Logger) step.GitCloneStep {
+	envRepo := env.NewRepository()
+	tracker := gitclone.NewStepTracker(envRepo, logger)
+	inputParser := stepconf.NewInputParser(envRepo)
+	cmdFactory := command.NewFactory(envRepo)
+
+	return step.NewGitCloneStep(logger, tracker, inputParser, cmdFactory)
 }
