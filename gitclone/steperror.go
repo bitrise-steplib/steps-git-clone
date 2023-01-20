@@ -27,7 +27,7 @@ func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
 	return nil
 }
 
-func newStepError(tag string, err error, shortMsg string) error {
+func NewStepError(tag string, err error, shortMsg string) error {
 	recommendations := mapDetailedErrorRecommendation(tag, err.Error())
 	if recommendations != nil {
 		return step.NewErrorWithRecommendations("git-clone", tag, err, shortMsg, recommendations)
@@ -38,7 +38,7 @@ func newStepError(tag string, err error, shortMsg string) error {
 
 func newStepErrorWithBranchRecommendations(tag string, err error, shortMsg, currentBranch string, availableBranches []string) error {
 	// First: Map the error messages
-	newErr := newStepError(tag, err, shortMsg)
+	newErr := NewStepError(tag, err, shortMsg)
 
 	if mappedError, ok := newErr.(*step.Error); ok {
 		// Second: Extend recommendation with available branches, if has any

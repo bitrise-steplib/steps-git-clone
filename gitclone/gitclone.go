@@ -57,13 +57,18 @@ func NewGitCloner(logger log.Logger, tracker StepTracker, cmdFactory command.Fac
 	}
 }
 
+type CheckoutStateResult struct {
+	CheckoutStrategy CheckoutStrategy
+	IsPR             bool
+}
+
 // CheckoutState is the entry point of the git clone process
-func (g GitCloner) CheckoutState(cfg Config) error {
+func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	defer g.tracker.wait()
 
 	gitCmd, err := git.New(cfg.CloneIntoDir)
 	if err != nil {
-		return newStepError(
+		return CheckoutStateResult{}, NewStepError(
 			"git_new",
 			fmt.Errorf("failed to create git project directory: %v", err),
 			"Creating new git project directory failed",
@@ -72,7 +77,7 @@ func (g GitCloner) CheckoutState(cfg Config) error {
 
 	originPresent, err := isOriginPresent(gitCmd, cfg.CloneIntoDir, cfg.RepositoryURL)
 	if err != nil {
-		return newStepError(
+		return CheckoutStateResult{}, NewStepError(
 			"check_origin_present_failed",
 			fmt.Errorf("checking if origin is present failed: %v", err),
 			"Checking whether origin is present failed",
@@ -81,7 +86,7 @@ func (g GitCloner) CheckoutState(cfg Config) error {
 
 	if originPresent && cfg.ResetRepository {
 		if err := resetRepo(gitCmd); err != nil {
-			return newStepError(
+			return CheckoutStateResult{}, NewStepError(
 				"reset_repository_failed",
 				fmt.Errorf("reset repository failed: %v", err),
 				"Resetting repository failed",
@@ -89,7 +94,7 @@ func (g GitCloner) CheckoutState(cfg Config) error {
 		}
 	}
 	if err := runner.Run(gitCmd.Init()); err != nil {
-		return newStepError(
+		return CheckoutStateResult{}, NewStepError(
 			"init_git_failed",
 			fmt.Errorf("initializing repository failed: %v", err),
 			"Initializing git has failed",
@@ -97,7 +102,7 @@ func (g GitCloner) CheckoutState(cfg Config) error {
 	}
 	if !originPresent {
 		if err := runner.Run(gitCmd.RemoteAdd(originRemoteName, cfg.RepositoryURL)); err != nil {
-			return newStepError(
+			return CheckoutStateResult{}, NewStepError(
 				"add_remote_failed",
 				fmt.Errorf("adding remote repository failed (%s): %v", cfg.RepositoryURL, err),
 				"Adding remote repository failed",
@@ -110,7 +115,7 @@ func (g GitCloner) CheckoutState(cfg Config) error {
 	// https://mirrors.edge.kernel.org/pub/software/scm/git/docs/git-gc.html
 	err = runner.Run(gitCmd.Config("gc.auto", "0"))
 	if err != nil {
-		return newStepError(
+		return CheckoutStateResult{}, NewStepError(
 			"disable_gc",
 			fmt.Errorf("failed to disable GC: %v", err),
 			"Failed to disable git garbage collection",
@@ -118,18 +123,18 @@ func (g GitCloner) CheckoutState(cfg Config) error {
 	}
 
 	if err := setupSparseCheckout(gitCmd, cfg.SparseDirectories); err != nil {
-		return err
+		return CheckoutStateResult{}, err
 	}
 
 	checkoutStrategy, isPR, err := g.checkoutState(gitCmd, cfg, defaultPatchSource{})
 	if err != nil {
-		return err
+		return CheckoutStateResult{}, err
 	}
 
 	if cfg.UpdateSubmodules {
 		startTime := time.Now()
 		if err := updateSubmodules(gitCmd, cfg); err != nil {
-			return err
+			return CheckoutStateResult{}, err
 		}
 		updateTime := time.Since(startTime).Round(time.Second)
 		g.logger.Println()
@@ -137,25 +142,13 @@ func (g GitCloner) CheckoutState(cfg Config) error {
 		g.tracker.logSubmoduleUpdate(updateTime)
 	}
 
-	fmt.Println()
-	g.logger.Infof("Exporting commit details")
-	ref := checkoutStrategy.getBuildTriggerRef()
-	if ref == "" {
-		g.logger.Warnf(`Can't export commit information (commit message and author) as it is not available.
-This is a limitation of Bitbucket webhooks when the PR source repo (a fork) is not accessible.
-Try using the env vars based on the webhook contents instead, such as $BITRISE_GIT_COMMIT and $BITRISE_GIT_MESSAGE`)
-		return nil
-	}
-
-	exporter := newOutputExporter(g.logger, g.cmdFactory, gitCmd)
-	if err := exporter.exportCommitInfo(ref, isPR); err != nil {
-		return newStepError("export_envs_failed", err, "Exporting envs failed")
-	}
-
-	return nil
+	return CheckoutStateResult{
+		CheckoutStrategy: checkoutStrategy,
+		IsPR:             isPR,
+	}, nil
 }
 
-func (g GitCloner) checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, isPR bool, err error) {
+func (g GitCloner) checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy CheckoutStrategy, isPR bool, err error) {
 	checkoutStartTime := time.Now()
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
 
@@ -191,7 +184,7 @@ func updateSubmodules(gitCmd git.Git, cfg Config) error {
 	}
 
 	if err := runner.Run(gitCmd.SubmoduleUpdate(opts...)); err != nil {
-		return newStepError(
+		return NewStepError(
 			updateSubmoduleFailedTag,
 			fmt.Errorf("submodule update: %v", err),
 			"Updating submodules has failed",
@@ -208,7 +201,7 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 
 	initCommand := gitCmd.SparseCheckoutInit(true)
 	if err := runner.Run(initCommand); err != nil {
-		return newStepError(
+		return NewStepError(
 			sparseCheckoutFailedTag,
 			fmt.Errorf("initializing sparse-checkout config failed: %v", err),
 			"Initializing sparse-checkout config has failed",
@@ -217,7 +210,7 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 
 	sparseSetCommand := gitCmd.SparseCheckoutSet(sparseDirectories...)
 	if err := runner.Run(sparseSetCommand); err != nil {
-		return newStepError(
+		return NewStepError(
 			sparseCheckoutFailedTag,
 			fmt.Errorf("updating sparse-checkout config failed: %v", err),
 			"Updating sparse-checkout config has failed",
@@ -227,7 +220,7 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 	// Enable partial clone support for the remote
 	sparseConfigCmd := gitCmd.Config("extensions.partialClone", originRemoteName, "--local")
 	if err := runner.Run(sparseConfigCmd); err != nil {
-		return newStepError(
+		return NewStepError(
 			sparseCheckoutFailedTag,
 			fmt.Errorf("enable partial clone support for the remote has failed: %v", err),
 			"Enable partial clone support for the remote has failed",

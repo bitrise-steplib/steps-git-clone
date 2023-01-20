@@ -64,7 +64,7 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 	return cfg, nil
 }
 
-func (g GitCloneStep) Execute(cfg Config) error {
+func (g GitCloneStep) Execute(cfg Config) (gitclone.CheckoutStateResult, error) {
 	gitcloneCfg := convertConfig(cfg)
 	cloner := gitclone.NewGitCloner(g.logger, g.tracker, g.cmdFactory)
 	return cloner.CheckoutState(gitcloneCfg)

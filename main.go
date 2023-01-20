@@ -35,7 +35,8 @@ func run() ExitCode {
 		return Failure
 	}
 
-	if err := gitCloneStep.Execute(cfg); err != nil {
+	err = gitCloneStep.Execute(cfg)
+	if err != nil {
 		logger.Println()
 		logger.Errorf(errorutil.FormattedError(fmt.Errorf("Failed to execute Step: %w", err)))
 		return Failure
