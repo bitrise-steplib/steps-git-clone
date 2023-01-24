@@ -66,7 +66,7 @@ func NewParameterValidationError(msg string) error {
 type checkoutStrategy interface {
 	do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error
 
-	// GetBuildTriggerRef returns ref to the commit/branch/tag that triggered the build.
+	// getBuildTriggerRef returns ref to the commit/branch/tag that triggered the build.
 	// For simple checkout strategies the returned ref will be HEAD (after running 'do').
 	// However, a PR checkout strategy may create a (temporary) merge commit, so the merged state can be tested.
 	// In this case the returned ref will point to the Source branch (or a commit on the Source branch).
