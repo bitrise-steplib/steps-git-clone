@@ -55,19 +55,19 @@ func NewGitCloneStep(logger log.Logger, tracker gitclone.StepTracker, inputParse
 }
 
 func (g GitCloneStep) ProcessConfig() (Config, error) {
-	var cfg Config
-	if err := g.inputParser.Parse(&cfg); err != nil {
+	var input Input
+	if err := g.inputParser.Parse(&input); err != nil {
 		return Config{}, fmt.Errorf("Error: %s\n", err)
 	}
-	stepconf.Print(cfg)
+	stepconf.Print(input)
 
-	return cfg, nil
+	return Config{input}, nil
 }
 
 func (g GitCloneStep) Run(cfg Config) (gitclone.CheckoutStateResult, error) {
-	gitcloneCfg := convertConfig(cfg)
+	gitCloneCfg := convertConfig(cfg)
 	cloner := gitclone.NewGitCloner(g.logger, g.tracker, g.cmdFactory)
-	return cloner.CheckoutState(gitcloneCfg)
+	return cloner.CheckoutState(gitCloneCfg)
 }
 
 func (g GitCloneStep) ExportOutputs(runResult gitclone.CheckoutStateResult) error {
