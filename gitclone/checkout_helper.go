@@ -117,7 +117,7 @@ func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTr
 	// Update branch: 'git fetch' followed by a 'git merge' is the same as 'git pull'.
 	remoteBranch := fmt.Sprintf("%s/%s", remote, branch)
 	if err := runner.Run(gitCmd.Merge(remoteBranch)); err != nil {
-		return NewStepError(
+		return newStepError(
 			"update_branch_failed",
 			fmt.Errorf("updating branch (merge) failed %s: %v", branch, err),
 			"Updating branch failed",
@@ -146,7 +146,7 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error
 
 func detachHead(gitCmd git.Git) error {
 	if err := runner.Run(gitCmd.Checkout("--detach")); err != nil {
-		return NewStepError(
+		return newStepError(
 			"detach_head_failed",
 			fmt.Errorf("detaching head failed: %v", err),
 			"Detaching head failed",

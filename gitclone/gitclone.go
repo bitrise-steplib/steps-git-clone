@@ -69,7 +69,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 
 	gitCmd, err := git.New(cfg.CloneIntoDir)
 	if err != nil {
-		return CheckoutStateResult{}, NewStepError(
+		return CheckoutStateResult{}, newStepError(
 			"git_new",
 			fmt.Errorf("failed to create git project directory: %v", err),
 			"Creating new git project directory failed",
@@ -78,7 +78,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 
 	originPresent, err := isOriginPresent(gitCmd, cfg.CloneIntoDir, cfg.RepositoryURL)
 	if err != nil {
-		return CheckoutStateResult{}, NewStepError(
+		return CheckoutStateResult{}, newStepError(
 			"check_origin_present_failed",
 			fmt.Errorf("checking if origin is present failed: %v", err),
 			"Checking whether origin is present failed",
@@ -87,7 +87,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 
 	if originPresent && cfg.ResetRepository {
 		if err := resetRepo(gitCmd); err != nil {
-			return CheckoutStateResult{}, NewStepError(
+			return CheckoutStateResult{}, newStepError(
 				"reset_repository_failed",
 				fmt.Errorf("reset repository failed: %v", err),
 				"Resetting repository failed",
@@ -95,7 +95,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		}
 	}
 	if err := runner.Run(gitCmd.Init()); err != nil {
-		return CheckoutStateResult{}, NewStepError(
+		return CheckoutStateResult{}, newStepError(
 			"init_git_failed",
 			fmt.Errorf("initializing repository failed: %v", err),
 			"Initializing git has failed",
@@ -103,7 +103,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	}
 	if !originPresent {
 		if err := runner.Run(gitCmd.RemoteAdd(originRemoteName, cfg.RepositoryURL)); err != nil {
-			return CheckoutStateResult{}, NewStepError(
+			return CheckoutStateResult{}, newStepError(
 				"add_remote_failed",
 				fmt.Errorf("adding remote repository failed (%s): %v", cfg.RepositoryURL, err),
 				"Adding remote repository failed",
@@ -116,7 +116,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	// https://mirrors.edge.kernel.org/pub/software/scm/git/docs/git-gc.html
 	err = runner.Run(gitCmd.Config("gc.auto", "0"))
 	if err != nil {
-		return CheckoutStateResult{}, NewStepError(
+		return CheckoutStateResult{}, newStepError(
 			"disable_gc",
 			fmt.Errorf("failed to disable GC: %v", err),
 			"Failed to disable git garbage collection",
@@ -186,7 +186,7 @@ func updateSubmodules(gitCmd git.Git, cfg Config) error {
 	}
 
 	if err := runner.Run(gitCmd.SubmoduleUpdate(opts...)); err != nil {
-		return NewStepError(
+		return newStepError(
 			updateSubmoduleFailedTag,
 			fmt.Errorf("submodule update: %v", err),
 			"Updating submodules has failed",
@@ -203,7 +203,7 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 
 	initCommand := gitCmd.SparseCheckoutInit(true)
 	if err := runner.Run(initCommand); err != nil {
-		return NewStepError(
+		return newStepError(
 			sparseCheckoutFailedTag,
 			fmt.Errorf("initializing sparse-checkout config failed: %v", err),
 			"Initializing sparse-checkout config has failed",
@@ -212,7 +212,7 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 
 	sparseSetCommand := gitCmd.SparseCheckoutSet(sparseDirectories...)
 	if err := runner.Run(sparseSetCommand); err != nil {
-		return NewStepError(
+		return newStepError(
 			sparseCheckoutFailedTag,
 			fmt.Errorf("updating sparse-checkout config failed: %v", err),
 			"Updating sparse-checkout config has failed",
@@ -222,7 +222,7 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 	// Enable partial clone support for the remote
 	sparseConfigCmd := gitCmd.Config("extensions.partialClone", originRemoteName, "--local")
 	if err := runner.Run(sparseConfigCmd); err != nil {
-		return NewStepError(
+		return newStepError(
 			sparseCheckoutFailedTag,
 			fmt.Errorf("enable partial clone support for the remote has failed: %v", err),
 			"Enable partial clone support for the remote has failed",

@@ -339,7 +339,7 @@ func Test_newStepError(t *testing.T) {
 		want *step.Error
 	}{
 		{
-			name: "NewStepError without recommendation",
+			name: "newStepError without recommendation",
 			args: args{
 				tag:      "test_tag",
 				err:      errors.New("fatal error"),
@@ -353,7 +353,7 @@ func Test_newStepError(t *testing.T) {
 			},
 		},
 		{
-			name: "NewStepError with recommendation",
+			name: "newStepError with recommendation",
 			args: args{
 				tag:      "fetch_failed",
 				err:      errors.New("Permission denied (publickey)"),
@@ -373,8 +373,8 @@ func Test_newStepError(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewStepError(tt.args.tag, tt.args.err, tt.args.shortMsg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewStepError() = %v, want %v", got, tt.want)
+			if got := newStepError(tt.args.tag, tt.args.err, tt.args.shortMsg); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("newStepError() = %v, want %v", got, tt.want)
 			}
 		})
 	}

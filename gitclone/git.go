@@ -144,7 +144,7 @@ func handleCheckoutError(callback getAvailableBranches, tag string, err error, s
 		}
 	}
 
-	return NewStepError(
+	return newStepError(
 		tag,
 		err,
 		shortMsg,

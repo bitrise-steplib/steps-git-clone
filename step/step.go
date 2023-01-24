@@ -83,7 +83,7 @@ Try using the env vars based on the webhook contents instead, such as $BITRISE_G
 
 	exporter := gitclone.NewOutputExporter(g.logger, g.cmdFactory, runResult.GitCmd)
 	if err := exporter.ExportCommitInfo(ref, runResult.IsPR); err != nil {
-		return gitclone.NewStepError("export_envs_failed", err, "Exporting envs failed")
+		return err
 	}
 
 	return nil

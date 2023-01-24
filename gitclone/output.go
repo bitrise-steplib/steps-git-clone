@@ -37,16 +37,20 @@ func NewOutputExporter(logger log.Logger, cmdFactory command.Factory, gitCmd git
 func (e *OutputExporter) ExportCommitInfo(gitRef string, isPR bool) error {
 	maxEnvLength, err := getMaxEnvLength()
 	if err != nil {
-		return err
+		return e.wrapErrorForExportCommitInfo(err)
 	}
 
 	for _, commitInfo := range e.gitOutputs(gitRef, isPR) {
 		if err := e.printLogAndExportEnv(commitInfo.gitCmd, commitInfo.envKey, maxEnvLength); err != nil {
-			return err
+			return e.wrapErrorForExportCommitInfo(err)
 		}
 	}
 
 	return nil
+}
+
+func (e *OutputExporter) wrapErrorForExportCommitInfo(err error) error {
+	return newStepError("export_envs_failed", err, "Exporting envs failed")
 }
 
 func (e *OutputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
