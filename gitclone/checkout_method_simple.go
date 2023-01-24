@@ -14,7 +14,7 @@ func (c checkoutNone) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fal
 	return nil
 }
 
-func (c checkoutNone) GetBuildTriggerRef() string {
+func (c checkoutNone) getBuildTriggerRef() string {
 	return ""
 }
 
@@ -63,7 +63,7 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 	return nil
 }
 
-func (c checkoutCommit) GetBuildTriggerRef() string {
+func (c checkoutCommit) getBuildTriggerRef() string {
 	return c.params.Commit
 }
 
@@ -96,7 +96,7 @@ func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallback
 	return nil
 }
 
-func (c checkoutBranch) GetBuildTriggerRef() string {
+func (c checkoutBranch) getBuildTriggerRef() string {
 	return c.localRef()
 }
 
@@ -138,7 +138,7 @@ func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fall
 	return nil
 }
 
-func (c checkoutTag) GetBuildTriggerRef() string {
+func (c checkoutTag) getBuildTriggerRef() string {
 	return c.ref()
 }
 

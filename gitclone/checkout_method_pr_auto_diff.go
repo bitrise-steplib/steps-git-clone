@@ -16,13 +16,13 @@ import (
 // PRDiffFileParams are parameters to check out a Merge/Pull Request (when a diff file is available)
 type PRDiffFileParams struct {
 	DestinationBranch     string
-	PRManualMergeStrategy CheckoutStrategy
+	PRManualMergeStrategy checkoutStrategy
 }
 
 // NewPRDiffFileParams validates and returns a new PRDiffFileParams
 func NewPRDiffFileParams(
 	destBranch string,
-	prManualMergeStrategy CheckoutStrategy,
+	prManualMergeStrategy checkoutStrategy,
 ) (*PRDiffFileParams, error) {
 	if strings.TrimSpace(destBranch) == "" {
 		return nil, NewParameterValidationError("PR diff file based checkout strategy can not be used: no base branch specified")
@@ -64,7 +64,7 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 	return detachHead(gitCmd)
 }
 
-func (c checkoutPRDiffFile) GetBuildTriggerRef() string {
+func (c checkoutPRDiffFile) getBuildTriggerRef() string {
 	return ""
 }
 

@@ -6,7 +6,6 @@ import (
 	"github.com/bitrise-io/envman/envman"
 	"github.com/bitrise-io/go-steputils/v2/export"
 	v1command "github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/log"
 )
@@ -21,26 +20,36 @@ type gitOutput struct {
 }
 
 type OutputExporter struct {
-	logger   log.Logger
-	gitCmd   git.Git
-	exporter export.Exporter
+	logger         log.Logger
+	checkoutResult CheckoutStateResult
+	exporter       export.Exporter
 }
 
-func NewOutputExporter(logger log.Logger, cmdFactory command.Factory, gitCmd git.Git) OutputExporter {
+func NewOutputExporter(logger log.Logger, cmdFactory command.Factory, checkoutResult CheckoutStateResult) OutputExporter {
 	return OutputExporter{
-		logger:   logger,
-		gitCmd:   gitCmd,
-		exporter: export.NewExporter(cmdFactory),
+		logger:         logger,
+		checkoutResult: checkoutResult,
+		exporter:       export.NewExporter(cmdFactory),
 	}
 }
 
-func (e *OutputExporter) ExportCommitInfo(gitRef string, isPR bool) error {
+func (e *OutputExporter) ExportCommitInfo() error {
+	fmt.Println()
+	e.logger.Infof("Exporting commit details")
+	gitRef := e.checkoutResult.checkoutStrategy.getBuildTriggerRef()
+	if gitRef == "" {
+		e.logger.Warnf(`Can't export commit information (commit message and author) as it is not available.
+This is a limitation of Bitbucket webhooks when the PR source repo (a fork) is not accessible.
+Try using the env vars based on the webhook contents instead, such as $BITRISE_GIT_COMMIT and $BITRISE_GIT_MESSAGE`)
+		return nil
+	}
+
 	maxEnvLength, err := getMaxEnvLength()
 	if err != nil {
 		return e.wrapErrorForExportCommitInfo(err)
 	}
 
-	for _, commitInfo := range e.gitOutputs(gitRef, isPR) {
+	for _, commitInfo := range e.gitOutputs(gitRef, e.checkoutResult.isPR) {
 		if err := e.printLogAndExportEnv(commitInfo.gitCmd, commitInfo.envKey, maxEnvLength); err != nil {
 			return e.wrapErrorForExportCommitInfo(err)
 		}
@@ -57,23 +66,23 @@ func (e *OutputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 	outputs := []gitOutput{
 		{
 			envKey: "GIT_CLONE_COMMIT_AUTHOR_NAME",
-			gitCmd: e.gitCmd.Log(`%an`, gitRef),
+			gitCmd: e.checkoutResult.gitCmd.Log(`%an`, gitRef),
 		},
 		{
 			envKey: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
-			gitCmd: e.gitCmd.Log(`%ae`, gitRef),
+			gitCmd: e.checkoutResult.gitCmd.Log(`%ae`, gitRef),
 		},
 		{
 			envKey: "GIT_CLONE_COMMIT_HASH",
-			gitCmd: e.gitCmd.Log(`%H`, gitRef),
+			gitCmd: e.checkoutResult.gitCmd.Log(`%H`, gitRef),
 		},
 		{
 			envKey: "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
-			gitCmd: e.gitCmd.Log(`%s`, gitRef),
+			gitCmd: e.checkoutResult.gitCmd.Log(`%s`, gitRef),
 		},
 		{
 			envKey: "GIT_CLONE_COMMIT_MESSAGE_BODY",
-			gitCmd: e.gitCmd.Log(`%b`, gitRef),
+			gitCmd: e.checkoutResult.gitCmd.Log(`%b`, gitRef),
 		},
 	}
 	if isPR {
@@ -85,15 +94,15 @@ func (e *OutputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 		extraOutputs := []gitOutput{
 			{
 				envKey: outputCommitterName,
-				gitCmd: e.gitCmd.Log(`%cn`, gitRef),
+				gitCmd: e.checkoutResult.gitCmd.Log(`%cn`, gitRef),
 			},
 			{
 				envKey: outputCommitterEmail,
-				gitCmd: e.gitCmd.Log(`%ce`, gitRef),
+				gitCmd: e.checkoutResult.gitCmd.Log(`%ce`, gitRef),
 			},
 			{
 				envKey: outputCommitCount,
-				gitCmd: e.gitCmd.RevList("HEAD", "--count"),
+				gitCmd: e.checkoutResult.gitCmd.RevList("HEAD", "--count"),
 			},
 		}
 		outputs = append(outputs, extraOutputs...)

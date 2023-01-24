@@ -97,7 +97,13 @@ func Test_gitOutputs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := NewOutputExporter(log.NewLogger(), command.NewFactory(env.NewRepository()), gitCmd)
+			mock := MockStrategy{ref: tt.args.gitRef}
+			r := CheckoutStateResult{
+				checkoutStrategy: mock,
+				isPR:             tt.args.isPR,
+				gitCmd:           gitCmd,
+			}
+			e := NewOutputExporter(log.NewLogger(), command.NewFactory(env.NewRepository()), r)
 			assert.Equalf(t, tt.want, e.gitOutputs(tt.args.gitRef, tt.args.isPR), "gitOutputs(%v, %v)", tt.args.gitRef, tt.args.isPR)
 		})
 	}

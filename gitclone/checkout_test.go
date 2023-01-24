@@ -231,7 +231,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 func Test_getBuildTriggerRef(t *testing.T) {
 	tests := []struct {
 		name     string
-		strategy CheckoutStrategy
+		strategy checkoutStrategy
 		wantRef  string
 	}{
 		{
@@ -302,7 +302,7 @@ func Test_getBuildTriggerRef(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%T %s", tt.strategy, tt.name), func(t *testing.T) {
-			gotRef := tt.strategy.GetBuildTriggerRef()
+			gotRef := tt.strategy.getBuildTriggerRef()
 
 			assert.Equal(t, tt.wantRef, gotRef)
 		})
