@@ -16,7 +16,7 @@ type PRManualMergeParams struct {
 	DestinationBranch string
 }
 
-//NewPRManualMergeParams validates and returns a new PRManualMergeParams
+// NewPRManualMergeParams validates and returns a new PRManualMergeParams
 func NewPRManualMergeParams(sourceBranch, commit, sourceRepoURL, destBranch string) (*PRManualMergeParams, error) {
 	if err := validatePRManualMergeParams(sourceBranch, commit, sourceRepoURL, destBranch); err != nil {
 		return nil, err

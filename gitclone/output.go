@@ -6,8 +6,8 @@ import (
 	"github.com/bitrise-io/envman/envman"
 	"github.com/bitrise-io/go-steputils/v2/export"
 	v1command "github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/log"
 )
 
 const outputCommitterName = "GIT_CLONE_COMMIT_COMMITTER_NAME"
@@ -19,74 +19,90 @@ type gitOutput struct {
 	gitCmd *v1command.Model
 }
 
-type outputExporter struct {
-	gitCmd   git.Git
-	exporter export.Exporter
+type OutputExporter struct {
+	logger         log.Logger
+	checkoutResult CheckoutStateResult
+	exporter       export.Exporter
 }
 
-func newOutputExporter(cmdFactory command.Factory, gitCmd git.Git) outputExporter {
-	return outputExporter{
-		gitCmd:   gitCmd,
-		exporter: export.NewExporter(cmdFactory),
+func NewOutputExporter(logger log.Logger, cmdFactory command.Factory, checkoutResult CheckoutStateResult) OutputExporter {
+	return OutputExporter{
+		logger:         logger,
+		checkoutResult: checkoutResult,
+		exporter:       export.NewExporter(cmdFactory),
 	}
 }
 
-func (e *outputExporter) exportCommitInfo(gitRef string, isPR bool) error {
+func (e *OutputExporter) ExportCommitInfo() error {
+	fmt.Println()
+	e.logger.Infof("Exporting commit details")
+	gitRef := e.checkoutResult.gitRef
+	if gitRef == "" {
+		e.logger.Warnf(`Can't export commit information (commit message and author) as it is not available.
+This is a limitation of Bitbucket webhooks when the PR source repo (a fork) is not accessible.
+Try using the env vars based on the webhook contents instead, such as $BITRISE_GIT_COMMIT and $BITRISE_GIT_MESSAGE`)
+		return nil
+	}
+
 	maxEnvLength, err := getMaxEnvLength()
 	if err != nil {
-		return err
+		return e.wrapErrorForExportCommitInfo(err)
 	}
 
-	for _, commitInfo := range e.gitOutputs(gitRef, isPR) {
+	for _, commitInfo := range e.gitOutputs(gitRef, e.checkoutResult.isPR) {
 		if err := e.printLogAndExportEnv(commitInfo.gitCmd, commitInfo.envKey, maxEnvLength); err != nil {
-			return err
+			return e.wrapErrorForExportCommitInfo(err)
 		}
 	}
 
 	return nil
 }
 
-func (e *outputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
+func (e *OutputExporter) wrapErrorForExportCommitInfo(err error) error {
+	return newStepError("export_envs_failed", err, "Exporting envs failed")
+}
+
+func (e *OutputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 	outputs := []gitOutput{
 		{
 			envKey: "GIT_CLONE_COMMIT_AUTHOR_NAME",
-			gitCmd: e.gitCmd.Log(`%an`, gitRef),
+			gitCmd: e.checkoutResult.gitCmd.Log(`%an`, gitRef),
 		},
 		{
 			envKey: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
-			gitCmd: e.gitCmd.Log(`%ae`, gitRef),
+			gitCmd: e.checkoutResult.gitCmd.Log(`%ae`, gitRef),
 		},
 		{
 			envKey: "GIT_CLONE_COMMIT_HASH",
-			gitCmd: e.gitCmd.Log(`%H`, gitRef),
+			gitCmd: e.checkoutResult.gitCmd.Log(`%H`, gitRef),
 		},
 		{
 			envKey: "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
-			gitCmd: e.gitCmd.Log(`%s`, gitRef),
+			gitCmd: e.checkoutResult.gitCmd.Log(`%s`, gitRef),
 		},
 		{
 			envKey: "GIT_CLONE_COMMIT_MESSAGE_BODY",
-			gitCmd: e.gitCmd.Log(`%b`, gitRef),
+			gitCmd: e.checkoutResult.gitCmd.Log(`%b`, gitRef),
 		},
 	}
 	if isPR {
-		logger.Printf("The following outputs are not exported for Pull Requests:")
-		logger.Printf("- %s", outputCommitterName)
-		logger.Printf("- %s", outputCommitterEmail)
-		logger.Printf("- %s", outputCommitCount)
+		e.logger.Printf("The following outputs are not exported for Pull Requests:")
+		e.logger.Printf("- %s", outputCommitterName)
+		e.logger.Printf("- %s", outputCommitterEmail)
+		e.logger.Printf("- %s", outputCommitCount)
 	} else {
 		extraOutputs := []gitOutput{
 			{
 				envKey: outputCommitterName,
-				gitCmd: e.gitCmd.Log(`%cn`, gitRef),
+				gitCmd: e.checkoutResult.gitCmd.Log(`%cn`, gitRef),
 			},
 			{
 				envKey: outputCommitterEmail,
-				gitCmd: e.gitCmd.Log(`%ce`, gitRef),
+				gitCmd: e.checkoutResult.gitCmd.Log(`%ce`, gitRef),
 			},
 			{
 				envKey: outputCommitCount,
-				gitCmd: e.gitCmd.RevList("HEAD", "--count"),
+				gitCmd: e.checkoutResult.gitCmd.RevList("HEAD", "--count"),
 			},
 		}
 		outputs = append(outputs, extraOutputs...)
@@ -95,7 +111,7 @@ func (e *outputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 	return outputs
 }
 
-func (e *outputExporter) printLogAndExportEnv(command *v1command.Model, env string, maxEnvLength int) error {
+func (e *OutputExporter) printLogAndExportEnv(command *v1command.Model, env string, maxEnvLength int) error {
 	l, err := runner.RunForOutput(command)
 	if err != nil {
 		return fmt.Errorf("command failed: %s", err)
@@ -103,11 +119,11 @@ func (e *outputExporter) printLogAndExportEnv(command *v1command.Model, env stri
 
 	if (env == "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" || env == "GIT_CLONE_COMMIT_MESSAGE_BODY") && len(l) > maxEnvLength {
 		tv := l[:maxEnvLength-len(trimEnding)] + trimEnding
-		logger.Printf("Value %s  is bigger than maximum env variable size, trimming", env)
+		e.logger.Printf("Value %s  is bigger than maximum env variable size, trimming", env)
 		l = tv
 	}
 
-	logger.Printf("=> %s\n   value: %s", env, l)
+	e.logger.Printf("=> %s\n   value: %s", env, l)
 	if err := e.exporter.ExportOutput(env, l); err != nil {
 		return fmt.Errorf("envman export failed: %v", err)
 	}
