@@ -36,7 +36,7 @@ func NewOutputExporter(logger log.Logger, cmdFactory command.Factory, checkoutRe
 func (e *OutputExporter) ExportCommitInfo() error {
 	fmt.Println()
 	e.logger.Infof("Exporting commit details")
-	gitRef := e.checkoutResult.checkoutStrategy.getBuildTriggerRef()
+	gitRef := e.checkoutResult.gitRef
 	if gitRef == "" {
 		e.logger.Warnf(`Can't export commit information (commit message and author) as it is not available.
 This is a limitation of Bitbucket webhooks when the PR source repo (a fork) is not accessible.
