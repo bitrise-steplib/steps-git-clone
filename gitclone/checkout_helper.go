@@ -2,6 +2,7 @@ package gitclone
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command"
@@ -15,10 +16,9 @@ type fetchOptions struct {
 	// - https://git-scm.com/docs/git-fetch#Documentation/git-fetch.txt---tags
 	// - https://git-scm.com/docs/git-fetch#Documentation/git-fetch.txt---no-tags
 	tags bool
-	// Sets '--depth' flag to the value of `depth` if `limitDepth` is true, doesn't set the flag otherwise
+	// Sets '--depth' flag
 	// More info: https://git-scm.com/docs/fetch-options/2.29.0#Documentation/fetch-options.txt---depthltdepthgt
-	limitDepth bool
-	depth      int
+	depth int
 	// Sets '--no-recurse-submodules' flag
 	// More info: https://git-scm.com/docs/git-fetch#Documentation/git-fetch.txt---no-recurse-submodules
 	fetchSubmodules bool
@@ -27,7 +27,6 @@ type fetchOptions struct {
 	filterTree bool
 }
 
-// TODO
 func (t fetchOptions) IsFullDepth() bool {
 	return t.depth == 0
 }
@@ -37,30 +36,30 @@ const (
 	refsHeadsPrefix = "refs/heads/"
 )
 
-func fetch(gitCmd git.Git, remote string, ref string, options fetchOptions) error {
+func fetch(gitCmd git.Git, remote string, ref string, traits fetchOptions) error {
 	var opts []string
 	opts = append(opts, jobsFlag)
 
-	if options.limitDepth {
-		opts = append(opts, fmt.Sprintf("--depth=%d", options.depth))
+	if traits.depth != 0 {
+		opts = append(opts, "--depth="+strconv.Itoa(traits.depth))
 	}
-	if options.filterTree {
+	if traits.filterTree {
 		opts = append(opts, `--filter=tree:0`)
 	}
 
-	if options.tags {
+	if traits.tags {
 		opts = append(opts, "--tags")
 	} else {
 		opts = append(opts, "--no-tags")
 	}
-	if !options.fetchSubmodules {
+	if !traits.fetchSubmodules {
 		opts = append(opts, "--no-recurse-submodules")
 	}
 	if ref != "" {
 		opts = append(opts, remote, ref)
 	}
 
-	// Not necessarily a branch, can be tag too
+	// Not neccessarily a branch, can be tag too
 	branch := ""
 	if strings.HasPrefix(ref, refsHeadsPrefix) {
 		branch = strings.TrimPrefix(ref, refsHeadsPrefix)

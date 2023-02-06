@@ -10,6 +10,7 @@ app:
   - MERGE_PR: "yes"
   - CLONE_DEPTH: ""
   - SPARSE_DIRECTORIES: ""
+  - MANUAL_MERGE: "yes"
   # define these envs in your .bitrise.secrets.yml
   - GIT_CLONE_SSH_PRIVATE_KEY: $GIT_CLONE_SSH_PRIVATE_KEY
 
@@ -21,7 +22,6 @@ workflows:
     - BRANCH: test/generate-changelog
     - FETCH_TAGS: "yes"
     - UPDATE_SUBMODULES: "no"
-    - CLONE_DEPTH: 78
     before_run:
     - _setup
     after_run:
@@ -36,7 +36,6 @@ workflows:
     - BRANCH: test/generate-changelog
     - FETCH_TAGS: "yes"
     - UPDATE_SUBMODULES: "no"
-    - CLONE_DEPTH: 46
     before_run:
     - _setup
     after_run:
@@ -185,9 +184,11 @@ workflows:
 
   test_checkout_github_pull_request:
     envs:
+    - PULL_REQUEST_ID: 5
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
     - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/5/head
     - BITRISEIO_GIT_BRANCH_DEST: master
+    - MANUAL_MERGE: "no"
     - UPDATE_SUBMODULES: "no"
     before_run:
     - _setup
@@ -198,12 +199,26 @@ workflows:
 
   test_checkout_pull_request_no_merge:
     envs:
+    - PULL_REQUEST_ID: 5
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
     - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/5/head
     - BITRISEIO_GIT_BRANCH_DEST: master
     - COMMIT: 4301a9b8499ed3e87778dd053c55fd698d0a3b7e
-    - CLONE_DEPTH: 1
+    - MANUAL_MERGE: "no"
     - MERGE_PR: "no"
+    - UPDATE_SUBMODULES: "no"
+    before_run:
+    - _setup
+    after_run:
+    - _run
+    - _check_outputs
+    - _teardown
+
+  test_checkout_pull_request_standard_branch:
+    envs:
+    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pr_test
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - MANUAL_MERGE: "no"
     - UPDATE_SUBMODULES: "no"
     before_run:
     - _setup
@@ -214,10 +229,29 @@ workflows:
 
   test_checkout_pull_request_with_depth:
     envs:
+    - PULL_REQUEST_ID: 5
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
     - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/5/head
     - BITRISEIO_GIT_BRANCH_DEST: master
     - CLONE_DEPTH: 1
+    - MANUAL_MERGE: "no"
+    before_run:
+    - _setup
+    after_run:
+    - _run
+    - _check_outputs
+    - _teardown
+
+  test_manual_merge_unshallow:
+    envs:
+    - PULL_REQUEST_ID: 5
+    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/7/merge
+    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/7/head
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - COMMIT: 76a934ae80f12bb9b504bbc86f64a1d310e5db64
+    - BRANCH: test/commit-messages
+    - CLONE_DEPTH: 1
+    - UPDATE_SUBMODULES: "no"
     before_run:
     - _setup
     after_run:
@@ -266,9 +300,9 @@ workflows:
 
   test_hosted_git_notfork:
     envs:
+    - PULL_REQUEST_ID: 7
     - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: git@github.com:bitrise-io/git-clone-test.git
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/7/merge
-    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/7/head
     - BITRISEIO_GIT_BRANCH_DEST: master
     - COMMIT: 76a934ae80f12bb9b504bbc86f64a1d310e5db64
     - BRANCH: test/commit-messages
@@ -295,6 +329,7 @@ workflows:
 
   test_fork_with_head_branch:
     envs:
+    - PULL_REQUEST_ID: 7
     # Alternate URL for repository, the difference causes the Step to handle it as a fork
     - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: https://github.com/bitrise-samples/git-clone-test/
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/7/merge
@@ -302,6 +337,7 @@ workflows:
     - BITRISEIO_GIT_BRANCH_DEST: master
     - COMMIT: 76a934ae80f12bb9b504bbc86f64a1d310e5db64
     - BRANCH: test/commit-messages
+    - MANUAL_MERGE: "no"
     before_run:
     - _setup
     after_run:
@@ -311,12 +347,13 @@ workflows:
 
   test_unrelated_histories:
     envs:
+    - PULL_REQUEST_ID: 8
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/8/merge
-    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/8/head
     - BITRISEIO_PULL_REQUEST_REPOSITORY_URL: $TEST_REPO_URL
     - BITRISEIO_GIT_BRANCH_DEST: unrelated-histories/master
     - COMMIT: 62af44590c7a2b937726f2c3024a88a129b330b5
     - CLONE_DEPTH: 1
+    - MANUAL_MERGE: "no"
     - UPDATE_SUBMODULES: "no"
     before_run:
     - _setup
@@ -379,11 +416,13 @@ workflows:
         inputs:
         - repository_url: $TEST_DIFF_REPO_URL
         - clone_into_dir: $TEST_DIFF_CLONE_DIR
+        - pull_request_id: 8
         - pull_request_repository_url: $TEST_DIFF_PR_REPOSITORY_URL
         - branch_dest: master
         - branch: master
         - commit: c6810e6
         - clone_depth: 1
+        - manual_merge: "no"
     - script:
         inputs:
         - content: |-
@@ -453,7 +492,7 @@ workflows:
         inputs:
         - content: |-
             #!/bin/env bash
-            set -e
+            set -ex
 
             EXPECTED_CHANGELOG="* [a409478] Add newline to the description.
             * [b002ab7] Add repository description.
@@ -464,11 +503,6 @@ workflows:
                 echo "Expected changelog generated."
             else
                 echo "Invalid changelog generated:"
-                echo ""
-                echo "Expected changelog:"
-                echo "$EXPECTED_CHANGELOG"
-                echo ""
-                echo "Generated changelog:"
                 echo "$BITRISE_CHANGELOG"
                 exit 1
             fi
@@ -492,11 +526,11 @@ workflows:
             check "GIT_CLONE_COMMIT_HASH" "76a934ae80f12bb9b504bbc86f64a1d310e5db64"
             check "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" "Sample commit message subject"
             check "GIT_CLONE_COMMIT_MESSAGE_BODY" "Sample commit message body"
-            check "GIT_CLONE_COMMIT_COUNT" "1"
+            check "GIT_CLONE_COMMIT_COUNT" "25"
             check "GIT_CLONE_COMMIT_AUTHOR_NAME" "Krisztian Dobmayer"
             check "GIT_CLONE_COMMIT_AUTHOR_EMAIL" "krisztian.dobmayer@bitrise.io"
-            check "GIT_CLONE_COMMIT_COMMITTER_NAME" "Krisztian Dobmayer"
-            check "GIT_CLONE_COMMIT_COMMITTER_EMAIL" "krisztian.dobmayer@bitrise.io"
+            check "GIT_CLONE_COMMIT_COMMITER_NAME" "Krisztian Dobmayer"
+            check "GIT_CLONE_COMMIT_COMMITER_EMAIL" "krisztian.dobmayer@bitrise.io"
 
   _check_too_long_message:
     steps:
@@ -526,8 +560,8 @@ workflows:
             echo "GIT_CLONE_COMMIT_COUNT: ${GIT_CLONE_COMMIT_COUNT}"
             echo "GIT_CLONE_COMMIT_AUTHOR_NAME: ${GIT_CLONE_COMMIT_AUTHOR_NAME}"
             echo "GIT_CLONE_COMMIT_AUTHOR_EMAIL: ${GIT_CLONE_COMMIT_AUTHOR_EMAIL}"
-            echo "GIT_CLONE_COMMIT_COMMITTER_NAME: ${GIT_CLONE_COMMIT_COMMITTER_NAME}"
-            echo "GIT_CLONE_COMMIT_COMMITTER_EMAIL: ${GIT_CLONE_COMMIT_COMMITTER_EMAIL}"
+            echo "GIT_CLONE_COMMIT_COMMITER_NAME: ${GIT_CLONE_COMMIT_COMMITER_NAME}"
+            echo "GIT_CLONE_COMMIT_COMMITER_EMAIL: ${GIT_CLONE_COMMIT_COMMITER_EMAIL}"
 
   _setup:
     steps:
@@ -544,6 +578,7 @@ workflows:
             envman unset --key BITRISE_GIT_TAG
             envman unset --key BITRISE_GIT_BRANCH
             envman unset --key BITRISEIO_GIT_BRANCH_DEST
+            envman unset --key PULL_REQUEST_ID
             envman unset --key BITRISEIO_PULL_REQUEST_REPOSITORY_URL
             envman unset --key BITRISEIO_PULL_REQUEST_MERGE_BRANCH
             envman unset --key BITRISEIO_PULL_REQUEST_HEAD_BRANCH
@@ -556,8 +591,8 @@ workflows:
             envman unset --key GIT_CLONE_COMMIT_COUNT
             envman unset --key GIT_CLONE_COMMIT_AUTHOR_NAME
             envman unset --key GIT_CLONE_COMMIT_AUTHOR_EMAIL
-            envman unset --key GIT_CLONE_COMMIT_COMMITTER_NAME
-            envman unset --key GIT_CLONE_COMMIT_COMMITTER_EMAIL
+            envman unset --key GIT_CLONE_COMMIT_COMMITER_NAME
+            envman unset --key GIT_CLONE_COMMIT_COMMITER_EMAIL
 
   _run:
     steps:
@@ -579,7 +614,6 @@ workflows:
               envman add --key WORKDIR_ABSOLUTE --value $WD
             fi
     - path::./:
-        run_if: "true"
         inputs:
         - repository_url: $TEST_REPO_URL
         - clone_into_dir: $WORKDIR
@@ -591,6 +625,7 @@ workflows:
         - merge_pr: $MERGE_PR
         - clone_depth: $CLONE_DEPTH
         - sparse_directories: $SPARSE_DIRECTORIES
+        - manual_merge: $MANUAL_MERGE
 
   _teardown:
     steps:

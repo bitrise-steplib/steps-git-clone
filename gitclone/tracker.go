@@ -9,23 +9,23 @@ import (
 	"github.com/bitrise-io/go-utils/v2/log"
 )
 
-type StepTracker struct {
+type stepTracker struct {
 	tracker analytics.Tracker
 	logger  log.Logger
 }
 
-func NewStepTracker(envRepo env.Repository, logger log.Logger) StepTracker {
+func newStepTracker(envRepo env.Repository, logger log.Logger) stepTracker {
 	p := analytics.Properties{
 		"build_slug":  envRepo.Get("BITRISE_BUILD_SLUG"),
 		"is_pr_build": envRepo.Get("PR") == "true",
 	}
-	return StepTracker{
+	return stepTracker{
 		tracker: analytics.NewDefaultTracker(logger, p),
 		logger:  logger,
 	}
 }
 
-func (t *StepTracker) logCheckout(duration time.Duration, method CheckoutMethod, remoteURL string) {
+func (t *stepTracker) logCheckout(duration time.Duration, method CheckoutMethod, remoteURL string) {
 	var remoteType = "other"
 	if strings.Contains(remoteURL, "github.com") {
 		remoteType = "github.com"
@@ -43,13 +43,13 @@ func (t *StepTracker) logCheckout(duration time.Duration, method CheckoutMethod,
 	t.tracker.Enqueue("step_git_clone_fetch_and_checkout", p)
 }
 
-func (t *StepTracker) logSubmoduleUpdate(duration time.Duration) {
+func (t *stepTracker) logSubmoduleUpdate(duration time.Duration) {
 	p := analytics.Properties{
 		"duration_s": duration.Truncate(time.Second).Seconds(),
 	}
 	t.tracker.Enqueue("step_git_clone_submodule_updated", p)
 }
 
-func (t *StepTracker) wait() {
+func (t *stepTracker) wait() {
 	t.tracker.Wait()
 }

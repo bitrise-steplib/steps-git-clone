@@ -82,7 +82,7 @@ fatal: Authentication failed for 'https://bitrise-io.git/'`)),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := mapDetailedErrorRecommendation(updateSubmoduleFailedTag, tt.errMsg); !reflect.DeepEqual(got, tt.want) {
+			if got := mapDetailedErrorRecommendation(updateSubmodelFailedTag, tt.errMsg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("mapRecommendation() = %v, want %v", got, tt.want)
 			}
 		})
