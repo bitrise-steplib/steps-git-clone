@@ -217,9 +217,9 @@ outputs:
 - GIT_CLONE_COMMIT_AUTHOR_EMAIL:
   opts:
     title: Cloned git commit's author email address
-- GIT_CLONE_COMMIT_COMMITER_NAME:
+- GIT_CLONE_COMMIT_COMMITTER_NAME:
   opts:
     title: Cloned git commit's committer name
-- GIT_CLONE_COMMIT_COMMITER_EMAIL:
+- GIT_CLONE_COMMIT_COMMITTER_EMAIL:
   opts:
     title: Cloned git commit's committer email

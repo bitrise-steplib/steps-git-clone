@@ -76,16 +76,16 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 <details>
 <summary>Outputs</summary>
 
-| Environment Variable | Description |
-| --- | --- |
-| `GIT_CLONE_COMMIT_HASH` |  |
+| Environment Variable               | Description |
+|------------------------------------| --- |
+| `GIT_CLONE_COMMIT_HASH`            |  |
 | `GIT_CLONE_COMMIT_MESSAGE_SUBJECT` |  |
-| `GIT_CLONE_COMMIT_MESSAGE_BODY` |  |
-| `GIT_CLONE_COMMIT_COUNT` | Count will only work properly if no `--depth` option is set.  If `--depth` is set then the history truncated to the specified number of commits. Count will **not** fail but will be the clone depth. |
-| `GIT_CLONE_COMMIT_AUTHOR_NAME` |  |
-| `GIT_CLONE_COMMIT_AUTHOR_EMAIL` |  |
-| `GIT_CLONE_COMMIT_COMMITER_NAME` |  |
-| `GIT_CLONE_COMMIT_COMMITER_EMAIL` |  |
+| `GIT_CLONE_COMMIT_MESSAGE_BODY`    |  |
+| `GIT_CLONE_COMMIT_COUNT`           | Count will only work properly if no `--depth` option is set.  If `--depth` is set then the history truncated to the specified number of commits. Count will **not** fail but will be the clone depth. |
+| `GIT_CLONE_COMMIT_AUTHOR_NAME`     |  |
+| `GIT_CLONE_COMMIT_AUTHOR_EMAIL`    |  |
+| `GIT_CLONE_COMMIT_COMMITTER_NAME`  |  |
+| `GIT_CLONE_COMMIT_COMMITTER_EMAIL` |  |
 </details>
 
 ## 🙋 Contributing

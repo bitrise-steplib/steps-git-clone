@@ -80,11 +80,11 @@ func exportCommitInfo(gitCmd git.Git, gitRef string, isPR bool, maxEnvLength int
 	}
 	nonPROnlyInfos := []commitInfo{
 		{
-			envKey: "GIT_CLONE_COMMIT_COMMITER_NAME",
+			envKey: "GIT_CLONE_COMMIT_COMMITTER_NAME",
 			cmd:    gitCmd.Log(`%cn`, gitRef),
 		},
 		{
-			envKey: "GIT_CLONE_COMMIT_COMMITER_EMAIL",
+			envKey: "GIT_CLONE_COMMIT_COMMITTER_EMAIL",
 			cmd:    gitCmd.Log(`%ce`, gitRef),
 		},
 		{
