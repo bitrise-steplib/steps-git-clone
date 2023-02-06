@@ -16,7 +16,7 @@ func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
 	switch tag {
 	case checkoutFailedTag:
 		matcher = newCheckoutFailedPatternErrorMatcher()
-	case updateSubmoduleFailedTag:
+	case updateSubmodelFailedTag:
 		matcher = newUpdateSubmoduleFailedErrorMatcher()
 	case fetchFailedTag:
 		matcher = newFetchFailedPatternErrorMatcher()
