@@ -74,40 +74,36 @@ func Test_selectCheckoutMethod(t *testing.T) {
 			want: CheckoutCommitMethod,
 		},
 		{
-			name: "PR - no fork - manual merge: branch and commit",
+			name: "PR - no fork - branch and commit",
 			cfg: Config{
 				Commit:        "76a934ae",
 				Branch:        "test/commit-messages",
 				PRMergeBranch: "pull/7/merge",
 				PRDestBranch:  "master",
-				PRID:          7,
 				CloneDepth:    1,
-				ManualMerge:   true,
 				ShouldMergePR: true,
 			},
-			want: CheckoutPRManualMergeMethod,
+			want: CheckoutPRMergeBranchMethod,
 		},
 		{
-			name: "PR - no fork - manual merge: branch and commit, no PRRepoURL or PRID",
+			name: "PR - no fork - branch and commit, no PRRepoURL or PRID",
 			cfg: Config{
 				Commit:        "76a934ae",
 				Branch:        "test/commit-messages",
 				PRDestBranch:  "master",
 				CloneDepth:    1,
-				ManualMerge:   true,
 				ShouldMergePR: true,
 			},
 			want: CheckoutPRManualMergeMethod,
 		},
 		{
-			name: "PR - fork - manual merge",
+			name: "PR - fork - no merge ref",
 			cfg: Config{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "https://github.com/bitrise-io/other-repo.git",
 				Branch:                "test/commit-messages",
 				PRDestBranch:          "master",
 				Commit:                "76a934ae",
-				ManualMerge:           true,
 				ShouldMergePR:         true,
 			},
 			want: CheckoutPRManualMergeMethod,
@@ -120,15 +116,13 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				Branch:                "test/commit-messages",
 				PRDestBranch:          "master",
 				PRMergeBranch:         "pull/7/merge",
-				PRID:                  7,
 				Commit:                "76a934ae",
-				ManualMerge:           true,
 				ShouldMergePR:         true,
 			},
-			want: CheckoutPRManualMergeMethod,
+			want: CheckoutPRMergeBranchMethod,
 		},
 		{
-			name: "PR - no fork - auto merge - merge branch (GitHub format)",
+			name: "PR - no fork - merge ref (GitHub format)",
 			cfg: Config{
 				PRDestBranch:  "master",
 				PRMergeBranch: "pull/5/merge",
@@ -137,11 +131,10 @@ func Test_selectCheckoutMethod(t *testing.T) {
 			want: CheckoutPRMergeBranchMethod,
 		},
 		{
-			name: "PR - no fork - auto merge - diff file",
+			name: "PR - no fork - diff file",
 			cfg: Config{
 				RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 				PRDestBranch:  "master",
-				PRID:          7,
 				Commit:        "76a934ae",
 				ShouldMergePR: true,
 				BuildURL:      "dummy_url",
@@ -150,37 +143,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 			want:        CheckoutPRDiffFileMethod,
 		},
 		{
-			name: "PR - fork - auto merge - merge branch: private fork overrides manual merge flag",
-			cfg: Config{
-				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
-				PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
-				Branch:                "test/commit-messages",
-				PRDestBranch:          "master",
-				PRMergeBranch:         "pull/7/merge",
-				PRID:                  7,
-				Commit:                "76a934ae",
-				ManualMerge:           true,
-				ShouldMergePR:         true,
-			},
-			want: CheckoutPRMergeBranchMethod,
-		},
-		{
-			name: "PR - fork - auto merge: private fork overrides manual merge flag",
-			cfg: Config{
-				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
-				PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
-				Branch:                "test/commit-messages",
-				PRDestBranch:          "master",
-				Commit:                "76a934ae",
-				BuildURL:              "dummy_url",
-				ManualMerge:           true,
-				ShouldMergePR:         true,
-			},
-			patchSource: MockPatchSource{diffFilePath: "dummy_path"},
-			want:        CheckoutPRDiffFileMethod,
-		},
-		{
-			name: "PR - no merge - no fork - auto merge - head branch",
+			name: "PR - no merge - no fork - head branch",
 			cfg: Config{
 				Commit:        "76a934ae",
 				Branch:        "test/commit-messages",
@@ -188,19 +151,17 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				PRHeadBranch:  "pull/7/head",
 				PRDestBranch:  "master",
 				CloneDepth:    1,
-				ManualMerge:   true,
 				ShouldMergePR: false,
 			},
 			want: CheckoutHeadBranchCommitMethod,
 		},
 		{
-			name: "PR - no merge - no fork - manual merge",
+			name: "PR - no merge - no fork - no PR head - no merge ref",
 			cfg: Config{
 				Commit:        "76a934ae",
 				Branch:        "test/commit-messages",
 				PRDestBranch:  "master",
 				CloneDepth:    1,
-				ManualMerge:   true,
 				ShouldMergePR: false,
 			},
 			want: CheckoutCommitMethod,
@@ -211,7 +172,6 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				RepositoryURL: "https://github.com/bitrise-io/git-clone-test.git",
 				Commit:        "76a934ae",
 				PRDestBranch:  "master",
-				PRID:          7,
 				ShouldMergePR: false,
 				BuildURL:      "dummy_url",
 			},
@@ -226,26 +186,37 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				Branch:                "test/commit-messages",
 				PRDestBranch:          "master",
 				Commit:                "76a934ae",
-				ManualMerge:           true,
 				ShouldMergePR:         false,
 			},
 			want: CheckoutForkCommitMethod,
 		},
 		{
-			name: "PR - no merge - fork - auto merge - diff file: private fork",
+			name: "PR - no merge - fork - diff file: private fork",
 			cfg: Config{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 				Branch:                "test/commit-messages",
 				PRDestBranch:          "master",
-				PRID:                  7,
 				Commit:                "76a934ae",
-				ManualMerge:           true,
 				ShouldMergePR:         false,
 				BuildURL:              "dummy_url",
 			},
 			patchSource: MockPatchSource{diffFilePath: "dummy_path"},
 			want:        CheckoutPRDiffFileMethod,
+		},
+		{
+			name: "PR - no merge - fork - diff file doesn't exist",
+			cfg: Config{
+				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
+				PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
+				Branch:                "test/commit-messages",
+				PRDestBranch:          "master",
+				Commit:                "76a934ae",
+				ShouldMergePR:         false,
+				BuildURL:              "dummy_url",
+			},
+			patchSource: MockPatchSource{diffFilePath: ""},
+			want:        CheckoutForkCommitMethod,
 		},
 	}
 	for _, tt := range tests {
@@ -320,13 +291,13 @@ func Test_getBuildTriggerRef(t *testing.T) {
 			wantRef: "remote/source",
 		},
 		{
-			strategy: checkoutPRMergeBranch{
-				params: PRMergeBranchParams{
-					DestinationBranch: "dest",
-					MergeBranch:       "pull/2/merge",
+			strategy: checkoutPRMergeRef{
+				params: PRMergeRefParams{
+					MergeRef: "pull/2/merge",
+					HeadRef:  "pull/2/head",
 				},
 			},
-			wantRef: "pull/2",
+			wantRef: "refs/remotes/pull/2/head",
 		},
 	}
 	for _, tt := range tests {
@@ -334,6 +305,129 @@ func Test_getBuildTriggerRef(t *testing.T) {
 			gotRef := tt.strategy.getBuildTriggerRef()
 
 			assert.Equal(t, tt.wantRef, gotRef)
+		})
+	}
+}
+
+func Test_idealDefaultCloneDepth(t *testing.T) {
+	tests := []struct {
+		method CheckoutMethod
+		want   int
+	}{
+		{
+			method: CheckoutNoneMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutPRMergeBranchMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutPRManualMergeMethod,
+			want:   50,
+		},
+		{
+			method: CheckoutPRDiffFileMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutCommitMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutTagMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutBranchMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutHeadBranchCommitMethod,
+			want:   1,
+		},
+		{
+			method: CheckoutForkCommitMethod,
+			want:   1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.method.String(), func(t *testing.T) {
+			if got := idealDefaultCloneDepth(tt.method); got != tt.want {
+				t.Errorf("idealDefaultCloneDepth() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_selectFetchOptions(t *testing.T) {
+	type args struct {
+		method          CheckoutMethod
+		cloneDepth      int
+		fetchTags       bool
+		fetchSubmodules bool
+		filterTree      bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want fetchOptions
+	}{
+		{
+			name: "default depth setting",
+			args: args{
+				method:          CheckoutCommitMethod,
+				cloneDepth:      0,
+				fetchTags:       false,
+				fetchSubmodules: false,
+				filterTree:      false,
+			},
+			want: fetchOptions{
+				tags:            false,
+				limitDepth:      true,
+				depth:           1,
+				fetchSubmodules: false,
+				filterTree:      false,
+			},
+		},
+		{
+			name: "custom depth setting",
+			args: args{
+				method:          CheckoutPRMergeBranchMethod,
+				cloneDepth:      115,
+				fetchTags:       false,
+				fetchSubmodules: false,
+				filterTree:      false,
+			},
+			want: fetchOptions{
+				tags:            false,
+				limitDepth:      true,
+				depth:           115,
+				fetchSubmodules: false,
+				filterTree:      false,
+			},
+		},
+		{
+			name: "disable depth limit",
+			args: args{
+				method:          CheckoutCommitMethod,
+				cloneDepth:      -1,
+				fetchTags:       false,
+				fetchSubmodules: false,
+				filterTree:      false,
+			},
+			want: fetchOptions{
+				tags:            false,
+				limitDepth:      false,
+				depth:           -1,
+				fetchSubmodules: false,
+				filterTree:      false,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, selectFetchOptions(tt.args.method, tt.args.cloneDepth, tt.args.fetchTags, tt.args.fetchSubmodules, tt.args.filterTree), "selectFetchOptions(%v, %v, %v, %v, %v)", tt.args.method, tt.args.cloneDepth, tt.args.fetchTags, tt.args.fetchSubmodules, tt.args.filterTree)
 		})
 	}
 }
