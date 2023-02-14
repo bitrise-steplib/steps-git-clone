@@ -13,7 +13,6 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 )
 
-//
 // PRDiffFileParams are parameters to check out a Merge/Pull Request (when a diff file is available)
 type PRDiffFileParams struct {
 	DestinationBranch     string

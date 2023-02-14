@@ -7,7 +7,6 @@ import (
 	"github.com/bitrise-io/go-utils/command/git"
 )
 
-//
 // checkoutNone
 type checkoutNone struct{}
 
@@ -19,7 +18,6 @@ func (c checkoutNone) getBuildTriggerRef() string {
 	return ""
 }
 
-//
 // CommitParams are parameters to check out a given commit (In addition to the repository URL)
 type CommitParams struct {
 	Commit        string
@@ -69,7 +67,6 @@ func (c checkoutCommit) getBuildTriggerRef() string {
 	return c.params.Commit
 }
 
-//
 // BranchParams are parameters to check out a given branch (In addition to the repository URL)
 type BranchParams struct {
 	Branch string
@@ -107,7 +104,6 @@ func (c checkoutBranch) localRef() string {
 	return refsHeadsPrefix + c.params.Branch
 }
 
-//
 // TagParams are parameters to check out a given tag
 type TagParams struct {
 	Tag string

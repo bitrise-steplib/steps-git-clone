@@ -3,7 +3,6 @@ package gitclone
 import (
 	"fmt"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
@@ -90,23 +89,6 @@ func getRepo(url string) string {
 
 func isPrivate(repoURL string) bool {
 	return strings.HasPrefix(repoURL, "git")
-}
-
-// If incoming branch matches to pull/x/merge pattern headBranchRefs
-// converts it to remote ref (pull/x/head) and local ref (pull/x)
-// If it does not match it keeps original name.
-func headBranchRefs(mergeBranch string) (remoteRef, localRef string) {
-	var re = regexp.MustCompile("^pull/(.*)/merge$")
-	if re.MatchString(mergeBranch) {
-		branchID := re.ReplaceAllString(mergeBranch, "$1")
-		remoteRef = fmt.Sprintf("refs/pull/%s/head", branchID)
-		localRef = fmt.Sprintf("pull/%s", branchID)
-		return
-	}
-
-	remoteRef = "refs/heads/" + mergeBranch
-	localRef = mergeBranch
-	return
 }
 
 type getAvailableBranches func() (map[string][]string, error)
