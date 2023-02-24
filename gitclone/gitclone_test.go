@@ -20,7 +20,7 @@ func Test_checkoutState(t *testing.T) {
 	var tests = [...]struct {
 		name            string
 		cfg             Config
-		patchSource     FakePatchSource
+		patchSource     bitriseapi.PatchSource
 		mergeRefChecker bitriseapi.MergeRefChecker
 		mockRunner      *MockRunner
 		wantErr         error

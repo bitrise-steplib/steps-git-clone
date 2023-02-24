@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/bitrise-io/go-utils/v2/log"
 )
 
-func Test_isMergeRefUpToDate(t *testing.T) {
+func Test_doPoll(t *testing.T) {
 	tests := []struct {
 		name    string
 		fetcher mergeRefFetcher
@@ -70,7 +72,7 @@ func Test_isMergeRefUpToDate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			retryWaitTime := time.Duration(0)
-			got, err := doPoll(tt.fetcher, retryWaitTime)
+			got, err := doPoll(tt.fetcher, retryWaitTime, log.NewLogger())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("doPoll() error = %v, wantErr %v", err, tt.wantErr)
 				return

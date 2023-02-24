@@ -192,7 +192,8 @@ inputs:
   opts:
     category: Build trigger parameters
     title: Unverified pull request merge ref
-    description: TODO
+    description: |-
+      This input is the same as **Pull request merge ref**, but the provided merge ref can be potentially outdated. The Step will make an attempt to check it's validity and only use it for the checkout if it's up-to-date with the PR head.
     is_dont_change_value: true
 
 - pull_request_head_branch: $BITRISEIO_PULL_REQUEST_HEAD_BRANCH
