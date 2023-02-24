@@ -188,6 +188,13 @@ inputs:
       Note: not all Git services provide this value.
     is_dont_change_value: true
 
+- pull_request_unverified_merge_branch: $BITRISEIO_PULL_REQUEST_UNVERIFIED_MERGE_BRANCH
+  opts:
+    category: Build trigger parameters
+    title: Unverified pull request merge ref
+    description: TODO
+    is_dont_change_value: true
+
 - pull_request_head_branch: $BITRISEIO_PULL_REQUEST_HEAD_BRANCH
   opts:
     category: Build trigger parameters

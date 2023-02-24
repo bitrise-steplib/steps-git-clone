@@ -2,14 +2,9 @@ package gitclone
 
 import (
 	"fmt"
-	"net/http"
-	"net/url"
-	"path/filepath"
 	"strings"
 
-	"github.com/bitrise-io/go-steputils/input"
 	"github.com/bitrise-io/go-utils/command/git"
-	"github.com/bitrise-io/go-utils/filedownloader"
 	"github.com/bitrise-io/go-utils/log"
 )
 
@@ -66,25 +61,4 @@ func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallba
 
 func (c checkoutPRDiffFile) getBuildTriggerRef() string {
 	return ""
-}
-
-type patchSource interface {
-	getDiffPath(buildURL, apiToken string) (string, error)
-}
-
-type defaultPatchSource struct{}
-
-func (defaultPatchSource) getDiffPath(buildURL, apiToken string) (string, error) {
-	url, err := url.Parse(buildURL)
-	if err != nil {
-		return "", fmt.Errorf("could not parse diff file URL: %v", err)
-	}
-
-	if url.Scheme == "file" {
-		return filepath.Join(url.Path, "diff.txt"), nil
-	}
-
-	diffURL := fmt.Sprintf("%s/diff.txt?api_token=%s", buildURL, apiToken)
-	fileProvider := input.NewFileProvider(filedownloader.New(http.DefaultClient))
-	return fileProvider.LocalPath(diffURL)
 }

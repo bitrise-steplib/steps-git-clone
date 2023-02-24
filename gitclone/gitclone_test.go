@@ -10,6 +10,7 @@ import (
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,13 +18,14 @@ const rawCmdError = "dummy_cmd_error"
 
 func Test_checkoutState(t *testing.T) {
 	var tests = [...]struct {
-		name        string
-		cfg         Config
-		patchSource patchSource
-		mockRunner  *MockRunner
-		wantErr     error
-		wantErrType error
-		wantCmds    []string
+		name            string
+		cfg             Config
+		patchSource     FakePatchSource
+		mergeRefChecker bitriseapi.MergeRefChecker
+		mockRunner      *MockRunner
+		wantErr         error
+		wantErrType     error
+		wantCmds        []string
 	}{
 		// ** Simple checkout cases (using commit, tag and branch) **
 		{
@@ -138,7 +140,7 @@ func Test_checkoutState(t *testing.T) {
 			name: "PR - no fork - merge ref (GitHub format)",
 			cfg: Config{
 				PRDestBranch:  "master",
-				PRMergeBranch: "pull/5/merge",
+				PRMergeRef:    "pull/5/merge",
 				PRHeadBranch:  "pull/5/head",
 				CloneDepth:    1,
 				ShouldMergePR: true,
@@ -153,7 +155,7 @@ func Test_checkoutState(t *testing.T) {
 			name: "PR - no fork - merge ref (standard branch format)",
 			cfg: Config{
 				PRDestBranch:  "master",
-				PRMergeBranch: "pr_test",
+				PRMergeRef:    "pr_test",
 				ShouldMergePR: true,
 			},
 			wantErrType: ParameterValidationError{},
@@ -165,7 +167,7 @@ func Test_checkoutState(t *testing.T) {
 				PRSourceRepositoryURL: "git@github.com:bitrise-io/other-repo.git",
 				Branch:                "test/commit-messages",
 				PRDestBranch:          "master",
-				PRMergeBranch:         "pull/7/merge",
+				PRMergeRef:            "pull/7/merge",
 				PRHeadBranch:          "pull/7/head",
 				Commit:                "76a934ae",
 				ShouldMergePR:         true,
@@ -185,10 +187,9 @@ func Test_checkoutState(t *testing.T) {
 				PRDestBranch:          "master",
 				Commit:                "76a934ae",
 				ShouldMergePR:         true,
-				BuildURL:              "dummy_url",
 				UpdateSubmodules:      true,
 			},
-			patchSource: MockPatchSource{"", errors.New(rawCmdError)},
+			patchSource: FakePatchSource{"", errors.New(rawCmdError)},
 			mockRunner: givenMockRunner().
 				GivenRunWithRetryFailsAfter(2).
 				GivenRunSucceeds(),
@@ -209,11 +210,9 @@ func Test_checkoutState(t *testing.T) {
 				PRDestBranch:  "master",
 				Commit:        "76a934ae",
 				CloneDepth:    1,
-				//ManualMerge:   false,
 				ShouldMergePR: true,
-				BuildURL:      "dummy_url",
 			},
-			patchSource: MockPatchSource{"diff_path", nil},
+			patchSource: FakePatchSource{"diff_path", nil},
 			wantErr:     nil,
 			wantCmds: []string{
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
@@ -231,9 +230,8 @@ func Test_checkoutState(t *testing.T) {
 				Commit:        "76a934ae",
 				CloneDepth:    1,
 				ShouldMergePR: true,
-				BuildURL:      "dummy_url",
 			},
-			patchSource: MockPatchSource{"diff_path", nil},
+			patchSource: FakePatchSource{"diff_path", nil},
 			mockRunner: givenMockRunner().
 				GivenRunFailsForCommand(`git "apply" "--index" "diff_path"`, 1).
 				GivenRunWithRetrySucceeds().
@@ -260,9 +258,8 @@ func Test_checkoutState(t *testing.T) {
 				PRDestBranch:          "master",
 				Commit:                "76a934ae",
 				ShouldMergePR:         true,
-				BuildURL:              "dummy_url",
 			},
-			patchSource: MockPatchSource{"diff_path", nil},
+			patchSource: FakePatchSource{"diff_path", nil},
 			mockRunner: givenMockRunner().
 				GivenRunFailsForCommand(`git "apply" "--index" "diff_path"`, 1).
 				GivenRunWithRetrySucceeds().
@@ -303,7 +300,7 @@ func Test_checkoutState(t *testing.T) {
 			cfg: Config{
 				Commit:           "76a934ae",
 				PRDestBranch:     "master",
-				PRMergeBranch:    "pull/5/merge",
+				PRMergeRef:       "pull/5/merge",
 				PRHeadBranch:     "pull/5/head",
 				CloneDepth:       1,
 				ShouldMergePR:    false,
@@ -326,7 +323,7 @@ func Test_checkoutState(t *testing.T) {
 				ShouldMergePR:         false,
 				UpdateSubmodules:      true,
 			},
-			patchSource: MockPatchSource{"diff_path", nil},
+			patchSource: FakePatchSource{"diff_path", nil},
 			wantErr:     nil,
 			wantCmds: []string{
 				`git "remote" "add" "fork" "https://github.com/bitrise-io/git-clone-test2.git"`,
@@ -345,9 +342,8 @@ func Test_checkoutState(t *testing.T) {
 				CloneDepth:            1,
 				ShouldMergePR:         false,
 				UpdateSubmodules:      true,
-				BuildURL:              "dummy_url",
 			},
-			patchSource: MockPatchSource{"diff_path", nil},
+			patchSource: FakePatchSource{"diff_path", nil},
 			wantErr:     nil,
 			wantCmds: []string{
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "origin" "refs/heads/master"`,
@@ -386,7 +382,7 @@ func Test_checkoutState(t *testing.T) {
 			cfg: Config{
 				Commit:        "76a934ae",
 				Branch:        "test/commit-messages",
-				PRMergeBranch: "pull/7/merge",
+				PRMergeRef:    "pull/7/merge",
 				CloneDepth:    1,
 				ShouldMergePR: true,
 			},
@@ -419,7 +415,7 @@ func Test_checkoutState(t *testing.T) {
 			name: "PR - no fork: branch, no commit (ignore depth)",
 			cfg: Config{
 				Branch:        "test/commit-messages",
-				PRMergeBranch: "pull/7/merge",
+				PRMergeRef:    "pull/7/merge",
 				PRHeadBranch:  "pull/7/head",
 				PRDestBranch:  "master",
 				ShouldMergePR: true,
@@ -497,8 +493,8 @@ func Test_checkoutState(t *testing.T) {
 			envRepo := env.NewRepository()
 			logger := log.NewLogger()
 			tracker := NewStepTracker(envRepo, logger)
-			cloner := NewGitCloner(log.NewLogger(), tracker, command.NewFactory(envRepo))
-			_, _, actualErr := cloner.checkoutState(git.Git{}, tt.cfg, tt.patchSource)
+			cloner := NewGitCloner(log.NewLogger(), tracker, command.NewFactory(envRepo), tt.patchSource, tt.mergeRefChecker)
+			_, _, actualErr := cloner.checkoutState(git.Git{}, tt.cfg)
 
 			// Then
 			if tt.wantErrType != nil {
@@ -631,11 +627,20 @@ func givenMockRunnerSucceedsAfter(times int) *MockRunner {
 		GivenRunSucceeds()
 }
 
-type MockPatchSource struct {
+type FakePatchSource struct {
 	diffFilePath string
 	err          error
 }
 
-func (m MockPatchSource) getDiffPath(_, _ string) (string, error) {
-	return m.diffFilePath, m.err
+func (f FakePatchSource) GetPRPatch() (string, error) {
+	return f.diffFilePath, f.err
+}
+
+type FakeMergeRefChecker struct {
+	isUpToDate bool
+	err        error
+}
+
+func (f FakeMergeRefChecker) IsMergeRefUpToDate(ref string) (bool, error) {
+	return f.isUpToDate, f.err
 }

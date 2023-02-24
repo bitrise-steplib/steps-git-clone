@@ -6,6 +6,7 @@ import (
 
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 
 	"github.com/bitrise-io/go-utils/command/git"
 )
@@ -35,25 +36,28 @@ type Config struct {
 	Branch                string
 	PRDestBranch          string
 	PRSourceRepositoryURL string
-	PRMergeBranch         string
+	PRMergeRef            string
+	PRUnverifiedMergeRef  string
 	PRHeadBranch          string
 
 	ResetRepository bool
-	BuildURL        string
-	BuildAPIToken   string
 }
 
 type GitCloner struct {
-	logger     log.Logger
-	tracker    StepTracker
-	cmdFactory command.Factory
+	logger          log.Logger
+	tracker         StepTracker
+	cmdFactory      command.Factory
+	patchSource     bitriseapi.PatchSource
+	mergeRefChecker bitriseapi.MergeRefChecker
 }
 
-func NewGitCloner(logger log.Logger, tracker StepTracker, cmdFactory command.Factory) GitCloner {
+func NewGitCloner(logger log.Logger, tracker StepTracker, cmdFactory command.Factory, patchSource bitriseapi.PatchSource, mergeRefChecker bitriseapi.MergeRefChecker) GitCloner {
 	return GitCloner{
-		logger:     logger,
-		tracker:    tracker,
-		cmdFactory: cmdFactory,
+		logger:          logger,
+		tracker:         tracker,
+		cmdFactory:      cmdFactory,
+		patchSource:     patchSource,
+		mergeRefChecker: mergeRefChecker,
 	}
 }
 
@@ -127,7 +131,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		return CheckoutStateResult{}, err
 	}
 
-	checkoutStrategy, isPR, err := g.checkoutState(gitCmd, cfg, defaultPatchSource{})
+	checkoutStrategy, isPR, err := g.checkoutState(gitCmd, cfg)
 	if err != nil {
 		return CheckoutStateResult{}, err
 	}
@@ -150,9 +154,9 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	}, nil
 }
 
-func (g GitCloner) checkoutState(gitCmd git.Git, cfg Config, patch patchSource) (strategy checkoutStrategy, isPR bool, err error) {
+func (g GitCloner) checkoutState(gitCmd git.Git, cfg Config) (strategy checkoutStrategy, isPR bool, err error) {
 	checkoutStartTime := time.Now()
-	checkoutMethod, diffFile := selectCheckoutMethod(cfg, patch)
+	checkoutMethod, diffFile := selectCheckoutMethod(cfg, g.patchSource, g.mergeRefChecker)
 
 	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 
