@@ -374,6 +374,7 @@ workflows:
             envman add --key TEST_DIFF_REPO_URL --value ${GIT_DIR}
             envman add --key TEST_DIFF_PR_REPOSITORY_URL --value ${PR_GIT_DIR}
             envman add --key BITRISE_BUILD_URL --value "file://${DIFF_DIR}"
+            envman add --key BITRISE_BUILD_API_TOKEN --value "dummy token"
     - path::./:
         run_if: "true"
         inputs:
