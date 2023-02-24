@@ -72,7 +72,7 @@ func Test_doPoll(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			retryWaitTime := time.Duration(0)
-			got, err := doPoll(tt.fetcher, retryWaitTime, log.NewLogger())
+			got, _, err := doPoll(tt.fetcher, retryWaitTime, log.NewLogger())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("doPoll() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -11,6 +11,7 @@ import (
 	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -492,7 +493,7 @@ func Test_checkoutState(t *testing.T) {
 			// When
 			envRepo := env.NewRepository()
 			logger := log.NewLogger()
-			tracker := NewStepTracker(envRepo, logger)
+			tracker := tracker.NewStepTracker(envRepo, logger)
 			cloner := NewGitCloner(log.NewLogger(), tracker, command.NewFactory(envRepo), tt.patchSource, tt.mergeRefChecker)
 			_, _, actualErr := cloner.checkoutState(git.Git{}, tt.cfg)
 

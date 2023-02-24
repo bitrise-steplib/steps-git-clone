@@ -9,6 +9,7 @@ import (
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
 )
 
 type Input struct {
@@ -43,12 +44,12 @@ type Config struct {
 
 type GitCloneStep struct {
 	logger      log.Logger
-	tracker     gitclone.StepTracker
+	tracker     tracker.StepTracker
 	inputParser stepconf.InputParser
 	cmdFactory  command.Factory
 }
 
-func NewGitCloneStep(logger log.Logger, tracker gitclone.StepTracker, inputParser stepconf.InputParser, cmdFactory command.Factory) GitCloneStep {
+func NewGitCloneStep(logger log.Logger, tracker tracker.StepTracker, inputParser stepconf.InputParser, cmdFactory command.Factory) GitCloneStep {
 	return GitCloneStep{
 		logger:      logger,
 		tracker:     tracker,
@@ -70,7 +71,7 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 func (g GitCloneStep) Run(cfg Config) (gitclone.CheckoutStateResult, error) {
 	gitCloneCfg := convertConfig(cfg)
 	patchSource := bitriseapi.NewPatchSource(cfg.BuildURL, cfg.BuildAPIToken)
-	mergeRefChecker := bitriseapi.NewMergeRefChecker(cfg.BuildURL, cfg.BuildAPIToken, retry.NewHTTPClient(), g.logger)
+	mergeRefChecker := bitriseapi.NewMergeRefChecker(cfg.BuildURL, cfg.BuildAPIToken, retry.NewHTTPClient(), g.logger, g.tracker)
 	cloner := gitclone.NewGitCloner(g.logger, g.tracker, g.cmdFactory, patchSource, mergeRefChecker)
 	return cloner.CheckoutState(gitCloneCfg)
 }

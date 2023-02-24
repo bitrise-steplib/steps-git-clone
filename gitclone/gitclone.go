@@ -7,6 +7,7 @@ import (
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
 
 	"github.com/bitrise-io/go-utils/command/git"
 )
@@ -45,13 +46,13 @@ type Config struct {
 
 type GitCloner struct {
 	logger          log.Logger
-	tracker         StepTracker
+	tracker         tracker.StepTracker
 	cmdFactory      command.Factory
 	patchSource     bitriseapi.PatchSource
 	mergeRefChecker bitriseapi.MergeRefChecker
 }
 
-func NewGitCloner(logger log.Logger, tracker StepTracker, cmdFactory command.Factory, patchSource bitriseapi.PatchSource, mergeRefChecker bitriseapi.MergeRefChecker) GitCloner {
+func NewGitCloner(logger log.Logger, tracker tracker.StepTracker, cmdFactory command.Factory, patchSource bitriseapi.PatchSource, mergeRefChecker bitriseapi.MergeRefChecker) GitCloner {
 	return GitCloner{
 		logger:          logger,
 		tracker:         tracker,
@@ -69,7 +70,7 @@ type CheckoutStateResult struct {
 
 // CheckoutState is the entry point of the git clone process
 func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
-	defer g.tracker.wait()
+	defer g.tracker.Wait()
 
 	gitCmd, err := git.New(cfg.CloneIntoDir)
 	if err != nil {
@@ -144,7 +145,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		updateTime := time.Since(startTime).Round(time.Second)
 		g.logger.Println()
 		g.logger.Infof("Updating submodules took %s", updateTime)
-		g.tracker.logSubmoduleUpdate(updateTime)
+		g.tracker.LogSubmoduleUpdate(updateTime)
 	}
 
 	return CheckoutStateResult{
@@ -176,7 +177,7 @@ func (g GitCloner) checkoutState(gitCmd git.Git, cfg Config) (strategy checkoutS
 	checkoutDuration := time.Since(checkoutStartTime).Round(time.Second)
 	g.logger.Println()
 	g.logger.Infof("Fetch and checkout took %s", checkoutDuration)
-	g.tracker.logCheckout(checkoutDuration, checkoutMethod, cfg.RepositoryURL)
+	g.tracker.LogCheckout(checkoutDuration, checkoutMethod.String(), cfg.RepositoryURL)
 
 	return checkoutStrategy, isPRCheckout(checkoutMethod), nil
 }
