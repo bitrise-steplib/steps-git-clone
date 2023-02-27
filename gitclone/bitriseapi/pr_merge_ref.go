@@ -41,6 +41,7 @@ type apiMergeRefChecker struct {
 
 type mergeRefResponse struct {
 	Status string `json:"status"`
+	Error  string `json:"error_msg"`
 }
 
 type mergeRefFetcher func(attempt uint) (mergeRefResponse, error)
@@ -70,6 +71,12 @@ func doPoll(fetcher mergeRefFetcher, retryWaitTime time.Duration, logger log.Log
 			logger.Warnf("Retrying request...")
 			return err, false
 		}
+		if resp.Error != "" {
+			// Soft-error from API
+			logger.Warnf("Response: %s", resp.Error)
+			return fmt.Errorf("response: %s", resp.Error), false
+		}
+
 		switch resp.Status {
 		case "up-to-date":
 			isUpToDate = true
