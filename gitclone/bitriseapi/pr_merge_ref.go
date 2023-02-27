@@ -102,12 +102,12 @@ func doPoll(fetcher mergeRefFetcher, retryWaitTime time.Duration, logger log.Log
 }
 
 func (c apiMergeRefChecker) fetchMergeRef(attempt uint) (mergeRefResponse, error) {
-	url := fmt.Sprintf("%s/pull_request_merge_ref_status?api_token=%s", c.buildURL, c.apiToken)
+	url := fmt.Sprintf("%s/pull_request_merge_ref_status", c.buildURL)
 	req, err := retryablehttp.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return mergeRefResponse{}, err
 	}
-	//req.Header.Set("HTTP_BUILD_API_TOKEN", c.apiToken)
+	req.Header.Set("HTTP_BUILD_API_TOKEN", c.apiToken)
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := c.client.Do(req)
@@ -115,6 +115,10 @@ func (c apiMergeRefChecker) fetchMergeRef(attempt uint) (mergeRefResponse, error
 		return mergeRefResponse{}, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		c.logger.Warnf("Response status: %d", resp.Status)
+	}
 
 	var response mergeRefResponse
 	err = json.NewDecoder(resp.Body).Decode(&response)
