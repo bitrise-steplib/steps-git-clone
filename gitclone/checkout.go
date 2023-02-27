@@ -90,7 +90,7 @@ type checkoutStrategy interface {
 // |=========================================================================|
 
 func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeRefChecker bitriseapi.MergeRefChecker) (CheckoutMethod, string) {
-	isPR := cfg.PRSourceRepositoryURL != "" || cfg.PRDestBranch != "" || cfg.PRMergeRef != ""
+	isPR := cfg.PRSourceRepositoryURL != "" || cfg.PRDestBranch != "" || cfg.PRMergeRef != "" || cfg.PRUnverifiedMergeRef != ""
 	if !isPR {
 		if cfg.Commit != "" {
 			return CheckoutCommitMethod, ""
@@ -157,6 +157,9 @@ func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeR
 	// Merge ref is available, but it might be outdated, we need to check its status and potentially trigger an update
 	// before we can use it for checkout
 	if cfg.PRUnverifiedMergeRef != "" {
+		log.Printf("\n")
+		log.Infof("Checking if %s is up to date...", cfg.PRUnverifiedMergeRef)
+
 		upToDate, err := mergeRefChecker.IsMergeRefUpToDate(cfg.PRUnverifiedMergeRef)
 		if err != nil {
 			log.Warnf("Failed to check PR merge ref freshness: %s", err)
@@ -167,6 +170,8 @@ func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeR
 	}
 
 	// Fallback (Bitbucket only): fetch the PR patch file through the API and apply the diff manually
+	log.Printf("\n")
+	log.Infof("Checking if PR patch file is available...")
 	patchFile, err := patchSource.GetPRPatch()
 	if err != nil {
 		log.Warnf("Patch file unavailable for PR: %s", err)

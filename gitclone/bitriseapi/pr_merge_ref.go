@@ -81,7 +81,7 @@ func doPoll(fetcher mergeRefFetcher, retryWaitTime time.Duration, logger log.Log
 			logger.Warnf("Attempt %d: not up-to-date yet", attempts)
 			return fmt.Errorf("pending"), false
 		default:
-			logger.Warnf("Attempt %d: unknown status: %s", attempts, resp.Status)
+			logger.Warnf("Attempt %d: unknown status: %s", attempts, resp)
 			return fmt.Errorf("unknown status: %s", resp.Status), false
 		}
 	}
