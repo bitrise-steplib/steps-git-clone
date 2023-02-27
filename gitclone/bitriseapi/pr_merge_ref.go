@@ -101,6 +101,7 @@ func (c apiMergeRefChecker) fetchMergeRef(attempt uint) (mergeRefResponse, error
 		return mergeRefResponse{}, err
 	}
 	req.Header.Set("HTTP_BUILD_API_TOKEN", c.apiToken)
+	req.Header.Set("Accept", "application/json")
 
 	resp, err := c.client.Do(req)
 	if err != nil {
