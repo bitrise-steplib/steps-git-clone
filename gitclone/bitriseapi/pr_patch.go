@@ -44,7 +44,6 @@ func (s apiPatchSource) GetPRPatch() (string, error) {
 		return filepath.Join(u.Path, "diff.txt"), nil
 	}
 
-	// TODO
 	diffURL := fmt.Sprintf("%s/diff.txt?api_token=%s", s.buildURL, s.apiToken)
 	fileProvider := input.NewFileProvider(filedownloader.New(http.DefaultClient))
 	return fileProvider.LocalPath(diffURL)

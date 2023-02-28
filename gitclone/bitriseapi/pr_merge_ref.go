@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -119,6 +120,12 @@ func (c apiMergeRefChecker) fetchMergeRef(attempt uint) (mergeRefResponse, error
 	if resp.StatusCode != http.StatusOK {
 		c.logger.Warnf("Response status: %s", resp.Status)
 	}
+
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return mergeRefResponse{}, err
+	}
+	c.logger.Infof("Raw response: %s", respBytes)
 
 	var response mergeRefResponse
 	err = json.NewDecoder(resp.Body).Decode(&response)
