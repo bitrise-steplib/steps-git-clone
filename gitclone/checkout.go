@@ -232,7 +232,16 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 		}
 	case CheckoutPRMergeBranchMethod:
 		{
-			params, err := NewPRMergeRefParams(cfg.PRMergeRef, cfg.PRHeadBranch)
+			var mergeRef string
+			if cfg.PRMergeRef != "" {
+				mergeRef = cfg.PRMergeRef
+			} else if cfg.PRUnverifiedMergeRef != "" {
+				// `selectCheckoutMethod()` only selects this method if it verified this merge ref
+				mergeRef = cfg.PRUnverifiedMergeRef
+			} else {
+				return nil, fmt.Errorf("inconsistent checkout strategy and checkout params: PRMergeRef=%s, PRUnverifiedMergeRef=%s", cfg.PRMergeRef, cfg.PRUnverifiedMergeRef)
+			}
+			params, err := NewPRMergeRefParams(mergeRef, cfg.PRHeadBranch)
 			if err != nil {
 				return nil, err
 			}
