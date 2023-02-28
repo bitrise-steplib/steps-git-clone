@@ -107,7 +107,7 @@ func (c apiMergeRefChecker) fetchMergeRef(attempt uint) (mergeRefResponse, error
 	if err != nil {
 		return mergeRefResponse{}, err
 	}
-	req.Header.Set("HTTP_BUILD_API_TOKEN", c.apiToken)
+	req.Header.Set("BUILD_API_TOKEN", c.apiToken)
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := c.client.Do(req)
@@ -117,7 +117,7 @@ func (c apiMergeRefChecker) fetchMergeRef(attempt uint) (mergeRefResponse, error
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		c.logger.Warnf("Response status: %d", resp.Status)
+		c.logger.Warnf("Response status: %s", resp.Status)
 	}
 
 	var response mergeRefResponse
