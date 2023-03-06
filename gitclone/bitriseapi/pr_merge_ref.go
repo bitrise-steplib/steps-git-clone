@@ -13,6 +13,9 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 )
 
+const maxAttemptCount = 5
+const retryWaitTime = time.Second * 2
+
 var ErrServiceAccountAuth = errors.New(`authentication error: Bitrise can't connect to the git server to check the freshness of the merge ref.
 Check the Service Credential User in App Settings > Integrations`)
 
@@ -55,12 +58,12 @@ func (c apiMergeRefChecker) IsMergeRefUpToDate(ref string) (bool, error) {
 	}
 
 	startTime := time.Now()
-	isUpToDate, attempts, err := doPoll(c.fetchMergeRef, time.Second*2, c.logger)
+	isUpToDate, attempts, err := doPoll(c.fetchMergeRef, maxAttemptCount, retryWaitTime, c.logger)
 	c.tracker.LogMergeRefVerify(time.Since(startTime), isUpToDate, attempts)
 	return isUpToDate, err
 }
 
-func doPoll(fetcher mergeRefFetcher, retryWaitTime time.Duration, logger log.Logger) (bool, uint, error) {
+func doPoll(fetcher mergeRefFetcher, maxAttemptCount uint, retryWaitTime time.Duration, logger log.Logger) (bool, uint, error) {
 	isUpToDate := false
 	attempts := uint(0)
 	pollAction := func(attempt uint) (err error, shouldAbort bool) {
@@ -93,7 +96,7 @@ func doPoll(fetcher mergeRefFetcher, retryWaitTime time.Duration, logger log.Log
 		}
 	}
 
-	err := retry.Times(5).Wait(retryWaitTime).TryWithAbort(pollAction)
+	err := retry.Times(maxAttemptCount).Wait(retryWaitTime).TryWithAbort(pollAction)
 	if err != nil {
 		return false, attempts, err
 	}
