@@ -56,7 +56,7 @@ func (c apiMergeRefChecker) IsMergeRefUpToDate(ref string) (bool, error) {
 
 	startTime := time.Now()
 	isUpToDate, attempts, err := doPoll(c.fetchMergeRef, time.Second*2, c.logger)
-	c.tracker.LogMergeRefCheck(time.Since(startTime), isUpToDate, attempts)
+	c.tracker.LogMergeRefVerify(time.Since(startTime), isUpToDate, attempts)
 	return isUpToDate, err
 }
 

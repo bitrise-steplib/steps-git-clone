@@ -50,13 +50,13 @@ func (t *StepTracker) LogSubmoduleUpdate(duration time.Duration) {
 	t.tracker.Enqueue("step_git_clone_submodule_updated", p)
 }
 
-func (t *StepTracker) LogMergeRefCheck(duration time.Duration, success bool, attemptCount uint) {
+func (t *StepTracker) LogMergeRefVerify(duration time.Duration, success bool, attemptCount uint) {
 	p := analytics.Properties{
 		"duration_s":    duration.Truncate(time.Second).Seconds(),
 		"success":       success,
 		"attempt_count": attemptCount,
 	}
-	t.tracker.Enqueue("step_git_clone_merge_ref_checked", p)
+	t.tracker.Enqueue("step_git_clone_merge_ref_verified", p)
 }
 
 func (t *StepTracker) Wait() {
