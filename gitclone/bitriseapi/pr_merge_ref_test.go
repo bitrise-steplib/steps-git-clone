@@ -17,7 +17,7 @@ func Test_doPoll(t *testing.T) {
 	}{
 		{
 			name: "Up-to-date for the first check",
-			fetcher: func(uint) (mergeRefResponse, error) {
+			fetcher: func(attempt uint) (mergeRefResponse, error) {
 				return mergeRefResponse{Status: "up-to-date"}, nil
 			},
 			want: true,
@@ -67,6 +67,14 @@ func Test_doPoll(t *testing.T) {
 				return mergeRefResponse{Status: "up-to-date"}, nil
 			},
 			want: true,
+		},
+		{
+			name: "Error message in response",
+			fetcher: func(attempt uint) (mergeRefResponse, error) {
+				return mergeRefResponse{Error: "Test error message"}, nil
+			},
+			want:    false,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

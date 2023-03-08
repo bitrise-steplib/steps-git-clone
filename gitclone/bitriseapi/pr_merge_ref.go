@@ -2,7 +2,6 @@ package bitriseapi
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -15,9 +14,6 @@ import (
 
 const maxAttemptCount = 5
 const retryWaitTime = time.Second * 2
-
-var ErrServiceAccountAuth = errors.New(`authentication error: Bitrise can't connect to the git server to check the freshness of the merge ref.
-Check the Service Credential User in App Settings > Integrations`)
 
 type MergeRefChecker interface {
 	// IsMergeRefUpToDate returns true if the ref is safe to use in a checkout, and it reflects the latest state of the PR
@@ -76,7 +72,8 @@ func doPoll(fetcher mergeRefFetcher, maxAttemptCount uint, retryWaitTime time.Du
 		}
 		if resp.Error != "" {
 			// Soft-error from API
-			logger.Warnf("Response: %s", resp.Error)
+			logger.Warnf(resp.Error)
+			logger.Warnf("Check your connected account in App settings > Integrations > Service credential user")
 			return fmt.Errorf("response: %s", resp.Error), false
 		}
 
@@ -85,8 +82,6 @@ func doPoll(fetcher mergeRefFetcher, maxAttemptCount uint, retryWaitTime time.Du
 			isUpToDate = true
 			logger.Donef("Attempt %d: merge ref is up-to-date", attempts)
 			return nil, true
-		case "auth_error": // TODO
-			return ErrServiceAccountAuth, true
 		case "pending":
 			logger.Warnf("Attempt %d: not up-to-date yet", attempts)
 			return fmt.Errorf("pending"), false
