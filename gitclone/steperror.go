@@ -104,6 +104,7 @@ func newFetchFailedPatternErrorMatcher() *errormapper.PatternErrorMatcher {
 			`fatal: repository '(.+)' not found`:                                                     newFetchFailedCouldNotFindGitRepoDetailedError,
 			`fatal: '(.+)' does not appear to be a git repository`:                                   newFetchFailedCouldNotFindGitRepoDetailedError,
 			`fatal: (.+)/info/refs not valid: is this a git repository?`:                             newFetchFailedCouldNotFindGitRepoDetailedError,
+			`fatal: couldn't find remote ref (.+)`:                                                   newFetchFailedCouldNotFindGitRemoteRefDetailedError,
 			`remote: HTTP Basic: Access denied[\n]*fatal: Authentication failed for '(.+)'`:          newFetchFailedHTTPAccessErrorDetailedError,
 			`remote: Invalid username or password\(\.\)[\n]*fatal: Authentication failed for '(.+)'`: newFetchFailedHTTPAccessErrorDetailedError,
 			`Unauthorized`:                          newFetchFailedHTTPAccessErrorDetailedError,
@@ -150,6 +151,14 @@ func newFetchFailedCouldNotFindGitRepoDetailedError(errorMsg string, params ...s
 	return errormapper.DetailedError{
 		Title:       fmt.Sprintf("We couldn’t find a git repository at '%s'.", repoURL),
 		Description: "Please abort the process, double-check your repository URL and try again.",
+	}
+}
+
+func newFetchFailedCouldNotFindGitRemoteRefDetailedError(errorMsg string, params ...string) errormapper.DetailedError {
+	remoteRef := errormapper.GetParamAt(0, params)
+	return errormapper.DetailedError{
+		Title:       fmt.Sprintf("We couldn’t find the remote ref '%s'.", remoteRef),
+		Description: "Please make sure your PR is open and try again.",
 	}
 }
 

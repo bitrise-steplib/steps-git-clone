@@ -1,6 +1,7 @@
 package gitclone
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -138,7 +139,8 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error
 			return runner.Run(gitCmd.Merge(arg))
 		}
 
-		return fmt.Errorf("merge failed (%s): %v", arg, mErr)
+		wErr := fmt.Errorf("merge failed (%s): %w%w", arg, mErr)
+		return fmt.Errorf("%v%w", wErr, errors.New("please try to resolve all conflicts between the base and compare branches"))
 	}
 
 	return nil
