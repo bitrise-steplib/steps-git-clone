@@ -48,7 +48,7 @@ const (
 const privateForkAuthWarning = `May fail due to missing authentication as Pull Request opened from a private fork.
 A git hosting provider head branch or a diff file is unavailable.`
 
-// ParameterValidationError is returned when there is missing or malformatted parameter for a given parameter set
+// ParameterValidationError is returned when there is missing or malformed parameter for a given parameter set
 type ParameterValidationError struct {
 	ErrorString string
 }
@@ -183,6 +183,8 @@ func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeR
 	// As a last resort, fetch target + PR branches and do a manual merge
 	// This is not ideal because the merge requires fetched branch histories. If the fetch is too shallow,
 	// the merge is going to fail with "refusing to merge unrelated histories"
+	log.Printf("\n")
+	log.Warnf("Fallback strategy: we are going to check out the PR and target branches and do a manual merge")
 	return CheckoutPRManualMergeMethod, ""
 }
 
