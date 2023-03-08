@@ -85,6 +85,14 @@ func doPoll(fetcher mergeRefFetcher, maxAttemptCount uint, retryWaitTime time.Du
 		case "pending":
 			logger.Warnf("Attempt %d: not up-to-date yet", attempts)
 			return fmt.Errorf("pending"), false
+		case "not-mergeable":
+			// A not-mergeable PR state doesn't trigger a build directly, but there is a time window between
+			// triggering a build from a mergeable PR and running this code, where the PR can become unmergeable.
+			// The API responds with `not-mergeable` in this case.
+			//
+			// [PR push]-----[trigger]-------------------------------------------------[step run]
+			// |---------------[PR push: merge conflict]-----[trigger: skip build]--------------|
+			return fmt.Errorf("PR is not in a mergeable state"), true
 		default:
 			logger.Warnf("Attempt %d: unknown status: %s", attempts, resp)
 			return fmt.Errorf("unknown status: %s", resp.Status), false

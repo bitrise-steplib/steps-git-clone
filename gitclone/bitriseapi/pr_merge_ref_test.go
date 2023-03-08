@@ -76,6 +76,14 @@ func Test_doPoll(t *testing.T) {
 			want:    false,
 			wantErr: true,
 		},
+		{
+			name: "Not mergeable PR state",
+			fetcher: func(attempt uint) (mergeRefResponse, error) {
+				return mergeRefResponse{Status: "not-mergeable"}, nil
+			},
+			want:    false,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
