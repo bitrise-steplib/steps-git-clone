@@ -62,7 +62,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 	// Fetch and checkout destinations branch
 	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
 	if err := fetchInitialBranch(gitCmd, originRemoteName, destBranchRef, fetchOptions); err != nil {
-		return fmt.Errorf("failed to fetch base branch:%w", err)
+		return fmt.Errorf("failed to fetch base branch: %w", err)
 	}
 
 	commitHash, err := runner.RunForOutput(gitCmd.Log("%H"))
