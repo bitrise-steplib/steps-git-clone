@@ -140,7 +140,7 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error
 		}
 
 		wErr := fmt.Errorf("merge failed (%s): %w", arg, mErr)
-		return fmt.Errorf("%v%w", wErr, errors.New("please try to resolve all conflicts between the base and compare branches"))
+		return fmt.Errorf("%v: %w", wErr, errors.New("please try to resolve all conflicts between the base and compare branches"))
 	}
 
 	return nil
