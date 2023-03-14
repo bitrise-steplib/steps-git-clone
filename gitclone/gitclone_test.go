@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bitrise-io/go-steputils/step"
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
@@ -201,7 +200,7 @@ func Test_checkoutState(t *testing.T) {
 				`git "fetch" "--jobs=10"`,
 				`git "branch" "-r"`,
 			},
-			wantErrType: &step.Error{},
+			wantErr: fmt.Errorf("failed to fetch base branch: fetch failed: dummy_cmd_error"),
 		},
 		{
 			name: "PR - fork - no merge ref - diff file available",
