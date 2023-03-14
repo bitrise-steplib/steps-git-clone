@@ -184,7 +184,7 @@ func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeR
 	// This is not ideal because the merge requires fetched branch histories. If the fetch is too shallow,
 	// the merge is going to fail with "refusing to merge unrelated histories"
 	log.Printf("\n")
-	log.Warnf("Fallback strategy: we are going to check out the PR and target branches, then do a manual merge")
+	log.Warnf("Fallback strategy: we are going to check out the PR and target branches and do a manual merge")
 	return CheckoutPRManualMergeMethod, ""
 }
 

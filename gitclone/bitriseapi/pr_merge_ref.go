@@ -20,21 +20,14 @@ type MergeRefChecker interface {
 	IsMergeRefUpToDate(ref string) (bool, error)
 }
 
-func NewMergeRefChecker(buildURL string, apiToken string, client *retryablehttp.Client, logger log.Logger, tracker tracker.StepTracker) (MergeRefChecker, error) {
-	if buildURL == "" {
-		return apiMergeRefChecker{}, fmt.Errorf("Bitrise build URL is not defined")
-	}
-	if apiToken == "" {
-		return apiMergeRefChecker{}, fmt.Errorf("Bitrise API token is not defined")
-	}
-
+func NewMergeRefChecker(buildURL string, apiToken string, client *retryablehttp.Client, logger log.Logger, tracker tracker.StepTracker) MergeRefChecker {
 	return apiMergeRefChecker{
 		buildURL: buildURL,
 		apiToken: apiToken,
 		client:   client,
 		logger:   logger,
 		tracker:  tracker,
-	}, nil
+	}
 }
 
 type apiMergeRefChecker struct {
@@ -53,6 +46,13 @@ type mergeRefResponse struct {
 type mergeRefFetcher func(attempt uint) (mergeRefResponse, error)
 
 func (c apiMergeRefChecker) IsMergeRefUpToDate(ref string) (bool, error) {
+	if c.buildURL == "" {
+		return false, fmt.Errorf("Bitrise build URL is not defined")
+	}
+	if c.apiToken == "" {
+		return false, fmt.Errorf("Bitrise API token is not defined")
+	}
+
 	startTime := time.Now()
 	isUpToDate, attempts, err := doPoll(c.fetchMergeRef, maxAttemptCount, retryWaitTime, c.logger)
 	c.tracker.LogMergeRefVerify(time.Since(startTime), isUpToDate, attempts)
