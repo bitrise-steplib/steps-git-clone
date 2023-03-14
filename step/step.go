@@ -70,14 +70,8 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 
 func (g GitCloneStep) Run(cfg Config) (gitclone.CheckoutStateResult, error) {
 	gitCloneCfg := convertConfig(cfg)
-	patchSource, err := bitriseapi.NewPatchSource(cfg.BuildURL, cfg.BuildAPIToken)
-	if err != nil {
-		return gitclone.CheckoutStateResult{}, err
-	}
-	mergeRefChecker, err := bitriseapi.NewMergeRefChecker(cfg.BuildURL, cfg.BuildAPIToken, retry.NewHTTPClient(), g.logger, g.tracker)
-	if err != nil {
-		return gitclone.CheckoutStateResult{}, err
-	}
+	patchSource := bitriseapi.NewPatchSource(cfg.BuildURL, cfg.BuildAPIToken)
+	mergeRefChecker := bitriseapi.NewMergeRefChecker(cfg.BuildURL, cfg.BuildAPIToken, retry.NewHTTPClient(), g.logger, g.tracker)
 	cloner := gitclone.NewGitCloner(g.logger, g.tracker, g.cmdFactory, patchSource, mergeRefChecker)
 	return cloner.CheckoutState(gitCloneCfg)
 }
