@@ -15,11 +15,18 @@ type PatchSource interface {
 	GetPRPatch() (string, error)
 }
 
-func NewPatchSource(buildURL, apiToken string) PatchSource {
+func NewPatchSource(buildURL, apiToken string) (PatchSource, error) {
+	if buildURL == "" {
+		return apiPatchSource{}, fmt.Errorf("Bitrise build URL is not defined")
+	}
+	if apiToken == "" {
+		return apiPatchSource{}, fmt.Errorf("Bitrise API token is not defined")
+	}
+
 	return apiPatchSource{
 		buildURL: buildURL,
 		apiToken: apiToken,
-	}
+	}, nil
 }
 
 type apiPatchSource struct {
@@ -28,13 +35,6 @@ type apiPatchSource struct {
 }
 
 func (s apiPatchSource) GetPRPatch() (string, error) {
-	if s.buildURL == "" {
-		return "", fmt.Errorf("Bitrise build URL is not defined")
-	}
-	if s.apiToken == "" {
-		return "", fmt.Errorf("Bitrise API token is not defined")
-	}
-
 	u, err := url.Parse(s.buildURL)
 	if err != nil {
 		return "", fmt.Errorf("could not parse build URL: %v", err)
