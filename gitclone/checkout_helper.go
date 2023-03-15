@@ -73,7 +73,7 @@ func fetch(gitCmd git.Git, remote string, ref string, options fetchOptions) erro
 		return handleCheckoutError(
 			listBranches(gitCmd),
 			fetchFailedTag,
-			fmt.Errorf("fetch failed: %v", err),
+			fmt.Errorf("fetch failed: %w", err),
 			"Fetching repository has failed",
 			branch,
 		)

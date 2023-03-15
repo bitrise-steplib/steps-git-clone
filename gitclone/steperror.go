@@ -104,7 +104,7 @@ func newFetchFailedPatternErrorMatcher() *errormapper.PatternErrorMatcher {
 			`fatal: repository '(.+)' not found`:                                                     newFetchFailedCouldNotFindGitRepoDetailedError,
 			`fatal: '(.+)' does not appear to be a git repository`:                                   newFetchFailedCouldNotFindGitRepoDetailedError,
 			`fatal: (.+)/info/refs not valid: is this a git repository?`:                             newFetchFailedCouldNotFindGitRepoDetailedError,
-			`fatal: couldn't find remote ref (.+)`:                                                   newFetchFailedCouldNotFindGitRemoteRefDetailedError,
+			`fatal: couldn't find remote ref refs/heads/(.+)`:                                        newFetchFailedCouldNotFindGitRemoteRefDetailedError,
 			`remote: HTTP Basic: Access denied[\n]*fatal: Authentication failed for '(.+)'`:          newFetchFailedHTTPAccessErrorDetailedError,
 			`remote: Invalid username or password\(\.\)[\n]*fatal: Authentication failed for '(.+)'`: newFetchFailedHTTPAccessErrorDetailedError,
 			`Unauthorized`:                          newFetchFailedHTTPAccessErrorDetailedError,
