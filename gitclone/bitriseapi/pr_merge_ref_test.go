@@ -35,7 +35,7 @@ func Test_doPoll(t *testing.T) {
 		{
 			name: "Unrecoverable error for first check",
 			fetcher: func(attempt uint) (mergeRefResponse, error) {
-				return mergeRefResponse{Status: "auth_error"}, nil
+				return mergeRefResponse{Error: "A fatal error", ShouldRetry: false}, nil
 			},
 			want:    false,
 			wantErr: true,

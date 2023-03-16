@@ -39,8 +39,9 @@ type apiMergeRefChecker struct {
 }
 
 type mergeRefResponse struct {
-	Status string `json:"status"`
-	Error  string `json:"error_msg"`
+	Status      string `json:"status"`
+	Error       string `json:"error_msg"`
+	ShouldRetry bool   `json:"should_retry"`
 }
 
 type mergeRefFetcher func(attempt uint) (mergeRefResponse, error)
@@ -74,7 +75,7 @@ func doPoll(fetcher mergeRefFetcher, maxAttemptCount uint, retryWaitTime time.Du
 			// Soft-error from API
 			logger.Warnf(resp.Error)
 			logger.Warnf("Check your connected account in App settings > Integrations > Service credential user")
-			return fmt.Errorf("response: %s", resp.Error), false
+			return fmt.Errorf("response: %s", resp.Error), !resp.ShouldRetry
 		}
 
 		switch resp.Status {
