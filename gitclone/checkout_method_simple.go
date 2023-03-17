@@ -130,7 +130,7 @@ type checkoutTag struct {
 func (c checkoutTag) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	ref := fmt.Sprintf("%s:%s", c.ref(), c.ref())
 	if err := fetch(gitCmd, originRemoteName, ref, fetchOptions); err != nil {
-		return err
+		return fmt.Errorf("failed to fetch tag (%s): %w", c.ref(), err)
 	}
 
 	if err := checkoutWithCustomRetry(gitCmd, c.params.Tag, fallback); err != nil {
