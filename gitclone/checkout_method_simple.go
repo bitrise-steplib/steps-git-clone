@@ -57,7 +57,9 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 	}
 
 	if err := checkoutWithCustomRetry(gitCmd, c.params.Commit, fallback); err != nil {
-		return err
+		err = fmt.Errorf("failed to checkout commit: %w", err)
+		newErr := fmt.Errorf("please check if the provided commit hash (%s) is valid", c.params.Commit)
+		return fmt.Errorf("%v: %w", err, newErr)
 	}
 
 	return nil
