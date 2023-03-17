@@ -7,6 +7,7 @@ import (
 
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 )
 
 // CheckoutMethod is the checkout method used
@@ -47,7 +48,7 @@ const (
 const privateForkAuthWarning = `May fail due to missing authentication as Pull Request opened from a private fork.
 A git hosting provider head branch or a diff file is unavailable.`
 
-// ParameterValidationError is returned when there is missing or malformatted parameter for a given parameter set
+// ParameterValidationError is returned when there is missing or malformed parameter for a given parameter set
 type ParameterValidationError struct {
 	ErrorString string
 }
@@ -88,8 +89,8 @@ type checkoutStrategy interface {
 // | headBranch  |        |     |        |          |  X         |           |
 // |=========================================================================|
 
-func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string) {
-	isPR := cfg.PRSourceRepositoryURL != "" || cfg.PRDestBranch != "" || cfg.PRMergeBranch != ""
+func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeRefChecker bitriseapi.MergeRefChecker) (CheckoutMethod, string) {
+	isPR := cfg.PRSourceRepositoryURL != "" || cfg.PRDestBranch != "" || cfg.PRMergeRef != "" || cfg.PRUnverifiedMergeRef != ""
 	if !isPR {
 		if cfg.Commit != "" {
 			return CheckoutCommitMethod, ""
@@ -130,12 +131,13 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 
 		// Fallback (Bitbucket only): it's a PR from a fork we can't access, so we fetch the PR patch file through
 		// the API and apply the diff manually
-		if cfg.BuildURL != "" {
-			patchFile := getPatchFile(patch, cfg.BuildURL, cfg.BuildAPIToken)
-			if patchFile != "" {
-				log.Infof("Merging Pull Request despite the option to disable merging, as it is opened from a private fork.")
-				return CheckoutPRDiffFileMethod, patchFile
-			}
+		patchFile, err := patchSource.GetPRPatch()
+		if err != nil {
+			log.Warnf("Patch file unavailable for PR: %v", err)
+		}
+		if err == nil && patchFile != "" {
+			log.Infof("Merging Pull Request despite the option to disable merging, as it is opened from a private fork.")
+			return CheckoutPRDiffFileMethod, patchFile
 		}
 
 		log.Warnf(privateForkAuthWarning)
@@ -143,37 +145,47 @@ func selectCheckoutMethod(cfg Config, patch patchSource) (CheckoutMethod, string
 	}
 
 	// PR: check out the merge result (merging the PR branch into the destination branch)
-	if cfg.PRMergeBranch != "" {
-		// Merge ref (such as refs/pull/2/merge) is available in the destination repo, we can access that
-		// even if the PR source is a private repo
+	if cfg.PRMergeRef != "" {
+		// Merge ref (such as refs/pull/2/merge) is available in the destination repo.
+		// This field is only defined if the merge ref is known to be up-to-date and is safe to checkout.
+		// See `PRUnverifiedMergeRef` below for handling a potentially outdated merge ref.
+		// Note about PRs from private forks: we can access this merge ref of the destination repo even if the source
+		// repo is private and not accessible to Bitrise
 		return CheckoutPRMergeBranchMethod, ""
 	}
 
-	// Fallback (Bitbucket only): fetch the PR patch file through the API and apply the diff manually
-	if cfg.BuildURL != "" {
-		patchFile := getPatchFile(patch, cfg.BuildURL, cfg.BuildAPIToken)
-		if patchFile != "" {
-			return CheckoutPRDiffFileMethod, patchFile
+	// Merge ref is available, but it might be outdated, we need to check its status and potentially trigger an update
+	// before we can use it for checkout
+	if cfg.PRUnverifiedMergeRef != "" {
+		log.Printf("\n")
+		log.Infof("Checking if %s is up to date...", cfg.PRUnverifiedMergeRef)
+
+		upToDate, err := mergeRefChecker.IsMergeRefUpToDate(cfg.PRUnverifiedMergeRef)
+		if err != nil {
+			log.Warnf("Failed to check PR merge ref freshness: %s", err)
 		}
+		if upToDate {
+			return CheckoutPRMergeBranchMethod, ""
+		}
+	}
+
+	// Fallback (Bitbucket only): fetch the PR patch file through the API and apply the diff manually
+	log.Printf("\n")
+	log.Infof("Checking if PR patch file is available...")
+	patchFile, err := patchSource.GetPRPatch()
+	if err != nil {
+		log.Warnf("Patch file unavailable for PR: %s", err)
+	}
+	if err == nil && patchFile != "" {
+		return CheckoutPRDiffFileMethod, patchFile
 	}
 
 	// As a last resort, fetch target + PR branches and do a manual merge
 	// This is not ideal because the merge requires fetched branch histories. If the fetch is too shallow,
 	// the merge is going to fail with "refusing to merge unrelated histories"
+	log.Printf("\n")
+	log.Warnf("Fallback strategy: we are going to check out the PR and target branches and do a manual merge")
 	return CheckoutPRManualMergeMethod, ""
-}
-
-func getPatchFile(patch patchSource, buildURL, buildAPIToken string) string {
-	if patch != nil {
-		patchFile, err := patch.getDiffPath(buildURL, buildAPIToken)
-		if err != nil {
-			log.Warnf("Diff file unavailable: %v", err)
-		} else {
-			return patchFile
-		}
-	}
-
-	return ""
 }
 
 func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile string) (checkoutStrategy, error) {
@@ -222,7 +234,16 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 		}
 	case CheckoutPRMergeBranchMethod:
 		{
-			params, err := NewPRMergeRefParams(cfg.PRMergeBranch, cfg.PRHeadBranch)
+			var mergeRef string
+			if cfg.PRMergeRef != "" {
+				mergeRef = cfg.PRMergeRef
+			} else if cfg.PRUnverifiedMergeRef != "" {
+				// `selectCheckoutMethod()` only selects this method if it verified this merge ref
+				mergeRef = cfg.PRUnverifiedMergeRef
+			} else {
+				return nil, fmt.Errorf("inconsistent checkout strategy and checkout params: PRMergeRef=%s, PRUnverifiedMergeRef=%s", cfg.PRMergeRef, cfg.PRUnverifiedMergeRef)
+			}
+			params, err := NewPRMergeRefParams(mergeRef, cfg.PRHeadBranch)
 			if err != nil {
 				return nil, err
 			}

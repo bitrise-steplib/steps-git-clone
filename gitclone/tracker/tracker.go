@@ -1,4 +1,4 @@
-package gitclone
+package tracker
 
 import (
 	"strings"
@@ -25,7 +25,7 @@ func NewStepTracker(envRepo env.Repository, logger log.Logger) StepTracker {
 	}
 }
 
-func (t *StepTracker) logCheckout(duration time.Duration, method CheckoutMethod, remoteURL string) {
+func (t *StepTracker) LogCheckout(duration time.Duration, method string, remoteURL string) {
 	var remoteType = "other"
 	if strings.Contains(remoteURL, "github.com") {
 		remoteType = "github.com"
@@ -37,19 +37,28 @@ func (t *StepTracker) logCheckout(duration time.Duration, method CheckoutMethod,
 
 	p := analytics.Properties{
 		"duration_s":  duration.Truncate(time.Second).Seconds(),
-		"method":      method.String(),
+		"method":      method,
 		"remote_type": remoteType,
 	}
 	t.tracker.Enqueue("step_git_clone_fetch_and_checkout", p)
 }
 
-func (t *StepTracker) logSubmoduleUpdate(duration time.Duration) {
+func (t *StepTracker) LogSubmoduleUpdate(duration time.Duration) {
 	p := analytics.Properties{
 		"duration_s": duration.Truncate(time.Second).Seconds(),
 	}
 	t.tracker.Enqueue("step_git_clone_submodule_updated", p)
 }
 
-func (t *StepTracker) wait() {
+func (t *StepTracker) LogMergeRefVerify(duration time.Duration, success bool, attemptCount uint) {
+	p := analytics.Properties{
+		"duration_s":    duration.Truncate(time.Second).Seconds(),
+		"is_success":    success,
+		"attempt_count": attemptCount,
+	}
+	t.tracker.Enqueue("step_git_clone_merge_ref_verified", p)
+}
+
+func (t *StepTracker) Wait() {
 	t.tracker.Wait()
 }

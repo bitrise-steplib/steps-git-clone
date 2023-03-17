@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_selectCheckoutMethod(t *testing.T) {
 	tests := []struct {
-		name        string
-		cfg         Config
-		patchSource patchSource
-		want        CheckoutMethod
+		name            string
+		cfg             Config
+		patchSource     bitriseapi.PatchSource
+		mergeRefChecker bitriseapi.MergeRefChecker
+		want            CheckoutMethod
 	}{
 		{
 			name: "none",
@@ -78,12 +80,53 @@ func Test_selectCheckoutMethod(t *testing.T) {
 			cfg: Config{
 				Commit:        "76a934ae",
 				Branch:        "test/commit-messages",
-				PRMergeBranch: "pull/7/merge",
+				PRMergeRef:    "pull/7/merge",
 				PRDestBranch:  "master",
 				CloneDepth:    1,
 				ShouldMergePR: true,
 			},
 			want: CheckoutPRMergeBranchMethod,
+		},
+		{
+			name: "PR - unverified merge ref - is up to date",
+			cfg: Config{
+				Commit:               "76a934ae",
+				Branch:               "test/commit-messages",
+				PRUnverifiedMergeRef: "pull/7/merge",
+				PRDestBranch:         "master",
+				CloneDepth:           1,
+				ShouldMergePR:        true,
+			},
+			mergeRefChecker: FakeMergeRefChecker{isUpToDate: true},
+			want:            CheckoutPRMergeBranchMethod,
+		},
+		{
+			name: "PR - unverified merge ref - does not become up to date",
+			cfg: Config{
+				Commit:               "76a934ae",
+				Branch:               "test/commit-messages",
+				PRUnverifiedMergeRef: "pull/7/merge",
+				PRDestBranch:         "master",
+				CloneDepth:           1,
+				ShouldMergePR:        true,
+			},
+			mergeRefChecker: FakeMergeRefChecker{isUpToDate: false},
+			patchSource:     FakePatchSource{err: fmt.Errorf("no patch file")},
+			want:            CheckoutPRManualMergeMethod,
+		},
+		{
+			name: "PR - unverified merge ref - error",
+			cfg: Config{
+				Commit:               "76a934ae",
+				Branch:               "test/commit-messages",
+				PRUnverifiedMergeRef: "pull/7/merge",
+				PRDestBranch:         "master",
+				CloneDepth:           1,
+				ShouldMergePR:        true,
+			},
+			mergeRefChecker: FakeMergeRefChecker{err: fmt.Errorf("error while checking merge ref")},
+			patchSource:     FakePatchSource{err: fmt.Errorf("no patch file")},
+			want:            CheckoutPRManualMergeMethod,
 		},
 		{
 			name: "PR - no fork - branch and commit, no PRRepoURL or PRID",
@@ -94,10 +137,11 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				CloneDepth:    1,
 				ShouldMergePR: true,
 			},
-			want: CheckoutPRManualMergeMethod,
+			patchSource: FakePatchSource{err: fmt.Errorf("no patch file available")},
+			want:        CheckoutPRManualMergeMethod,
 		},
 		{
-			name: "PR - fork - no merge ref",
+			name: "PR - fork - no merge ref - no patch file",
 			cfg: Config{
 				RepositoryURL:         "https://github.com/bitrise-io/git-clone-test.git",
 				PRSourceRepositoryURL: "https://github.com/bitrise-io/other-repo.git",
@@ -106,7 +150,8 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				Commit:                "76a934ae",
 				ShouldMergePR:         true,
 			},
-			want: CheckoutPRManualMergeMethod,
+			patchSource: FakePatchSource{err: fmt.Errorf("no patch file available")},
+			want:        CheckoutPRManualMergeMethod,
 		},
 		{
 			name: "PR - no fork - manual merge: repo is the same with different scheme",
@@ -115,7 +160,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				PRSourceRepositoryURL: "git@github.com:bitrise-io/git-clone-test.git",
 				Branch:                "test/commit-messages",
 				PRDestBranch:          "master",
-				PRMergeBranch:         "pull/7/merge",
+				PRMergeRef:            "pull/7/merge",
 				Commit:                "76a934ae",
 				ShouldMergePR:         true,
 			},
@@ -125,7 +170,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 			name: "PR - no fork - merge ref (GitHub format)",
 			cfg: Config{
 				PRDestBranch:  "master",
-				PRMergeBranch: "pull/5/merge",
+				PRMergeRef:    "pull/5/merge",
 				ShouldMergePR: true,
 			},
 			want: CheckoutPRMergeBranchMethod,
@@ -137,9 +182,8 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				PRDestBranch:  "master",
 				Commit:        "76a934ae",
 				ShouldMergePR: true,
-				BuildURL:      "dummy_url",
 			},
-			patchSource: MockPatchSource{diffFilePath: "dummy_path"},
+			patchSource: FakePatchSource{diffFilePath: "dummy_path"},
 			want:        CheckoutPRDiffFileMethod,
 		},
 		{
@@ -147,7 +191,7 @@ func Test_selectCheckoutMethod(t *testing.T) {
 			cfg: Config{
 				Commit:        "76a934ae",
 				Branch:        "test/commit-messages",
-				PRMergeBranch: "pull/7/merge",
+				PRMergeRef:    "pull/7/merge",
 				PRHeadBranch:  "pull/7/head",
 				PRDestBranch:  "master",
 				CloneDepth:    1,
@@ -173,9 +217,8 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				Commit:        "76a934ae",
 				PRDestBranch:  "master",
 				ShouldMergePR: false,
-				BuildURL:      "dummy_url",
 			},
-			patchSource: MockPatchSource{diffFilePath: "dummy_path"},
+			patchSource: FakePatchSource{diffFilePath: "dummy_path"},
 			want:        CheckoutCommitMethod,
 		},
 		{
@@ -199,9 +242,8 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				PRDestBranch:          "master",
 				Commit:                "76a934ae",
 				ShouldMergePR:         false,
-				BuildURL:              "dummy_url",
 			},
-			patchSource: MockPatchSource{diffFilePath: "dummy_path"},
+			patchSource: FakePatchSource{diffFilePath: "dummy_path"},
 			want:        CheckoutPRDiffFileMethod,
 		},
 		{
@@ -213,15 +255,14 @@ func Test_selectCheckoutMethod(t *testing.T) {
 				PRDestBranch:          "master",
 				Commit:                "76a934ae",
 				ShouldMergePR:         false,
-				BuildURL:              "dummy_url",
 			},
-			patchSource: MockPatchSource{diffFilePath: ""},
+			patchSource: FakePatchSource{diffFilePath: ""},
 			want:        CheckoutForkCommitMethod,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got, _ := selectCheckoutMethod(tt.cfg, tt.patchSource); got != tt.want {
+			if got, _ := selectCheckoutMethod(tt.cfg, tt.patchSource, tt.mergeRefChecker); got != tt.want {
 				t.Errorf("selectCheckoutMethod() = %v, want %v", got, tt.want)
 			}
 		})

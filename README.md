@@ -63,6 +63,7 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 | `branch_dest` | The branch that the pull request targets, such as `main` |  | `$BITRISEIO_GIT_BRANCH_DEST` |
 | `pull_request_repository_url` | URL of the source repository of a pull request.  This points to the fork repository in builds triggered by pull requests. |  | `$BITRISEIO_PULL_REQUEST_REPOSITORY_URL` |
 | `pull_request_merge_branch` | Git ref pointing to the result of merging the PR branch into the destination branch. Even if the source of the PR is a fork, this is a reference to the destination repository.  Example: `refs/pull/14/merge`  Note: not all Git services provide this value. |  | `$BITRISEIO_PULL_REQUEST_MERGE_BRANCH` |
+| `pull_request_unverified_merge_branch` | This input is the same as **Pull request merge ref**, but the provided merge ref can be potentially outdated. The Step will make an attempt to check it's validity and only use it for the checkout if it's up-to-date with the PR head. |  | `$BITRISEIO_PULL_REQUEST_UNVERIFIED_MERGE_BRANCH` |
 | `pull_request_head_branch` | Git ref pointing to the head of the PR branch. Even if the source of the PR is a fork, this is a reference to the destination repository.  Example: `refs/pull/14/head`  Note: not all Git services provide this value. |  | `$BITRISEIO_PULL_REQUEST_HEAD_BRANCH` |
 | `reset_repository` | Reset repository contents with `git reset --hard HEAD` and `git clean -f` before fetching. |  | `No` |
 | `build_url` | Unique build URL of this build on Bitrise.io |  | `$BITRISE_BUILD_URL` |

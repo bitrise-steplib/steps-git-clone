@@ -10,7 +10,7 @@ import (
 	"github.com/bitrise-io/go-utils/v2/errorutil"
 	. "github.com/bitrise-io/go-utils/v2/exitcode"
 	"github.com/bitrise-io/go-utils/v2/log"
-	"github.com/bitrise-steplib/steps-git-clone/gitclone"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
 	"github.com/bitrise-steplib/steps-git-clone/step"
 )
 
@@ -50,7 +50,7 @@ func run() ExitCode {
 
 func createStep(logger log.Logger) step.GitCloneStep {
 	envRepo := env.NewRepository()
-	tracker := gitclone.NewStepTracker(envRepo, logger)
+	tracker := tracker.NewStepTracker(envRepo, logger)
 	inputParser := stepconf.NewInputParser(envRepo)
 	cmdFactory := command.NewFactory(envRepo)
 
