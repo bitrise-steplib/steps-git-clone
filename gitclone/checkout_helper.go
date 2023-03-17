@@ -102,7 +102,8 @@ func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) er
 func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTraits fetchOptions) error {
 	branch := strings.TrimPrefix(branchRef, refsHeadsPrefix)
 	if err := fetch(gitCmd, remote, branchRef, fetchTraits); err != nil {
-		return err
+		wErr := fmt.Errorf("failed to fetch branch (%s): %w", branchRef, err)
+		return fmt.Errorf("%v: %w", wErr, errors.New("please make sure the branch still exists"))
 	}
 
 	if err := checkoutWithCustomRetry(gitCmd, branch, nil); err != nil {
