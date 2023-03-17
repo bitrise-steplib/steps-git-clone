@@ -93,7 +93,7 @@ func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) er
 			return runner.Run(gitCmd.Checkout(arg))
 		}
 
-		return fmt.Errorf("checkout failed (%s): %v", arg, cErr)
+		return fmt.Errorf("checkout failed (%s): %w", arg, cErr)
 	}
 
 	return nil
@@ -121,7 +121,7 @@ func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTr
 	if err := runner.Run(gitCmd.Merge(remoteBranch)); err != nil {
 		return newStepError(
 			"update_branch_failed",
-			fmt.Errorf("updating branch (merge) failed %s: %v", branch, err),
+			fmt.Errorf("updating branch (merge) failed %s: %w", branch, err),
 			"Updating branch failed",
 		)
 	}
@@ -151,7 +151,7 @@ func detachHead(gitCmd git.Git) error {
 	if err := runner.Run(gitCmd.Checkout("--detach")); err != nil {
 		return newStepError(
 			"detach_head_failed",
-			fmt.Errorf("detaching head failed: %v", err),
+			fmt.Errorf("detaching head failed: %w", err),
 			"Detaching head failed",
 		)
 	}
