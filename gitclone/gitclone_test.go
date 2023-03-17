@@ -200,7 +200,7 @@ func Test_checkoutState(t *testing.T) {
 				`git "fetch" "--jobs=10"`,
 				`git "branch" "-r"`,
 			},
-			wantErr: fmt.Errorf("failed to fetch base branch: fetch failed: dummy_cmd_error"),
+			wantErr: fmt.Errorf("failed to fetch base branch: failed to fetch branch (refs/heads/master): dummy_cmd_error: please make sure the branch still exists"),
 		},
 		{
 			name: "PR - fork - no merge ref - diff file available",
@@ -371,7 +371,7 @@ func Test_checkoutState(t *testing.T) {
 			},
 			wantErr: newStepErrorWithBranchRecommendations(
 				fetchFailedTag,
-				fmt.Errorf("fetch failed: %v", errors.New(rawCmdError)),
+				fmt.Errorf("failed to fetch branch (refs/heads/fake): %w: please make sure the branch still exists", errors.New(rawCmdError)),
 				"Fetching repository has failed",
 				"fake",
 				[]string{"master"},
