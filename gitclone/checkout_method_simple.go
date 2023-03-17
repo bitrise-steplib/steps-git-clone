@@ -53,7 +53,7 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 	}
 
 	if err := fetch(gitCmd, remote, c.params.BranchRef, fetchOptions); err != nil {
-		return err
+		return fmt.Errorf("failed to fetch branch ref (%s) while checking out commit: %w", c.params.BranchRef, err)
 	}
 
 	if err := checkoutWithCustomRetry(gitCmd, c.params.Commit, fallback); err != nil {
