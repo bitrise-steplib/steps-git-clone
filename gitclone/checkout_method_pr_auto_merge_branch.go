@@ -43,7 +43,7 @@ func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback 
 	// $ git fetch origin refs/remotes/pull/7/merge:refs/pull/7/merge
 	err := fetch(gitCmd, originRemoteName, refSpec, fetchOpts)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch merge ref: %w", err)
 	}
 
 	// Also fetch the PR head ref because the step exports outputs based on the PR head commit (see output.go)

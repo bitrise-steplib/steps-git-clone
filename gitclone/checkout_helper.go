@@ -1,6 +1,7 @@
 package gitclone
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -72,7 +73,7 @@ func fetch(gitCmd git.Git, remote string, ref string, options fetchOptions) erro
 		return handleCheckoutError(
 			listBranches(gitCmd),
 			fetchFailedTag,
-			fmt.Errorf("fetch failed: %v", err),
+			err,
 			"Fetching repository has failed",
 			branch,
 		)
@@ -92,7 +93,7 @@ func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) er
 			return runner.Run(gitCmd.Checkout(arg))
 		}
 
-		return fmt.Errorf("checkout failed (%s): %v", arg, cErr)
+		return fmt.Errorf("checkout failed (%s): %w", arg, cErr)
 	}
 
 	return nil
@@ -101,7 +102,8 @@ func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) er
 func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTraits fetchOptions) error {
 	branch := strings.TrimPrefix(branchRef, refsHeadsPrefix)
 	if err := fetch(gitCmd, remote, branchRef, fetchTraits); err != nil {
-		return err
+		wErr := fmt.Errorf("failed to fetch branch (%s): %w", branchRef, err)
+		return fmt.Errorf("%v: %w", wErr, errors.New("please make sure the branch still exists"))
 	}
 
 	if err := checkoutWithCustomRetry(gitCmd, branch, nil); err != nil {
@@ -119,7 +121,7 @@ func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTr
 	if err := runner.Run(gitCmd.Merge(remoteBranch)); err != nil {
 		return newStepError(
 			"update_branch_failed",
-			fmt.Errorf("updating branch (merge) failed %s: %v", branch, err),
+			fmt.Errorf("updating branch (%s) failed: %w", branch, err),
 			"Updating branch failed",
 		)
 	}
@@ -138,7 +140,8 @@ func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error
 			return runner.Run(gitCmd.Merge(arg))
 		}
 
-		return fmt.Errorf("merge failed (%s): %v", arg, mErr)
+		wErr := fmt.Errorf("merge failed (%s): %w", arg, mErr)
+		return fmt.Errorf("%v: %w", wErr, errors.New("please try to resolve all conflicts between the base and compare branches"))
 	}
 
 	return nil
@@ -148,7 +151,7 @@ func detachHead(gitCmd git.Git) error {
 	if err := runner.Run(gitCmd.Checkout("--detach")); err != nil {
 		return newStepError(
 			"detach_head_failed",
-			fmt.Errorf("detaching head failed: %v", err),
+			fmt.Errorf("detaching head failed: %w", err),
 			"Detaching head failed",
 		)
 	}

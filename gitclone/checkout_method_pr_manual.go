@@ -40,15 +40,15 @@ func NewPRManualMergeParams(sourceBranch, commit, sourceRepoURL, destBranch stri
 
 func validatePRManualMergeParams(sourceBranch, commit, sourceRepoURL, destBranch string) error {
 	if strings.TrimSpace(sourceBranch) == "" {
-		return NewParameterValidationError("manual PR merge checkout strategy can not be used: no source branch specified")
+		return NewParameterValidationError("manual PR merge checkout strategy cannot be used: no source branch specified")
 	}
 
 	if strings.TrimSpace(destBranch) == "" {
-		return NewParameterValidationError("manual PR merge checkout strategy can not be used: no destination branch specified")
+		return NewParameterValidationError("manual PR merge checkout strategy cannot be used: no destination branch specified")
 	}
 
 	if strings.TrimSpace(sourceRepoURL) == "" && strings.TrimSpace(commit) == "" {
-		return NewParameterValidationError("manual PR merge chekout strategy can not be used: no source repository URL or source branch commit hash specified")
+		return NewParameterValidationError("manual PR merge checkout strategy cannot be used: no source repository URL or source branch commit hash specified")
 	}
 
 	return nil
@@ -62,7 +62,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 	// Fetch and checkout destinations branch
 	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
 	if err := fetchInitialBranch(gitCmd, originRemoteName, destBranchRef, fetchOptions); err != nil {
-		return err
+		return fmt.Errorf("failed to fetch base branch: %w", err)
 	}
 
 	commitHash, err := runner.RunForOutput(gitCmd.Log("%H"))
@@ -77,7 +77,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 
 		// Add fork remote
 		if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.params.SourceRepoURL)); err != nil {
-			return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.SourceRepoURL, err)
+			return fmt.Errorf("adding remote fork repository failed (%s): %w", c.params.SourceRepoURL, err)
 		}
 
 	} else {
@@ -87,7 +87,7 @@ func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fal
 	// Fetch and merge
 	sourceBranchRef := refsHeadsPrefix + c.params.SourceBranch
 	if err := fetch(gitCmd, remoteName, sourceBranchRef, fetchOptions); err != nil {
-		return err
+		return fmt.Errorf("failed to fetch compare branch: %w", err)
 	}
 
 	if err := mergeWithCustomRetry(gitCmd, c.params.SourceMergeArg, fallback); err != nil {
