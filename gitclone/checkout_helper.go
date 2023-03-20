@@ -121,7 +121,7 @@ func fetchInitialBranch(gitCmd git.Git, remote string, branchRef string, fetchTr
 	if err := runner.Run(gitCmd.Merge(remoteBranch)); err != nil {
 		return newStepError(
 			"update_branch_failed",
-			fmt.Errorf("updating branch (merge) failed %s: %w", branch, err),
+			fmt.Errorf("updating branch (%s) failed: %w", branch, err),
 			"Updating branch failed",
 		)
 	}
