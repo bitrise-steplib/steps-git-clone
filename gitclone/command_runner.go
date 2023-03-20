@@ -47,7 +47,11 @@ func (r DefaultRunner) Run(c *command.Model) error {
 	err := c.SetStdout(os.Stdout).SetStderr(io.MultiWriter(os.Stderr, &buffer)).Run()
 	if err != nil {
 		if errorutil.IsExitStatusError(err) {
-			return errors.New(strings.TrimSpace(buffer.String()))
+			errorStr := buffer.String()
+			if errorStr == "" {
+				errorStr = "please check the command output for errors"
+			}
+			return errors.New(strings.TrimSpace(errorStr))
 		}
 		return err
 	}
