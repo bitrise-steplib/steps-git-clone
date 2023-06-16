@@ -448,7 +448,8 @@ workflows:
     envs:
     - TEST_REPO_URL: https://github.com/websitebot/git-repo-fixture-private.git
     - BRANCH: main
-    - GIT_HTTP_USERNAME: "username" # Doesn't matter for GitHub
+    # Doesn't matter for GitHub
+    - GIT_HTTP_USERNAME: username
     # Fine grained personal access token for the single repo having Contents rights,
     # will expire at 2024.06.01
     - GIT_HTTP_PASSWORD: $GIT_HTTP_PASSWORD_FOR_TEST
