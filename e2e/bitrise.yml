@@ -562,7 +562,7 @@ workflows:
 
   _setup:
     steps:
-    - script@1.2.0:
+    - script:
         title: Clear environment variables set by bitrise.io, to not interfere with tests
         inputs:
         - content: |-
@@ -592,12 +592,12 @@ workflows:
 
   _run:
     steps:
-    - activate-ssh-key@4.1.0:
+    - activate-ssh-key:
         run_if: |-
           {{ getenv "GIT_CLONE_SSH_PRIVATE_KEY" | ne "" }}
         inputs:
         - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
-    - script@1.2.0:
+    - script:
         inputs:
         - title: Create temporary dir
         - content: |-
@@ -625,6 +625,6 @@ workflows:
 
   _teardown:
     steps:
-    - ensure-clean-git@0.9.1:
+    - ensure-clean-git:
         inputs:
         - dir_to_check: $WORKDIR_ABSOLUTE
