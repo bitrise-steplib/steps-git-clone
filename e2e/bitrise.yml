@@ -12,6 +12,7 @@ app:
   - SPARSE_DIRECTORIES: ""
   # define these envs in your .bitrise.secrets.yml
   - GIT_CLONE_SSH_PRIVATE_KEY: $GIT_CLONE_SSH_PRIVATE_KEY
+  - GIT_HTTP_PASSWORD_FOR_TEST: $GIT_HTTP_PASSWORD_FOR_TEST
 
 workflows:
   test_generate_changelog_by_commit:
