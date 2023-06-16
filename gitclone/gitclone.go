@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
-
-	"github.com/bitrise-io/go-utils/command/git"
 )
 
 const (

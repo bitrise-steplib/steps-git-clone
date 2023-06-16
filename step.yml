@@ -60,6 +60,14 @@ inputs:
     - "yes"
     - "no"
 
+- git_http_username: $GIT_HTTP_USERNAME
+  opts:
+    title: Username for establishing an HTTP(S) connection to the repository
+
+- git_http_password: $GIT_HTTP_PASSWORD
+  opts:
+    title: Personal access token (or password) for establishing an HTTP(S) connection to the repository
+
 # Clone options
 - clone_into_dir: $BITRISE_SOURCE_DIR
   opts:

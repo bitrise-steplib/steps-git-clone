@@ -10,10 +10,14 @@ import (
 	"github.com/bitrise-steplib/steps-git-clone/gitclone"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
+	"github.com/bitrise-steplib/steps-git-clone/transport"
 )
 
 type Input struct {
 	ShouldMergePR bool `env:"merge_pr,opt[yes,no]"`
+
+	GitHTTPUsername string `env:"git_http_username"`
+	GitHTTPPassword string `env:"git_http_password"`
 
 	CloneIntoDir         string   `env:"clone_into_dir,required"`
 	CloneDepth           int      `env:"clone_depth"`
@@ -69,6 +73,9 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 }
 
 func (g GitCloneStep) Run(cfg Config) (gitclone.CheckoutStateResult, error) {
+	if err := transport.Setup(transport.Config{URL: cfg.RepositoryURL, HTTPUsername: cfg.GitHTTPUsername, HTTPPassword: cfg.GitHTTPPassword}); err != nil {
+		return gitclone.CheckoutStateResult{}, err
+	}
 	gitCloneCfg := convertConfig(cfg)
 	patchSource := bitriseapi.NewPatchSource(cfg.BuildURL, cfg.BuildAPIToken)
 	mergeRefChecker := bitriseapi.NewMergeRefChecker(cfg.BuildURL, cfg.BuildAPIToken, retry.NewHTTPClient(), g.logger, g.tracker)

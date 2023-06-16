@@ -9,7 +9,9 @@ require (
 	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.15
 	github.com/bitrise-io/go-utils v1.0.1
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.15
+	github.com/bitrise-steplib/steps-authenticate-host-with-netrc v0.0.0-20230216105320-8cb845d52e28
 	github.com/hashicorp/go-retryablehttp v0.7.1
+	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.1
 )
 

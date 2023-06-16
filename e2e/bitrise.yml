@@ -444,6 +444,34 @@ workflows:
     - _check_too_long_message
     - _teardown
 
+  test_private_http_repository:
+    envs:
+    - TEST_REPO_URL: https://github.com/websitebot/git-repo-fixture-private.git
+    - BRANCH: main
+    - GIT_HTTP_USERNAME: "username" # Doesn't matter for GitHub
+    # Fine grained personal access token for the single repo having Contents rights,
+    # will expire at 2024.06.01
+    - GIT_HTTP_PASSWORD: $GIT_HTTP_PASSWORD_FOR_TEST
+    before_run:
+    - _setup
+    after_run:
+    - _run
+    - _check_outputs
+    - _teardown
+
+  test_private_http_repository_without_username_set:
+    envs:
+    - TEST_REPO_URL: https://github.com/websitebot/git-repo-fixture-private.git
+    - BRANCH: main
+    - GIT_HTTP_USERNAME: ""
+    - GIT_HTTP_PASSWORD: $GIT_HTTP_PASSWORD_FOR_TEST
+    before_run:
+    - _setup
+    after_run:
+    - _run
+    - _check_outputs
+    - _teardown
+
   _check_changelog:
     steps:
     - generate-changelog:
@@ -532,7 +560,7 @@ workflows:
 
   _setup:
     steps:
-    - script:
+    - script@1.2.0:
         title: Clear environment variables set by bitrise.io, to not interfere with tests
         inputs:
         - content: |-
@@ -562,12 +590,12 @@ workflows:
 
   _run:
     steps:
-    - activate-ssh-key:
+    - activate-ssh-key@4.1.0:
         run_if: |-
           {{ getenv "GIT_CLONE_SSH_PRIVATE_KEY" | ne "" }}
         inputs:
         - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
-    - script:
+    - script@1.2.0:
         inputs:
         - title: Create temporary dir
         - content: |-
@@ -595,6 +623,6 @@ workflows:
 
   _teardown:
     steps:
-    - ensure-clean-git:
+    - ensure-clean-git@0.9.1:
         inputs:
         - dir_to_check: $WORKDIR_ABSOLUTE
