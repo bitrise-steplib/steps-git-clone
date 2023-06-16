@@ -26,7 +26,7 @@ func Setup(cfg Config) error {
 		return nil
 	}
 
-	// Setup is a no-op if password is provided
+	// Setup is a no-op if no password is provided
 	if cfg.HTTPPassword == "" {
 		return nil
 	}
@@ -46,8 +46,7 @@ func Setup(cfg Config) error {
 
 	netRC := netrcutil.New()
 
-	// copied as a PoC from
-	// https://github.com/bitrise-steplib/steps-authenticate-host-with-netrc/blob/master/main.go
+	// based on https://github.com/bitrise-steplib/steps-authenticate-host-with-netrc/blob/master/main.go
 	netRC.AddItemModel(netrcutil.NetRCItemModel{Machine: host, Login: username, Password: password})
 
 	isExists, err := pathutil.IsPathExists(netRC.OutputPth)
@@ -56,7 +55,7 @@ func Setup(cfg Config) error {
 	}
 
 	if !isExists {
-		log.Printf("No .netrc file found at (%s), creating new...", netRC.OutputPth)
+		log.Debugf("No .netrc file found at (%s), creating new...", netRC.OutputPth)
 
 		if err := netRC.CreateFile(); err != nil {
 			return errors.Wrap(err, "Failed to write .netrc file")
@@ -71,14 +70,15 @@ func Setup(cfg Config) error {
 		} else if err := fileutil.WriteBytesToFile(backupPth, originalContent); err != nil {
 			return errors.Wrap(err, fmt.Sprintf("Failed to write file (%s)", backupPth))
 		} else {
-			log.Printf("Backup created at: %s", backupPth)
+			log.Warnf("Backup created at: %s", backupPth)
 		}
 
-		log.Printf("Appending config to the existing .netrc file...")
+		log.Debugf("Appending config to the existing .netrc file...")
 
 		if err := netRC.Append(); err != nil {
 			return errors.Wrap(err, "Failed to write .netrc file")
 		}
 	}
+
 	return nil
 }
