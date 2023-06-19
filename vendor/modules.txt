@@ -42,6 +42,9 @@ github.com/bitrise-io/go-utils/v2/retryhttp
 # github.com/bitrise-io/goinp v0.0.0-20210504152833-8559b0680ab1
 ## explicit; go 1.16
 github.com/bitrise-io/goinp/goinp
+# github.com/bitrise-steplib/steps-authenticate-host-with-netrc v0.0.0-20230216105320-8cb845d52e28
+## explicit; go 1.17
+github.com/bitrise-steplib/steps-authenticate-host-with-netrc/netrcutil
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew

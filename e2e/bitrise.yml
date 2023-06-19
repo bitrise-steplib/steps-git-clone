@@ -12,6 +12,7 @@ app:
   - SPARSE_DIRECTORIES: ""
   # define these envs in your .bitrise.secrets.yml
   - GIT_CLONE_SSH_PRIVATE_KEY: $GIT_CLONE_SSH_PRIVATE_KEY
+  - GIT_HTTP_PASSWORD_FOR_TEST: $GIT_HTTP_PASSWORD_FOR_TEST
 
 workflows:
   test_generate_changelog_by_commit:
@@ -442,6 +443,35 @@ workflows:
     - _run
     - _check_outputs
     - _check_too_long_message
+    - _teardown
+
+  test_private_http_repository:
+    envs:
+    - TEST_REPO_URL: https://github.com/websitebot/git-repo-fixture-private.git
+    - BRANCH: main
+    # Doesn't matter for GitHub
+    - GIT_HTTP_USERNAME: username
+    # Fine grained personal access token for the single repo having Contents rights,
+    # will expire at 2024.06.01
+    - GIT_HTTP_PASSWORD: $GIT_HTTP_PASSWORD_FOR_TEST
+    before_run:
+    - _setup
+    after_run:
+    - _run
+    - _check_outputs
+    - _teardown
+
+  test_private_http_repository_without_username_set:
+    envs:
+    - TEST_REPO_URL: https://github.com/websitebot/git-repo-fixture-private.git
+    - BRANCH: main
+    - GIT_HTTP_USERNAME: ""
+    - GIT_HTTP_PASSWORD: $GIT_HTTP_PASSWORD_FOR_TEST
+    before_run:
+    - _setup
+    after_run:
+    - _run
+    - _check_outputs
     - _teardown
 
   _check_changelog:

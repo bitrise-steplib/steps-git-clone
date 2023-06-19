@@ -68,6 +68,8 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 | `reset_repository` | Reset repository contents with `git reset --hard HEAD` and `git clean -f` before fetching. |  | `No` |
 | `build_url` | Unique build URL of this build on Bitrise.io |  | `$BITRISE_BUILD_URL` |
 | `build_api_token` | The build's API Token for the build on Bitrise.io | sensitive | `$BITRISE_BUILD_API_TOKEN` |
+| `git_http_username` | Username for establishing an HTTP(S) connection to the repository | sensitive | `$GIT_HTTP_USERNAME` |
+| `git_http_password` | Personal access token (or password) for establishing an HTTP(S) connection to the repository | sensitive | `$GIT_HTTP_PASSWORD` |
 </details>
 
 <details>
