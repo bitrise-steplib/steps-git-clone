@@ -4,11 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"time"
 
-	"github.com/bitrise-io/go-utils/fileutil"
-	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-steplib/steps-authenticate-host-with-netrc/netrcutil"
 )
 
@@ -44,38 +40,8 @@ func Setup(cfg Config) error {
 
 	netRC := netrcutil.New()
 
-	// based on https://github.com/bitrise-steplib/steps-authenticate-host-with-netrc/blob/master/main.go
-	netRC.AddItemModel(netrcutil.NetRCItemModel{Machine: host, Login: username, Password: password})
-
-	isExists, err := pathutil.IsPathExists(netRC.OutputPth)
-	if err != nil {
-		return fmt.Errorf("failed to check path (%s): %w", netRC.OutputPth, err)
-	}
-
-	if !isExists {
-		log.Debugf("No .netrc file found at (%s), creating new...", netRC.OutputPth)
-
-		if err := netRC.CreateFile(); err != nil {
-			return fmt.Errorf("failed to create .netrc file: %w", err)
-		}
-	} else {
-		log.Warnf(".netrc file already exists at (%s)", netRC.OutputPth)
-
-		backupPth := fmt.Sprintf("%s%s", strings.Replace(netRC.OutputPth, ".netrc", ".bk.netrc", -1), time.Now().Format("2006_01_02_15_04_05"))
-
-		if originalContent, err := fileutil.ReadBytesFromFile(netRC.OutputPth); err != nil {
-			return fmt.Errorf("failed to read file (%s): %w", netRC.OutputPth, err)
-		} else if err := fileutil.WriteBytesToFile(backupPth, originalContent); err != nil {
-			return fmt.Errorf("failed to write file (%s): %w", backupPth, err)
-		} else {
-			log.Warnf("Backup created at: %s", backupPth)
-		}
-
-		log.Debugf("Appending config to the existing .netrc file...")
-
-		if err := netRC.Append(); err != nil {
-			return fmt.Errorf("failed to append to .netrc file: %w", err)
-		}
+	if err := netRC.CreateOrUpdateFile(netrcutil.NetRCItemModel{Machine: host, Login: username, Password: password}); err != nil {
+		return fmt.Errorf("failed to update .netrc file: %w", err)
 	}
 
 	return nil
