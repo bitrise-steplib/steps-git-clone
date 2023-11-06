@@ -10,6 +10,7 @@ app:
   - MERGE_PR: "yes"
   - CLONE_DEPTH: ""
   - SPARSE_DIRECTORIES: ""
+  - RESET_REPOSITORY: "Yes"
   # define these envs in your .bitrise.secrets.yml
   - GIT_CLONE_SSH_PRIVATE_KEY: $GIT_CLONE_SSH_PRIVATE_KEY
   - GIT_HTTP_PASSWORD_FOR_TEST: $GIT_HTTP_PASSWORD_FOR_TEST
@@ -94,6 +95,17 @@ workflows:
     - _check_outputs
     - _teardown
 
+  test_checkout_commit_dirty:
+    envs:
+    - COMMIT: 7a93251a9bf08fb8c6b19fc02f6d94618de6b386
+    - UPDATE_SUBMODULES: "no"
+    before_run:
+    - _setup
+    after_run:
+    - _run_with_existing_checkout_dir
+    - _check_outputs
+    - _teardown
+
   test_checkout_commit_on_branch:
     envs:
     - COMMIT: 7a93251a9bf08fb8c6b19fc02f6d94618de6b386
@@ -151,6 +163,17 @@ workflows:
     - _setup
     after_run:
     - _run
+    - _check_outputs
+    - _teardown
+
+  test_checkout_branch_dirty:
+    envs:
+    - BRANCH: master
+    - UPDATE_SUBMODULES: "no"
+    before_run:
+    - _setup
+    after_run:
+    - _run_with_existing_checkout_dir
     - _check_outputs
     - _teardown
 
@@ -591,6 +614,17 @@ workflows:
             envman unset --key GIT_CLONE_COMMIT_COMMITTER_EMAIL
 
   _run:
+    after_run:
+    - _setup
+    - _run_with_clean_dir
+    - _check_outputs
+    - _teardown
+    - _setup
+    - _run_with_existing_checkout_dir
+    - _check_outputs
+    - _teardown
+
+  _run_with_clean_dir:
     steps:
     - activate-ssh-key:
         run_if: |-
@@ -623,8 +657,48 @@ workflows:
         - clone_depth: $CLONE_DEPTH
         - sparse_directories: $SPARSE_DIRECTORIES
 
+  _run_with_existing_checkout_dir:
+    steps:
+      - activate-ssh-key:
+          run_if: |-
+            {{ getenv "GIT_CLONE_SSH_PRIVATE_KEY" | ne "" }}
+          inputs:
+          - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
+      - script:
+          inputs:
+          - title: Create temporary dir
+          - content: |-
+              #!/bin/env bash
+              set -ex
+              # If WORKDIR is not empty, preserve value
+              if [[ -z "$WORKDIR" ]]; then
+                WD=$(mktemp -d -t step-git-cloneXXXXXX)
+                envman add --key WORKDIR --value $WD
+                envman add --key WORKDIR_ABSOLUTE --value $WD
+              fi
+
+              git clone $TEST_REPO_URL $WD
+  
+              echo "test" > $WD/test.txt
+      - path::./:
+          run_if: "true"
+          inputs:
+          - repository_url: $TEST_REPO_URL
+          - clone_into_dir: $WORKDIR
+          - commit: $COMMIT
+          - branch: $BRANCH
+          - tag: $TAG
+          - fetch_tags: $FETCH_TAGS
+          - update_submodules: $UPDATE_SUBMODULES
+          - merge_pr: $MERGE_PR
+          - clone_depth: $CLONE_DEPTH
+          - sparse_directories: $SPARSE_DIRECTORIES
+          - reset_repository: $RESET_REPOSITORY
+  
   _teardown:
     steps:
     - ensure-clean-git:
         inputs:
         - dir_to_check: $WORKDIR_ABSOLUTE
+
+
