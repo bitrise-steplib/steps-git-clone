@@ -158,3 +158,7 @@ func detachHead(gitCmd git.Git) error {
 
 	return nil
 }
+
+func deleteRef(gitCmd git.Git, ref string) error {
+	return runner.Run(gitCmd.UpdateRef("-d", ref))
+}

@@ -40,8 +40,15 @@ func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback 
 	// https://git-scm.com/book/en/v2/Git-Internals-The-Refspec
 	refSpec := fmt.Sprintf("%s:%s", c.remoteMergeRef(), c.localMergeRef())
 
+	// delete remote branch ref
+	// $ git update-ref -d refs/remotes/pull/7/merge
+	err := deleteRef(gitCmd, c.remoteMergeRef())
+	if err != nil {
+		return fmt.Errorf("failed to delte ref: %w", err)
+	}
+
 	// $ git fetch origin refs/remotes/pull/7/merge:refs/pull/7/merge
-	err := fetch(gitCmd, originRemoteName, refSpec, fetchOpts)
+	err = fetch(gitCmd, originRemoteName, refSpec, fetchOpts)
 	if err != nil {
 		return fmt.Errorf("failed to fetch merge ref: %w", err)
 	}
