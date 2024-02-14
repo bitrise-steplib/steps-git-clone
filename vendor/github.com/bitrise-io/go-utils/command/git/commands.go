@@ -162,3 +162,10 @@ func (g *Git) SparseCheckoutSet(opts ...string) *command.Model {
 	args = append(args, opts...)
 	return g.command(args...)
 }
+
+// UpdateRef ...
+func (g *Git) UpdateRef(opts ...string) *command.Model {
+	args := []string{"update-ref"}
+	args = append(args, opts...)
+	return g.command(args...)
+}
