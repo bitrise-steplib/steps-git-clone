@@ -53,6 +53,7 @@ func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback 
 	}
 
 	// $ git update-ref -d refs/remotes/pull/7/head
+	// If the ref does not exist, the command still exits with 0 exit code.
 	err = deleteRef(gitCmd, c.localHeadRef())
 	if err != nil {
 		return fmt.Errorf("failed to delete ref: %w", err)
