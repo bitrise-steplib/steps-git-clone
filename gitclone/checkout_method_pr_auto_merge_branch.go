@@ -40,7 +40,12 @@ func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback 
 	// https://git-scm.com/book/en/v2/Git-Internals-The-Refspec
 	refSpec := fmt.Sprintf("%s:%s", c.remoteMergeRef(), c.localMergeRef())
 
-	// delete remote branch ref
+	// When the git checkout directory is persisted between runs, we can encounter the following;
+	// > $ git "fetch" "--jobs=10" "--depth=1" "--no-tags" "origin" "refs/pull/7/merge:refs/remotes/pull/7/merge"
+	// > From github.com:bitrise-io/my-repo
+	// > ! [rejected]        refs/pull/2313/merge -> pull/2313/merge  (non-fast-forward)
+	// This is caused by the remote merge and head branches being "force-pushed" by GitHub.
+	// To solve it we remove merge and head branch refs.
 	// $ git update-ref -d refs/remotes/pull/7/merge
 	err := deleteRef(gitCmd, c.localMergeRef())
 	if err != nil {
