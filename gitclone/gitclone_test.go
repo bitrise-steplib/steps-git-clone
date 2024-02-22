@@ -146,7 +146,8 @@ func Test_checkoutState(t *testing.T) {
 				ShouldMergePR: true,
 			},
 			wantCmds: []string{
-				`git "update-ref" "-d" "refs/pull/5/merge"`,
+				`git "update-ref" "-d" "refs/remotes/pull/5/merge"`,
+				`git "update-ref" "-d" "refs/remotes/pull/5/head"`,
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/5/merge:refs/remotes/pull/5/merge"`,
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/5/head:refs/remotes/pull/5/head"`,
 				`git "checkout" "refs/remotes/pull/5/merge"`,
@@ -174,7 +175,8 @@ func Test_checkoutState(t *testing.T) {
 				ShouldMergePR:         true,
 			},
 			wantCmds: []string{
-				`git "update-ref" "-d" "refs/pull/7/merge"`,
+				`git "update-ref" "-d" "refs/remotes/pull/7/merge"`,
+				`git "update-ref" "-d" "refs/remotes/pull/7/head"`,
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/merge:refs/remotes/pull/7/merge"`,
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/head:refs/remotes/pull/7/head"`,
 				`git "checkout" "refs/remotes/pull/7/merge"`,
@@ -423,7 +425,8 @@ func Test_checkoutState(t *testing.T) {
 				ShouldMergePR: true,
 			},
 			wantCmds: []string{
-				`git "update-ref" "-d" "refs/pull/7/merge"`,
+				`git "update-ref" "-d" "refs/remotes/pull/7/merge"`,
+				`git "update-ref" "-d" "refs/remotes/pull/7/head"`,
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/merge:refs/remotes/pull/7/merge"`,
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/pull/7/head:refs/remotes/pull/7/head"`,
 				`git "checkout" "refs/remotes/pull/7/merge"`,
