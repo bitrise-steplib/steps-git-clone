@@ -1,5 +1,8 @@
 version: '2'
 
+env:
+  GOFLAGS: -mod=vendor
+
 tasks:
   default:
     deps: [test]

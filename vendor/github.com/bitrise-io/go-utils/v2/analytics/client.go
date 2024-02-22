@@ -10,7 +10,7 @@ import (
 	"github.com/bitrise-io/go-utils/v2/retryhttp"
 )
 
-const trackEndpoint = "https://step-analytics.bitrise.io/track"
+const trackEndpoint = "https://bitrise-step-analytics.herokuapp.com/track"
 
 // Client ...
 type Client interface {
