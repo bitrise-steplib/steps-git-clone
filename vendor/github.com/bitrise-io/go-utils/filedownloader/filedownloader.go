@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httputil"
 	"os"
 
 	"github.com/bitrise-io/go-utils/log"
@@ -44,9 +45,8 @@ func (downloader FileDownloader) GetWithFallback(destination, source string, fal
 	for _, source := range sources {
 		err := downloader.Get(destination, source)
 		if err != nil {
-			log.Errorf("Could not download file from: %s", err)
+			log.Warnf("Could not download file (%s): %s", source, err)
 		} else {
-			log.Infof("URL used to download file: %s", source)
 			return nil
 		}
 	}
@@ -109,6 +109,10 @@ func download(context context.Context, client HTTPClient, source string, destina
 	}()
 
 	if resp.StatusCode != http.StatusOK {
+		responseBytes, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			return fmt.Errorf("unable to download file from: %s. Status code: %d. Response: %s", source, resp.StatusCode, string(responseBytes))
+		}
 		return fmt.Errorf("unable to download file from: %s. Status code: %d", source, resp.StatusCode)
 	}
 
