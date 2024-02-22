@@ -36,8 +36,6 @@ github.com/bitrise-io/go-utils/v2/log
 github.com/bitrise-io/go-utils/v2/log/colorstring
 github.com/bitrise-io/go-utils/v2/pathutil
 github.com/bitrise-io/go-utils/v2/retryhttp
-# github.com/bitrise-io/goinp v0.0.0-20240103152431-054ed78518ef
-## explicit; go 1.18
 # github.com/bitrise-steplib/steps-authenticate-host-with-netrc v0.0.0-20230711084209-91fcd09b2017
 ## explicit; go 1.17
 github.com/bitrise-steplib/steps-authenticate-host-with-netrc/netrcutil
@@ -66,16 +64,6 @@ github.com/stretchr/objx
 ## explicit; go 1.20
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
-# golang.org/x/crypto v0.19.0
-## explicit; go 1.18
-# golang.org/x/sys v0.17.0
-## explicit; go 1.18
-# golang.org/x/term v0.17.0
-## explicit; go 1.18
-# golang.org/x/text v0.14.0
-## explicit; go 1.18
-# gopkg.in/yaml.v2 v2.4.0
-## explicit; go 1.15
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
