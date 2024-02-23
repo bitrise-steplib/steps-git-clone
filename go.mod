@@ -1,13 +1,13 @@
 module github.com/bitrise-steplib/steps-git-clone
 
-go 1.17
+go 1.18
 
 require (
 	github.com/bitrise-io/bitrise-init v0.0.0-20210518121553-1e678625c45d
 	github.com/bitrise-io/envman v0.0.0-20210517135508-b2b4fe89eac5
 	github.com/bitrise-io/go-steputils v1.0.5
 	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.15
-	github.com/bitrise-io/go-utils v1.0.1
+	github.com/bitrise-io/go-utils v1.0.13
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.15
 	github.com/bitrise-steplib/steps-authenticate-host-with-netrc v0.0.0-20230711084209-91fcd09b2017
 	github.com/hashicorp/go-retryablehttp v0.7.1

@@ -10,13 +10,24 @@ func (g *Git) Init() *command.Model {
 }
 
 // Clone a repository into a new directory.
-func (g *Git) Clone(repo string) *command.Model {
-	return g.command("clone", repo, ".")
+func (g *Git) Clone(repo string, opts ...string) *command.Model {
+	args := []string{"clone"}
+	args = append(args, opts...)
+	args = append(args, repo)
+	args = append(args, ".")
+	return g.command(args...)
 }
 
 // CloneTagOrBranch is recursively clones a tag or branch.
-func (g *Git) CloneTagOrBranch(repo, tagOrBranch string) *command.Model {
-	return g.command("clone", "--recursive", "--branch", tagOrBranch, repo, ".")
+func (g *Git) CloneTagOrBranch(repo, tagOrBranch string, opts ...string) *command.Model {
+	args := []string{"clone"}
+	args = append(args, "--recursive")
+	args = append(args, []string{"--branch", tagOrBranch}...)
+	args = append(args, opts...)
+	args = append(args, repo)
+	args = append(args, ".")
+
+	return g.command(args...)
 }
 
 // RemoteList shows a list of existing remote urls with remote names.
@@ -36,7 +47,7 @@ func (g *Git) Fetch(opts ...string) *command.Model {
 	return g.command(args...)
 }
 
-// Checkout switchs branches or restore working tree files.
+// Checkout switches branches or restore working tree files.
 // Arg can be a commit hash, a branch or a tag.
 func (g *Git) Checkout(arg string) *command.Model {
 	return g.command("checkout", arg)
@@ -159,6 +170,14 @@ func (g *Git) SparseCheckoutInit(cone bool) *command.Model {
 // SparseCheckoutSet writes the provided patterns to the sparse-checkout config file.
 func (g *Git) SparseCheckoutSet(opts ...string) *command.Model {
 	args := []string{"sparse-checkout", "set"}
+	args = append(args, opts...)
+	return g.command(args...)
+}
+
+// UpdateRef updates the object name stored in a ref safely.
+// With -d flag, it deletes the named <ref>.
+func (g *Git) UpdateRef(opts ...string) *command.Model {
+	args := []string{"update-ref"}
 	args = append(args, opts...)
 	return g.command(args...)
 }
