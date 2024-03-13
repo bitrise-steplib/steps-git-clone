@@ -5,6 +5,7 @@ app:
   envs:
   - ORIGINAL_WORKDIR: $BITRISE_SOURCE_DIR
   - TEST_REPO_URL: https://github.com/bitrise-io/git-clone-test.git
+  - PR_REPO_URL: https://github.com/bitrise-io/git-clone-test.git
   - FETCH_TAGS: "no"
   - UPDATE_SUBMODULES: "yes"
   - MERGE_PR: "yes"
@@ -634,6 +635,7 @@ workflows:
         - merge_pr: $MERGE_PR
         - clone_depth: $CLONE_DEPTH
         - sparse_directories: $SPARSE_DIRECTORIES
+        - pull_request_repository_url: PR_REPO_URL
 
   _teardown:
     steps:
