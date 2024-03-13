@@ -15,6 +15,17 @@ app:
   - GIT_HTTP_PASSWORD_FOR_TEST: $GIT_HTTP_PASSWORD_FOR_TEST
 
 workflows:
+  test_dirty_state_before_checkout:
+    envs:
+    - BRANCH: conflict-test/a
+    - BRANCH_DEST: conflict-test/b
+    before_run:
+    - _setup
+    after_run:
+    - _run
+    - _check_outputs
+    - _teardown
+
   test_generate_changelog_by_commit:
     envs:
     - COMMIT: a409478
@@ -616,6 +627,7 @@ workflows:
         - clone_into_dir: $WORKDIR
         - commit: $COMMIT
         - branch: $BRANCH
+        - branch_dest: $BRANCH_DEST
         - tag: $TAG
         - fetch_tags: $FETCH_TAGS
         - update_submodules: $UPDATE_SUBMODULES
