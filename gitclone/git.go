@@ -150,3 +150,13 @@ func handleCheckoutError(callback getAvailableBranches, tag string, err error, s
 		shortMsg,
 	)
 }
+
+func isWorkingTreeClean(gitCmd git.Git) (bool, error) {
+	// Despite the flag name, `--porcelain` is the plumbing format to use in scripts:
+	// https://git-scm.com/docs/git-status#Documentation/git-status.txt---porcelainltversiongt
+	out, err := gitCmd.Status("--porcelain").RunAndReturnTrimmedOutput()
+	if err != nil {
+		return false, fmt.Errorf("git status check: %s", err)
+	}
+	return strings.TrimSpace(out) == "", nil
+}

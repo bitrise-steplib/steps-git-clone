@@ -18,10 +18,27 @@ app:
 workflows:
   test_dirty_state_before_checkout:
     envs:
-    - BRANCH: conflict-test/a
-    - BRANCH_DEST: conflict-test/b
+    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
+    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/5/head
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - COMMIT: 4301a9b8499ed3e87778dd053c55fd698d0a3b7e
+    - MERGE_PR: "yes"
+    - UPDATE_SUBMODULES: "no"
     before_run:
     - _setup
+    steps:
+    - script:
+        title: Make a mess
+        is_skippable: true
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -ex
+            cd $WORKDIR
+            git clone $TEST_REPO_URL .
+            git checkout conflict-test/b
+            git merge origin/conflict-test/a || true
+            git status
     after_run:
     - _run
     - _check_outputs
@@ -601,14 +618,6 @@ workflows:
             envman unset --key GIT_CLONE_COMMIT_AUTHOR_EMAIL
             envman unset --key GIT_CLONE_COMMIT_COMMITTER_NAME
             envman unset --key GIT_CLONE_COMMIT_COMMITTER_EMAIL
-
-  _run:
-    steps:
-    - activate-ssh-key:
-        run_if: |-
-          {{ getenv "GIT_CLONE_SSH_PRIVATE_KEY" | ne "" }}
-        inputs:
-        - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
     - script:
         inputs:
         - title: Create temporary dir
@@ -621,6 +630,14 @@ workflows:
               envman add --key WORKDIR --value $WD
               envman add --key WORKDIR_ABSOLUTE --value $WD
             fi
+
+  _run:
+    steps:
+    - activate-ssh-key:
+        run_if: |-
+          {{ getenv "GIT_CLONE_SSH_PRIVATE_KEY" | ne "" }}
+        inputs:
+        - ssh_rsa_private_key: $GIT_CLONE_SSH_PRIVATE_KEY
     - path::./:
         run_if: "true"
         inputs:
@@ -635,7 +652,7 @@ workflows:
         - merge_pr: $MERGE_PR
         - clone_depth: $CLONE_DEPTH
         - sparse_directories: $SPARSE_DIRECTORIES
-        - pull_request_repository_url: PR_REPO_URL
+        - pull_request_repository_url: $PR_REPO_URL
 
   _teardown:
     steps:
