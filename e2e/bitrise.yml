@@ -15,34 +15,6 @@ app:
   - GIT_HTTP_PASSWORD_FOR_TEST: $GIT_HTTP_PASSWORD_FOR_TEST
 
 workflows:
-  test_dirty_state_before_checkout:
-    envs:
-    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
-    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/5/head
-    - BITRISEIO_GIT_BRANCH_DEST: master
-    - COMMIT: 4301a9b8499ed3e87778dd053c55fd698d0a3b7e
-    - MERGE_PR: "yes"
-    - UPDATE_SUBMODULES: "no"
-    before_run:
-    - _setup
-    steps:
-    - script:
-        title: Make a mess
-        is_skippable: true
-        inputs:
-        - content: |-
-            #!/bin/env bash
-            set -ex
-            cd $WORKDIR
-            git clone $TEST_REPO_URL .
-            git checkout conflict-test/b
-            git merge origin/conflict-test/a || true
-            git status
-    after_run:
-    - _run
-    - _check_outputs
-    - _teardown
-
   test_generate_changelog_by_commit:
     envs:
     - COMMIT: a409478
@@ -497,6 +469,34 @@ workflows:
     - GIT_HTTP_PASSWORD: $GIT_HTTP_PASSWORD_FOR_TEST
     before_run:
     - _setup
+    after_run:
+    - _run
+    - _check_outputs
+    - _teardown
+  
+  test_dirty_state_before_checkout:
+    envs:
+    - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
+    - BITRISEIO_PULL_REQUEST_HEAD_BRANCH: pull/5/head
+    - BITRISEIO_GIT_BRANCH_DEST: master
+    - COMMIT: 4301a9b8499ed3e87778dd053c55fd698d0a3b7e
+    - MERGE_PR: "yes"
+    - UPDATE_SUBMODULES: "no"
+    before_run:
+    - _setup
+    steps:
+    - script:
+        title: Make a mess
+        is_skippable: true
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -ex
+            cd $WORKDIR
+            git clone $TEST_REPO_URL .
+            git checkout conflict-test/b
+            git merge origin/conflict-test/a || true
+            git status
     after_run:
     - _run
     - _check_outputs
