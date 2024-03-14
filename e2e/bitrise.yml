@@ -473,7 +473,7 @@ workflows:
     - _run
     - _check_outputs
     - _teardown
-  
+
   test_dirty_state_before_checkout:
     envs:
     - BITRISEIO_PULL_REQUEST_MERGE_BRANCH: pull/5/merge
