@@ -131,6 +131,25 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		return CheckoutStateResult{}, err
 	}
 
+	clean, err := isWorkingTreeClean(gitCmd)
+	if err != nil {
+		g.logger.Warnf("Failed to check if working tree is clean: %s", err)
+	}
+	if !clean {
+		g.logger.Println()
+		g.logger.Warnf("Working tree is dirty, cleaning before checkout:")
+		
+		err = runner.Run(gitCmd.Clean("-fd"))
+		if err != nil {
+			g.logger.Warnf("Failed to clean untracked files: %s", err)
+		}
+
+		err = runner.Run(gitCmd.Reset("--hard", "HEAD"))
+		if err != nil {
+			g.logger.Warnf("Failed to reset repository: %s", err)
+		}
+	}
+
 	checkoutStrategy, isPR, err := g.checkoutState(gitCmd, cfg)
 	if err != nil {
 		return CheckoutStateResult{}, err
