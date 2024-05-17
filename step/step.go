@@ -76,7 +76,7 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 	if g.isCloneDirDangerous(input.CloneIntoDir) {
 		g.logger.Println()
 		g.logger.Println()
-		g.logger.Errorf("BEWARE: The git clone directory is set to:", input.CloneIntoDir)
+		g.logger.Errorf("BEWARE: The git clone directory is set to %s", input.CloneIntoDir)
 		g.logger.Errorf("This is probably not what you want, as the step could overwrite files in the directory.")
 		g.logger.Printf("To update the path, you have a few options:")
 		g.logger.Printf("1. Change the %s step input", colorstring.Cyan("clone_into_dir"))
