@@ -501,7 +501,7 @@ workflows:
     - _run
     - _check_outputs
     - _teardown
-  
+
   test_dangerous_clone_dir:
     envs:
     - TEST_REPO_URL: https://github.com/websitebot/git-repo-fixture-private.git
