@@ -74,12 +74,12 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 	stepconf.Print(input)
 
 	if g.isCloneDirDangerous(input.CloneIntoDir) {
-		g.logger.Warnf("Warning: The git clone directory is set to %s", input.CloneIntoDir)
-		g.logger.Warnf("This is probably not what you want, as the step could overwrite files in the directory.")
+		g.logger.Errorf("BEWARE: The git clone directory is set to %s", colorstring.Blue(input.CloneIntoDir))
+		g.logger.Errorf("This is probably not what you want, as the step could overwrite files in the directory.")
 		g.logger.Printf("To update the path, you have a few options:")
 		g.logger.Printf("1. Change the %s step input", colorstring.Cyan("clone_into_dir"))
 		g.logger.Printf("2. If not specified, %s defaults to %s. Check the value of this env var.", colorstring.Cyan("clone_into_dir"), colorstring.Cyan("$BITRISE_SOURCE_DIR"))
-		g.logger.Printf("3. When using self-hosted agents, you can customize %s and other important values in the %s file.", colorstring.Cyan("$BITRISE_SOURCE_DIR"), colorstring.Cyan("~/.bitrise/.agent-config.yml"))
+		g.logger.Printf("3. When using self-hosted agents, you can customize %s and other important values in the %s file.", colorstring.Cyan("$BITRISE_SOURCE_DIR"), colorstring.Cyan("~/.bitrise/agent-config.yml"))
 
 		return Config{}, fmt.Errorf("dangerous clone directory detected")
 	}
