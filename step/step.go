@@ -6,6 +6,7 @@ import (
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/retry"
 	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-io/go-utils/v2/log/colorstring"
 	"github.com/bitrise-io/go-utils/v2/pathutil"
@@ -52,15 +53,17 @@ type GitCloneStep struct {
 	logger       log.Logger
 	tracker      tracker.StepTracker
 	inputParser  stepconf.InputParser
+	envRepo      env.Repository
 	cmdFactory   command.Factory
 	pathModifier pathutil.PathModifier
 }
 
-func NewGitCloneStep(logger log.Logger, tracker tracker.StepTracker, inputParser stepconf.InputParser, cmdFactory command.Factory, pathModifier pathutil.PathModifier) GitCloneStep {
+func NewGitCloneStep(logger log.Logger, tracker tracker.StepTracker, inputParser stepconf.InputParser, envRepo env.Repository, cmdFactory command.Factory, pathModifier pathutil.PathModifier) GitCloneStep {
 	return GitCloneStep{
 		logger:       logger,
 		tracker:      tracker,
 		inputParser:  inputParser,
+		envRepo:      envRepo,
 		cmdFactory:   cmdFactory,
 		pathModifier: pathModifier,
 	}
@@ -73,7 +76,7 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 	}
 	stepconf.Print(input)
 
-	if g.isCloneDirDangerous(input.CloneIntoDir) {
+	if g.isCloneDirDangerous(input.CloneIntoDir) && g.envRepo.Get("BITRISE_GIT_CLONE_FORCE_RUN") != "true" {
 		g.logger.Println()
 		g.logger.Println()
 		g.logger.Errorf("BEWARE: The git clone directory is set to %s", input.CloneIntoDir)
@@ -82,6 +85,7 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 		g.logger.Printf("1. Change the %s step input", colorstring.Cyan("clone_into_dir"))
 		g.logger.Printf("2. If not specified, %s defaults to %s. Check the value of this env var.", colorstring.Cyan("clone_into_dir"), colorstring.Cyan("$BITRISE_SOURCE_DIR"))
 		g.logger.Printf("3. When using self-hosted agents, you can customize %s and other important values in the %s file.", colorstring.Cyan("$BITRISE_SOURCE_DIR"), colorstring.Cyan("~/.bitrise/agent-config.yml"))
+		g.logger.Printf("If you are sure you want to proceed, you can set the %s env var to force the step to run.", colorstring.Cyan("BITRISE_GIT_CLONE_FORCE_RUN=true"))
 
 		return Config{}, fmt.Errorf("dangerous clone directory detected")
 	}

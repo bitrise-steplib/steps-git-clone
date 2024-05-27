@@ -72,7 +72,7 @@ func Test_GitCloneStep_IsCloneDirDangerous(t *testing.T) {
 	cmdFactory := command.NewFactory(envRepo)
 	pathModifier := pathutil.NewPathModifier()
 
-	gitCloneStep := NewGitCloneStep(logger, tracker, inputParser, cmdFactory, pathModifier)
+	gitCloneStep := NewGitCloneStep(logger, tracker, inputParser, envRepo, cmdFactory, pathModifier)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

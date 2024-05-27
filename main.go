@@ -56,5 +56,5 @@ func createStep(logger log.Logger) step.GitCloneStep {
 	cmdFactory := command.NewFactory(envRepo)
 	pathModififer := pathutil.NewPathModifier()
 
-	return step.NewGitCloneStep(logger, tracker, inputParser, cmdFactory, pathModififer)
+	return step.NewGitCloneStep(logger, tracker, inputParser, envRepo, cmdFactory, pathModififer)
 }
