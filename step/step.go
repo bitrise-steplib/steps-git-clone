@@ -6,7 +6,10 @@ import (
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/retry"
 	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-io/go-utils/v2/log/colorstring"
+	"github.com/bitrise-io/go-utils/v2/pathutil"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
@@ -47,18 +50,22 @@ type Config struct {
 }
 
 type GitCloneStep struct {
-	logger      log.Logger
-	tracker     tracker.StepTracker
-	inputParser stepconf.InputParser
-	cmdFactory  command.Factory
+	logger       log.Logger
+	tracker      tracker.StepTracker
+	inputParser  stepconf.InputParser
+	envRepo      env.Repository
+	cmdFactory   command.Factory
+	pathModifier pathutil.PathModifier
 }
 
-func NewGitCloneStep(logger log.Logger, tracker tracker.StepTracker, inputParser stepconf.InputParser, cmdFactory command.Factory) GitCloneStep {
+func NewGitCloneStep(logger log.Logger, tracker tracker.StepTracker, inputParser stepconf.InputParser, envRepo env.Repository, cmdFactory command.Factory, pathModifier pathutil.PathModifier) GitCloneStep {
 	return GitCloneStep{
-		logger:      logger,
-		tracker:     tracker,
-		inputParser: inputParser,
-		cmdFactory:  cmdFactory,
+		logger:       logger,
+		tracker:      tracker,
+		inputParser:  inputParser,
+		envRepo:      envRepo,
+		cmdFactory:   cmdFactory,
+		pathModifier: pathModifier,
 	}
 }
 
@@ -68,6 +75,20 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 		return Config{}, fmt.Errorf("Error: %s\n", err)
 	}
 	stepconf.Print(input)
+
+	if g.isCloneDirDangerous(input.CloneIntoDir) && g.envRepo.Get("BITRISE_GIT_CLONE_FORCE_RUN") != "true" {
+		g.logger.Println()
+		g.logger.Println()
+		g.logger.Errorf("BEWARE: The git clone directory is set to %s", input.CloneIntoDir)
+		g.logger.Errorf("This is probably not what you want, as the step could overwrite files in the directory.")
+		g.logger.Printf("To update the path, you have a few options:")
+		g.logger.Printf("1. Change the %s step input", colorstring.Cyan("clone_into_dir"))
+		g.logger.Printf("2. If not specified, %s defaults to %s. Check the value of this env var.", colorstring.Cyan("clone_into_dir"), colorstring.Cyan("$BITRISE_SOURCE_DIR"))
+		g.logger.Printf("3. When using self-hosted agents, you can customize %s and other important values in the %s file.", colorstring.Cyan("$BITRISE_SOURCE_DIR"), colorstring.Cyan("~/.bitrise/agent-config.yml"))
+		g.logger.Printf("If you are sure you want to proceed, you can set the %s env var to force the step to run.", colorstring.Cyan("BITRISE_GIT_CLONE_FORCE_RUN=true"))
+
+		return Config{}, fmt.Errorf("dangerous clone directory detected")
+	}
 
 	return Config{input}, nil
 }
@@ -97,6 +118,46 @@ func (g GitCloneStep) ExportOutputs(runResult gitclone.CheckoutStateResult) erro
 	}
 
 	return nil
+}
+
+func (g GitCloneStep) isCloneDirDangerous(path string) bool {
+	blocklist := []string{
+		"~",
+		"~/Downloads",
+		"~/Documents",
+		"~/Desktop",
+		"/bin",
+		"/usr/bin",
+		"/etc",
+		"/Applications",
+		"/Library",
+		"~/Library",
+		"~/.config",
+		"~/.bitrise",
+		"~/.ssh",
+	}
+
+	absClonePath, err := g.pathModifier.AbsPath(path)
+	if err != nil {
+		g.logger.Warnf("Failed to get absolute path of clone directory: %s", err)
+		// The path could be incorrect for many reasons, but we don't want to cause a false positive.
+		// A true positive will be caught by the git command anyway.
+		return false
+	}
+
+	for _, dangerousPath := range blocklist {
+		absDangerousPath, err := g.pathModifier.AbsPath(dangerousPath)
+		if err != nil {
+			// Not all blocklisted paths are valid on all systems, so we ignore this error.
+			continue
+		}
+
+		if absClonePath == absDangerousPath {
+			return true
+		}
+	}
+
+	return false
 }
 
 func convertConfig(config Config) gitclone.Config {

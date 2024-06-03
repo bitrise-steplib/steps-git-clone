@@ -70,6 +70,7 @@ github.com/stretchr/objx
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
+github.com/stretchr/testify/require
 # golang.org/x/crypto v0.6.1-0.20230215202200-ebe92624d142
 ## explicit; go 1.17
 golang.org/x/crypto/ssh/terminal

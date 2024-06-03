@@ -502,6 +502,26 @@ workflows:
     - _check_outputs
     - _teardown
 
+  test_dangerous_clone_dir:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #/bin/env bash
+            set -x
+            bitrise run --config=./e2e/bitrise.yml utility_dangerous_clone_dir
+            if [ $? == 0 ]; then
+              exit 1
+            fi
+
+  utility_dangerous_clone_dir:
+    envs:
+    - TEST_REPO_URL: https://github.com/websitebot/git-repo-fixture-private.git
+    - BRANCH: main
+    - WORKDIR: $HOME
+    after_run:
+    - _run
+
   _check_changelog:
     steps:
     - generate-changelog:

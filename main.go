@@ -10,6 +10,7 @@ import (
 	"github.com/bitrise-io/go-utils/v2/errorutil"
 	. "github.com/bitrise-io/go-utils/v2/exitcode"
 	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-io/go-utils/v2/pathutil"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
 	"github.com/bitrise-steplib/steps-git-clone/step"
 )
@@ -53,6 +54,7 @@ func createStep(logger log.Logger) step.GitCloneStep {
 	tracker := tracker.NewStepTracker(envRepo, logger)
 	inputParser := stepconf.NewInputParser(envRepo)
 	cmdFactory := command.NewFactory(envRepo)
+	pathModififer := pathutil.NewPathModifier()
 
-	return step.NewGitCloneStep(logger, tracker, inputParser, cmdFactory)
+	return step.NewGitCloneStep(logger, tracker, inputParser, envRepo, cmdFactory, pathModififer)
 }
