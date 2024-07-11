@@ -10,7 +10,7 @@ require (
 	github.com/bitrise-io/go-utils v1.0.13
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.15
 	github.com/bitrise-steplib/steps-authenticate-host-with-netrc v0.0.0-20230711084209-91fcd09b2017
-	github.com/hashicorp/go-retryablehttp v0.7.1
+	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/stretchr/testify v1.8.1
 )
 
@@ -23,7 +23,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	golang.org/x/crypto v0.6.1-0.20230215202200-ebe92624d142 // indirect
-	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
