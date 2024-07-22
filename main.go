@@ -27,21 +27,21 @@ func run() ExitCode {
 	cfg, err := gitCloneStep.ProcessConfig()
 	if err != nil {
 		logger.Println()
-		logger.Errorf(errorutil.FormattedError(fmt.Errorf("Failed to process Step inputs: %w", err)))
+		logger.Errorf("%s", errorutil.FormattedError(fmt.Errorf("Failed to process Step inputs: %w", err)))
 		return Failure
 	}
 
 	result, err := gitCloneStep.Run(cfg)
 	if err != nil {
 		logger.Println()
-		logger.Errorf(errorutil.FormattedError(fmt.Errorf("Failed to execute Step: %w", err)))
+		logger.Errorf("%s", errorutil.FormattedError(fmt.Errorf("Failed to execute Step: %w", err)))
 		return Failure
 	}
 
 	err = gitCloneStep.ExportOutputs(result)
 	if err != nil {
 		logger.Println()
-		logger.Errorf(errorutil.FormattedError(fmt.Errorf("Failed to export Step outputs: %w", err)))
+		logger.Errorf("%s", errorutil.FormattedError(fmt.Errorf("Failed to export Step outputs: %w", err)))
 	}
 
 	fmt.Println()
