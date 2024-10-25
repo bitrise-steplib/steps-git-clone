@@ -165,7 +165,8 @@ func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeR
 			log.Warnf("Failed to check PR merge ref freshness: %s", err)
 		}
 		if upToDate {
-			return CheckoutPRMergeBranchMethod, ""
+			log.Warnf("Deliberately skipping using merge ref")
+			// return CheckoutPRMergeBranchMethod, ""
 		}
 	}
 
