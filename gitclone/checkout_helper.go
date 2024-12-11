@@ -112,7 +112,7 @@ func forceCheckoutRemoteBranch(gitCmd git.Git, remote string, branchRef string, 
 	// so the next run would see unrelated histories after shallow-fetching another single commit.
 	out, err := runner.RunForOutput(command.New("git", "checkout", "-B", branch, remoteBranch))
 	if err != nil {
-		fmt.Printf(out)
+		fmt.Println(out)
 		return fmt.Errorf("checkout remote-tracking branch %s: %w", remoteBranch, err)
 	}
 
