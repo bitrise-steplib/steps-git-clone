@@ -76,8 +76,7 @@ func Test_checkoutState(t *testing.T) {
 			},
 			wantCmds: []string{
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
-				`git "checkout" "hcnarb"`,
-				`git "merge" "origin/hcnarb"`,
+				`git "checkout" "-B" "hcnarb" "origin/hcnarb"`,
 			},
 		},
 		{
@@ -204,7 +203,7 @@ func Test_checkoutState(t *testing.T) {
 				`git "fetch" "--jobs=10"`,
 				`git "branch" "-r"`,
 			},
-			wantErr: fmt.Errorf("failed to fetch base branch: failed to fetch branch (refs/heads/master): dummy_cmd_error: please make sure the branch still exists"),
+			wantErr: fmt.Errorf("failed to fetch base branch: fetch branch refs/heads/master: dummy_cmd_error: please make sure the branch still exists"),
 		},
 		{
 			name: "PR - fork - no merge ref - diff file available",
@@ -245,8 +244,7 @@ func Test_checkoutState(t *testing.T) {
 				`git "checkout" "master"`,
 				`git "apply" "--index" "diff_path"`,
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
-				`git "checkout" "master"`,
-				`git "merge" "origin/master"`,
+				`git "checkout" "-B" "master" "origin/master"`,
 				`git "log" "-1" "--format=%H"`,
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/test/commit-messages"`,
 				`git "merge" "76a934ae"`,
@@ -273,8 +271,7 @@ func Test_checkoutState(t *testing.T) {
 				`git "checkout" "master"`,
 				`git "apply" "--index" "diff_path"`,
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/master"`,
-				`git "checkout" "master"`,
-				`git "merge" "origin/master"`,
+				`git "checkout" "-B" "master" "origin/master"`,
 				`git "log" "-1" "--format=%H"`,
 				`git "remote" "add" "fork" "git@github.com:bitrise-io/other-repo.git"`,
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "fork" "refs/heads/test/commit-messages"`,
@@ -375,7 +372,7 @@ func Test_checkoutState(t *testing.T) {
 			},
 			wantErr: newStepErrorWithBranchRecommendations(
 				fetchFailedTag,
-				fmt.Errorf("failed to fetch branch (refs/heads/fake): %w: please make sure the branch still exists", errors.New(rawCmdError)),
+				fmt.Errorf("fetch branch refs/heads/fake: %w: please make sure the branch still exists", errors.New(rawCmdError)),
 				"Fetching repository has failed",
 				"fake",
 				[]string{"master"},
@@ -466,8 +463,7 @@ func Test_checkoutState(t *testing.T) {
 			},
 			wantCmds: []string{
 				`git "fetch" "--jobs=10" "--depth=1" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
-				`git "checkout" "hcnarb"`,
-				`git "merge" "origin/hcnarb"`,
+				`git "checkout" "-B" "hcnarb" "origin/hcnarb"`,
 			},
 		},
 		{
