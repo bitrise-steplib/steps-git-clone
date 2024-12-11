@@ -91,7 +91,7 @@ type checkoutBranch struct {
 }
 
 func (c checkoutBranch) do(gitCmd git.Git, fetchOptions fetchOptions, _ fallbackRetry) error {
-	if err := fetchInitialBranch(gitCmd, originRemoteName, c.localRef(), fetchOptions); err != nil {
+	if err := forceCheckoutRemoteBranch(gitCmd, originRemoteName, c.localRef(), fetchOptions); err != nil {
 		return err
 	}
 

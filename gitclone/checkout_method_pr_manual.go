@@ -61,7 +61,7 @@ type checkoutPRManualMerge struct {
 func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch and checkout destinations branch
 	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
-	if err := fetchInitialBranch(gitCmd, originRemoteName, destBranchRef, fetchOptions); err != nil {
+	if err := forceCheckoutRemoteBranch(gitCmd, originRemoteName, destBranchRef, fetchOptions); err != nil {
 		return fmt.Errorf("failed to fetch base branch: %w", err)
 	}
 
