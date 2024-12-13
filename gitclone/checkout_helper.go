@@ -114,9 +114,9 @@ func forceCheckoutRemoteBranch(gitCmd git.Git, remote string, branchRef string, 
 	if err != nil {
 		return handleCheckoutError(
 			listBranches(gitCmd),
-			fetchFailedTag,
+			checkoutFailedTag,
 			err,
-			"Fetching repository has failed",
+			"Checkout has failed",
 			branch,
 		)
 	}
