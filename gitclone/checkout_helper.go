@@ -110,10 +110,15 @@ func forceCheckoutRemoteBranch(gitCmd git.Git, remote string, branchRef string, 
 	// -B: create the branch if it doesn't exist, reset if it does
 	// The latter is important in persistent environments because shallow-fetching only fetches 1 commit,
 	// so the next run would see unrelated histories after shallow-fetching another single commit.
-	out, err := runner.RunForOutput(command.New("git", "checkout", "-B", branch, remoteBranch))
+	err := runner.Run(gitCmd.Checkout("-B", branch, remoteBranch))
 	if err != nil {
-		fmt.Println(out)
-		return fmt.Errorf("checkout remote-tracking branch %s: %w", remoteBranch, err)
+		return handleCheckoutError(
+			listBranches(gitCmd),
+			fetchFailedTag,
+			err,
+			"Fetching repository has failed",
+			branch,
+		)
 	}
 
 	return nil
