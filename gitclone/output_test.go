@@ -13,7 +13,7 @@ import (
 func Test_gitOutputs(t *testing.T) {
 	gitCmd, err := git.New(t.TempDir())
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err)
 	}
 	type args struct {
 		gitRef string
