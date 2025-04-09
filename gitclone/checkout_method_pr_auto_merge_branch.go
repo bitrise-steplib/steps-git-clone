@@ -39,6 +39,18 @@ type checkoutPRMergeRef struct {
 }
 
 func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
+	if err := c.performCheckout(gitCmd, fetchOpts, fallback); err != nil {
+		if c.manualMergeFallbackParams != nil {
+			log.Warnf("Falling back to manual merge checkout strategy...")
+			fallbackManualMerge := checkoutPRManualMerge{params: *c.manualMergeFallbackParams}
+			return fallbackManualMerge.do(gitCmd, fetchOpts, nil)
+		}
+		return err
+	}
+	return nil
+}
+
+func (c checkoutPRMergeRef) performCheckout(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
 	// https://git-scm.com/book/en/v2/Git-Internals-The-Refspec
 	refSpec := fmt.Sprintf("%s:%s", c.remoteMergeRef(), c.localMergeRef())
 
@@ -71,13 +83,8 @@ func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback 
 	// $ git fetch origin refs/remotes/pull/7/head:refs/pull/7/head
 	err = c.fetchPRHeadRef(gitCmd, fetchOpts)
 	if err != nil {
-		if c.manualMergeFallbackParams != nil {
-			refSpec = fmt.Sprintf("%s:%s", c.remoteHeadRef(), c.localHeadRef())
-			log.Warnf("Failed to fetch PR head ref (%s): %v", refSpec, err)
-			log.Warnf("Falling back to manual merge checkout strategy...")
-			fallbackManualMerge := checkoutPRManualMerge{params: *c.manualMergeFallbackParams}
-			return fallbackManualMerge.do(gitCmd, fetchOpts, nil)
-		}
+		refSpec = fmt.Sprintf("%s:%s", c.remoteHeadRef(), c.localHeadRef())
+		log.Warnf("Failed to fetch PR head ref (%s): %v", refSpec, err)
 		return err
 	}
 
