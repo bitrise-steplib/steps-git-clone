@@ -34,18 +34,18 @@ func NewPRMergeRefParams(mergeRef, headRef string) (*PRMergeRefParams, error) {
 }
 
 type checkoutPRMergeRef struct {
-	params       PRMergeRefParams
-	fallbackFunc fallbackCheckoutStrategyFunc
+	params           PRMergeRefParams
+	fallbackCheckout fallbackCheckoutFunc
 }
 
-type fallbackCheckoutStrategyFunc func(gitCmd git.Git) error
+type fallbackCheckoutFunc func(gitCmd git.Git) error
 
 func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
 	if err := c.performCheckout(gitCmd, fetchOpts, fallback); err != nil {
 		log.Warnf("Failed to checkout PR merge branch: %s", err)
 
-		if c.fallbackFunc != nil {
-			return c.fallbackFunc(gitCmd)
+		if c.fallbackCheckout != nil {
+			return c.fallbackCheckout(gitCmd)
 		}
 		return err
 	}
@@ -85,8 +85,6 @@ func (c checkoutPRMergeRef) performCheckout(gitCmd git.Git, fetchOpts fetchOptio
 	// $ git fetch origin refs/remotes/pull/7/head:refs/pull/7/head
 	err = c.fetchPRHeadRef(gitCmd, fetchOpts)
 	if err != nil {
-		refSpec = fmt.Sprintf("%s:%s", c.remoteHeadRef(), c.localHeadRef())
-		log.Warnf("Failed to fetch PR head ref (%s): %v", refSpec, err)
 		return err
 	}
 

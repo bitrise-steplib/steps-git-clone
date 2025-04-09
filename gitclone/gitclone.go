@@ -138,7 +138,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	if !clean {
 		g.logger.Println()
 		g.logger.Warnf("Working tree is dirty, cleaning before checkout:")
-		
+
 		err = runner.Run(gitCmd.Clean("-fd"))
 		if err != nil {
 			g.logger.Warnf("Failed to clean untracked files: %s", err)
@@ -176,7 +176,6 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 func (g GitCloner) checkoutState(gitCmd git.Git, cfg Config) (strategy checkoutStrategy, isPR bool, err error) {
 	checkoutStartTime := time.Now()
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, g.patchSource, g.mergeRefChecker)
-	g.logger.Warnf("Checkout method: %s", checkoutMethod.String())
 
 	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 
