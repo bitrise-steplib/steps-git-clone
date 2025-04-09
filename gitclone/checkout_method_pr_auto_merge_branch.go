@@ -34,18 +34,17 @@ func NewPRMergeRefParams(mergeRef, headRef string) (*PRMergeRefParams, error) {
 }
 
 type checkoutPRMergeRef struct {
-	params                           PRMergeRefParams
-	manualMergeFallbackParams        *PRManualMergeParams
-	manualMergeFallbackFetchOpts     fetchOptions
-	manualMergeFallbackFallbackRetry fallbackRetry
+	params       PRMergeRefParams
+	fallbackFunc fallbackCheckoutStrategyFunc
 }
+
+type fallbackCheckoutStrategyFunc func(gitCmd git.Git) error
 
 func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
 	if err := c.performCheckout(gitCmd, fetchOpts, fallback); err != nil {
-		if c.manualMergeFallbackParams != nil {
+		if c.fallbackFunc != nil {
 			log.Warnf("Falling back to manual merge checkout strategy...")
-			fallbackManualMerge := checkoutPRManualMerge{params: *c.manualMergeFallbackParams}
-			return fallbackManualMerge.do(gitCmd, c.manualMergeFallbackFetchOpts, c.manualMergeFallbackFallbackRetry)
+			return c.fallbackFunc(gitCmd)
 		}
 		return err
 	}
