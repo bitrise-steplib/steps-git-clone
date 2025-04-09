@@ -160,7 +160,7 @@ func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeR
 		log.Printf("\n")
 		log.Infof("Checking if %s is up to date...", cfg.PRUnverifiedMergeRef)
 
-		upToDate, err := mergeRefChecker.IsMergeRefUpToDate(cfg.PRUnverifiedMergeRef)
+		_, err := mergeRefChecker.IsMergeRefUpToDate(cfg.PRUnverifiedMergeRef)
 		if err != nil {
 			log.Warnf("Failed to check PR merge ref freshness: %s", err)
 		}
