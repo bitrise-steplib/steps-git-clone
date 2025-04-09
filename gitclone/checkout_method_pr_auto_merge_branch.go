@@ -84,6 +84,7 @@ func (c checkoutPRMergeRef) performCheckout(gitCmd git.Git, fetchOpts fetchOptio
 	// Also fetch the PR head ref because the step exports outputs based on the PR head commit (see output.go)
 	// $ git fetch origin refs/remotes/pull/7/head:refs/pull/7/head
 	err = c.fetchPRHeadRef(gitCmd, fetchOpts)
+	err = fmt.Errorf("fatal: couldn't find remote ref for pull head")
 	if err != nil {
 		refSpec = fmt.Sprintf("%s:%s", c.remoteHeadRef(), c.localHeadRef())
 		log.Warnf("Failed to fetch PR head ref (%s): %v", refSpec, err)
