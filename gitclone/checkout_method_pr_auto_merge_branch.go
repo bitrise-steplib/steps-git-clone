@@ -42,8 +42,9 @@ type fallbackCheckoutStrategyFunc func(gitCmd git.Git) error
 
 func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
 	if err := c.performCheckout(gitCmd, fetchOpts, fallback); err != nil {
+		log.Warnf("Failed to checkout PR merge branch: %s", err)
+
 		if c.fallbackFunc != nil {
-			log.Warnf("Falling back to manual merge checkout strategy...")
 			return c.fallbackFunc(gitCmd)
 		}
 		return err

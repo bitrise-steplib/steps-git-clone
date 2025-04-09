@@ -270,11 +270,16 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 			return checkoutPRMergeRef{
 				params: *params,
 				fallbackFunc: func(gitCmd git.Git) error {
+					log.Warnf("Using manual merge strategy with PR head branch")
+
 					// PR merge branch checkout falls back to PR manual merge strategy using the PR head branch
 					err := fallbackManualMergeWithHeadBranch.do(gitCmd, manualMergeFallbackFetchOpts, manualMergeFallbackFallback)
 					if err == nil {
 						return nil
 					}
+
+					log.Warnf("Failed to merge PR head branch: %s", err)
+					log.Warnf("Using manual merge strategy with PR source branch")
 
 					// PR merge branch checkout falls back to PR manual merge strategy using the PR source branch
 					return fallbackManualMergeWithSourceBranch.do(gitCmd, manualMergeFallbackFetchOpts, manualMergeFallbackFallback)
