@@ -256,7 +256,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 
 			manualMergeFallbackParams, err := NewPRManualMergeParams(cfg.Branch, cfg.Commit, prRepositoryURL, cfg.PRDestBranch)
 			if err != nil {
-				// TODO: log warning but don't fail, it's anyway just a fallback option
+				log.Warnf("Failed to create PR manual merge fallback params: %v", err)
 			}
 			///
 

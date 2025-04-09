@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-io/go-utils/log"
 )
 
 // PRMergeRefParams are parameters to check out a Merge/Pull Request's merge ref (the result of merging the 2 branches)
@@ -71,7 +72,9 @@ func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback 
 	err = c.fetchPRHeadRef(gitCmd, fetchOpts)
 	if err != nil {
 		if c.manualMergeFallbackParams != nil {
-			// TODO: log warning
+			refSpec = fmt.Sprintf("%s:%s", c.remoteHeadRef(), c.localHeadRef())
+			log.Warnf("Failed to fetch PR head ref (%s): %v", refSpec, err)
+			log.Warnf("Falling back to manual merge checkout strategy...")
 			fallbackManualMerge := checkoutPRManualMerge{params: *c.manualMergeFallbackParams}
 			return fallbackManualMerge.do(gitCmd, fetchOpts, nil)
 		}
