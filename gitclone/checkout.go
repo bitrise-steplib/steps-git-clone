@@ -248,8 +248,21 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 				return nil, err
 			}
 
+			// Manual merge fallback params
+			prRepositoryURL := ""
+			if isFork(cfg.RepositoryURL, cfg.PRSourceRepositoryURL) {
+				prRepositoryURL = cfg.PRSourceRepositoryURL
+			}
+
+			manualMergeFallbackParams, err := NewPRManualMergeParams(cfg.Branch, cfg.Commit, prRepositoryURL, cfg.PRDestBranch)
+			if err != nil {
+				// TODO: log warning but don't fail, it's anyway just a fallback option
+			}
+			///
+
 			return checkoutPRMergeRef{
-				params: *params,
+				params:                    *params,
+				manualMergeFallbackParams: manualMergeFallbackParams,
 			}, nil
 		}
 	case CheckoutPRDiffFileMethod:

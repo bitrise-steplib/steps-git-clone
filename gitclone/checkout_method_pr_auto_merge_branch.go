@@ -33,7 +33,8 @@ func NewPRMergeRefParams(mergeRef, headRef string) (*PRMergeRefParams, error) {
 }
 
 type checkoutPRMergeRef struct {
-	params PRMergeRefParams
+	params                    PRMergeRefParams
+	manualMergeFallbackParams *PRManualMergeParams
 }
 
 func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
@@ -69,6 +70,11 @@ func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback 
 	// $ git fetch origin refs/remotes/pull/7/head:refs/pull/7/head
 	err = c.fetchPRHeadRef(gitCmd, fetchOpts)
 	if err != nil {
+		if c.manualMergeFallbackParams != nil {
+			// TODO: log warning
+			fallbackManualMerge := checkoutPRManualMerge{params: *c.manualMergeFallbackParams}
+			return fallbackManualMerge.do(gitCmd, fetchOpts, nil)
+		}
 		return err
 	}
 
