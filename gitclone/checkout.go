@@ -248,24 +248,23 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 				return nil, err
 			}
 
-			manualMergeFallbackFetchOpts := selectFetchOptions(CheckoutPRManualMergeMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
-			manualMergeFallbackFallback := selectFallbacks(CheckoutPRManualMergeMethod, manualMergeFallbackFetchOpts)
-
-			prRepositoryURL := ""
-			if isFork(cfg.RepositoryURL, cfg.PRSourceRepositoryURL) {
-				prRepositoryURL = cfg.PRSourceRepositoryURL
-			}
-
-			fallbackManualMergeWithSourceBranch, err := createManualMergeFallbackFunc(prRepositoryURL, cfg.Branch, cfg.Commit, cfg.PRDestBranch)
-			if err != nil {
-				return nil, err
-			}
-
 			return checkoutPRMergeRef{
 				params: *params,
 				fallbackCheckout: func(gitCmd git.Git) error {
-					log.Warnf("Failed to merge PR head branch: %s", err)
 					log.Warnf("Using manual merge strategy with PR source branch")
+
+					manualMergeFallbackFetchOpts := selectFetchOptions(CheckoutPRManualMergeMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
+					manualMergeFallbackFallback := selectFallbacks(CheckoutPRManualMergeMethod, manualMergeFallbackFetchOpts)
+
+					prRepositoryURL := ""
+					if isFork(cfg.RepositoryURL, cfg.PRSourceRepositoryURL) {
+						prRepositoryURL = cfg.PRSourceRepositoryURL
+					}
+
+					fallbackManualMergeWithSourceBranch, err := createManualMergeFallbackFunc(prRepositoryURL, cfg.Branch, cfg.Commit, cfg.PRDestBranch)
+					if err != nil {
+						return err
+					}
 
 					// PR merge branch checkout falls back to PR manual merge strategy using the PR source branch
 					return fallbackManualMergeWithSourceBranch.do(gitCmd, manualMergeFallbackFetchOpts, manualMergeFallbackFallback)
