@@ -176,6 +176,8 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 func (g GitCloner) checkoutState(gitCmd git.Git, cfg Config) (strategy checkoutStrategy, isPR bool, err error) {
 	checkoutStartTime := time.Now()
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, g.patchSource, g.mergeRefChecker)
+	// TODO: for a quick test we use the PR merge branch method
+	checkoutMethod = CheckoutPRMergeBranchMethod
 
 	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 
