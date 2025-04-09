@@ -55,10 +55,22 @@ func validatePRManualMergeParams(sourceBranch, commit, sourceRepoURL, destBranch
 }
 
 type checkoutPRManualMerge struct {
-	params PRManualMergeParams
+	params       PRManualMergeParams
+	fallbackFunc fallbackCheckoutStrategyFunc
 }
 
-func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
+func (c checkoutPRManualMerge) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
+	if err := c.performCheckout(gitCmd, fetchOpts, fallback); err != nil {
+		if c.fallbackFunc != nil {
+			log.Warnf("Falling back to manual merge checkout strategy...")
+			return c.fallbackFunc(gitCmd)
+		}
+		return err
+	}
+	return nil
+}
+
+func (c checkoutPRManualMerge) performCheckout(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch and checkout destinations branch
 	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
 	if err := forceCheckoutRemoteBranch(gitCmd, originRemoteName, destBranchRef, fetchOptions); err != nil {

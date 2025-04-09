@@ -253,15 +253,28 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 				params: *params,
 				fallbackFunc: func(gitCmd git.Git) error {
 					// PR merge branch checkout falls back to PR manual merge strategy using the PR head branch
-					manualMergeFallbackParams, err := NewPRManualMergeParams(cfg.PRHeadBranch, cfg.Commit, cfg.RepositoryURL, cfg.PRDestBranch)
+					manualMergeFallbackFetchOpts := selectFetchOptions(CheckoutPRManualMergeMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
+					manualMergeFallbackFallback := selectFallbacks(CheckoutPRManualMergeMethod, manualMergeFallbackFetchOpts)
+
+					fallbackFunc := func(gitCmd git.Git) error {
+						// PR merge branch checkout falls back to PR manual merge strategy using the PR source branch
+						prRepositoryURL := ""
+						if isFork(cfg.RepositoryURL, cfg.PRSourceRepositoryURL) {
+							prRepositoryURL = cfg.PRSourceRepositoryURL
+						}
+
+						fallbackManualMerge, err := createManualMergeFallbackFunc(prRepositoryURL, cfg.Branch, cfg.Commit, cfg.PRDestBranch, nil)
+						if err != nil {
+							return err
+						}
+						return fallbackManualMerge.do(gitCmd, manualMergeFallbackFetchOpts, manualMergeFallbackFallback)
+					}
+
+					fallbackManualMerge, err := createManualMergeFallbackFunc(cfg.RepositoryURL, cfg.PRHeadBranch, cfg.Commit, cfg.PRDestBranch, fallbackFunc)
 					if err != nil {
 						return err
 					}
 
-					manualMergeFallbackFetchOpts := selectFetchOptions(CheckoutPRManualMergeMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
-					manualMergeFallbackFallback := selectFallbacks(CheckoutPRManualMergeMethod, manualMergeFallbackFetchOpts)
-
-					fallbackManualMerge := checkoutPRManualMerge{params: *manualMergeFallbackParams}
 					return fallbackManualMerge.do(gitCmd, manualMergeFallbackFetchOpts, manualMergeFallbackFallback)
 				},
 			}, nil
@@ -442,4 +455,15 @@ func isPRCheckout(method CheckoutMethod) bool {
 	default:
 		panic(fmt.Sprintf("implementation missing for enum value %T", method))
 	}
+}
+
+func createManualMergeFallbackFunc(repositoryURL, branch, commit, prDestBranch string, fallbackFunc fallbackCheckoutStrategyFunc) (*checkoutPRManualMerge, error) {
+	manualMergeFallbackParams, err := NewPRManualMergeParams(branch, commit, repositoryURL, prDestBranch)
+	if err != nil {
+		return nil, err
+	}
+	return &checkoutPRManualMerge{
+		params:       *manualMergeFallbackParams,
+		fallbackFunc: fallbackFunc,
+	}, nil
 }
