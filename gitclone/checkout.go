@@ -261,7 +261,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 			if err != nil {
 				return nil, err
 			}
-
+			
 			return checkoutPRMergeRef{
 				params: *params,
 				fallbackFunc: func(gitCmd git.Git) error {
