@@ -160,14 +160,13 @@ func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeR
 		log.Printf("\n")
 		log.Infof("Checking if %s is up to date...", cfg.PRUnverifiedMergeRef)
 
-		_, err := mergeRefChecker.IsMergeRefUpToDate(cfg.PRUnverifiedMergeRef)
+		upToDate, err := mergeRefChecker.IsMergeRefUpToDate(cfg.PRUnverifiedMergeRef)
 		if err != nil {
 			log.Warnf("Failed to check PR merge ref freshness: %s", err)
 		}
-		//if upToDate {
-		//	return CheckoutPRMergeBranchMethod, ""
-		//}
-		return CheckoutPRMergeBranchMethod, ""
+		if upToDate {
+			return CheckoutPRMergeBranchMethod, ""
+		}
 	}
 
 	// Fallback (Bitbucket only): fetch the PR patch file through the API and apply the diff manually
@@ -261,7 +260,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 			if err != nil {
 				return nil, err
 			}
-			
+
 			return checkoutPRMergeRef{
 				params: *params,
 				fallbackFunc: func(gitCmd git.Git) error {
