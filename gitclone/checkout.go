@@ -262,7 +262,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 				return nil, err
 			}
 
-			fallbackManualMergeWithHeadBranch, err := createManualMergeFallbackFunc(cfg.RepositoryURL, cfg.PRHeadBranch, cfg.Commit, cfg.PRDestBranch)
+			fallbackManualMergeWithHeadBranch, err := createManualMergeFallbackFunc("", cfg.PRHeadBranch, cfg.Commit, cfg.PRDestBranch)
 			if err != nil {
 				return nil, err
 			}
