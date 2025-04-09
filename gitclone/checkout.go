@@ -258,11 +258,16 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 			if err != nil {
 				log.Warnf("Failed to create PR manual merge fallback params: %v", err)
 			}
+
+			manualMergeFallbackFetchOpts := selectFetchOptions(CheckoutPRManualMergeMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
+			manualMergeFallbackFallback := selectFallbacks(CheckoutPRManualMergeMethod, manualMergeFallbackFetchOpts)
 			///
 
 			return checkoutPRMergeRef{
-				params:                    *params,
-				manualMergeFallbackParams: manualMergeFallbackParams,
+				params:                           *params,
+				manualMergeFallbackParams:        manualMergeFallbackParams,
+				manualMergeFallbackFetchOpts:     manualMergeFallbackFetchOpts,
+				manualMergeFallbackFallbackRetry: manualMergeFallbackFallback,
 			}, nil
 		}
 	case CheckoutPRDiffFileMethod:
