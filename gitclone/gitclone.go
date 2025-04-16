@@ -138,7 +138,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	if !clean {
 		g.logger.Println()
 		g.logger.Warnf("Working tree is dirty, cleaning before checkout:")
-		
+
 		err = runner.Run(gitCmd.Clean("-fd"))
 		if err != nil {
 			g.logger.Warnf("Failed to clean untracked files: %s", err)

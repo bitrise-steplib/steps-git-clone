@@ -250,6 +250,25 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 
 			return checkoutPRMergeRef{
 				params: *params,
+				fallbackCheckout: func(gitCmd git.Git) error {
+					log.Warnf("Using manual merge strategy with PR source branch")
+
+					manualMergeFallbackFetchOpts := selectFetchOptions(CheckoutPRManualMergeMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
+					manualMergeFallbackFallback := selectFallbacks(CheckoutPRManualMergeMethod, manualMergeFallbackFetchOpts)
+
+					prRepositoryURL := ""
+					if isFork(cfg.RepositoryURL, cfg.PRSourceRepositoryURL) {
+						prRepositoryURL = cfg.PRSourceRepositoryURL
+					}
+
+					fallbackManualMergeWithSourceBranch, err := createManualMergeFallbackFunc(prRepositoryURL, cfg.Branch, cfg.Commit, cfg.PRDestBranch)
+					if err != nil {
+						return err
+					}
+
+					// PR merge branch checkout falls back to PR manual merge strategy using the PR source branch
+					return fallbackManualMergeWithSourceBranch.do(gitCmd, manualMergeFallbackFetchOpts, manualMergeFallbackFallback)
+				},
 			}, nil
 		}
 	case CheckoutPRDiffFileMethod:
@@ -428,4 +447,14 @@ func isPRCheckout(method CheckoutMethod) bool {
 	default:
 		panic(fmt.Sprintf("implementation missing for enum value %T", method))
 	}
+}
+
+func createManualMergeFallbackFunc(repositoryURL, branch, commit, prDestBranch string) (*checkoutPRManualMerge, error) {
+	manualMergeFallbackParams, err := NewPRManualMergeParams(branch, commit, repositoryURL, prDestBranch)
+	if err != nil {
+		return nil, err
+	}
+	return &checkoutPRManualMerge{
+		params: *manualMergeFallbackParams,
+	}, nil
 }

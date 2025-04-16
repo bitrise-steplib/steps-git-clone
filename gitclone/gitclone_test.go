@@ -507,7 +507,8 @@ func Test_checkoutState(t *testing.T) {
 				assert.Nil(t, actualErr)
 			}
 
-			assert.Equal(t, tt.wantCmds, mockRunner.Cmds())
+			gotCmds := mockRunner.Cmds()
+			assert.Equal(t, tt.wantCmds, gotCmds)
 		})
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-io/go-utils/log"
 )
 
 // PRMergeRefParams are parameters to check out a Merge/Pull Request's merge ref (the result of merging the 2 branches)
@@ -33,10 +34,25 @@ func NewPRMergeRefParams(mergeRef, headRef string) (*PRMergeRefParams, error) {
 }
 
 type checkoutPRMergeRef struct {
-	params PRMergeRefParams
+	params           PRMergeRefParams
+	fallbackCheckout fallbackCheckoutFunc
 }
 
+type fallbackCheckoutFunc func(gitCmd git.Git) error
+
 func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
+	if err := c.performCheckout(gitCmd, fetchOpts, fallback); err != nil {
+		log.Warnf("Failed to checkout PR merge branch: %s", err)
+
+		if c.fallbackCheckout != nil {
+			return c.fallbackCheckout(gitCmd)
+		}
+		return err
+	}
+	return nil
+}
+
+func (c checkoutPRMergeRef) performCheckout(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
 	// https://git-scm.com/book/en/v2/Git-Internals-The-Refspec
 	refSpec := fmt.Sprintf("%s:%s", c.remoteMergeRef(), c.localMergeRef())
 
