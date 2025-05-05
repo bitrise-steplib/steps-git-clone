@@ -58,27 +58,29 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 }
 
 func (c checkoutCommit) performCheckout(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	return errors.New("failed to checkout PR head branch")
+	if strings.HasSuffix(c.params.BranchRef, "/head") {
+		return errors.New("failed to checkout PR head branch")
+	}
 
-	//remote := originRemoteName
-	//if c.params.SourceRepoURL != "" {
-	//	remote = forkRemoteName
-	//	if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.params.SourceRepoURL)); err != nil {
-	//		return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.SourceRepoURL, err)
-	//	}
-	//}
-	//
-	//if err := fetch(gitCmd, remote, c.params.BranchRef, fetchOptions); err != nil {
-	//	return fmt.Errorf("failed to fetch branch ref (%s) while checking out commit: %w", c.params.BranchRef, err)
-	//}
-	//
-	//if err := checkoutWithCustomRetry(gitCmd, c.params.Commit, fallback); err != nil {
-	//	err = fmt.Errorf("failed to checkout commit: %w", err)
-	//	newErr := fmt.Errorf("please check if the provided commit hash (%s) is valid", c.params.Commit)
-	//	return fmt.Errorf("%v: %w", err, newErr)
-	//}
-	//
-	//return nil
+	remote := originRemoteName
+	if c.params.SourceRepoURL != "" {
+		remote = forkRemoteName
+		if err := runner.Run(gitCmd.RemoteAdd(forkRemoteName, c.params.SourceRepoURL)); err != nil {
+			return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.SourceRepoURL, err)
+		}
+	}
+
+	if err := fetch(gitCmd, remote, c.params.BranchRef, fetchOptions); err != nil {
+		return fmt.Errorf("failed to fetch branch ref (%s) while checking out commit: %w", c.params.BranchRef, err)
+	}
+
+	if err := checkoutWithCustomRetry(gitCmd, c.params.Commit, fallback); err != nil {
+		err = fmt.Errorf("failed to checkout commit: %w", err)
+		newErr := fmt.Errorf("please check if the provided commit hash (%s) is valid", c.params.Commit)
+		return fmt.Errorf("%v: %w", err, newErr)
+	}
+
+	return nil
 }
 
 func (c checkoutCommit) getBuildTriggerRef() string {
