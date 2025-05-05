@@ -1,7 +1,6 @@
 package gitclone
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -58,10 +57,6 @@ func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback f
 }
 
 func (c checkoutCommit) performCheckout(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	if strings.HasSuffix(c.params.BranchRef, "/head") {
-		return errors.New("Failed to checkout PR head branch")
-	}
-
 	remote := originRemoteName
 	if c.params.SourceRepoURL != "" {
 		remote = forkRemoteName
