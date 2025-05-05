@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
+	"github.com/bitrise-io/go-utils/log"
 )
 
 // checkoutNone
@@ -40,10 +41,22 @@ func NewCommitParams(commit, branchRef, sourceRepoURL string) (*CommitParams, er
 
 // checkoutCommit
 type checkoutCommit struct {
-	params CommitParams
+	params           CommitParams
+	fallbackCheckout fallbackCheckoutFunc
 }
 
 func (c checkoutCommit) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
+	if err := c.performCheckout(gitCmd, fetchOptions, fallback); err != nil {
+		if c.fallbackCheckout != nil {
+			log.Warnf("Failed to checkout commit: %s", err)
+			return c.fallbackCheckout(gitCmd)
+		}
+		return err
+	}
+	return nil
+}
+
+func (c checkoutCommit) performCheckout(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	remote := originRemoteName
 	if c.params.SourceRepoURL != "" {
 		remote = forkRemoteName

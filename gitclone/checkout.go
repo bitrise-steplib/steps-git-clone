@@ -314,6 +314,33 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 
 			return checkoutCommit{
 				params: *params,
+				fallbackCheckout: func(gitCmd git.Git) error {
+					log.Warnf("Using commit checkout strategy with PR source branch")
+
+					if cfg.Branch == "" || cfg.Commit == "" {
+						return fmt.Errorf("inconsistent checkout strategy and checkout params: branch=%s, commit=%s", cfg.Branch, cfg.Commit)
+					}
+
+					branchRef := refsHeadsPrefix + cfg.Branch
+					commitCheckoutFallbackFetchOpts := selectFetchOptions(CheckoutCommitMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
+					commitCheckoutFallbackFallback := selectFallbacks(CheckoutCommitMethod, commitCheckoutFallbackFetchOpts)
+
+					prRepositoryURL := ""
+					if isFork(cfg.RepositoryURL, cfg.PRSourceRepositoryURL) {
+						prRepositoryURL = cfg.PRSourceRepositoryURL
+					}
+
+					params, err := NewCommitParams(cfg.Commit, branchRef, prRepositoryURL)
+					if err != nil {
+						return err
+					}
+
+					commitCheckoutFallbackCheckoutMethod := checkoutCommit{
+						params: *params,
+					}
+
+					return commitCheckoutFallbackCheckoutMethod.do(gitCmd, commitCheckoutFallbackFetchOpts, commitCheckoutFallbackFallback)
+				},
 			}, nil
 		}
 	case CheckoutForkCommitMethod:
