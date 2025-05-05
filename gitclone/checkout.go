@@ -325,7 +325,12 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 					commitCheckoutFallbackFetchOpts := selectFetchOptions(CheckoutCommitMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 					commitCheckoutFallbackFallback := selectFallbacks(CheckoutCommitMethod, commitCheckoutFallbackFetchOpts)
 
-					params, err := NewCommitParams(cfg.Commit, branchRef, "")
+					prRepositoryURL := ""
+					if isFork(cfg.RepositoryURL, cfg.PRSourceRepositoryURL) {
+						prRepositoryURL = cfg.PRSourceRepositoryURL
+					}
+
+					params, err := NewCommitParams(cfg.Commit, branchRef, prRepositoryURL)
 					if err != nil {
 						return err
 					}
