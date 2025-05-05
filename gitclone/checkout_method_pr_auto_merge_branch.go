@@ -3,7 +3,7 @@ package gitclone
 import (
 	"fmt"
 	"strings"
-
+	
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 )
@@ -42,9 +42,8 @@ type fallbackCheckoutFunc func(gitCmd git.Git) error
 
 func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
 	if err := c.performCheckout(gitCmd, fetchOpts, fallback); err != nil {
-		log.Warnf("Failed to checkout PR merge branch: %s", err)
-
 		if c.fallbackCheckout != nil {
+			log.Warnf("Failed to checkout PR merge branch: %s", err)
 			return c.fallbackCheckout(gitCmd)
 		}
 		return err

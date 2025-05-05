@@ -314,6 +314,26 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 
 			return checkoutCommit{
 				params: *params,
+				fallbackCheckout: func(gitCmd git.Git) error {
+					branchRef := ""
+					if cfg.Branch != "" {
+						branchRef = refsHeadsPrefix + cfg.Branch
+					}
+
+					commitCheckoutFallbackFetchOpts := selectFetchOptions(CheckoutCommitMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
+					commitCheckoutFallbackFallback := selectFallbacks(CheckoutCommitMethod, commitCheckoutFallbackFetchOpts)
+
+					params, err := NewCommitParams(cfg.Commit, branchRef, "")
+					if err != nil {
+						return err
+					}
+
+					commitCheckoutFallbackCheckoutMethod := checkoutCommit{
+						params: *params,
+					}
+
+					return commitCheckoutFallbackCheckoutMethod.do(gitCmd, commitCheckoutFallbackFetchOpts, commitCheckoutFallbackFallback)
+				},
 			}, nil
 		}
 	case CheckoutForkCommitMethod:
