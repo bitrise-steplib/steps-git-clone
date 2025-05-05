@@ -315,6 +315,8 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 			return checkoutCommit{
 				params: *params,
 				fallbackCheckout: func(gitCmd git.Git) error {
+					log.Warnf("Using commit checkout strategy with PR source branch")
+
 					if cfg.Branch == "" || cfg.Commit == "" {
 						return fmt.Errorf("inconsistent checkout strategy and checkout params: branch=%s, commit=%s", cfg.Branch, cfg.Commit)
 					}
