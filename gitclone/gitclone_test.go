@@ -200,8 +200,6 @@ func Test_checkoutState(t *testing.T) {
 				`git "fetch" "--jobs=10" "--depth=50" "--no-tags" "origin" "refs/heads/master"`,
 				`git "fetch" "--jobs=10" "--depth=50" "--no-tags" "origin" "refs/heads/master"`,
 				`git "fetch" "--jobs=10" "--depth=50" "--no-tags" "origin" "refs/heads/master"`,
-				`git "fetch" "--jobs=10"`,
-				`git "branch" "-r"`,
 			},
 			wantErr: fmt.Errorf("failed to fetch base branch: fetch branch refs/heads/master: dummy_cmd_error: please make sure the branch still exists"),
 		},
@@ -367,8 +365,6 @@ func Test_checkoutState(t *testing.T) {
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
-				`git "fetch" "--jobs=10"`,
-				`git "branch" "-r"`,
 			},
 			wantErr: newStepErrorWithBranchRecommendations(
 				fetchFailedTag,

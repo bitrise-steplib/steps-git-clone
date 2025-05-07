@@ -7,7 +7,6 @@ import (
 
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-io/go-utils/sliceutil"
 )
 
 const (
@@ -126,24 +125,7 @@ func parseListBranchesOutput(output string) map[string][]string {
 	return branchesByRemote
 }
 
-func handleCheckoutError(callback getAvailableBranches, tag string, err error, shortMsg string, branch string) error {
-	// We were checking out a branch (not tag or commit)
-	if branch != "" {
-		branchesByRemote, branchesErr := callback()
-		branches := branchesByRemote[originRemoteName]
-		// There was no error grabbing the available branches
-		// And the current branch is not present in the list
-		if branchesErr == nil && !sliceutil.IsStringInSlice(branch, branches) {
-			return newStepErrorWithBranchRecommendations(
-				tag,
-				err,
-				shortMsg,
-				branch,
-				branches,
-			)
-		}
-	}
-
+func handleCheckoutError(tag string, err error, shortMsg string) error {
 	return newStepError(
 		tag,
 		err,

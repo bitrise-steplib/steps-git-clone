@@ -138,7 +138,6 @@ func Test_handleCheckoutError(t *testing.T) {
 				Err:      errors.New("pathspec 'test' did not match any file(s) known to git"),
 				ShortMsg: "Checkout has failed",
 				Recommendations: step.Recommendation{
-					branchRecKey: []string{"master", "develop"},
 					errormapper.DetailedErrorRecKey: errormapper.DetailedError{
 						Title:       "We couldn't find the branch 'test'.",
 						Description: "Please choose another branch and try again.",
@@ -225,7 +224,7 @@ func Test_handleCheckoutError(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := handleCheckoutError(tt.args.callback, tt.args.tag, tt.args.err, tt.args.shortMsg, tt.args.branch); !reflect.DeepEqual(got, tt.want) {
+			if got := handleCheckoutError(tt.args.tag, tt.args.err, tt.args.shortMsg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("handleCheckoutError() = %v, want %v", got, tt.want)
 			}
 		})
