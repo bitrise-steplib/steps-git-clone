@@ -19,16 +19,23 @@ type CommandRunner interface {
 	RunForOutput(c *command.Model) (string, error)
 	Run(c *command.Model) error
 	RunWithRetry(getCommmand func() *command.Model) error
+	SetPerformanceMonitoring(enable bool)
+	PausePerformanceMonitoring()
+	ResumePerformanceMonitoring()
 }
 
 // DefaultRunner ...
 type DefaultRunner struct {
+	performanceMonitoringEnabled             bool
+	performanceMonitoringTemporarilyDisabled bool
 }
 
 // RunForOutput ...
-func (r DefaultRunner) RunForOutput(c *command.Model) (string, error) {
+func (r *DefaultRunner) RunForOutput(c *command.Model) (string, error) {
 	fmt.Println()
 	log.Infof("$ %s &> out", c.PrintableCommandArgs())
+
+	r.setupPerformanceMonitoring(c)
 
 	out, err := c.RunAndReturnTrimmedCombinedOutput()
 	if err != nil && errorutil.IsExitStatusError(err) {
@@ -39,10 +46,12 @@ func (r DefaultRunner) RunForOutput(c *command.Model) (string, error) {
 }
 
 // Run ...
-func (r DefaultRunner) Run(c *command.Model) error {
+func (r *DefaultRunner) Run(c *command.Model) error {
 	fmt.Println()
 	log.Infof("$ %s", c.PrintableCommandArgs())
 	var buffer bytes.Buffer
+
+	r.setupPerformanceMonitoring(c)
 
 	err := c.SetStdout(os.Stdout).SetStderr(io.MultiWriter(os.Stderr, &buffer)).Run()
 	if err != nil {
@@ -60,7 +69,7 @@ func (r DefaultRunner) Run(c *command.Model) error {
 }
 
 // RunWithRetry ...
-func (r DefaultRunner) RunWithRetry(getCommand func() *command.Model) error {
+func (r *DefaultRunner) RunWithRetry(getCommand func() *command.Model) error {
 	return retry.Times(2).Wait(5).Try(func(attempt uint) error {
 		if attempt > 0 {
 			log.Warnf("Retrying...")
@@ -74,4 +83,27 @@ func (r DefaultRunner) RunWithRetry(getCommand func() *command.Model) error {
 
 		return err
 	})
+}
+
+func (r *DefaultRunner) SetPerformanceMonitoring(enable bool) {
+	r.performanceMonitoringEnabled = enable
+}
+
+func (r *DefaultRunner) PausePerformanceMonitoring() {
+	r.performanceMonitoringTemporarilyDisabled = true
+}
+
+func (r *DefaultRunner) ResumePerformanceMonitoring() {
+	r.performanceMonitoringTemporarilyDisabled = false
+}
+
+func (r *DefaultRunner) setupPerformanceMonitoring(c *command.Model) {
+	if r.performanceMonitoringTemporarilyDisabled {
+		c.AppendEnvs("GIT_TRACE2_PERF=0")
+		return
+	}
+
+	if r.performanceMonitoringEnabled {
+		c.AppendEnvs("GIT_TRACE2_PERF=1")
+	}
 }
