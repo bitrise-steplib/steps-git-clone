@@ -227,6 +227,16 @@ inputs:
     - "No"
     - "Yes"
 
+- performance_monitoring: "no"
+  opts:
+    category: Debug
+    title: Performance monitoring
+    summary: Enable performance monitoring.
+    description: Prints extra performance related information for every git operation.
+    value_options:
+      - "no"
+      - "yes"
+
 - build_url: $BITRISE_BUILD_URL
   opts:
     category: Debug

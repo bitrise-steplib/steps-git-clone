@@ -39,9 +39,10 @@ type Input struct {
 	PRUnverifiedMergeBranch string `env:"pull_request_unverified_merge_branch"`
 	PRHeadBranch            string `env:"pull_request_head_branch"`
 
-	ResetRepository bool   `env:"reset_repository,opt[Yes,No]"`
-	BuildURL        string `env:"build_url"`
-	BuildAPIToken   string `env:"build_api_token"`
+	ResetRepository       bool   `env:"reset_repository,opt[Yes,No]"`
+	PerformanceMonitoring bool   `env:"performance_monitoring,opt[yes,no]"`
+	BuildURL              string `env:"build_url"`
+	BuildAPIToken         string `env:"build_api_token"`
 }
 
 // Config is the git clone step configuration
