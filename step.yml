@@ -234,8 +234,8 @@ inputs:
     summary: Enable performance monitoring.
     description: Prints extra performance related information for every git operation.
     value_options:
-      - "no"
-      - "yes"
+    - "no"
+    - "yes"
 
 - build_url: $BITRISE_BUILD_URL
   opts:
