@@ -79,7 +79,13 @@ func fetch(gitCmd git.Git, remote string, ref string, options fetchOptions) erro
 		)
 	}
 
-	return nil
+	return handleCheckoutError(
+		listBranches(gitCmd),
+		fetchFailedTag,
+		fmt.Errorf("fetch error"),
+		"Fetching repository has failed",
+		branch,
+	)
 }
 
 func checkoutWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error {
@@ -105,7 +111,7 @@ func forceCheckoutRemoteBranch(gitCmd git.Git, remote string, branchRef string, 
 		wErr := fmt.Errorf("fetch branch %s: %w", branchRef, err)
 		return fmt.Errorf("%v: %w", wErr, errors.New("please make sure the branch still exists"))
 	}
-	
+
 	remoteBranch := fmt.Sprintf("%s/%s", remote, branch)
 	// -B: create the branch if it doesn't exist, reset if it does
 	// The latter is important in persistent environments because shallow-fetching only fetches 1 commit,
@@ -121,7 +127,13 @@ func forceCheckoutRemoteBranch(gitCmd git.Git, remote string, branchRef string, 
 		)
 	}
 
-	return nil
+	return handleCheckoutError(
+		listBranches(gitCmd),
+		checkoutFailedTag,
+		fmt.Errorf("force checkout error"),
+		"Checkout has failed",
+		branch,
+	)
 }
 
 func mergeWithCustomRetry(gitCmd git.Git, arg string, retry fallbackRetry) error {
