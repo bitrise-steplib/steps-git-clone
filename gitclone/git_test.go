@@ -47,36 +47,63 @@ func Test_getRepo(t *testing.T) {
 
 func Test_parseListBranchesOutput(t *testing.T) {
 	tests := []struct {
-		name string
-		args string
-		want map[string][]string
+		name       string
+		remoteList string
+		branchList string
+		want       map[string][]string
 	}{
 		{
-			name: "single branch",
-			args: "upstream/master",
+			name: "single branch, single remote",
+			remoteList: `
+origin	git_url (fetch)
+origin	git_url (push)
+`,
+			branchList: `
+From git_url
+aaabbbcccddd	refs/heads/master
+`,
 			want: map[string][]string{
-				"upstream": {
+				"origin": {
 					"master",
 				},
 			},
 		},
 		{
-			name: "multiple branches",
-			args: `upstream/bitrise-bot-1
-  upstream/bitrise-bot-2
-  upstream/bitrise-bot-3`,
+			name: "multiple branches, multiple remotes",
+			remoteList: `
+origin	git_url1 (fetch)
+origin	git_url1 (push)
+upstream	git_url2 (fetch)
+upstream	git_url3 (push)
+`,
+			branchList: `
+From git_url1
+aaabbbcccddd1	refs/heads/A
+aaabbbcccddd2	refs/heads/B
+aaabbbcccddd3	refs/heads/C
+
+From git_url2
+aaabbbcccddd4	refs/heads/D
+aaabbbcccddd5	refs/heads/E
+aaabbbcccddd6	refs/heads/F
+`,
 			want: map[string][]string{
+				"origin": {
+					"A",
+					"B",
+					"C",
+				},
 				"upstream": {
-					"bitrise-bot-1",
-					"bitrise-bot-2",
-					"bitrise-bot-3",
+					"D",
+					"E",
+					"F",
 				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := parseListBranchesOutput(tt.args)
+			got := parseListBranchesOutput(tt.remoteList, tt.branchList)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("parseListBranchesOutput() = %v, want %v", got, tt.want)
 			}
