@@ -51,7 +51,9 @@ type GitCloner struct {
 	mergeRefChecker bitriseapi.MergeRefChecker
 }
 
-func NewGitCloner(logger log.Logger, tracker tracker.StepTracker, cmdFactory command.Factory, patchSource bitriseapi.PatchSource, mergeRefChecker bitriseapi.MergeRefChecker) GitCloner {
+func NewGitCloner(logger log.Logger, tracker tracker.StepTracker, cmdFactory command.Factory, patchSource bitriseapi.PatchSource, mergeRefChecker bitriseapi.MergeRefChecker, performanceMonitoring bool) GitCloner {
+	runner.SetPerformanceMonitoring(performanceMonitoring)
+
 	return GitCloner{
 		logger:          logger,
 		tracker:         tracker,

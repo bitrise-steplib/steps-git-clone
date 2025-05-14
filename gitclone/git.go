@@ -16,7 +16,7 @@ const (
 	jobsFlag          = "--jobs=10"
 )
 
-var runner CommandRunner = DefaultRunner{}
+var runner CommandRunner = &DefaultRunner{}
 
 func isOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
 	absDir, err := pathutil.AbsPath(dir)

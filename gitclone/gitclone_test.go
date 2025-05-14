@@ -495,7 +495,7 @@ func Test_checkoutState(t *testing.T) {
 			envRepo := env.NewRepository()
 			logger := log.NewLogger()
 			tracker := tracker.NewStepTracker(envRepo, logger)
-			cloner := NewGitCloner(log.NewLogger(), tracker, command.NewFactory(envRepo), tt.patchSource, tt.mergeRefChecker)
+			cloner := NewGitCloner(log.NewLogger(), tracker, command.NewFactory(envRepo), tt.patchSource, tt.mergeRefChecker, false)
 			_, _, actualErr := cloner.checkoutState(git.Git{}, tt.cfg)
 
 			// Then
