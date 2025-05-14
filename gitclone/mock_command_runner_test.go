@@ -89,6 +89,15 @@ func (m *MockRunner) GivenRunWithRetryFailsAfter(times int) *MockRunner {
 	return m
 }
 
+func (m *MockRunner) SetPerformanceMonitoring(enable bool) {
+}
+
+func (m *MockRunner) PausePerformanceMonitoring() {
+}
+
+func (m *MockRunner) ResumePerformanceMonitoring() {
+}
+
 func (m *MockRunner) rememberCommand(args mock.Arguments) {
 	var cmdModel *command.Model
 	switch res := args[0].(type) {

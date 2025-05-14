@@ -39,9 +39,10 @@ type Input struct {
 	PRUnverifiedMergeBranch string `env:"pull_request_unverified_merge_branch"`
 	PRHeadBranch            string `env:"pull_request_head_branch"`
 
-	ResetRepository bool   `env:"reset_repository,opt[Yes,No]"`
-	BuildURL        string `env:"build_url"`
-	BuildAPIToken   string `env:"build_api_token"`
+	ResetRepository       bool   `env:"reset_repository,opt[Yes,No]"`
+	PerformanceMonitoring bool   `env:"performance_monitoring,opt[yes,no]"`
+	BuildURL              string `env:"build_url"`
+	BuildAPIToken         string `env:"build_api_token"`
 }
 
 // Config is the git clone step configuration
@@ -105,7 +106,7 @@ func (g GitCloneStep) Run(cfg Config) (gitclone.CheckoutStateResult, error) {
 	gitCloneCfg := convertConfig(cfg)
 	patchSource := bitriseapi.NewPatchSource(cfg.BuildURL, cfg.BuildAPIToken)
 	mergeRefChecker := bitriseapi.NewMergeRefChecker(cfg.BuildURL, cfg.BuildAPIToken, retry.NewHTTPClient(), g.logger, g.tracker)
-	cloner := gitclone.NewGitCloner(g.logger, g.tracker, g.cmdFactory, patchSource, mergeRefChecker)
+	cloner := gitclone.NewGitCloner(g.logger, g.tracker, g.cmdFactory, patchSource, mergeRefChecker, cfg.PerformanceMonitoring)
 	return cloner.CheckoutState(gitCloneCfg)
 }
 
