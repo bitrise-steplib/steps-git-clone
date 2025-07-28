@@ -111,6 +111,22 @@ func (e *OutputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 	return outputs
 }
 
+func trimEnv(logger log.Logger, envKey string, envValue string, maxEnvLength int) string {
+	if len(envValue) <= maxEnvLength {
+		return envValue
+	}
+
+	if maxEnvLength <= len(trimEnding) {
+		logger.Warnf("Maximum env length size (%d) is too small to fit anything, setting %s to '%s'", maxEnvLength, envKey, trimEnding)
+		return trimEnding
+	}
+
+	tv := envValue[:maxEnvLength-len(trimEnding)] + trimEnding
+	logger.Printf("Value %s is bigger than maximum env variable size, trimming", envKey)
+
+	return tv
+}
+
 func (e *OutputExporter) printLogAndExportEnv(command *v1command.Model, env string, maxEnvLength int) error {
 	runner.PausePerformanceMonitoring()
 	defer runner.ResumePerformanceMonitoring()
@@ -120,10 +136,8 @@ func (e *OutputExporter) printLogAndExportEnv(command *v1command.Model, env stri
 		return fmt.Errorf("command failed: %s", err)
 	}
 
-	if (env == "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" || env == "GIT_CLONE_COMMIT_MESSAGE_BODY") && len(l) > maxEnvLength {
-		tv := l[:maxEnvLength-len(trimEnding)] + trimEnding
-		e.logger.Printf("Value %s  is bigger than maximum env variable size, trimming", env)
-		l = tv
+	if env == "GIT_CLONE_COMMIT_MESSAGE_SUBJECT" || env == "GIT_CLONE_COMMIT_MESSAGE_BODY" {
+		l = trimEnv(e.logger, env, l, maxEnvLength)
 	}
 
 	e.logger.Printf("=> %s\n   value: %s", env, l)
