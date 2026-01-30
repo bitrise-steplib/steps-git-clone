@@ -29,7 +29,7 @@ func NewOutputExporter(logger log.Logger, cmdFactory command.Factory, checkoutRe
 	return OutputExporter{
 		logger:         logger,
 		checkoutResult: checkoutResult,
-		exporter:       export.NewExporter(cmdFactory),
+		exporter:       export.NewExporter(cmdFactory, export.NewFileManager()),
 	}
 }
 
