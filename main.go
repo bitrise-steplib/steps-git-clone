@@ -51,10 +51,10 @@ func run() ExitCode {
 
 func createStep(logger log.Logger) step.GitCloneStep {
 	envRepo := env.NewRepository()
-	tracker := tracker.NewStepTracker(envRepo, logger)
+	stepTracker := tracker.NewStepTracker(envRepo, logger)
 	inputParser := stepconf.NewInputParser(envRepo)
 	cmdFactory := command.NewFactory(envRepo)
-	pathModififer := pathutil.NewPathModifier()
+	pathModifier := pathutil.NewPathModifier()
 
-	return step.NewGitCloneStep(logger, tracker, inputParser, envRepo, cmdFactory, pathModififer)
+	return step.NewGitCloneStep(logger, stepTracker, inputParser, envRepo, cmdFactory, pathModifier)
 }
