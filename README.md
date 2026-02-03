@@ -51,8 +51,8 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 | Key | Description | Flags | Default |
 | --- | --- | --- | --- |
 | `merge_pr` | This only applies to builds triggered by pull requests.  Options: - `yes`: Depending on the information in the build trigger, either fetches the PR merge ref or creates the merged state locally. - `no`: Checks out the head of the PR branch without merging it into the destination branch. |  | `yes` |
-| `git_http_username` | Username for establishing an HTTP(S) connection to the repository | sensitive | `$GIT_HTTP_USERNAME` |
-| `git_http_password` | Personal access token (or password) for establishing an HTTP(S) connection to the repository | sensitive | `$GIT_HTTP_PASSWORD` |
+| `git_http_username` | Username for establishing an HTTP(S) connection to the repository.  This is typically required when the repository is private. | sensitive | `$GIT_HTTP_USERNAME` |
+| `git_http_password` | Personal access token (or password) for establishing an HTTP(S) connection to the repository.  This is typically required when the repository is private. | sensitive | `$GIT_HTTP_PASSWORD` |
 | `clone_into_dir` | Local directory where the repository is cloned | required | `$BITRISE_SOURCE_DIR` |
 | `clone_depth` | Limit fetching to the specified number of commits.  By default, the Step tries to do a shallow clone (depth of 1) if it's possible based on the build trigger parameters. If it's not possible, it applies a low depth value, unless another value is specified here.  It's not recommended to define this input because a shallow clone ensures fast clone times. Examples of when you want to override the clone depth:  - A Step in the workflow reads the commit history in order to generate a changelog - A Step in the workflow runs a git diff against a previous commit  Use the value `-1` to disable the depth limit completely and fetch the entire repo history. |  |  |
 | `update_submodules` | Update registered submodules to match what the superproject expects. If set to `no`, `git fetch` calls will use the `--no-recurse-submodules` flag. |  | `yes` |
@@ -95,6 +95,8 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 We welcome [pull requests](https://github.com/bitrise-steplib/steps-git-clone/pulls) and [issues](https://github.com/bitrise-steplib/steps-git-clone/issues) against this repository.
 
 For pull requests, work on your changes in a forked repository and use the Bitrise CLI to [run step tests locally](https://docs.bitrise.io/en/bitrise-ci/bitrise-cli/running-your-first-local-build-with-the-cli.html).
+
+Note: this step's end-to-end tests (defined in e2e/bitrise.yml) are working with secrets which are intentionally not stored in this repo. External contributors won't be able to run those tests. Don't worry, if you open a PR with your contribution, we will help with running tests and make sure that they pass.
 
 Learn more about developing steps:
 
