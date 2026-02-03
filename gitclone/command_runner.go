@@ -8,17 +8,17 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/retry"
+	"github.com/bitrise-io/go-utils/v2/git"
 )
 
 // CommandRunner ...
 type CommandRunner interface {
-	RunForOutput(c *command.Model) (string, error)
-	Run(c *command.Model) error
-	RunWithRetry(getCommmand func() *command.Model) error
+	RunForOutput(t git.Template) (string, error)
+	Run(t git.Template) error
+	RunWithRetry(get func() git.Template) error
 	SetPerformanceMonitoring(enable bool)
 	PausePerformanceMonitoring()
 	ResumePerformanceMonitoring()
@@ -31,11 +31,12 @@ type DefaultRunner struct {
 }
 
 // RunForOutput ...
-func (r *DefaultRunner) RunForOutput(c *command.Model) (string, error) {
+func (r *DefaultRunner) RunForOutput(t git.Template) (string, error) {
+	perfEnv := r.performanceMonitoringEnvVar()
+	c := t.Create(nil, nil, []string{perfEnv})
+
 	fmt.Println()
 	log.Infof("$ %s &> out", c.PrintableCommandArgs())
-
-	r.setupPerformanceMonitoring(c)
 
 	out, err := c.RunAndReturnTrimmedCombinedOutput()
 	if err != nil && errorutil.IsExitStatusError(err) {
@@ -46,14 +47,16 @@ func (r *DefaultRunner) RunForOutput(c *command.Model) (string, error) {
 }
 
 // Run ...
-func (r *DefaultRunner) Run(c *command.Model) error {
-	fmt.Println()
-	log.Infof("$ %s", c.PrintableCommandArgs())
+func (r *DefaultRunner) Run(t git.Template) error {
 	var buffer bytes.Buffer
 
-	r.setupPerformanceMonitoring(c)
+	perfEnv := r.performanceMonitoringEnvVar()
+	c := t.Create(os.Stdout, io.MultiWriter(os.Stderr, &buffer), []string{perfEnv})
 
-	err := c.SetStdout(os.Stdout).SetStderr(io.MultiWriter(os.Stderr, &buffer)).Run()
+	fmt.Println()
+	log.Infof("$ %s", c.PrintableCommandArgs())
+
+	err := c.Run()
 	if err != nil {
 		if errorutil.IsExitStatusError(err) {
 			errorStr := buffer.String()
@@ -69,13 +72,13 @@ func (r *DefaultRunner) Run(c *command.Model) error {
 }
 
 // RunWithRetry ...
-func (r *DefaultRunner) RunWithRetry(getCommand func() *command.Model) error {
+func (r *DefaultRunner) RunWithRetry(get func() git.Template) error {
 	return retry.Times(2).Wait(5).Try(func(attempt uint) error {
 		if attempt > 0 {
 			log.Warnf("Retrying...")
 		}
 
-		err := r.Run(getCommand())
+		err := r.Run(get())
 		if err != nil {
 			log.Warnf("Attempt %d failed:", attempt+1)
 			fmt.Println(err.Error())
@@ -97,13 +100,14 @@ func (r *DefaultRunner) ResumePerformanceMonitoring() {
 	r.performanceMonitoringTemporarilyDisabled = false
 }
 
-func (r *DefaultRunner) setupPerformanceMonitoring(c *command.Model) {
+func (r *DefaultRunner) performanceMonitoringEnvVar() string {
 	if r.performanceMonitoringTemporarilyDisabled {
-		c.AppendEnvs("GIT_TRACE2_PERF=0")
-		return
+		return "GIT_TRACE2_PERF=0"
 	}
 
 	if r.performanceMonitoringEnabled {
-		c.AppendEnvs("GIT_TRACE2_PERF=1")
+		return "GIT_TRACE2_PERF=1"
 	}
+
+	return ""
 }

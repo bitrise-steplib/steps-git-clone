@@ -20,7 +20,7 @@ func NewStepTracker(envRepo env.Repository, logger log.Logger) StepTracker {
 		"is_pr_build": envRepo.Get("PR") == "true",
 	}
 	return StepTracker{
-		tracker: analytics.NewDefaultTracker(logger, p),
+		tracker: analytics.NewDefaultTracker(logger, envRepo, p),
 		logger:  logger,
 	}
 }

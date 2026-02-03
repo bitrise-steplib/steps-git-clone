@@ -1,11 +1,12 @@
 package gitclone
 
 import (
-	"os/exec"
+	"io"
 	"strings"
 	"testing"
 
-	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/stretchr/testify/require"
 )
 
@@ -50,11 +51,13 @@ func TestPerformanceMonitoring(t *testing.T) {
 				r.PausePerformanceMonitoring()
 			}
 
-			cmd := command.New("echo", "hello")
-			err := r.Run(cmd)
+			gitTemplate := mockTemplate{
+				mockCommand: command.NewFactory(env.NewRepository()).Create("echo", []string{"hello"}, nil),
+			}
+			err := r.Run(&gitTemplate)
 			require.NoError(t, err)
 
-			value, ok := getEnv(cmd.GetCmd(), "GIT_TRACE2_PERF")
+			value, ok := getEnv(gitTemplate.receivedEnvs, "GIT_TRACE2_PERF")
 
 			if tt.want == nil {
 				require.Equal(t, "", value)
@@ -78,11 +81,21 @@ func pointer[T any](d T) *T {
 	return &d
 }
 
-func getEnv(cmd *exec.Cmd, key string) (string, bool) {
-	for _, env := range cmd.Env {
-		if strings.HasPrefix(env, key) {
-			return strings.TrimPrefix(env, key+"="), true
+func getEnv(envs []string, key string) (string, bool) {
+	for _, e := range envs {
+		if strings.HasPrefix(e, key) {
+			return strings.TrimPrefix(e, key+"="), true
 		}
 	}
 	return "", false
+}
+
+type mockTemplate struct {
+	receivedEnvs []string
+	mockCommand  command.Command
+}
+
+func (m *mockTemplate) Create(stdOut, stdErr io.Writer, envs []string) command.Command {
+	m.receivedEnvs = envs
+	return m.mockCommand
 }

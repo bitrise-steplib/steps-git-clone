@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/git"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
@@ -64,16 +64,16 @@ func NewGitCloner(logger log.Logger, tracker tracker.StepTracker, cmdFactory com
 }
 
 type CheckoutStateResult struct {
-	gitRef string
-	isPR   bool
-	gitCmd git.Git
+	gitRef     string
+	isPR       bool
+	gitFactory git.Factory
 }
 
 // CheckoutState is the entry point of the git clone process
 func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	defer g.tracker.Wait()
 
-	gitCmd, err := git.New(cfg.CloneIntoDir)
+	gitFactory, err := git.DefaultFactory(cfg.CloneIntoDir, g.cmdFactory)
 	if err != nil {
 		return CheckoutStateResult{}, newStepError(
 			"git_new",
@@ -82,7 +82,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		)
 	}
 
-	originPresent, err := isOriginPresent(gitCmd, cfg.CloneIntoDir, cfg.RepositoryURL)
+	originPresent, err := isOriginPresent(gitFactory, cfg.CloneIntoDir, cfg.RepositoryURL)
 	if err != nil {
 		return CheckoutStateResult{}, newStepError(
 			"check_origin_present_failed",
@@ -92,7 +92,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	}
 
 	if originPresent && cfg.ResetRepository {
-		if err := resetRepo(gitCmd); err != nil {
+		if err := resetRepo(gitFactory); err != nil {
 			return CheckoutStateResult{}, newStepError(
 				"reset_repository_failed",
 				fmt.Errorf("reset repository failed: %v", err),
@@ -100,7 +100,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 			)
 		}
 	}
-	if err := runner.Run(gitCmd.Init()); err != nil {
+	if err := runner.Run(gitFactory.Init()); err != nil {
 		return CheckoutStateResult{}, newStepError(
 			"init_git_failed",
 			fmt.Errorf("initializing repository failed: %v", err),
@@ -108,7 +108,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		)
 	}
 	if !originPresent {
-		if err := runner.Run(gitCmd.RemoteAdd(originRemoteName, cfg.RepositoryURL)); err != nil {
+		if err := runner.Run(gitFactory.RemoteAdd(originRemoteName, cfg.RepositoryURL)); err != nil {
 			return CheckoutStateResult{}, newStepError(
 				"add_remote_failed",
 				fmt.Errorf("adding remote repository failed (%s): %v", cfg.RepositoryURL, err),
@@ -120,7 +120,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	// Disable automatic GC as it may be triggered by other git commands (making run times nondeterministic).
 	// And we run in ephemeral VMs anyway, so GC isn't really needed.
 	// https://mirrors.edge.kernel.org/pub/software/scm/git/docs/git-gc.html
-	err = runner.Run(gitCmd.Config("gc.auto", "0"))
+	err = runner.Run(gitFactory.Config("gc.auto", "0"))
 	if err != nil {
 		return CheckoutStateResult{}, newStepError(
 			"disable_gc",
@@ -129,11 +129,11 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		)
 	}
 
-	if err := setupSparseCheckout(gitCmd, cfg.SparseDirectories); err != nil {
+	if err := setupSparseCheckout(gitFactory, cfg.SparseDirectories); err != nil {
 		return CheckoutStateResult{}, err
 	}
 
-	clean, err := isWorkingTreeClean(gitCmd)
+	clean, err := isWorkingTreeClean(gitFactory)
 	if err != nil {
 		g.logger.Warnf("Failed to check if working tree is clean: %s", err)
 	}
@@ -141,25 +141,25 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		g.logger.Println()
 		g.logger.Warnf("Working tree is dirty, cleaning before checkout:")
 
-		err = runner.Run(gitCmd.Clean("-fd"))
+		err = runner.Run(gitFactory.Clean("-fd"))
 		if err != nil {
 			g.logger.Warnf("Failed to clean untracked files: %s", err)
 		}
 
-		err = runner.Run(gitCmd.Reset("--hard", "HEAD"))
+		err = runner.Run(gitFactory.Reset("--hard", "HEAD"))
 		if err != nil {
 			g.logger.Warnf("Failed to reset repository: %s", err)
 		}
 	}
 
-	checkoutStrategy, isPR, err := g.checkoutState(gitCmd, cfg)
+	checkoutStrategy, isPR, err := g.checkoutState(gitFactory, cfg)
 	if err != nil {
 		return CheckoutStateResult{}, err
 	}
 
 	if cfg.UpdateSubmodules {
 		startTime := time.Now()
-		if err := updateSubmodules(gitCmd, cfg); err != nil {
+		if err := updateSubmodules(gitFactory, cfg); err != nil {
 			return CheckoutStateResult{}, err
 		}
 		updateTime := time.Since(startTime).Round(time.Second)
@@ -169,13 +169,13 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	}
 
 	return CheckoutStateResult{
-		gitRef: checkoutStrategy.getBuildTriggerRef(),
-		isPR:   isPR,
-		gitCmd: gitCmd,
+		gitRef:     checkoutStrategy.getBuildTriggerRef(),
+		isPR:       isPR,
+		gitFactory: gitFactory,
 	}, nil
 }
 
-func (g GitCloner) checkoutState(gitCmd git.Git, cfg Config) (strategy checkoutStrategy, isPR bool, err error) {
+func (g GitCloner) checkoutState(gitFactory git.Factory, cfg Config) (strategy checkoutStrategy, isPR bool, err error) {
 	checkoutStartTime := time.Now()
 	checkoutMethod, diffFile := selectCheckoutMethod(cfg, g.patchSource, g.mergeRefChecker)
 
@@ -189,7 +189,7 @@ func (g GitCloner) checkoutState(gitCmd git.Git, cfg Config) (strategy checkoutS
 		return nil, false, fmt.Errorf("failed to select a checkout stategy")
 	}
 
-	if err := checkoutStrategy.do(gitCmd, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
+	if err := checkoutStrategy.do(gitFactory, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
 		g.logger.Infof("Checkout strategy used: %T", checkoutStrategy)
 		return nil, false, err
 	}
@@ -202,7 +202,7 @@ func (g GitCloner) checkoutState(gitCmd git.Git, cfg Config) (strategy checkoutS
 	return checkoutStrategy, isPRCheckout(checkoutMethod), nil
 }
 
-func updateSubmodules(gitCmd git.Git, cfg Config) error {
+func updateSubmodules(gitFactory git.Factory, cfg Config) error {
 	var opts []string
 	opts = append(opts, jobsFlag)
 
@@ -210,7 +210,7 @@ func updateSubmodules(gitCmd git.Git, cfg Config) error {
 		opts = append(opts, fmt.Sprintf("--depth=%d", cfg.SubmoduleUpdateDepth))
 	}
 
-	if err := runner.Run(gitCmd.SubmoduleUpdate(opts...)); err != nil {
+	if err := runner.Run(gitFactory.SubmoduleUpdate(opts...)); err != nil {
 		return newStepError(
 			updateSubmoduleFailedTag,
 			fmt.Errorf("submodule update: %v", err),
@@ -221,12 +221,12 @@ func updateSubmodules(gitCmd git.Git, cfg Config) error {
 	return nil
 }
 
-func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
+func setupSparseCheckout(gitFactory git.Factory, sparseDirectories []string) error {
 	if len(sparseDirectories) == 0 {
 		return nil
 	}
 
-	initCommand := gitCmd.SparseCheckoutInit(true)
+	initCommand := gitFactory.SparseCheckoutInit(true)
 	if err := runner.Run(initCommand); err != nil {
 		return newStepError(
 			sparseCheckoutFailedTag,
@@ -235,7 +235,7 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 		)
 	}
 
-	sparseSetCommand := gitCmd.SparseCheckoutSet(sparseDirectories...)
+	sparseSetCommand := gitFactory.SparseCheckoutSet(sparseDirectories...)
 	if err := runner.Run(sparseSetCommand); err != nil {
 		return newStepError(
 			sparseCheckoutFailedTag,
@@ -245,7 +245,7 @@ func setupSparseCheckout(gitCmd git.Git, sparseDirectories []string) error {
 	}
 
 	// Enable partial clone support for the remote
-	sparseConfigCmd := gitCmd.Config("extensions.partialClone", originRemoteName, "--local")
+	sparseConfigCmd := gitFactory.Config("extensions.partialClone", originRemoteName, "--local")
 	if err := runner.Run(sparseConfigCmd); err != nil {
 		return newStepError(
 			sparseCheckoutFailedTag,

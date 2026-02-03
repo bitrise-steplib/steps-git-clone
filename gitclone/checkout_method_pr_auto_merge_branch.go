@@ -3,9 +3,9 @@ package gitclone
 import (
 	"fmt"
 	"strings"
-	
-	"github.com/bitrise-io/go-utils/command/git"
+
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/v2/git"
 )
 
 // PRMergeRefParams are parameters to check out a Merge/Pull Request's merge ref (the result of merging the 2 branches)
@@ -38,20 +38,20 @@ type checkoutPRMergeRef struct {
 	fallbackCheckout fallbackCheckoutFunc
 }
 
-type fallbackCheckoutFunc func(gitCmd git.Git) error
+type fallbackCheckoutFunc func(gitFactory git.Factory) error
 
-func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
-	if err := c.performCheckout(gitCmd, fetchOpts, fallback); err != nil {
+func (c checkoutPRMergeRef) do(gitFactory git.Factory, fetchOpts fetchOptions, fallback fallbackRetry) error {
+	if err := c.performCheckout(gitFactory, fetchOpts, fallback); err != nil {
 		if c.fallbackCheckout != nil {
 			log.Warnf("Failed to checkout PR merge branch: %s", err)
-			return c.fallbackCheckout(gitCmd)
+			return c.fallbackCheckout(gitFactory)
 		}
 		return err
 	}
 	return nil
 }
 
-func (c checkoutPRMergeRef) performCheckout(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
+func (c checkoutPRMergeRef) performCheckout(gitFactory git.Factory, fetchOpts fetchOptions, fallback fallbackRetry) error {
 	// https://git-scm.com/book/en/v2/Git-Internals-The-Refspec
 	refSpec := fmt.Sprintf("%s:%s", c.remoteMergeRef(), c.localMergeRef())
 
@@ -62,33 +62,33 @@ func (c checkoutPRMergeRef) performCheckout(gitCmd git.Git, fetchOpts fetchOptio
 	// This is caused by the remote merge and head branches being "force-pushed" by GitHub.
 	// To solve it we remove merge and head branch refs.
 	// $ git update-ref -d refs/remotes/pull/7/merge
-	err := deleteRef(gitCmd, c.localMergeRef())
+	err := deleteRef(gitFactory, c.localMergeRef())
 	if err != nil {
 		return fmt.Errorf("failed to delete ref: %w", err)
 	}
 
 	// $ git update-ref -d refs/remotes/pull/7/head
 	// If the ref does not exist, the command still exits with 0 exit code.
-	err = deleteRef(gitCmd, c.localHeadRef())
+	err = deleteRef(gitFactory, c.localHeadRef())
 	if err != nil {
 		return fmt.Errorf("failed to delete ref: %w", err)
 	}
 
 	//$ git fetch origin refs/remotes/pull/7/merge:refs/pull/7/merge
-	err = fetch(gitCmd, originRemoteName, refSpec, fetchOpts)
+	err = fetch(gitFactory, originRemoteName, refSpec, fetchOpts)
 	if err != nil {
 		return fmt.Errorf("failed to fetch merge ref: %w", err)
 	}
 
 	// Also fetch the PR head ref because the step exports outputs based on the PR head commit (see output.go)
 	// $ git fetch origin refs/remotes/pull/7/head:refs/pull/7/head
-	err = c.fetchPRHeadRef(gitCmd, fetchOpts)
+	err = c.fetchPRHeadRef(gitFactory, fetchOpts)
 	if err != nil {
 		return err
 	}
 
 	// $ git checkout refs/remotes/pull/7/merge
-	err = checkoutWithCustomRetry(gitCmd, c.localMergeRef(), nil)
+	err = checkoutWithCustomRetry(gitFactory, c.localMergeRef(), nil)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (c checkoutPRMergeRef) remoteHeadRef() string {
 	return fmt.Sprintf("refs/%s", c.params.HeadRef)
 }
 
-func (c checkoutPRMergeRef) fetchPRHeadRef(gitCmd git.Git, fetchOpts fetchOptions) error {
+func (c checkoutPRMergeRef) fetchPRHeadRef(gitFactory git.Factory, fetchOpts fetchOptions) error {
 	refSpec := fmt.Sprintf("%s:%s", c.remoteHeadRef(), c.localHeadRef())
-	return fetch(gitCmd, originRemoteName, refSpec, fetchOpts)
+	return fetch(gitFactory, originRemoteName, refSpec, fetchOpts)
 }

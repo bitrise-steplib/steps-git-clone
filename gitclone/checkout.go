@@ -5,8 +5,8 @@ package gitclone
 import (
 	"fmt"
 
-	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/v2/git"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 )
 
@@ -65,7 +65,7 @@ func NewParameterValidationError(msg string) error {
 
 // checkoutStrategy is the interface an actual checkout strategy implements
 type checkoutStrategy interface {
-	do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error
+	do(gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error
 
 	// getBuildTriggerRef returns ref to the commit/branch/tag that triggered the build.
 	// For simple checkout strategies the returned ref will be HEAD (after running 'do').
@@ -250,7 +250,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 
 			return checkoutPRMergeRef{
 				params: *params,
-				fallbackCheckout: func(gitCmd git.Git) error {
+				fallbackCheckout: func(gitFactory git.Factory) error {
 					log.Warnf("Using manual merge strategy with PR source branch")
 
 					manualMergeFallbackFetchOpts := selectFetchOptions(CheckoutPRManualMergeMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
@@ -267,7 +267,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 					}
 
 					// PR merge branch checkout falls back to PR manual merge strategy using the PR source branch
-					return fallbackManualMergeWithSourceBranch.do(gitCmd, manualMergeFallbackFetchOpts, manualMergeFallbackFallback)
+					return fallbackManualMergeWithSourceBranch.do(gitFactory, manualMergeFallbackFetchOpts, manualMergeFallbackFallback)
 				},
 			}, nil
 		}
@@ -314,7 +314,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 
 			return checkoutCommit{
 				params: *params,
-				fallbackCheckout: func(gitCmd git.Git) error {
+				fallbackCheckout: func(gitFactory git.Factory) error {
 					log.Warnf("Using commit checkout strategy with PR source branch")
 
 					if cfg.Branch == "" || cfg.Commit == "" {
@@ -339,7 +339,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 						params: *params,
 					}
 
-					return commitCheckoutFallbackCheckoutMethod.do(gitCmd, commitCheckoutFallbackFetchOpts, commitCheckoutFallbackFallback)
+					return commitCheckoutFallbackCheckoutMethod.do(gitFactory, commitCheckoutFallbackFetchOpts, commitCheckoutFallbackFallback)
 				},
 			}, nil
 		}
