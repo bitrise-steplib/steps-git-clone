@@ -3,9 +3,8 @@ package gitclone
 import (
 	"fmt"
 
-	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/v2/git"
 )
 
 type unshallowFetchOptions struct {
@@ -20,34 +19,34 @@ type unshallowFetchOptions struct {
 }
 
 type fallbackRetry interface {
-	do(gitCmd git.Git) error
+	do(gitFactory git.Factory) error
 }
 
 type simpleUnshallow struct {
 	traits unshallowFetchOptions
 }
 
-func (s simpleUnshallow) do(gitCmd git.Git) error {
+func (s simpleUnshallow) do(gitFactory git.Factory) error {
 	log.Infof("Fetch with unshallow...")
 
-	return unshallowFetch(gitCmd, s.traits)
+	return unshallowFetch(gitFactory, s.traits)
 }
 
 type resetUnshallow struct {
 	traits unshallowFetchOptions
 }
 
-func (r resetUnshallow) do(gitCmd git.Git) error {
+func (r resetUnshallow) do(gitFactory git.Factory) error {
 	log.Infof("Resetting repository, then fetch with unshallow...")
 
-	if err := resetRepo(gitCmd); err != nil {
+	if err := resetRepo(gitFactory); err != nil {
 		return fmt.Errorf("reset repository: %v", err)
 	}
 
-	return unshallowFetch(gitCmd, r.traits)
+	return unshallowFetch(gitFactory, r.traits)
 }
 
-func unshallowFetch(gitCmd git.Git, traits unshallowFetchOptions) error {
+func unshallowFetch(gitFactory git.Factory, traits unshallowFetchOptions) error {
 	opts := []string{jobsFlag, "--unshallow"}
 	if traits.tags {
 		opts = append(opts, "--tags")
@@ -58,8 +57,8 @@ func unshallowFetch(gitCmd git.Git, traits unshallowFetchOptions) error {
 		opts = append(opts, "--no-recurse-submodules")
 	}
 
-	if err := runner.RunWithRetry(func() *command.Model {
-		return gitCmd.Fetch(opts...)
+	if err := runner.RunWithRetry(func() git.Template {
+		return gitFactory.Fetch(opts...)
 	}); err != nil {
 		return fmt.Errorf("fetch failed: %v", err)
 	}

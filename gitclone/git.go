@@ -2,12 +2,13 @@ package gitclone
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/sliceutil"
+	"github.com/bitrise-io/go-utils/v2/git"
 )
 
 const (
@@ -18,7 +19,7 @@ const (
 
 var runner CommandRunner = &DefaultRunner{}
 
-func isOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
+func isOriginPresent(gitFactory git.Factory, dir, repoURL string) (bool, error) {
 	absDir, err := pathutil.AbsPath(dir)
 	if err != nil {
 		return false, err
@@ -28,7 +29,7 @@ func isOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
 	if exist, err := pathutil.IsDirExists(gitDir); err != nil {
 		return false, err
 	} else if exist {
-		remotes, err := runner.RunForOutput(gitCmd.RemoteList())
+		remotes, err := runner.RunForOutput(gitFactory.RemoteList())
 		if err != nil {
 			return false, err
 		}
@@ -42,17 +43,17 @@ func isOriginPresent(gitCmd git.Git, dir, repoURL string) (bool, error) {
 	return false, nil
 }
 
-func resetRepo(gitCmd git.Git) error {
-	if err := runner.Run(gitCmd.Reset("--hard", "HEAD")); err != nil {
+func resetRepo(gitFactory git.Factory) error {
+	if err := runner.Run(gitFactory.Reset("--hard", "HEAD")); err != nil {
 		return err
 	}
-	if err := runner.Run(gitCmd.Clean("-x", "-d", "-f")); err != nil {
+	if err := runner.Run(gitFactory.Clean("-x", "-d", "-f")); err != nil {
 		return err
 	}
-	if err := runner.Run(gitCmd.SubmoduleForeach(gitCmd.Reset("--hard", "HEAD"))); err != nil {
+	if err := runner.Run(gitFactory.SubmoduleForeach(gitFactory.Reset("--hard", "HEAD"))); err != nil {
 		return err
 	}
-	return runner.Run(gitCmd.SubmoduleForeach(gitCmd.Clean("-x", "-d", "-f")))
+	return runner.Run(gitFactory.SubmoduleForeach(gitFactory.Clean("-x", "-d", "-f")))
 }
 
 func isFork(repoURL, prRepoURL string) bool {
@@ -93,14 +94,14 @@ func isPrivate(repoURL string) bool {
 
 type getAvailableBranches func() (map[string][]string, error)
 
-func listBranches(gitCmd git.Git) getAvailableBranches {
+func listBranches(gitFactory git.Factory) getAvailableBranches {
 	return func() (map[string][]string, error) {
-		remoteList, err := runner.RunForOutput(gitCmd.RemoteList())
+		remoteList, err := runner.RunForOutput(gitFactory.RemoteList())
 		if err != nil {
 			return nil, err
 		}
 
-		remoteBranches, err := runner.RunForOutput(gitCmd.RemoteBranches())
+		remoteBranches, err := runner.RunForOutput(gitFactory.RemoteBranches())
 		if err != nil {
 			return nil, err
 		}
@@ -211,10 +212,11 @@ func handleCheckoutError(callback getAvailableBranches, tag string, err error, s
 	)
 }
 
-func isWorkingTreeClean(gitCmd git.Git) (bool, error) {
+func isWorkingTreeClean(gitFactory git.Factory) (bool, error) {
 	// Despite the flag name, `--porcelain` is the plumbing format to use in scripts:
 	// https://git-scm.com/docs/git-status#Documentation/git-status.txt---porcelainltversiongt
-	out, err := gitCmd.Status("--porcelain").RunAndReturnTrimmedOutput()
+	c := gitFactory.Status("--porcelain").Create(os.Stdout, os.Stderr, nil)
+	out, err := c.RunAndReturnTrimmedOutput()
 	if err != nil {
 		return false, fmt.Errorf("git status check: %s", err)
 	}

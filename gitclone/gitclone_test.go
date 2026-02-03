@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
+	"github.com/bitrise-io/go-utils/v2/git"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -490,13 +491,15 @@ func Test_checkoutState(t *testing.T) {
 				mockRunner = givenMockRunnerSucceeds()
 			}
 			runner = mockRunner
+			gitFactory, err := git.DefaultFactory(t.TempDir(), command.NewFactory(env.NewRepository()))
+			assert.NoError(t, err)
 
 			// When
 			envRepo := env.NewRepository()
 			logger := log.NewLogger()
-			tracker := tracker.NewStepTracker(envRepo, logger)
-			cloner := NewGitCloner(log.NewLogger(), tracker, command.NewFactory(envRepo), tt.patchSource, tt.mergeRefChecker, false)
-			_, _, actualErr := cloner.checkoutState(git.Git{}, tt.cfg)
+			stepTracker := tracker.NewStepTracker(envRepo, logger)
+			cloner := NewGitCloner(log.NewLogger(), stepTracker, command.NewFactory(envRepo), tt.patchSource, tt.mergeRefChecker, false)
+			_, _, actualErr := cloner.checkoutState(gitFactory, tt.cfg)
 
 			// Then
 			if tt.wantErrType != nil {
@@ -560,9 +563,11 @@ func Test_SubmoduleUpdate(t *testing.T) {
 			// Given
 			mockRunner := givenMockRunnerSucceeds()
 			runner = mockRunner
+			gitFactory, err := git.DefaultFactory(t.TempDir(), command.NewFactory(env.NewRepository()))
+			assert.NoError(t, err)
 
 			// When
-			actualErr := updateSubmodules(git.Git{}, tt.cfg)
+			actualErr := updateSubmodules(gitFactory, tt.cfg)
 
 			// Then
 			assert.NoError(t, actualErr)
@@ -602,9 +607,11 @@ func Test_SetupSparseCheckout(t *testing.T) {
 			// Given
 			mockRunner := givenMockRunnerSucceeds()
 			runner = mockRunner
+			gitFactory, err := git.DefaultFactory(t.TempDir(), command.NewFactory(env.NewRepository()))
+			assert.NoError(t, err)
 
 			// When
-			actualErr := setupSparseCheckout(git.Git{}, tt.sparseDirectories)
+			actualErr := setupSparseCheckout(gitFactory, tt.sparseDirectories)
 
 			// Then
 			assert.NoError(t, actualErr)

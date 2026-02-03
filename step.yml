@@ -58,12 +58,20 @@ inputs:
 - git_http_username: $GIT_HTTP_USERNAME
   opts:
     title: Username for establishing an HTTP(S) connection to the repository
+    description: |-
+      Username for establishing an HTTP(S) connection to the repository.
+
+      This is typically required when the repository is private.
     is_dont_change_value: true
     is_sensitive: true
 
 - git_http_password: $GIT_HTTP_PASSWORD
   opts:
     title: Personal access token (or password) for establishing an HTTP(S) connection to the repository
+    description: |-
+      Personal access token (or password) for establishing an HTTP(S) connection to the repository.
+
+      This is typically required when the repository is private.
     is_dont_change_value: true
     is_sensitive: true
 
