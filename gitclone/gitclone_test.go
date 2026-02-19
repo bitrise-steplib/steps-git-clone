@@ -40,7 +40,7 @@ func Test_checkoutState(t *testing.T) {
 				CloneDepth: 1,
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "76a934a"`,
 				`git "checkout" "76a934a"`,
 			},
 		},
@@ -52,7 +52,7 @@ func Test_checkoutState(t *testing.T) {
 				FetchTags: true,
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--tags" "--no-recurse-submodules" "origin" "76a934ae"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
@@ -63,8 +63,8 @@ func Test_checkoutState(t *testing.T) {
 			},
 			mockRunner: givenMockRunnerSucceedsAfter(1),
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules"`,
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "76a934ae"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "76a934ae"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
@@ -118,7 +118,7 @@ func Test_checkoutState(t *testing.T) {
 				Branch: "hcnarb",
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "76a934ae"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
@@ -129,7 +129,7 @@ func Test_checkoutState(t *testing.T) {
 				Tag:    "gat",
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "76a934ae"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
@@ -292,7 +292,7 @@ func Test_checkoutState(t *testing.T) {
 				UpdateSubmodules: true,
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "origin" "refs/heads/test/commit-messages"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "origin" "76a934ae"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
@@ -308,7 +308,7 @@ func Test_checkoutState(t *testing.T) {
 				UpdateSubmodules: true,
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "origin" "refs/pull/5/head"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "origin" "76a934ae"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
@@ -328,7 +328,7 @@ func Test_checkoutState(t *testing.T) {
 			wantErr:     nil,
 			wantCmds: []string{
 				`git "remote" "add" "fork" "https://github.com/bitrise-io/git-clone-test2.git"`,
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "fork" "refs/heads/test/commit-messages"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "fork" "76a934ae"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
@@ -404,7 +404,7 @@ func Test_checkoutState(t *testing.T) {
 				GivenRunWithRetrySucceeds().
 				GivenRunSucceeds(),
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "origin" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
 				`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
 				// fatal: reference is not a tree: cfba2b01332e31cb1568dbf3f22edce063118bae
 				// Checkout failed, error: fatal: reference is not a tree: cfba2b01332e31cb1568dbf3f22edce063118bae
@@ -429,6 +429,25 @@ func Test_checkoutState(t *testing.T) {
 				`git "checkout" "refs/remotes/pull/7/merge"`,
 			},
 		},
+		{
+			name: "Checkout commit, direct fetch fails, no branch, unshallow triggered",
+			cfg: Config{
+				Commit:     "cfba2b01332e31cb1568dbf3f22edce063118bae",
+				CloneDepth: 1,
+			},
+			mockRunner: givenMockRunner().
+				GivenRunWithRetryFailsForCommand(`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "cfba2b01332e31cb1568dbf3f22edce063118bae"`).
+				GivenRunFailsForCommand(`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`, 1).
+				GivenRunWithRetrySucceeds().
+				GivenRunSucceeds(),
+			wantCmds: []string{
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
+				`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
+				`git "fetch" "--jobs=10" "--unshallow" "--no-tags" "--no-recurse-submodules"`,
+				`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
+			},
+		},
+
 		// ** Sparse-checkout **
 		{
 			name: "Checkout commit - sparse",
@@ -438,7 +457,7 @@ func Test_checkoutState(t *testing.T) {
 				SparseDirectories: []string{"client/android"},
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--filter=tree:0" "--no-tags" "--no-recurse-submodules"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "76a934a"`,
 				`git "checkout" "76a934a"`,
 			},
 		},
@@ -450,7 +469,7 @@ func Test_checkoutState(t *testing.T) {
 				SparseDirectories: []string{"client/android"},
 			},
 			wantCmds: []string{
-				`git "fetch" "--jobs=10" "--depth=1" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--filter=tree:0" "--no-tags" "--no-recurse-submodules" "origin" "76a934ae"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
