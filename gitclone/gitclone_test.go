@@ -430,7 +430,7 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
-			name: "Checkout commit, direct fetch fails, branch fallback",
+			name: "Checkout commit, direct fetch fails",
 			cfg: Config{
 				Commit:     "76a934ae",
 				Branch:     "hcnarb",
@@ -438,11 +438,9 @@ func Test_checkoutState(t *testing.T) {
 			},
 			mockRunner: givenMockRunner().
 				GivenRunWithRetryFailsForCommand(`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "76a934ae"`).
-				GivenRunWithRetrySucceeds().
 				GivenRunSucceeds(),
 			wantCmds: []string{
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "76a934ae"`,
-				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/hcnarb"`,
 				`git "checkout" "76a934ae"`,
 			},
 		},
