@@ -7,7 +7,7 @@ description: |
   - the merged state of a Pull Request
   - the head of a Pull Request
   - a git tag
-  - a specific commit on a branch
+  - a specific commit
   - the head of a branch
 
   The Step also supports more advanced features, such as updating submodules and sparse checkouts.
