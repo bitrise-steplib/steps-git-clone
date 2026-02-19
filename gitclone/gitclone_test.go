@@ -17,7 +17,7 @@ import (
 const rawCmdError = "dummy_cmd_error"
 
 func Test_checkoutState(t *testing.T) {
-	var tests = [...]struct {
+	tests := [...]struct {
 		name            string
 		cfg             Config
 		patchSource     bitriseapi.PatchSource
@@ -433,6 +433,7 @@ func Test_checkoutState(t *testing.T) {
 			name: "Checkout commit, direct fetch fails, no branch, unshallow triggered",
 			cfg: Config{
 				Commit:     "cfba2b01332e31cb1568dbf3f22edce063118bae",
+				Branch:     "fake",
 				CloneDepth: 1,
 			},
 			mockRunner: givenMockRunner().
@@ -442,6 +443,7 @@ func Test_checkoutState(t *testing.T) {
 				GivenRunSucceeds(),
 			wantCmds: []string{
 				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "refs/heads/fake"`,
 				`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
 				`git "fetch" "--jobs=10" "--unshallow" "--no-tags" "--no-recurse-submodules"`,
 				`git "checkout" "cfba2b01332e31cb1568dbf3f22edce063118bae"`,
@@ -533,7 +535,7 @@ func Test_checkoutState(t *testing.T) {
 }
 
 func Test_SubmoduleUpdate(t *testing.T) {
-	var tests = [...]struct {
+	tests := [...]struct {
 		name     string
 		cfg      Config
 		wantCmds []string
@@ -591,7 +593,7 @@ func Test_SubmoduleUpdate(t *testing.T) {
 }
 
 func Test_SetupSparseCheckout(t *testing.T) {
-	var tests = [...]struct {
+	tests := [...]struct {
 		name              string
 		sparseDirectories []string
 		wantCmds          []string
