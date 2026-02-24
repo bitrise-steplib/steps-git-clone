@@ -65,8 +65,14 @@ func (c checkoutCommit) performCheckout(gitCmd git.Git, fetchOptions fetchOption
 		}
 	}
 
-	if err := fetch(gitCmd, remote, c.params.BranchRef, fetchOptions); err != nil {
-		return fmt.Errorf("failed to fetch branch ref (%s) while checking out commit: %w", c.params.BranchRef, err)
+	if directFetchErr := fetch(gitCmd, remote, c.params.Commit, fetchOptions); directFetchErr != nil {
+		log.Warnf("Could not fetch commit directly: %v", directFetchErr)
+		log.Warnf("Attempting fallback: fetching the associated branch '%s' instead.", c.params.BranchRef)
+		log.Warnf("Note: To speed up checkouts, ensure your Git server allows fetching reachable SHAs directly (uploadpack.allowReachableSHA1InWant).")
+
+		if err := fetch(gitCmd, remote, c.params.BranchRef, fetchOptions); err != nil {
+			return fmt.Errorf("failed to fetch branch ref (%s) while checking out commit: %w", c.params.BranchRef, err)
+		}
 	}
 
 	if err := checkoutWithCustomRetry(gitCmd, c.params.Commit, fallback); err != nil {

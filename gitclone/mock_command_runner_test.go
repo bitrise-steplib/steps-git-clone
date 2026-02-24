@@ -89,6 +89,18 @@ func (m *MockRunner) GivenRunWithRetryFailsAfter(times int) *MockRunner {
 	return m
 }
 
+// GivenRunWithRetryFailsForCommand ...
+func (m *MockRunner) GivenRunWithRetryFailsForCommand(cmdString string) *MockRunner {
+	m.On("RunWithRetry", mock.MatchedBy(func(getCommand func() *command.Model) bool {
+		return m.isCommandMatching(getCommand(), cmdString)
+	})).
+		Run(func(args mock.Arguments) {
+			m.rememberCommands(args, 0)
+		}).
+		Return(errDummy)
+	return m
+}
+
 func (m *MockRunner) SetPerformanceMonitoring(enable bool) {
 }
 

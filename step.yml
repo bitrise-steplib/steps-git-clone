@@ -7,7 +7,8 @@ description: |
   - the merged state of a Pull Request
   - the head of a Pull Request
   - a git tag
-  - a specific commit on a branch
+  - a specific commit (by hash)
+  - a commit on a specific branch
   - the head of a branch
 
   The Step also supports more advanced features, such as updating submodules and sparse checkouts.
@@ -58,12 +59,14 @@ inputs:
 - git_http_username: $GIT_HTTP_USERNAME
   opts:
     title: Username for establishing an HTTP(S) connection to the repository
+    description: Username for establishing an HTTP(S) connection to the repository
     is_dont_change_value: true
     is_sensitive: true
 
 - git_http_password: $GIT_HTTP_PASSWORD
   opts:
     title: Personal access token (or password) for establishing an HTTP(S) connection to the repository
+    description: Personal access token (or password) for establishing an HTTP(S) connection to the repository
     is_dont_change_value: true
     is_sensitive: true
 
