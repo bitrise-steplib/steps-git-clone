@@ -46,7 +46,7 @@ func fetch(gitCmd git.Git, remote string, ref string, options fetchOptions) erro
 		opts = append(opts, fmt.Sprintf("--depth=%d", options.depth))
 	}
 	if options.filterTree {
-		opts = append(opts, `--filter=tree:0`)
+		opts = append(opts, `--filter=blob:none`)
 	}
 
 	if options.tags {
