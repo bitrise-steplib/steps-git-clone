@@ -138,6 +138,22 @@ inputs:
 
       This input accepts one path per line, separate entries by a linebreak.
 
+- ignore_branch_for_commit_fetch: "no"
+  opts:
+    category: Clone options
+    title: Ignore branch for commit fetch
+    summary: Override the default fetch behavior when checking out a specific commit.
+    description: |-
+      If both commit SHA and branch are available, when checking out a specific commit, the Step normally fetches the branch ref.
+
+      This input overrides that default behavior:
+
+      - `yes`: Always fetch the commit SHA directly, ignoring any branch information. This requires the Git server to support fetching commits by SHA (uploadpack.allowReachableSHA1InWant).
+      - `no` (default): Use the default behavior (fetch the branch ref if available, otherwise fetch the commit SHA directly).
+    value_options:
+    - "yes"
+    - "no"
+
 # Build trigger parameters
 
 - repository_url: $GIT_REPOSITORY_URL

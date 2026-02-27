@@ -21,21 +21,23 @@ func (c checkoutNone) getBuildTriggerRef() string {
 
 // CommitParams are parameters to check out a given commit (In addition to the repository URL)
 type CommitParams struct {
-	Commit        string
-	BranchRef     string
-	SourceRepoURL string // optional
+	Commit                     string
+	BranchRef                  string
+	SourceRepoURL              string // optional
+	IgnoreBranchForCommitFetch bool // optional
 }
 
 // NewCommitParams validates and returns a new CommitParams
-func NewCommitParams(commit, branchRef, sourceRepoURL string) (*CommitParams, error) {
+func NewCommitParams(commit, branchRef, sourceRepoURL string, ignoreBranchForCommitFetch bool) (*CommitParams, error) {
 	if strings.TrimSpace(commit) == "" {
 		return nil, NewParameterValidationError("commit checkout strategy can not be used: no commit hash specified")
 	}
 
 	return &CommitParams{
-		Commit:        commit,
-		BranchRef:     branchRef,
-		SourceRepoURL: sourceRepoURL,
+		Commit:                     commit,
+		BranchRef:                  branchRef,
+		SourceRepoURL:              sourceRepoURL,
+		IgnoreBranchForCommitFetch: ignoreBranchForCommitFetch,
 	}, nil
 }
 
@@ -65,17 +67,16 @@ func (c checkoutCommit) performCheckout(gitCmd git.Git, fetchOptions fetchOption
 		}
 	}
 
-	if c.params.BranchRef != "" {
-		if err := fetch(gitCmd, remote, c.params.BranchRef, fetchOptions); err != nil {
-			return fmt.Errorf("failed to fetch branch ref (%s) while checking out commit: %w", c.params.BranchRef, err)
-		}
-	} else {
+	if c.params.IgnoreBranchForCommitFetch || c.params.BranchRef == "" {
 		if directFetchErr := fetch(gitCmd, remote, c.params.Commit, fetchOptions); directFetchErr != nil {
 			log.Warnf("Could not fetch commit directly: %v", directFetchErr)
-			log.Warnf("Attempting fallback: fetching the associated branch '%s' instead.", c.params.BranchRef)
 			log.Warnf("Note: To speed up checkouts, ensure your Git server allows fetching reachable SHAs directly (uploadpack.allowReachableSHA1InWant).")
 
 			return fmt.Errorf("failed to fetch commit directly: %w", directFetchErr)
+		}	
+	} else {
+		if err := fetch(gitCmd, remote, c.params.BranchRef, fetchOptions); err != nil {
+			return fmt.Errorf("failed to fetch branch ref (%s) while checking out commit: %w", c.params.BranchRef, err)
 		}
 	}
 
