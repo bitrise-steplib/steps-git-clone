@@ -24,7 +24,7 @@ type CommitParams struct {
 	Commit                     string
 	BranchRef                  string
 	SourceRepoURL              string // optional
-	IgnoreBranchForCommitFetch bool // optional
+	IgnoreBranchForCommitFetch bool   // optional
 }
 
 // NewCommitParams validates and returns a new CommitParams
@@ -73,7 +73,7 @@ func (c checkoutCommit) performCheckout(gitCmd git.Git, fetchOptions fetchOption
 			log.Warnf("Note: To speed up checkouts, ensure your Git server allows fetching reachable SHAs directly (uploadpack.allowReachableSHA1InWant).")
 
 			return fmt.Errorf("failed to fetch commit directly: %w", directFetchErr)
-		}	
+		}
 	} else {
 		if err := fetch(gitCmd, remote, c.params.BranchRef, fetchOptions); err != nil {
 			return fmt.Errorf("failed to fetch branch ref (%s) while checking out commit: %w", c.params.BranchRef, err)
