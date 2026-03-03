@@ -144,7 +144,7 @@ inputs:
     title: Ignore branch for commit fetch
     summary: Override the default fetch behavior when checking out a specific commit.
     description: |-
-      If both commit SHA and branch are available, when checking out a specific commit, the Step normally fetches the branch ref.
+      If both commit SHA and the branch are available in the build trigger params, the Step normally fetches the entire branch history.
 
       This input overrides that default behavior:
 
