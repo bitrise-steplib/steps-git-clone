@@ -149,7 +149,7 @@ inputs:
       This input overrides that default behavior:
 
       - `yes`: Only fetch a single commit according to the provided commit SHA, ignoring older commits of the same branch. This requires the Git server to support fetching commits by SHA (uploadpack.allowReachableSHA1InWant).
-      - `no` (default): Use the default behavior (fetch the branch ref if available, otherwise fetch the commit SHA directly).
+      - `no` (default): Fetch the entire branch history and check out the provided commit SHA.
     value_options:
     - "yes"
     - "no"
