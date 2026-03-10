@@ -201,7 +201,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 				branchRef = refsHeadsPrefix + cfg.Branch
 			}
 
-			params, err := NewCommitParams(cfg.Commit, branchRef, "")
+			params, err := NewCommitParams(cfg.Commit, branchRef, "", cfg.IgnoreBranchForCommitFetch)
 			if err != nil {
 				return nil, err
 			}
@@ -307,7 +307,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 	case CheckoutHeadBranchCommitMethod:
 		{
 			headBranchRef := refsPrefix + cfg.PRHeadBranch // ref/pull/2/head
-			params, err := NewCommitParams(cfg.Commit, headBranchRef, "")
+			params, err := NewCommitParams(cfg.Commit, headBranchRef, "", false)
 			if err != nil {
 				return nil, err
 			}
@@ -330,7 +330,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 						prRepositoryURL = cfg.PRSourceRepositoryURL
 					}
 
-					params, err := NewCommitParams(cfg.Commit, branchRef, prRepositoryURL)
+					params, err := NewCommitParams(cfg.Commit, branchRef, prRepositoryURL, false)
 					if err != nil {
 						return err
 					}
@@ -346,7 +346,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 	case CheckoutForkCommitMethod:
 		{
 			sourceBranchRef := refsHeadsPrefix + cfg.Branch
-			params, err := NewCommitParams(cfg.Commit, sourceBranchRef, cfg.PRSourceRepositoryURL)
+			params, err := NewCommitParams(cfg.Commit, sourceBranchRef, cfg.PRSourceRepositoryURL, false)
 			if err != nil {
 				return nil, err
 			}

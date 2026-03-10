@@ -23,12 +23,13 @@ const (
 type Config struct {
 	ShouldMergePR bool
 
-	CloneIntoDir         string
-	CloneDepth           int
-	UpdateSubmodules     bool
-	SubmoduleUpdateDepth int
-	FetchTags            bool
-	SparseDirectories    []string
+	CloneIntoDir               string
+	CloneDepth                 int
+	UpdateSubmodules           bool
+	SubmoduleUpdateDepth       int
+	FetchTags                  bool
+	SparseDirectories          []string
+	IgnoreBranchForCommitFetch bool
 
 	RepositoryURL         string
 	Commit                string

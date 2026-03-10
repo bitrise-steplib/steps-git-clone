@@ -22,12 +22,13 @@ type Input struct {
 	GitHTTPUsername string `env:"git_http_username"`
 	GitHTTPPassword string `env:"git_http_password"`
 
-	CloneIntoDir         string   `env:"clone_into_dir,required"`
-	CloneDepth           int      `env:"clone_depth"`
-	UpdateSubmodules     bool     `env:"update_submodules,opt[yes,no]"`
-	SubmoduleUpdateDepth int      `env:"submodule_update_depth"`
-	FetchTags            bool     `env:"fetch_tags,opt[yes,no]"`
-	SparseDirectories    []string `env:"sparse_directories,multiline"`
+	CloneIntoDir               string   `env:"clone_into_dir,required"`
+	CloneDepth                 int      `env:"clone_depth"`
+	UpdateSubmodules           bool     `env:"update_submodules,opt[yes,no]"`
+	SubmoduleUpdateDepth       int      `env:"submodule_update_depth"`
+	FetchTags                  bool     `env:"fetch_tags,opt[yes,no]"`
+	SparseDirectories          []string `env:"sparse_directories,multiline"`
+	IgnoreBranchForCommitFetch bool     `env:"ignore_branch_for_commit_fetch,opt[yes,no]"`
 
 	RepositoryURL           string `env:"repository_url,required"`
 	Commit                  string `env:"commit"`
@@ -163,22 +164,23 @@ func (g GitCloneStep) isCloneDirDangerous(path string) bool {
 
 func convertConfig(config Config) gitclone.Config {
 	return gitclone.Config{
-		ShouldMergePR:         config.ShouldMergePR,
-		CloneIntoDir:          config.CloneIntoDir,
-		CloneDepth:            config.CloneDepth,
-		UpdateSubmodules:      config.UpdateSubmodules,
-		SubmoduleUpdateDepth:  config.SubmoduleUpdateDepth,
-		FetchTags:             config.FetchTags,
-		SparseDirectories:     config.SparseDirectories,
-		RepositoryURL:         config.RepositoryURL,
-		Commit:                config.Commit,
-		Tag:                   config.Tag,
-		Branch:                config.Branch,
-		PRDestBranch:          config.PRDestBranch,
-		PRSourceRepositoryURL: config.PRSourceRepositoryURL,
-		PRMergeRef:            config.PRMergeBranch,
-		PRUnverifiedMergeRef:  config.PRUnverifiedMergeBranch,
-		PRHeadBranch:          config.PRHeadBranch,
-		ResetRepository:       config.ResetRepository,
+		ShouldMergePR:              config.ShouldMergePR,
+		CloneIntoDir:               config.CloneIntoDir,
+		CloneDepth:                 config.CloneDepth,
+		UpdateSubmodules:           config.UpdateSubmodules,
+		SubmoduleUpdateDepth:       config.SubmoduleUpdateDepth,
+		FetchTags:                  config.FetchTags,
+		SparseDirectories:          config.SparseDirectories,
+		IgnoreBranchForCommitFetch: config.IgnoreBranchForCommitFetch,
+		RepositoryURL:              config.RepositoryURL,
+		Commit:                     config.Commit,
+		Tag:                        config.Tag,
+		Branch:                     config.Branch,
+		PRDestBranch:               config.PRDestBranch,
+		PRSourceRepositoryURL:      config.PRSourceRepositoryURL,
+		PRMergeRef:                 config.PRMergeBranch,
+		PRUnverifiedMergeRef:       config.PRUnverifiedMergeBranch,
+		PRHeadBranch:               config.PRHeadBranch,
+		ResetRepository:            config.ResetRepository,
 	}
 }

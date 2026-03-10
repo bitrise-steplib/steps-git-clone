@@ -138,6 +138,22 @@ inputs:
 
       This input accepts one path per line, separate entries by a linebreak.
 
+- ignore_branch_for_commit_fetch: "no"
+  opts:
+    category: Clone options
+    title: Ignore branch for commit fetch
+    summary: Override the default fetch behavior when checking out a specific commit.
+    description: |-
+      If both commit SHA and the branch are available in the build trigger params, the Step normally fetches the entire branch history.
+
+      This input overrides that default behavior:
+
+      - `yes`: Only fetch a single commit according to the provided commit SHA, ignoring older commits of the same branch. This requires the Git server to support fetching commits by SHA (uploadpack.allowReachableSHA1InWant).
+      - `no` (default): Fetch the entire branch history and check out the provided commit SHA.
+    value_options:
+    - "yes"
+    - "no"
+
 # Build trigger parameters
 
 - repository_url: $GIT_REPOSITORY_URL

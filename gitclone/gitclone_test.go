@@ -57,6 +57,19 @@ func Test_checkoutState(t *testing.T) {
 			},
 		},
 		{
+			name: "Checkout commit, branch specified, ignore branch for commit fetch",
+			cfg: Config{
+				Commit:                     "76a934ae",
+				Branch:                     "hcnarb",
+				CloneDepth:                 1,
+				IgnoreBranchForCommitFetch: true,
+			},
+			wantCmds: []string{
+				`git "fetch" "--jobs=10" "--depth=1" "--no-tags" "--no-recurse-submodules" "origin" "76a934ae"`,
+				`git "checkout" "76a934ae"`,
+			},
+		},
+		{
 			name: "Checkout commit with retry",
 			cfg: Config{
 				Commit: "76a934ae",
