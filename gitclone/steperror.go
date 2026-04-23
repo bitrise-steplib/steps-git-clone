@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bitrise-io/bitrise-init/errormapper"
-	"github.com/bitrise-io/go-steputils/step"
+	"github.com/bitrise-io/go-steputils/v2/step"
 )
 
 const (
@@ -22,7 +22,7 @@ func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
 		matcher = newFetchFailedPatternErrorMatcher()
 	}
 	if matcher != nil {
-		return matcher.Run(errMsg)
+		return step.Recommendation(matcher.Run(errMsg))
 	}
 	return nil
 }

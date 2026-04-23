@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/bitrise-io/bitrise-init/errormapper"
-	"github.com/bitrise-io/go-steputils/step"
+	"github.com/bitrise-io/go-steputils/v2/step"
 )
 
 func Test_getRepo(t *testing.T) {

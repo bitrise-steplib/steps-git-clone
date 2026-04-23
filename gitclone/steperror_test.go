@@ -7,8 +7,12 @@ import (
 	"testing"
 
 	"github.com/bitrise-io/bitrise-init/errormapper"
-	"github.com/bitrise-io/go-steputils/step"
+	"github.com/bitrise-io/go-steputils/v2/step"
 )
+
+func newRec(e errormapper.DetailedError) step.Recommendation {
+	return step.Recommendation(errormapper.NewDetailedErrorRecommendation(e))
+}
 
 func Test_mapRecommendation_submodule_update(t *testing.T) {
 	wantGenericDetailedError := errormapper.DetailedError{
@@ -35,49 +39,49 @@ Our auto-configurator returned the following error:
 		{
 			name:   "update_submodule_failed generic (fatal: no submodule mapping found in .gitmodules for path 'web') error mapping",
 			errMsg: "fatal: no submodule mapping found in .gitmodules for path 'web'",
-			want:   errormapper.NewDetailedErrorRecommendation(wantGenericDetailedError),
+			want:   newRec(wantGenericDetailedError),
 		},
 		{
 			name:   "update_submodule_failed (ERROR: Repository not found.) error mapping",
 			errMsg: "ERROR: Repository not found.",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("ERROR: Repository not found.")),
+			want:   newRec(wantAuthenticationDetailedError("ERROR: Repository not found.")),
 		},
 		{
 			name:   "update_submodule_failed (remote: Invalid username or password(.)) error mapping",
 			errMsg: "remote: Invalid username or password(.)",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("remote: Invalid username or password(.)")),
+			want:   newRec(wantAuthenticationDetailedError("remote: Invalid username or password(.)")),
 		},
 		{
 			name:   "update_submodule_failed (Permission denied (publickey).) error mapping",
 			errMsg: "Permission denied (publickey).",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("Permission denied (publickey).")),
+			want:   newRec(wantAuthenticationDetailedError("Permission denied (publickey).")),
 		},
 		{
 			name: "update_submodule_failed (remote: HTTP Basic: Access denied) error mapping",
 			errMsg: `remote: HTTP Basic: Access denied
 fatal: Authentication failed for 'https://bitrise-io.git/'`,
-			want: errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError(`remote: HTTP Basic: Access denied
+			want: newRec(wantAuthenticationDetailedError(`remote: HTTP Basic: Access denied
 fatal: Authentication failed for 'https://bitrise-io.git/'`)),
 		},
 		{
 			name:   "update_submodule_failed (Permission denied, please try again.) error mapping",
 			errMsg: "Permission denied, please try again.",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("Permission denied, please try again.")),
+			want:   newRec(wantAuthenticationDetailedError("Permission denied, please try again.")),
 		},
 		{
 			name:   "update_submodule_failed (Unauthorized) error mapping",
 			errMsg: "Unauthorized",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("Unauthorized")),
+			want:   newRec(wantAuthenticationDetailedError("Unauthorized")),
 		},
 		{
 			name:   "update_submodule_failed (remote: The project you were looking for could not be found.) error mapping",
 			errMsg: "remote: The project you were looking for could not be found.",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("remote: The project you were looking for could not be found.")),
+			want:   newRec(wantAuthenticationDetailedError("remote: The project you were looking for could not be found.")),
 		},
 		{
 			name:   "update_submodule_failed (remote: Unauthorized LoginAndPassword(Username for 'https/***): User not found) error mapping",
 			errMsg: "remote: Unauthorized LoginAndPassword(Username for 'https/***): User not found",
-			want:   errormapper.NewDetailedErrorRecommendation(wantAuthenticationDetailedError("remote: Unauthorized LoginAndPassword(Username for 'https/***): User not found")),
+			want:   newRec(wantAuthenticationDetailedError("remote: Unauthorized LoginAndPassword(Username for 'https/***): User not found")),
 		},
 	}
 	for _, tt := range tests {
@@ -104,7 +108,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    checkoutFailedTag,
 				errMsg: "error: fatal: /master: '/master' is outside repository",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t checkout your branch.",
 				Description: "Our auto-configurator returned the following error:\nerror: fatal: /master: '/master' is outside repository",
 			}),
@@ -115,7 +119,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    checkoutFailedTag,
 				errMsg: "error: pathspec 'master' did not match any file(s) known to git.",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn't find the branch 'master'.",
 				Description: "Please choose another branch and try again.",
 			}),
@@ -126,7 +130,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "fetch failed, error: exit status 128",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t fetch your repository.",
 				Description: "Our auto-configurator returned the following error:\nfetch failed, error: exit status 128",
 			}),
@@ -137,7 +141,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "Permission denied (publickey).",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t access your repository.",
 				Description: "Please abort the process, double-check your SSH key and try again.",
 			}),
@@ -148,7 +152,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "Permission denied (publickey,gssapi-keyex,gssapi-with-mic,password).",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t access your repository.",
 				Description: "Please abort the process, double-check your SSH key and try again.",
 			}),
@@ -159,7 +163,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "fatal: repository 'http://localhost/repo.git' not found",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t find a git repository at 'http://localhost/repo.git'.",
 				Description: "Please abort the process, double-check your repository URL and try again.",
 			}),
@@ -170,7 +174,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "fatal: 'totally.not.made.up' does not appear to be a git repository",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t find a git repository at 'totally.not.made.up'.",
 				Description: "Please abort the process, double-check your repository URL and try again.",
 			}),
@@ -181,7 +185,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "fatal: https://www.youtube.com/channel/UCh0BVQAUkD3vr3WzmINFO5A/info/refs not valid: is this a git repository?",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t find a git repository at 'https://www.youtube.com/channel/UCh0BVQAUkD3vr3WzmINFO5A'.",
 				Description: "Please abort the process, double-check your repository URL and try again.",
 			}),
@@ -192,7 +196,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "remote: HTTP Basic: Access denied\nfatal: Authentication failed for 'https://localhost/repo.git'",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t access your repository.",
 				Description: "Please abort the process and try again, by providing the repository with SSH URL.",
 			}),
@@ -203,7 +207,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "remote: Invalid username or password(.)\nfatal: Authentication failed for 'https://localhost/repo.git'",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t access your repository.",
 				Description: "Please abort the process and try again, by providing the repository with SSH URL.",
 			}),
@@ -214,7 +218,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "Unauthorized",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t access your repository.",
 				Description: "Please abort the process and try again, by providing the repository with SSH URL.",
 			}),
@@ -225,7 +229,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "Forbidden",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t access your repository.",
 				Description: "Please abort the process and try again, by providing the repository with SSH URL.",
 			}),
@@ -236,7 +240,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "fatal: unable to access 'https://git.something.com/group/repo.git/': Failed to connect to git.something.com port 443: Connection timed out",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t access your repository.",
 				Description: "Please abort the process and try again, by providing the repository with SSH URL.",
 			}),
@@ -247,7 +251,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "fatal: unable to access 'https://github.com/group/repo.git)/': The requested URL returned error: 400",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t access your repository.",
 				Description: "Please abort the process and try again, by providing the repository with SSH URL.",
 			}),
@@ -258,7 +262,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "ssh: connect to host git.something.com port 22: Connection timed out) error mapping",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t connect to 'git.something.com'.",
 				Description: "Please abort the process, double-check your repository URL and try again.",
 			}),
@@ -269,7 +273,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "ssh: connect to host git.something.com port 22: Connection refused) error mapping",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t connect to 'git.something.com'.",
 				Description: "Please abort the process, double-check your repository URL and try again.",
 			}),
@@ -280,7 +284,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "ssh: connect to host git.something.com port 22: Network is unreachable) error mapping",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t connect to 'git.something.com'.",
 				Description: "Please abort the process, double-check your repository URL and try again.",
 			}),
@@ -291,7 +295,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "ssh: Could not resolve hostname git.something.com: Name or service not known",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t connect to 'git.something.com'.",
 				Description: "Please abort the process, double-check your repository URL and try again.",
 			}),
@@ -301,7 +305,7 @@ func Test_mapRecommendation(t *testing.T) {
 			args: args{
 				tag:    fetchFailedTag,
 				errMsg: "fatal: unable to access 'https://site.google.com/view/something/': Could not resolve host: site.google.com"},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "We couldn’t connect to 'site.google.com'.",
 				Description: "Please abort the process, double-check your repository URL and try again.",
 			}),
@@ -312,7 +316,7 @@ func Test_mapRecommendation(t *testing.T) {
 				tag:    fetchFailedTag,
 				errMsg: "ERROR: The `my-company' organization has enabled or enforced SAML SSO",
 			},
-			want: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+			want: newRec(errormapper.DetailedError{
 				Title:       "To access this repository, you need to use SAML SSO.",
 				Description: `Please abort the process, update your SSH settings and try again. You can find out more about <a target="_blank" href="https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/authorizing-an-ssh-key-for-use-with-saml-single-sign-on">using SAML SSO in the Github docs</a>.`,
 			}),
@@ -364,7 +368,7 @@ func Test_newStepError(t *testing.T) {
 				Tag:      "fetch_failed",
 				Err:      errors.New("Permission denied (publickey)"),
 				ShortMsg: "unknown error",
-				Recommendations: errormapper.NewDetailedErrorRecommendation(errormapper.DetailedError{
+				Recommendations: newRec(errormapper.DetailedError{
 					Title:       "We couldn’t access your repository.",
 					Description: "Please abort the process, double-check your SSH key and try again.",
 				}),
