@@ -1,6 +1,6 @@
 module github.com/bitrise-steplib/steps-git-clone
 
-go 1.18
+go 1.21
 
 require (
 	github.com/bitrise-io/bitrise-init v0.0.0-20210518121553-1e678625c45d
