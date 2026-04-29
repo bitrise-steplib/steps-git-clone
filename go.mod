@@ -1,6 +1,6 @@
 module github.com/bitrise-steplib/steps-git-clone
 
-go 1.22.0
+go 1.24.0
 
 require (
 	github.com/bitrise-io/bitrise-init v0.0.0-20250909114624-fbfc915502b7
@@ -22,9 +22,9 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/term v0.28.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/term v0.37.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
