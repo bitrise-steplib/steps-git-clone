@@ -1,6 +1,7 @@
 package step
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
@@ -96,6 +97,10 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 }
 
 func (g GitCloneStep) Run(cfg Config) (gitclone.CheckoutStateResult, error) {
+	if err := PrewarmRepoFromBuildCache(context.Background(), g.logger, g.envRepo, cfg.CloneIntoDir, cfg.RepositoryURL); err != nil {
+		g.logger.Warnf("Git repo prewarm failed: %s — continuing with normal clone", err)
+	}
+
 	if err := transport.Setup(transport.Config{
 		URL:          cfg.RepositoryURL,
 		HTTPUsername: cfg.GitHTTPUsername,
