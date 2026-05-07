@@ -21,12 +21,19 @@ import (
 // scratch.
 //
 // Unlike the original hackathon `cached-tar` workflow, we do NOT populate
-// the working tree (no `git checkout BR -- .`). The existing CheckoutState
-// flow will write the working tree once when it checks out the actual target
-// ref. To prevent CheckoutState's "is working tree clean" check from
-// triggering a redundant `git reset --hard HEAD`, we clear the index after
-// extraction — with both index and working tree empty, the tree is
-// considered clean.
+// the working tree. The existing CheckoutState flow will write the working
+// tree once when it checks out the actual target ref. To prevent
+// CheckoutState's "is working tree clean" check from triggering a redundant
+// `git reset --hard HEAD` (which would write all files only to be overwritten
+// again), we put the repo into a "no commits yet" state after extraction:
+//
+//  1. Move HEAD to a fresh, nonexistent branch ref (so HEAD has no
+//     commit to compare the index against).
+//  2. Clear the index (so there's nothing to compare the working tree
+//     against).
+//
+// Both index and working tree being empty + HEAD pointing at a branch
+// without commits = `git status --porcelain` empty = clean.
 //
 // On any error or cache miss it logs the cause and returns nil — callers
 // should fall back to a normal clone.
@@ -120,13 +127,17 @@ func PrewarmRepoFromBuildCache(ctx context.Context, logger log.Logger, envRepo e
 		return nil
 	}
 
-	clearIndexStart := time.Now()
-	logger.Infof("Clearing index so the next checkout writes the working tree exactly once")
+	resetStart := time.Now()
+	logger.Infof("Detaching HEAD to refs/heads/__prewarm_uninit__ and clearing index so the next checkout writes the working tree exactly once")
+	if out, err := runCmd(cloneIntoDir, "git", "symbolic-ref", "HEAD", "refs/heads/__prewarm_uninit__"); err != nil {
+		logger.Warnf("Failed to detach HEAD: %s\n%s\nFalling back to normal clone", err, out)
+		return nil
+	}
 	if out, err := runCmd(cloneIntoDir, "git", "read-tree", "--empty"); err != nil {
 		logger.Warnf("Failed to clear index: %s\n%s\nFalling back to normal clone", err, out)
 		return nil
 	}
-	logger.Infof("Index cleared in %s (default branch was %s)", time.Since(clearIndexStart).Round(time.Millisecond), branch)
+	logger.Infof("HEAD detached + index cleared in %s (saved-state default branch was %s)", time.Since(resetStart).Round(time.Millisecond), branch)
 
 	logger.Donef("Git repo prewarm complete in %s", time.Since(overallStart).Round(time.Millisecond))
 	return nil
