@@ -1,7 +1,10 @@
 package step
 
 import (
+	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/retry"
@@ -15,6 +18,8 @@ import (
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
 	"github.com/bitrise-steplib/steps-git-clone/transport"
 )
+
+const envEnableRepoPrewarm = "BITRISE_GIT_CLONE_ENABLE_PREWARM"
 
 type Input struct {
 	ShouldMergePR bool `env:"merge_pr,opt[yes,no]"`
@@ -44,6 +49,8 @@ type Input struct {
 	PerformanceMonitoring bool   `env:"performance_monitoring,opt[yes,no]"`
 	BuildURL              string `env:"build_url"`
 	BuildAPIToken         string `env:"build_api_token"`
+
+	EnableRepoPrewarm bool `env:"enable_repo_prewarm,opt[yes,no]"`
 }
 
 // Config is the git clone step configuration
@@ -96,6 +103,36 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 }
 
 func (g GitCloneStep) Run(cfg Config) (gitclone.CheckoutStateResult, error) {
+	runStart := time.Now()
+	g.logger.TInfof("Run: starting git-clone step")
+
+	prewarmEnabled := cfg.EnableRepoPrewarm
+	if envOverride := strings.ToLower(strings.TrimSpace(g.envRepo.Get(envEnableRepoPrewarm))); envOverride != "" {
+		switch envOverride {
+		case "false", "no", "0", "off":
+			prewarmEnabled = false
+		case "true", "yes", "1", "on":
+			prewarmEnabled = true
+		default:
+			g.logger.Warnf("Unrecognized value %q for env %s — ignoring (using input value enable_repo_prewarm=%t)", envOverride, envEnableRepoPrewarm, cfg.EnableRepoPrewarm)
+		}
+		if prewarmEnabled != cfg.EnableRepoPrewarm {
+			g.logger.Infof("%s=%q overrides input enable_repo_prewarm=%t → prewarm %s", envEnableRepoPrewarm, envOverride, cfg.EnableRepoPrewarm, map[bool]string{true: "ENABLED", false: "DISABLED"}[prewarmEnabled])
+		}
+	}
+
+	if prewarmEnabled {
+		prewarmStart := time.Now()
+		if err := PrewarmRepoFromBuildCache(context.Background(), g.logger, g.envRepo, cfg.CloneIntoDir, cfg.RepositoryURL); err != nil {
+			g.logger.Warnf("Git repo prewarm failed: %s — continuing with normal clone", err)
+		}
+		g.logger.TInfof("Run: prewarm phase took %s", time.Since(prewarmStart).Round(time.Millisecond))
+	} else {
+		g.logger.TInfof("Run: prewarm phase skipped (enable_repo_prewarm=no or %s set to disable)", envEnableRepoPrewarm)
+	}
+
+	transportStart := time.Now()
+	g.logger.TInfof("Run: configuring git transport")
 	if err := transport.Setup(transport.Config{
 		URL:          cfg.RepositoryURL,
 		HTTPUsername: cfg.GitHTTPUsername,
@@ -103,15 +140,24 @@ func (g GitCloneStep) Run(cfg Config) (gitclone.CheckoutStateResult, error) {
 	}); err != nil {
 		return gitclone.CheckoutStateResult{}, err
 	}
+	g.logger.TInfof("Run: transport setup took %s", time.Since(transportStart).Round(time.Millisecond))
 
 	gitCloneCfg := convertConfig(cfg)
 	patchSource := bitriseapi.NewPatchSource(cfg.BuildURL, cfg.BuildAPIToken, g.logger)
 	mergeRefChecker := bitriseapi.NewMergeRefChecker(cfg.BuildURL, cfg.BuildAPIToken, retry.NewHTTPClient(), g.logger, g.tracker)
 	cloner := gitclone.NewGitCloner(g.logger, g.tracker, g.cmdFactory, patchSource, mergeRefChecker, cfg.PerformanceMonitoring)
-	return cloner.CheckoutState(gitCloneCfg)
+	result, err := cloner.CheckoutState(gitCloneCfg)
+	if err != nil {
+		return result, err
+	}
+
+	g.logger.Donef("Run: total git-clone step took %s", time.Since(runStart).Round(time.Millisecond))
+	return result, nil
 }
 
 func (g GitCloneStep) ExportOutputs(runResult gitclone.CheckoutStateResult) error {
+	exportStart := time.Now()
+	g.logger.TInfof("ExportOutputs: starting commit info export")
 	fmt.Println()
 
 	exporter := gitclone.NewOutputExporter(g.logger, g.cmdFactory, runResult)
@@ -119,6 +165,7 @@ func (g GitCloneStep) ExportOutputs(runResult gitclone.CheckoutStateResult) erro
 		return err
 	}
 
+	g.logger.TInfof("ExportOutputs: took %s", time.Since(exportStart).Round(time.Millisecond))
 	return nil
 }
 

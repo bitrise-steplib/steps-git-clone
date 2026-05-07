@@ -3,7 +3,8 @@ package gitclone
 import (
 	"fmt"
 	"strings"
-	
+	"time"
+
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
 )
@@ -62,36 +63,46 @@ func (c checkoutPRMergeRef) performCheckout(gitCmd git.Git, fetchOpts fetchOptio
 	// This is caused by the remote merge and head branches being "force-pushed" by GitHub.
 	// To solve it we remove merge and head branch refs.
 	// $ git update-ref -d refs/remotes/pull/7/merge
+	tDelMerge := time.Now()
 	err := deleteRef(gitCmd, c.localMergeRef())
 	if err != nil {
 		return fmt.Errorf("failed to delete ref: %w", err)
 	}
+	log.Printf("[%s] PRMergeRef: delete-ref %s took %s", time.Now().Format("15:04:05.000"), c.localMergeRef(), time.Since(tDelMerge).Round(time.Millisecond))
 
 	// $ git update-ref -d refs/remotes/pull/7/head
 	// If the ref does not exist, the command still exits with 0 exit code.
+	tDelHead := time.Now()
 	err = deleteRef(gitCmd, c.localHeadRef())
 	if err != nil {
 		return fmt.Errorf("failed to delete ref: %w", err)
 	}
+	log.Printf("[%s] PRMergeRef: delete-ref %s took %s", time.Now().Format("15:04:05.000"), c.localHeadRef(), time.Since(tDelHead).Round(time.Millisecond))
 
 	//$ git fetch origin refs/remotes/pull/7/merge:refs/pull/7/merge
+	tFetchMerge := time.Now()
 	err = fetch(gitCmd, originRemoteName, refSpec, fetchOpts)
 	if err != nil {
 		return fmt.Errorf("failed to fetch merge ref: %w", err)
 	}
+	log.Printf("[%s] PRMergeRef: fetch merge ref %s took %s", time.Now().Format("15:04:05.000"), refSpec, time.Since(tFetchMerge).Round(time.Millisecond))
 
 	// Also fetch the PR head ref because the step exports outputs based on the PR head commit (see output.go)
 	// $ git fetch origin refs/remotes/pull/7/head:refs/pull/7/head
+	tFetchHead := time.Now()
 	err = c.fetchPRHeadRef(gitCmd, fetchOpts)
 	if err != nil {
 		return err
 	}
+	log.Printf("[%s] PRMergeRef: fetch head ref %s took %s", time.Now().Format("15:04:05.000"), c.remoteHeadRef(), time.Since(tFetchHead).Round(time.Millisecond))
 
 	// $ git checkout refs/remotes/pull/7/merge
+	tCheckout := time.Now()
 	err = checkoutWithCustomRetry(gitCmd, c.localMergeRef(), nil)
 	if err != nil {
 		return err
 	}
+	log.Printf("[%s] PRMergeRef: checkout %s took %s", time.Now().Format("15:04:05.000"), c.localMergeRef(), time.Since(tCheckout).Round(time.Millisecond))
 
 	return nil
 }

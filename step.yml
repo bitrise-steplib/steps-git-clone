@@ -234,6 +234,42 @@ inputs:
       Note: not all Git services provide this value.
     is_dont_change_value: true
 
+# Performance
+
+- early_exit: "no"
+  opts:
+    category: Performance
+    title: Early exit (warmup mode)
+    summary: When `yes`, the step exits successfully without doing any git work.
+    description: |-
+      Used to pre-warm Bitrise's stepman cache: an earlier no-op invocation of this step
+      causes the binary to be downloaded and built once. The next (real) invocation in
+      the same workflow then reuses the cached binary, paying no step download/build cost.
+
+      Has no other effect — leave at `no` for normal use.
+    value_options:
+    - "yes"
+    - "no"
+
+- enable_repo_prewarm: "yes"
+  opts:
+    category: Performance
+    title: Enable git repo prewarm via Bitrise Build Cache
+    summary: Restore a pre-built `.git` tarball from the Bitrise Build Cache before fetching, to avoid cold-pack object transfers.
+    description: |-
+      When set to `yes`, the step looks up `gitrepo-$BITRISE_APP_SLUG-main` in the Bitrise Build Cache and, on HIT, extracts the
+      tarball into the clone directory before running the normal fetch+checkout flow. The cached pack lets `git fetch` reuse
+      most objects, dropping a typical cold depth-1 fetch of a large repo (multiple seconds) to a small delta transfer
+      (hundreds of milliseconds).
+
+      On cache MISS or any error during prewarm, the step transparently falls back to a normal clone — never breaks the build.
+
+      Can also be controlled at runtime via the `BITRISE_GIT_CLONE_ENABLE_PREWARM` environment variable (`true`/`yes`/`1`/`on`
+      to enable, `false`/`no`/`0`/`off` to disable). The env var, if set, takes precedence over this input.
+    value_options:
+    - "yes"
+    - "no"
+
 # Debug
 
 - reset_repository: "No"

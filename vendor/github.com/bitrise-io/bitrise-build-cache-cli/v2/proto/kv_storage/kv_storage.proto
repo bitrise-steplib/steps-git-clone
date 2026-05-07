@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+import "google/bytestream/bytestream.proto";
+
+package kv_storage;
+option go_package = "github.com/bitrise-io/bitrise-build-cache-cli/v2/kv_storage";
+
+message DeleteResponse {
+  uint32 ok =1;
+}
+
+service KVStorage {
+  rpc Get(google.bytestream.ReadRequest) returns (stream google.bytestream.ReadResponse);
+  rpc Put(stream google.bytestream.WriteRequest) returns (google.bytestream.WriteResponse);
+  rpc Delete(google.bytestream.ReadRequest) returns (DeleteResponse);
+  rpc WriteStatus(google.bytestream.QueryWriteStatusRequest) returns (google.bytestream.QueryWriteStatusResponse);
+}
