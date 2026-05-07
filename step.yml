@@ -234,6 +234,27 @@ inputs:
       Note: not all Git services provide this value.
     is_dont_change_value: true
 
+# Performance
+
+- enable_repo_prewarm: "yes"
+  opts:
+    category: Performance
+    title: Enable git repo prewarm via Bitrise Build Cache
+    summary: Restore a pre-built `.git` tarball from the Bitrise Build Cache before fetching, to avoid cold-pack object transfers.
+    description: |-
+      When set to `yes`, the step looks up `gitrepo-$BITRISE_APP_SLUG-main` in the Bitrise Build Cache and, on HIT, extracts the
+      tarball into the clone directory before running the normal fetch+checkout flow. The cached pack lets `git fetch` reuse
+      most objects, dropping a typical cold depth-1 fetch of a large repo (multiple seconds) to a small delta transfer
+      (hundreds of milliseconds).
+
+      On cache MISS or any error during prewarm, the step transparently falls back to a normal clone — never breaks the build.
+
+      Can also be controlled at runtime via the `BITRISE_GIT_CLONE_ENABLE_PREWARM` environment variable (`true`/`yes`/`1`/`on`
+      to enable, `false`/`no`/`0`/`off` to disable). The env var, if set, takes precedence over this input.
+    value_options:
+    - "yes"
+    - "no"
+
 # Debug
 
 - reset_repository: "No"
