@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/v2/command"
@@ -22,6 +23,15 @@ func main() {
 
 func run() ExitCode {
 	logger := log.NewLogger()
+
+	// Early-exit hatch — used by the workflow's warmup invocation to load and
+	// build the step binary into Bitrise's stepman cache without doing any
+	// real git work, so the next (real) invocation pays no boot cost.
+	if v := strings.ToLower(strings.TrimSpace(os.Getenv("early_exit"))); v == "yes" || v == "true" || v == "1" || v == "on" {
+		logger.Donef("early_exit=%q — skipping git-clone step entirely (warmup mode)", v)
+		return Success
+	}
+
 	gitCloneStep := createStep(logger)
 
 	cfg, err := gitCloneStep.ProcessConfig()

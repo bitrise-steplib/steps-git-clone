@@ -236,6 +236,21 @@ inputs:
 
 # Performance
 
+- early_exit: "no"
+  opts:
+    category: Performance
+    title: Early exit (warmup mode)
+    summary: When `yes`, the step exits successfully without doing any git work.
+    description: |-
+      Used to pre-warm Bitrise's stepman cache: an earlier no-op invocation of this step
+      causes the binary to be downloaded and built once. The next (real) invocation in
+      the same workflow then reuses the cached binary, paying no step download/build cost.
+
+      Has no other effect — leave at `no` for normal use.
+    value_options:
+    - "yes"
+    - "no"
+
 - enable_repo_prewarm: "yes"
   opts:
     category: Performance
