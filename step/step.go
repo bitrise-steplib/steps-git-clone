@@ -3,6 +3,7 @@ package step
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/retry"
@@ -97,10 +98,17 @@ func (g GitCloneStep) ProcessConfig() (Config, error) {
 }
 
 func (g GitCloneStep) Run(cfg Config) (gitclone.CheckoutStateResult, error) {
+	runStart := time.Now()
+	g.logger.TInfof("Run: starting git-clone step")
+
+	prewarmStart := time.Now()
 	if err := PrewarmRepoFromBuildCache(context.Background(), g.logger, g.envRepo, cfg.CloneIntoDir, cfg.RepositoryURL); err != nil {
 		g.logger.Warnf("Git repo prewarm failed: %s — continuing with normal clone", err)
 	}
+	g.logger.TInfof("Run: prewarm phase took %s", time.Since(prewarmStart).Round(time.Millisecond))
 
+	transportStart := time.Now()
+	g.logger.TInfof("Run: configuring git transport")
 	if err := transport.Setup(transport.Config{
 		URL:          cfg.RepositoryURL,
 		HTTPUsername: cfg.GitHTTPUsername,
@@ -108,15 +116,24 @@ func (g GitCloneStep) Run(cfg Config) (gitclone.CheckoutStateResult, error) {
 	}); err != nil {
 		return gitclone.CheckoutStateResult{}, err
 	}
+	g.logger.TInfof("Run: transport setup took %s", time.Since(transportStart).Round(time.Millisecond))
 
 	gitCloneCfg := convertConfig(cfg)
 	patchSource := bitriseapi.NewPatchSource(cfg.BuildURL, cfg.BuildAPIToken, g.logger)
 	mergeRefChecker := bitriseapi.NewMergeRefChecker(cfg.BuildURL, cfg.BuildAPIToken, retry.NewHTTPClient(), g.logger, g.tracker)
 	cloner := gitclone.NewGitCloner(g.logger, g.tracker, g.cmdFactory, patchSource, mergeRefChecker, cfg.PerformanceMonitoring)
-	return cloner.CheckoutState(gitCloneCfg)
+	result, err := cloner.CheckoutState(gitCloneCfg)
+	if err != nil {
+		return result, err
+	}
+
+	g.logger.Donef("Run: total git-clone step took %s", time.Since(runStart).Round(time.Millisecond))
+	return result, nil
 }
 
 func (g GitCloneStep) ExportOutputs(runResult gitclone.CheckoutStateResult) error {
+	exportStart := time.Now()
+	g.logger.TInfof("ExportOutputs: starting commit info export")
 	fmt.Println()
 
 	exporter := gitclone.NewOutputExporter(g.logger, g.cmdFactory, runResult)
@@ -124,6 +141,7 @@ func (g GitCloneStep) ExportOutputs(runResult gitclone.CheckoutStateResult) erro
 		return err
 	}
 
+	g.logger.TInfof("ExportOutputs: took %s", time.Since(exportStart).Round(time.Millisecond))
 	return nil
 }
 
