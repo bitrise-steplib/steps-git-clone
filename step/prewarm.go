@@ -16,8 +16,17 @@ import (
 )
 
 // PrewarmRepoFromBuildCache attempts to populate cloneIntoDir with a pre-built
-// .git directory restored from the Bitrise Build Cache, mirroring the
-// `cached-tar` HIT branch from the hackathon-2026-git-prewarm workflow.
+// .git directory restored from the Bitrise Build Cache, so the subsequent
+// CheckoutState fetch can reuse cached objects instead of cloning from
+// scratch.
+//
+// Unlike the original hackathon `cached-tar` workflow, we do NOT populate
+// the working tree (no `git checkout BR -- .`). The existing CheckoutState
+// flow will write the working tree once when it checks out the actual target
+// ref. To prevent CheckoutState's "is working tree clean" check from
+// triggering a redundant `git reset --hard HEAD`, we clear the index after
+// extraction — with both index and working tree empty, the tree is
+// considered clean.
 //
 // On any error or cache miss it logs the cause and returns nil — callers
 // should fall back to a normal clone.
@@ -111,13 +120,13 @@ func PrewarmRepoFromBuildCache(ctx context.Context, logger log.Logger, envRepo e
 		return nil
 	}
 
-	checkoutStart := time.Now()
-	logger.Infof("Initializing working tree via git checkout %s -- .", branch)
-	if out, err := runCmd(cloneIntoDir, "git", "checkout", branch, "--", "."); err != nil {
-		logger.Warnf("Failed to initialize working tree: %s\n%s\nFalling back to normal clone", err, out)
+	clearIndexStart := time.Now()
+	logger.Infof("Clearing index so the next checkout writes the working tree exactly once")
+	if out, err := runCmd(cloneIntoDir, "git", "read-tree", "--empty"); err != nil {
+		logger.Warnf("Failed to clear index: %s\n%s\nFalling back to normal clone", err, out)
 		return nil
 	}
-	logger.Infof("Working tree initialized in %s", time.Since(checkoutStart).Round(time.Millisecond))
+	logger.Infof("Index cleared in %s (default branch was %s)", time.Since(clearIndexStart).Round(time.Millisecond), branch)
 
 	logger.Donef("Git repo prewarm complete in %s", time.Since(overallStart).Round(time.Millisecond))
 	return nil
