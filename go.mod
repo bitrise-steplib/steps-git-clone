@@ -8,7 +8,7 @@ require (
 	github.com/bitrise-io/go-steputils v1.0.6
 	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.50
 	github.com/bitrise-io/go-utils v1.0.15
-	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.34
+	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.34.0.20260508122358-62a8c8fc9cd0
 	github.com/bitrise-steplib/steps-authenticate-host-with-netrc v0.0.0-20230711084209-91fcd09b2017
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/stretchr/testify v1.10.0
