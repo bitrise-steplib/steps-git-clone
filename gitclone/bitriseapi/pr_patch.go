@@ -1,13 +1,14 @@
 package bitriseapi
 
 import (
+	"context"
 	"fmt"
-	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 
-	"github.com/bitrise-io/go-steputils/input"
-	"github.com/bitrise-io/go-utils/filedownloader"
+	"github.com/bitrise-io/go-utils/v2/filedownloader"
+	"github.com/bitrise-io/go-utils/v2/log"
 )
 
 type PatchSource interface {
@@ -15,16 +16,18 @@ type PatchSource interface {
 	GetPRPatch() (string, error)
 }
 
-func NewPatchSource(buildURL, apiToken string) PatchSource {
+func NewPatchSource(buildURL, apiToken string, logger log.Logger) PatchSource {
 	return apiPatchSource{
 		buildURL: buildURL,
 		apiToken: apiToken,
+		logger:   logger,
 	}
 }
 
 type apiPatchSource struct {
 	buildURL string
 	apiToken string
+	logger   log.Logger
 }
 
 func (s apiPatchSource) GetPRPatch() (string, error) {
@@ -37,7 +40,7 @@ func (s apiPatchSource) GetPRPatch() (string, error) {
 
 	u, err := url.Parse(s.buildURL)
 	if err != nil {
-		return "", fmt.Errorf("could not parse build URL: %v", err)
+		return "", fmt.Errorf("parse build URL: %v", err)
 	}
 
 	if u.Scheme == "file" {
@@ -45,6 +48,16 @@ func (s apiPatchSource) GetPRPatch() (string, error) {
 	}
 
 	diffURL := fmt.Sprintf("%s/diff.txt?api_token=%s", s.buildURL, s.apiToken)
-	fileProvider := input.NewFileProvider(filedownloader.New(http.DefaultClient))
-	return fileProvider.LocalPath(diffURL)
+	downloader := filedownloader.NewDownloader(s.logger)
+	ctx := context.Background()
+	tempDir, err := os.MkdirTemp("", "pr_patch")
+	if err != nil {
+		return "", fmt.Errorf("create temp directory: %v", err)
+	}
+	diffFilePath := filepath.Join(tempDir, "pr_diff.txt")
+	err = downloader.Download(ctx, diffFilePath, diffURL)
+	if err != nil {
+		return "", fmt.Errorf("download PR patch: %v", err)
+	}
+	return diffFilePath, nil
 }
