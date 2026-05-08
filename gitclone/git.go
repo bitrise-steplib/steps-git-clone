@@ -3,11 +3,11 @@ package gitclone
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-io/go-utils/sliceutil"
 )
 
 const (
@@ -193,7 +193,7 @@ func handleCheckoutError(callback getAvailableBranches, tag string, err error, s
 		branches := branchesByRemote[originRemoteName]
 		// There was no error grabbing the available branches
 		// And the current branch is not present in the list
-		if branchesErr == nil && !sliceutil.IsStringInSlice(branch, branches) {
+		if branchesErr == nil && !slices.Contains(branches, branch) {
 			return newStepErrorWithBranchRecommendations(
 				tag,
 				err,
