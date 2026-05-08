@@ -94,7 +94,7 @@ func (m *MockRunner) GivenRunWithRetryFailsAfter(times int) *MockRunner {
 
 // GivenRunWithRetryFailsForCommand ...
 func (m *MockRunner) GivenRunWithRetryFailsForCommand(cmdString string) *MockRunner {
-	m.On("RunWithRetry", mock.MatchedBy(func(getCommand func() *command.Model) bool {
+	m.On("RunWithRetry", mock.MatchedBy(func(getCommand func() git.Template) bool {
 		return m.isCommandMatching(getCommand(), cmdString)
 	})).
 		Run(func(args mock.Arguments) {
