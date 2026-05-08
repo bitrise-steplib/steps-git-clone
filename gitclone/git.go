@@ -50,10 +50,10 @@ func resetRepo(gitFactory git.Factory) error {
 	if err := runner.Run(gitFactory.Clean("-x", "-d", "-f")); err != nil {
 		return err
 	}
-	if err := runner.Run(gitFactory.SubmoduleForeach(gitFactory.Reset("--hard", "HEAD"))); err != nil {
+	if err := runner.Run(gitFactory.SubmoduleForeach("reset", "--hard", "HEAD")); err != nil {
 		return err
 	}
-	return runner.Run(gitFactory.SubmoduleForeach(gitFactory.Clean("-x", "-d", "-f")))
+	return runner.Run(gitFactory.SubmoduleForeach("clean", "-x", "-d", "-f"))
 }
 
 func isFork(repoURL, prRepoURL string) bool {
