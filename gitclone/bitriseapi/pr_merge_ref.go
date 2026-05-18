@@ -48,10 +48,10 @@ type mergeRefFetcher func(attempt uint) (mergeRefResponse, error)
 
 func (c apiMergeRefChecker) IsMergeRefUpToDate(ref string) (bool, error) {
 	if c.buildURL == "" {
-		return false, fmt.Errorf("Bitrise build URL is not defined")
+		return false, fmt.Errorf("Bitrise build URL is not defined") //nolint:staticcheck
 	}
 	if c.apiToken == "" {
-		return false, fmt.Errorf("Bitrise API token is not defined")
+		return false, fmt.Errorf("Bitrise API token is not defined") //nolint:staticcheck
 	}
 
 	startTime := time.Now()

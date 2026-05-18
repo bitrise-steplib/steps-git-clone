@@ -51,7 +51,7 @@ func (c checkoutPRMergeRef) do(gitCmd git.Git, fetchOpts fetchOptions, fallback 
 	return nil
 }
 
-func (c checkoutPRMergeRef) performCheckout(gitCmd git.Git, fetchOpts fetchOptions, fallback fallbackRetry) error {
+func (c checkoutPRMergeRef) performCheckout(gitCmd git.Git, fetchOpts fetchOptions, _ fallbackRetry) error {
 	// https://git-scm.com/book/en/v2/Git-Internals-The-Refspec
 	refSpec := fmt.Sprintf("%s:%s", c.remoteMergeRef(), c.localMergeRef())
 

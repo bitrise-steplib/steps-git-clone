@@ -385,7 +385,6 @@ func Test_newStepErrorWithBranchRecommendations(t *testing.T) {
 		tag               string
 		err               error
 		shortMsg          string
-		currentBranch     string
 		availableBranches []string
 	}
 	tests := []struct {
@@ -399,7 +398,6 @@ func Test_newStepErrorWithBranchRecommendations(t *testing.T) {
 				tag:               "checkout_failed",
 				err:               errors.New("Generic error"),
 				shortMsg:          "Checkout has failed",
-				currentBranch:     "feature1",
 				availableBranches: nil,
 			},
 			want: &step.Error{
@@ -421,7 +419,6 @@ func Test_newStepErrorWithBranchRecommendations(t *testing.T) {
 				tag:               "checkout_failed",
 				err:               errors.New("pathspec 'feature1' did not match any file(s) known to git"),
 				shortMsg:          "Checkout has failed",
-				currentBranch:     "feature1",
 				availableBranches: []string{"master", "develop", "hotfix"},
 			},
 			want: &step.Error{
@@ -441,7 +438,7 @@ func Test_newStepErrorWithBranchRecommendations(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := newStepErrorWithBranchRecommendations(tt.args.tag, tt.args.err, tt.args.shortMsg, tt.args.currentBranch, tt.args.availableBranches); !reflect.DeepEqual(got, tt.want) {
+			if got := newStepErrorWithBranchRecommendations(tt.args.tag, tt.args.err, tt.args.shortMsg, tt.args.availableBranches); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("newStepErrorWithBranchRecommendations() = %v,want %v", got, tt.want)
 			}
 		})

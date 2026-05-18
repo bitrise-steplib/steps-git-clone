@@ -36,7 +36,7 @@ func newStepError(tag string, err error, shortMsg string) error {
 	return step.NewError("git-clone", tag, err, shortMsg)
 }
 
-func newStepErrorWithBranchRecommendations(tag string, err error, shortMsg, currentBranch string, availableBranches []string) error {
+func newStepErrorWithBranchRecommendations(tag string, err error, shortMsg string, availableBranches []string) error {
 	// First: Map the error messages
 	newErr := newStepError(tag, err, shortMsg)
 
@@ -78,7 +78,7 @@ Our auto-configurator returned the following error:
 	}
 }
 
-func newUpdateSubmoduleFailedAuthenticationDetailedError(errorMsg string, params ...string) errormapper.DetailedError {
+func newUpdateSubmoduleFailedAuthenticationDetailedError(errorMsg string, _ ...string) errormapper.DetailedError {
 	return errormapper.DetailedError{
 		Title: "We couldn’t access one or more of your Git submodules.",
 		Description: fmt.Sprintf(`You can try accessing your submodules <a target="_blank" href="https://devcenter.bitrise.io/faq/adding-projects-with-submodules/">using an SSH key</a>. You can continue adding your app, but your builds will fail unless you fix this issue later.
@@ -138,14 +138,14 @@ func newFetchFailedGenericDetailedError(errorMsg string) errormapper.DetailedErr
 	}
 }
 
-func newFetchFailedSSHAccessErrorDetailedError(errorMsg string, params ...string) errormapper.DetailedError {
+func newFetchFailedSSHAccessErrorDetailedError(_ string, _ ...string) errormapper.DetailedError {
 	return errormapper.DetailedError{
 		Title:       "We couldn’t access your repository.",
 		Description: "Please abort the process, double-check your SSH key and try again.",
 	}
 }
 
-func newFetchFailedCouldNotFindGitRepoDetailedError(errorMsg string, params ...string) errormapper.DetailedError {
+func newFetchFailedCouldNotFindGitRepoDetailedError(_ string, params ...string) errormapper.DetailedError {
 	repoURL := errormapper.GetParamAt(0, params)
 	return errormapper.DetailedError{
 		Title:       fmt.Sprintf("We couldn’t find a git repository at '%s'.", repoURL),
@@ -153,14 +153,14 @@ func newFetchFailedCouldNotFindGitRepoDetailedError(errorMsg string, params ...s
 	}
 }
 
-func newFetchFailedHTTPAccessErrorDetailedError(errorMsg string, params ...string) errormapper.DetailedError {
+func newFetchFailedHTTPAccessErrorDetailedError(_ string, _ ...string) errormapper.DetailedError {
 	return errormapper.DetailedError{
 		Title:       "We couldn’t access your repository.",
 		Description: "Please abort the process and try again, by providing the repository with SSH URL.",
 	}
 }
 
-func newFetchFailedCouldConnectErrorDetailedError(errorMsg string, params ...string) errormapper.DetailedError {
+func newFetchFailedCouldConnectErrorDetailedError(_ string, params ...string) errormapper.DetailedError {
 	host := errormapper.GetParamAt(0, params)
 	return errormapper.DetailedError{
 		Title:       fmt.Sprintf("We couldn’t connect to '%s'.", host),
@@ -168,14 +168,14 @@ func newFetchFailedCouldConnectErrorDetailedError(errorMsg string, params ...str
 	}
 }
 
-func newFetchFailedSamlSSOEnforcedDetailedError(errorMsg string, params ...string) errormapper.DetailedError {
+func newFetchFailedSamlSSOEnforcedDetailedError(_ string, _ ...string) errormapper.DetailedError {
 	return errormapper.DetailedError{
 		Title:       "To access this repository, you need to use SAML SSO.",
 		Description: `Please abort the process, update your SSH settings and try again. You can find out more about <a target="_blank" href="https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/authorizing-an-ssh-key-for-use-with-saml-single-sign-on">using SAML SSO in the Github docs</a>.`,
 	}
 }
 
-func newInvalidBranchDetailedError(errorMsg string, params ...string) errormapper.DetailedError {
+func newInvalidBranchDetailedError(_ string, params ...string) errormapper.DetailedError {
 	branch := errormapper.GetParamAt(0, params)
 	return errormapper.DetailedError{
 		Title:       fmt.Sprintf("We couldn't find the branch '%s'.", branch),

@@ -387,7 +387,6 @@ func Test_checkoutState(t *testing.T) {
 				fetchFailedTag,
 				fmt.Errorf("fetch branch refs/heads/fake: %w: please make sure the branch still exists", errors.New(rawCmdError)),
 				"Fetching repository has failed",
-				"fake",
 				[]string{"master"},
 			),
 		},
