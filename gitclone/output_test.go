@@ -107,3 +107,43 @@ func Test_gitOutputs(t *testing.T) {
 		})
 	}
 }
+
+func Test_trimEnv(t *testing.T) {
+	logger := log.NewLogger()
+	tests := []struct {
+		name         string
+		envKey       string
+		envValue     string
+		maxEnvLength int
+		want         string
+	}{
+		{
+			name:         "long value, trimmed",
+			envKey:       "TEST_ENV",
+			envValue:     "Short value",
+			maxEnvLength: 20,
+			want:         "Short value",
+		},
+		{
+			name:         "long value, trimmed",
+			envKey:       "TEST_ENV",
+			envValue:     "Somewhat long value that exceeds the limit",
+			maxEnvLength: 6,
+			want:         "Som...",
+		},
+		{
+			name:         "max env length smaller than trimEnding length",
+			envKey:       "TEST_ENV",
+			envValue:     "Somewhat long value that exceeds the limit",
+			maxEnvLength: 0,
+			want:         "...",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := trimEnv(logger, tt.envKey, tt.envValue, tt.maxEnvLength); got != tt.want {
+				t.Errorf("trimEnv() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
