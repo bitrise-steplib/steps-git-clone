@@ -32,10 +32,10 @@ type apiPatchSource struct {
 
 func (s apiPatchSource) GetPRPatch() (string, error) {
 	if s.buildURL == "" {
-		return "", fmt.Errorf("Bitrise build URL is not defined")
+		return "", fmt.Errorf("Bitrise build URL is not defined") //nolint:staticcheck
 	}
 	if s.apiToken == "" {
-		return "", fmt.Errorf("Bitrise API token is not defined")
+		return "", fmt.Errorf("Bitrise API token is not defined") //nolint:staticcheck
 	}
 
 	u, err := url.Parse(s.buildURL)

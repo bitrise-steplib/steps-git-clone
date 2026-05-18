@@ -74,7 +74,7 @@ func NewGitCloneStep(logger log.Logger, tracker tracker.StepTracker, inputParser
 func (g GitCloneStep) ProcessConfig() (Config, error) {
 	var input Input
 	if err := g.inputParser.Parse(&input); err != nil {
-		return Config{}, fmt.Errorf("Error: %s\n", err)
+		return Config{}, fmt.Errorf("error: %s", err)
 	}
 	stepconf.Print(input)
 
