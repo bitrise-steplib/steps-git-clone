@@ -36,7 +36,7 @@ func newStepError(tag string, err error, shortMsg string) error {
 	return step.NewError("git-clone", tag, err, shortMsg)
 }
 
-func newStepErrorWithBranchRecommendations(tag string, err error, shortMsg, _ string, availableBranches []string) error {
+func newStepErrorWithBranchRecommendations(tag string, err error, shortMsg string, availableBranches []string) error {
 	// First: Map the error messages
 	newErr := newStepError(tag, err, shortMsg)
 

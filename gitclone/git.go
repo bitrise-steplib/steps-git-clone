@@ -198,7 +198,6 @@ func handleCheckoutError(callback getAvailableBranches, tag string, err error, s
 				tag,
 				err,
 				shortMsg,
-				branch,
 				branches,
 			)
 		}
