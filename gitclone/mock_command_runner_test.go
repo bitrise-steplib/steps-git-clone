@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io"
 
-	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/git"
 
 	"github.com/stretchr/testify/mock"
@@ -115,7 +114,7 @@ func (m *MockRunner) ResumePerformanceMonitoring() {
 }
 
 func (m *MockRunner) rememberCommand(args mock.Arguments) {
-	_, printable := templateToCommand(args[0])
+	printable := templateToCommand(args[0])
 	m.cmds = append(m.cmds, printable)
 }
 
@@ -126,11 +125,11 @@ func (m *MockRunner) rememberCommands(args mock.Arguments, times int) {
 }
 
 func (m *MockRunner) isCommandMatching(t git.Template, cmdString string) bool {
-	_, printable := templateToCommand(t)
+	printable := templateToCommand(t)
 	return printable == cmdString
 }
 
-func templateToCommand(v any) (command.Command, string) {
+func templateToCommand(v any) string {
 	var t git.Template
 	switch res := v.(type) {
 	case git.Template:
@@ -142,5 +141,5 @@ func templateToCommand(v any) (command.Command, string) {
 	}
 
 	c := t.Create(io.Discard, io.Discard, nil)
-	return c, c.PrintableCommandArgs()
+	return c.PrintableCommandArgs()
 }
