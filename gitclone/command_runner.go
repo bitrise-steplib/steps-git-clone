@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/retry"
+	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/git"
 )
 
@@ -39,8 +39,11 @@ func (r *DefaultRunner) RunForOutput(t git.Template) (string, error) {
 	log.Infof("$ %s &> out", c.PrintableCommandArgs())
 
 	out, err := c.RunAndReturnTrimmedCombinedOutput()
-	if err != nil && errorutil.IsExitStatusError(err) {
-		return out, errors.New(out)
+	if err != nil {
+		var exitErr *command.ExitStatusError
+		if errors.As(err, &exitErr) {
+			return out, errors.New(out)
+		}
 	}
 
 	return out, err
@@ -57,18 +60,20 @@ func (r *DefaultRunner) Run(t git.Template) error {
 	log.Infof("$ %s", c.PrintableCommandArgs())
 
 	err := c.Run()
-	if err != nil {
-		if errorutil.IsExitStatusError(err) {
-			errorStr := buffer.String()
-			if errorStr == "" {
-				errorStr = "please check the command output for errors"
-			}
-			return errors.New(strings.TrimSpace(errorStr))
-		}
-		return err
+	if err == nil {
+		return nil
 	}
 
-	return nil
+	var exitErr *command.ExitStatusError
+	if errors.As(err, &exitErr) {
+		errorStr := strings.TrimSpace(buffer.String())
+		if errorStr == "" {
+			errorStr = "please check the command output for errors"
+		}
+		return errors.New(errorStr)
+	}
+
+	return err
 }
 
 // RunWithRetry ...
