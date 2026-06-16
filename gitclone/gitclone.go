@@ -74,6 +74,12 @@ type CheckoutStateResult struct {
 func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	defer g.tracker.Wait()
 
+	checkoutStateStart := time.Now()
+	g.logger.TInfof("CheckoutState: starting git checkout flow")
+
+	setupStart := time.Now()
+	g.logger.TInfof("CheckoutState: phase=setup (origin check, init, remote add, gc config)")
+
 	gitCmd, err := git.New(cfg.CloneIntoDir)
 	if err != nil {
 		return CheckoutStateResult{}, newStepError(
@@ -93,6 +99,8 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	}
 
 	if originPresent && cfg.ResetRepository {
+		resetStart := time.Now()
+		g.logger.TInfof("CheckoutState: phase=reset-repo (origin present and reset_repository=true)")
 		if err := resetRepo(gitCmd); err != nil {
 			return CheckoutStateResult{}, newStepError(
 				"reset_repository_failed",
@@ -100,6 +108,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 				"Resetting repository failed",
 			)
 		}
+		g.logger.TInfof("CheckoutState: reset-repo took %s", time.Since(resetStart).Round(time.Millisecond))
 	}
 	if err := runner.Run(gitCmd.Init()); err != nil {
 		return CheckoutStateResult{}, newStepError(
@@ -129,11 +138,19 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 			"Failed to disable git garbage collection",
 		)
 	}
+	g.logger.TInfof("CheckoutState: setup took %s", time.Since(setupStart).Round(time.Millisecond))
 
-	if err := setupSparseCheckout(gitCmd, cfg.SparseDirectories); err != nil {
-		return CheckoutStateResult{}, err
+	if len(cfg.SparseDirectories) > 0 {
+		sparseStart := time.Now()
+		g.logger.TInfof("CheckoutState: phase=sparse-checkout (configuring %d directories)", len(cfg.SparseDirectories))
+		if err := setupSparseCheckout(gitCmd, cfg.SparseDirectories); err != nil {
+			return CheckoutStateResult{}, err
+		}
+		g.logger.TInfof("CheckoutState: sparse-checkout took %s", time.Since(sparseStart).Round(time.Millisecond))
 	}
 
+	cleanCheckStart := time.Now()
+	g.logger.TInfof("CheckoutState: phase=working-tree-clean-check")
 	clean, err := isWorkingTreeClean(gitCmd)
 	if err != nil {
 		g.logger.Warnf("Failed to check if working tree is clean: %s", err)
@@ -152,7 +169,9 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 			g.logger.Warnf("Failed to reset repository: %s", err)
 		}
 	}
+	g.logger.TInfof("CheckoutState: working-tree-clean-check took %s (was clean=%t)", time.Since(cleanCheckStart).Round(time.Millisecond), clean)
 
+	g.logger.TInfof("CheckoutState: phase=fetch-and-checkout")
 	checkoutStrategy, isPR, err := g.checkoutState(gitCmd, cfg)
 	if err != nil {
 		return CheckoutStateResult{}, err
@@ -160,14 +179,17 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 
 	if cfg.UpdateSubmodules {
 		startTime := time.Now()
+		g.logger.TInfof("CheckoutState: phase=submodule-update")
 		if err := updateSubmodules(gitCmd, cfg); err != nil {
 			return CheckoutStateResult{}, err
 		}
 		updateTime := time.Since(startTime).Round(time.Second)
 		g.logger.Println()
-		g.logger.Infof("Updating submodules took %s", updateTime)
+		g.logger.TInfof("CheckoutState: submodule-update took %s", updateTime)
 		g.tracker.LogSubmoduleUpdate(updateTime)
 	}
+
+	g.logger.Donef("CheckoutState: total took %s", time.Since(checkoutStateStart).Round(time.Millisecond))
 
 	return CheckoutStateResult{
 		gitRef: checkoutStrategy.getBuildTriggerRef(),
@@ -195,10 +217,10 @@ func (g GitCloner) checkoutState(gitCmd git.Git, cfg Config) (strategy checkoutS
 		return nil, false, err
 	}
 
-	checkoutDuration := time.Since(checkoutStartTime).Round(time.Second)
+	checkoutDuration := time.Since(checkoutStartTime).Round(time.Millisecond)
 	g.logger.Println()
-	g.logger.Infof("Fetch and checkout took %s", checkoutDuration)
-	g.tracker.LogCheckout(checkoutDuration, checkoutMethod.String(), cfg.RepositoryURL)
+	g.logger.TInfof("Fetch and checkout took %s", checkoutDuration)
+	g.tracker.LogCheckout(checkoutDuration.Round(time.Second), checkoutMethod.String(), cfg.RepositoryURL)
 
 	return checkoutStrategy, isPRCheckout(checkoutMethod), nil
 }
