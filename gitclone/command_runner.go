@@ -32,8 +32,7 @@ type DefaultRunner struct {
 
 // RunForOutput ...
 func (r *DefaultRunner) RunForOutput(t git.Template) (string, error) {
-	perfEnv := r.performanceMonitoringEnvVar()
-	c := t.Create(nil, nil, []string{perfEnv})
+	c := t.Create(nil, nil, r.performanceMonitoringEnvs())
 
 	fmt.Println()
 	log.Infof("$ %s &> out", c.PrintableCommandArgs())
@@ -53,8 +52,7 @@ func (r *DefaultRunner) RunForOutput(t git.Template) (string, error) {
 func (r *DefaultRunner) Run(t git.Template) error {
 	var buffer bytes.Buffer
 
-	perfEnv := r.performanceMonitoringEnvVar()
-	c := t.Create(os.Stdout, io.MultiWriter(os.Stderr, &buffer), []string{perfEnv})
+	c := t.Create(os.Stdout, io.MultiWriter(os.Stderr, &buffer), r.performanceMonitoringEnvs())
 
 	fmt.Println()
 	log.Infof("$ %s", c.PrintableCommandArgs())
@@ -105,14 +103,14 @@ func (r *DefaultRunner) ResumePerformanceMonitoring() {
 	r.performanceMonitoringTemporarilyDisabled = false
 }
 
-func (r *DefaultRunner) performanceMonitoringEnvVar() string {
+func (r *DefaultRunner) performanceMonitoringEnvs() []string {
 	if r.performanceMonitoringTemporarilyDisabled {
-		return "GIT_TRACE2_PERF=0"
+		return []string{"GIT_TRACE2_PERF=0"}
 	}
 
 	if r.performanceMonitoringEnabled {
-		return "GIT_TRACE2_PERF=1"
+		return []string{"GIT_TRACE2_PERF=1"}
 	}
 
-	return ""
+	return nil
 }
