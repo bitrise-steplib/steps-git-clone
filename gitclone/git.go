@@ -2,7 +2,6 @@ package gitclone
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -214,7 +213,7 @@ func handleCheckoutError(callback getAvailableBranches, tag string, err error, s
 func isWorkingTreeClean(gitFactory git.Factory) (bool, error) {
 	// Despite the flag name, `--porcelain` is the plumbing format to use in scripts:
 	// https://git-scm.com/docs/git-status#Documentation/git-status.txt---porcelainltversiongt
-	c := gitFactory.Status("--porcelain").Create(os.Stdout, os.Stderr, nil)
+	c := gitFactory.Status("--porcelain").Create(nil, nil, nil)
 	out, err := c.RunAndReturnTrimmedOutput()
 	if err != nil {
 		return false, fmt.Errorf("git status check: %s", err)
