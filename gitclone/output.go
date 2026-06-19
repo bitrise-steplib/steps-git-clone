@@ -5,8 +5,8 @@ import (
 
 	"github.com/bitrise-io/envman/envman"
 	"github.com/bitrise-io/go-steputils/v2/export"
-	v1command "github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/git"
 	"github.com/bitrise-io/go-utils/v2/log"
 )
 
@@ -15,8 +15,8 @@ const outputCommitterEmail = "GIT_CLONE_COMMIT_COMMITTER_EMAIL"
 const outputCommitCount = "GIT_CLONE_COMMIT_COUNT"
 
 type gitOutput struct {
-	envKey string
-	gitCmd *v1command.Model
+	envKey      string
+	gitTemplate git.Template
 }
 
 type OutputExporter struct {
@@ -50,7 +50,7 @@ Try using the env vars based on the webhook contents instead, such as $BITRISE_G
 	}
 
 	for _, commitInfo := range e.gitOutputs(gitRef, e.checkoutResult.isPR) {
-		if err := e.printLogAndExportEnv(commitInfo.gitCmd, commitInfo.envKey, maxEnvLength); err != nil {
+		if err := e.printLogAndExportEnv(commitInfo.gitTemplate, commitInfo.envKey, maxEnvLength); err != nil {
 			return e.wrapErrorForExportCommitInfo(err)
 		}
 	}
@@ -65,24 +65,24 @@ func (e *OutputExporter) wrapErrorForExportCommitInfo(err error) error {
 func (e *OutputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 	outputs := []gitOutput{
 		{
-			envKey: "GIT_CLONE_COMMIT_AUTHOR_NAME",
-			gitCmd: e.checkoutResult.gitCmd.Log(`%an`, gitRef),
+			envKey:      "GIT_CLONE_COMMIT_AUTHOR_NAME",
+			gitTemplate: e.checkoutResult.gitFactory.Log(`%an`, gitRef),
 		},
 		{
-			envKey: "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
-			gitCmd: e.checkoutResult.gitCmd.Log(`%ae`, gitRef),
+			envKey:      "GIT_CLONE_COMMIT_AUTHOR_EMAIL",
+			gitTemplate: e.checkoutResult.gitFactory.Log(`%ae`, gitRef),
 		},
 		{
-			envKey: "GIT_CLONE_COMMIT_HASH",
-			gitCmd: e.checkoutResult.gitCmd.Log(`%H`, gitRef),
+			envKey:      "GIT_CLONE_COMMIT_HASH",
+			gitTemplate: e.checkoutResult.gitFactory.Log(`%H`, gitRef),
 		},
 		{
-			envKey: "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
-			gitCmd: e.checkoutResult.gitCmd.Log(`%s`, gitRef),
+			envKey:      "GIT_CLONE_COMMIT_MESSAGE_SUBJECT",
+			gitTemplate: e.checkoutResult.gitFactory.Log(`%s`, gitRef),
 		},
 		{
-			envKey: "GIT_CLONE_COMMIT_MESSAGE_BODY",
-			gitCmd: e.checkoutResult.gitCmd.Log(`%b`, gitRef),
+			envKey:      "GIT_CLONE_COMMIT_MESSAGE_BODY",
+			gitTemplate: e.checkoutResult.gitFactory.Log(`%b`, gitRef),
 		},
 	}
 	if isPR {
@@ -93,16 +93,16 @@ func (e *OutputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 	} else {
 		extraOutputs := []gitOutput{
 			{
-				envKey: outputCommitterName,
-				gitCmd: e.checkoutResult.gitCmd.Log(`%cn`, gitRef),
+				envKey:      outputCommitterName,
+				gitTemplate: e.checkoutResult.gitFactory.Log(`%cn`, gitRef),
 			},
 			{
-				envKey: outputCommitterEmail,
-				gitCmd: e.checkoutResult.gitCmd.Log(`%ce`, gitRef),
+				envKey:      outputCommitterEmail,
+				gitTemplate: e.checkoutResult.gitFactory.Log(`%ce`, gitRef),
 			},
 			{
-				envKey: outputCommitCount,
-				gitCmd: e.checkoutResult.gitCmd.RevList("HEAD", "--count"),
+				envKey:      outputCommitCount,
+				gitTemplate: e.checkoutResult.gitFactory.RevList("HEAD", "--count"),
 			},
 		}
 		outputs = append(outputs, extraOutputs...)
@@ -111,11 +111,11 @@ func (e *OutputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 	return outputs
 }
 
-func (e *OutputExporter) printLogAndExportEnv(command *v1command.Model, env string, maxEnvLength int) error {
+func (e *OutputExporter) printLogAndExportEnv(gitTemplate git.Template, env string, maxEnvLength int) error {
 	runner.PausePerformanceMonitoring()
 	defer runner.ResumePerformanceMonitoring()
 
-	l, err := runner.RunForOutput(command)
+	l, err := runner.RunForOutput(gitTemplate)
 	if err != nil {
 		return fmt.Errorf("command failed: %s", err)
 	}

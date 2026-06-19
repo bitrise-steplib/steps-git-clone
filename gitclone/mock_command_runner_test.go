@@ -2,8 +2,10 @@ package gitclone
 
 import (
 	"errors"
+	"io"
 
-	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/v2/git"
+
 	"github.com/stretchr/testify/mock"
 )
 
@@ -20,8 +22,8 @@ func (m *MockRunner) Cmds() []string {
 }
 
 // RunForOutput ...
-func (m *MockRunner) RunForOutput(c *command.Model) (string, error) {
-	args := m.Called(c)
+func (m *MockRunner) RunForOutput(t git.Template) (string, error) {
+	args := m.Called(t)
 	return args.String(0), args.Error(1)
 }
 
@@ -34,8 +36,8 @@ func (m *MockRunner) GivenRunForOutputSucceeds() *MockRunner {
 }
 
 // Run ...
-func (m *MockRunner) Run(c *command.Model) error {
-	args := m.Called(c)
+func (m *MockRunner) Run(t git.Template) error {
+	args := m.Called(t)
 	return args.Error(0)
 }
 
@@ -49,8 +51,8 @@ func (m *MockRunner) GivenRunSucceeds() *MockRunner {
 
 // GivenRunFailsForCommand ...
 func (m *MockRunner) GivenRunFailsForCommand(cmdString string, times int) *MockRunner {
-	m.On("Run", mock.MatchedBy(func(command *command.Model) bool {
-		return m.isCommandMatching(command, cmdString)
+	m.On("Run", mock.MatchedBy(func(t git.Template) bool {
+		return m.isCommandMatching(t, cmdString)
 	})).
 		Run(m.rememberCommand).
 		Times(times).
@@ -59,12 +61,12 @@ func (m *MockRunner) GivenRunFailsForCommand(cmdString string, times int) *MockR
 }
 
 // RunWithRetry ...
-func (m *MockRunner) RunWithRetry(getCommand func() *command.Model) error {
+func (m *MockRunner) RunWithRetry(getCommand func() git.Template) error {
 	args := m.Called(getCommand)
 	return args.Error(0)
 }
 
-// GivenRunWithRetrySucceedsAfter ...
+// GivenRunWithRetrySucceeds ...
 func (m *MockRunner) GivenRunWithRetrySucceeds() *MockRunner {
 	return m.GivenRunWithRetrySucceedsAfter(0)
 }
@@ -91,7 +93,7 @@ func (m *MockRunner) GivenRunWithRetryFailsAfter(times int) *MockRunner {
 
 // GivenRunWithRetryFailsForCommand ...
 func (m *MockRunner) GivenRunWithRetryFailsForCommand(cmdString string) *MockRunner {
-	m.On("RunWithRetry", mock.MatchedBy(func(getCommand func() *command.Model) bool {
+	m.On("RunWithRetry", mock.MatchedBy(func(getCommand func() git.Template) bool {
 		return m.isCommandMatching(getCommand(), cmdString)
 	})).
 		Run(func(args mock.Arguments) {
@@ -102,6 +104,7 @@ func (m *MockRunner) GivenRunWithRetryFailsForCommand(cmdString string) *MockRun
 }
 
 func (m *MockRunner) SetPerformanceMonitoring(enable bool) {
+	_ = enable
 }
 
 func (m *MockRunner) PausePerformanceMonitoring() {
@@ -111,17 +114,8 @@ func (m *MockRunner) ResumePerformanceMonitoring() {
 }
 
 func (m *MockRunner) rememberCommand(args mock.Arguments) {
-	var cmdModel *command.Model
-	switch res := args[0].(type) {
-	case *command.Model:
-		cmdModel = res
-	case func() *command.Model:
-		cmdModel = res()
-	default:
-		panic("Could not cast args[0] to *command.Model")
-	}
-
-	m.cmds = append(m.cmds, cmdModel.PrintableCommandArgs())
+	printable := templateToCommand(args[0])
+	m.cmds = append(m.cmds, printable)
 }
 
 func (m *MockRunner) rememberCommands(args mock.Arguments, times int) {
@@ -130,6 +124,22 @@ func (m *MockRunner) rememberCommands(args mock.Arguments, times int) {
 	}
 }
 
-func (m *MockRunner) isCommandMatching(command *command.Model, cmdString string) bool {
-	return command.PrintableCommandArgs() == cmdString
+func (m *MockRunner) isCommandMatching(t git.Template, cmdString string) bool {
+	printable := templateToCommand(t)
+	return printable == cmdString
+}
+
+func templateToCommand(v any) string {
+	var t git.Template
+	switch res := v.(type) {
+	case git.Template:
+		t = res
+	case func() git.Template:
+		t = res()
+	default:
+		panic("Could not cast argument to git.Template")
+	}
+
+	c := t.Create(io.Discard, io.Discard, nil)
+	return c.PrintableCommandArgs()
 }

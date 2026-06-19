@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/command/git"
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/v2/git"
 )
 
 // PRDiffFileParams are parameters to check out a Merge/Pull Request (when a diff file is available)
@@ -35,28 +35,28 @@ type checkoutPRDiffFile struct {
 	patchFile string
 }
 
-func (c checkoutPRDiffFile) do(gitCmd git.Git, fetchOptions fetchOptions, fallback fallbackRetry) error {
+func (c checkoutPRDiffFile) do(gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
-	if err := fetch(gitCmd, originRemoteName, destBranchRef, fetchOptions); err != nil {
+	if err := fetch(gitFactory, originRemoteName, destBranchRef, fetchOptions); err != nil {
 		return fmt.Errorf("failed to fetch base branch: %w", err)
 	}
 
-	if err := checkoutWithCustomRetry(gitCmd, c.params.DestinationBranch, fallback); err != nil {
+	if err := checkoutWithCustomRetry(gitFactory, c.params.DestinationBranch, fallback); err != nil {
 		return err
 	}
 
-	if err := runner.Run(gitCmd.Apply(c.patchFile)); err != nil {
+	if err := runner.Run(gitFactory.Apply(c.patchFile)); err != nil {
 		log.Warnf("Could not apply patch (%s): %v", c.patchFile, err)
 		log.Warnf("Falling back to manual merge...")
 
-		if err := c.params.PRManualMergeStrategy.do(gitCmd, fetchOptions, fallback); err != nil {
+		if err := c.params.PRManualMergeStrategy.do(gitFactory, fetchOptions, fallback); err != nil {
 			return fmt.Errorf("fallback failed for applying patch (%s): %v", c.patchFile, err)
 		}
 
 		return nil
 	}
 
-	return detachHead(gitCmd)
+	return detachHead(gitFactory)
 }
 
 func (c checkoutPRDiffFile) getBuildTriggerRef() string {

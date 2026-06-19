@@ -8,17 +8,17 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/retry"
+	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/git"
 )
 
 // CommandRunner ...
 type CommandRunner interface {
-	RunForOutput(c *command.Model) (string, error)
-	Run(c *command.Model) error
-	RunWithRetry(getCommmand func() *command.Model) error
+	RunForOutput(t git.Template) (string, error)
+	Run(t git.Template) error
+	RunWithRetry(get func() git.Template) error
 	SetPerformanceMonitoring(enable bool)
 	PausePerformanceMonitoring()
 	ResumePerformanceMonitoring()
@@ -31,51 +31,57 @@ type DefaultRunner struct {
 }
 
 // RunForOutput ...
-func (r *DefaultRunner) RunForOutput(c *command.Model) (string, error) {
+func (r *DefaultRunner) RunForOutput(t git.Template) (string, error) {
+	c := t.Create(nil, nil, r.performanceMonitoringEnvs())
+
 	fmt.Println()
 	log.Infof("$ %s &> out", c.PrintableCommandArgs())
 
-	r.setupPerformanceMonitoring(c)
-
 	out, err := c.RunAndReturnTrimmedCombinedOutput()
-	if err != nil && errorutil.IsExitStatusError(err) {
-		return out, errors.New(out)
+	if err != nil {
+		var exitErr *command.ExitStatusError
+		if errors.As(err, &exitErr) {
+			return out, errors.New(out)
+		}
 	}
 
 	return out, err
 }
 
 // Run ...
-func (r *DefaultRunner) Run(c *command.Model) error {
-	fmt.Println()
-	log.Infof("$ %s", c.PrintableCommandArgs())
+func (r *DefaultRunner) Run(t git.Template) error {
 	var buffer bytes.Buffer
 
-	r.setupPerformanceMonitoring(c)
+	c := t.Create(os.Stdout, io.MultiWriter(os.Stderr, &buffer), r.performanceMonitoringEnvs())
 
-	err := c.SetStdout(os.Stdout).SetStderr(io.MultiWriter(os.Stderr, &buffer)).Run()
-	if err != nil {
-		if errorutil.IsExitStatusError(err) {
-			errorStr := buffer.String()
-			if errorStr == "" {
-				errorStr = "please check the command output for errors"
-			}
-			return errors.New(strings.TrimSpace(errorStr))
-		}
-		return err
+	fmt.Println()
+	log.Infof("$ %s", c.PrintableCommandArgs())
+
+	err := c.Run()
+	if err == nil {
+		return nil
 	}
 
-	return nil
+	var exitErr *command.ExitStatusError
+	if errors.As(err, &exitErr) {
+		errorStr := strings.TrimSpace(buffer.String())
+		if errorStr == "" {
+			errorStr = "please check the command output for errors"
+		}
+		return errors.New(errorStr)
+	}
+
+	return err
 }
 
 // RunWithRetry ...
-func (r *DefaultRunner) RunWithRetry(getCommand func() *command.Model) error {
+func (r *DefaultRunner) RunWithRetry(get func() git.Template) error {
 	return retry.Times(2).Wait(5).Try(func(attempt uint) error {
 		if attempt > 0 {
 			log.Warnf("Retrying...")
 		}
 
-		err := r.Run(getCommand())
+		err := r.Run(get())
 		if err != nil {
 			log.Warnf("Attempt %d failed:", attempt+1)
 			fmt.Println(err.Error())
@@ -97,13 +103,14 @@ func (r *DefaultRunner) ResumePerformanceMonitoring() {
 	r.performanceMonitoringTemporarilyDisabled = false
 }
 
-func (r *DefaultRunner) setupPerformanceMonitoring(c *command.Model) {
+func (r *DefaultRunner) performanceMonitoringEnvs() []string {
 	if r.performanceMonitoringTemporarilyDisabled {
-		c.AppendEnvs("GIT_TRACE2_PERF=0")
-		return
+		return []string{"GIT_TRACE2_PERF=0"}
 	}
 
 	if r.performanceMonitoringEnabled {
-		c.AppendEnvs("GIT_TRACE2_PERF=1")
+		return []string{"GIT_TRACE2_PERF=1"}
 	}
+
+	return nil
 }
