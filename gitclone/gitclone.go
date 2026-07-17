@@ -7,6 +7,7 @@ import (
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/git"
 	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-io/go-utils/v2/pathutil"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
 )
@@ -44,23 +45,38 @@ type Config struct {
 	ResetRepository bool
 }
 
+type GitClonerParams struct {
+	Logger          log.Logger
+	Tracker         tracker.StepTracker
+	CmdFactory      command.Factory
+	PatchSource     bitriseapi.PatchSource
+	MergeRefChecker bitriseapi.MergeRefChecker
+	Runner          CommandRunner
+	PathChecker     pathutil.PathChecker
+	PathModifier    pathutil.PathModifier
+}
+
 type GitCloner struct {
 	logger          log.Logger
 	tracker         tracker.StepTracker
 	cmdFactory      command.Factory
 	patchSource     bitriseapi.PatchSource
 	mergeRefChecker bitriseapi.MergeRefChecker
+	runner          CommandRunner
+	pathChecker     pathutil.PathChecker
+	pathModifier    pathutil.PathModifier
 }
 
-func NewGitCloner(logger log.Logger, tracker tracker.StepTracker, cmdFactory command.Factory, patchSource bitriseapi.PatchSource, mergeRefChecker bitriseapi.MergeRefChecker, performanceMonitoring bool) GitCloner {
-	runner.SetPerformanceMonitoring(performanceMonitoring)
-
+func NewGitCloner(params GitClonerParams) GitCloner {
 	return GitCloner{
-		logger:          logger,
-		tracker:         tracker,
-		cmdFactory:      cmdFactory,
-		patchSource:     patchSource,
-		mergeRefChecker: mergeRefChecker,
+		logger:          params.Logger,
+		tracker:         params.Tracker,
+		cmdFactory:      params.CmdFactory,
+		patchSource:     params.PatchSource,
+		mergeRefChecker: params.MergeRefChecker,
+		runner:          params.Runner,
+		pathChecker:     params.PathChecker,
+		pathModifier:    params.PathModifier,
 	}
 }
 
@@ -83,7 +99,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		)
 	}
 
-	originPresent, err := isOriginPresent(gitFactory, cfg.CloneIntoDir, cfg.RepositoryURL)
+	originPresent, err := g.isOriginPresent(gitFactory, cfg.CloneIntoDir, cfg.RepositoryURL)
 	if err != nil {
 		return CheckoutStateResult{}, newStepError(
 			"check_origin_present_failed",
@@ -93,7 +109,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	}
 
 	if originPresent && cfg.ResetRepository {
-		if err := resetRepo(gitFactory); err != nil {
+		if err := g.resetRepo(gitFactory); err != nil {
 			return CheckoutStateResult{}, newStepError(
 				"reset_repository_failed",
 				fmt.Errorf("reset repository failed: %v", err),
@@ -101,7 +117,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 			)
 		}
 	}
-	if err := runner.Run(gitFactory.Init()); err != nil {
+	if err := g.runner.Run(gitFactory.Init()); err != nil {
 		return CheckoutStateResult{}, newStepError(
 			"init_git_failed",
 			fmt.Errorf("initializing repository failed: %v", err),
@@ -109,7 +125,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		)
 	}
 	if !originPresent {
-		if err := runner.Run(gitFactory.RemoteAdd(originRemoteName, cfg.RepositoryURL)); err != nil {
+		if err := g.runner.Run(gitFactory.RemoteAdd(originRemoteName, cfg.RepositoryURL)); err != nil {
 			return CheckoutStateResult{}, newStepError(
 				"add_remote_failed",
 				fmt.Errorf("adding remote repository failed (%s): %v", cfg.RepositoryURL, err),
@@ -121,7 +137,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 	// Disable automatic GC as it may be triggered by other git commands (making run times nondeterministic).
 	// And we run in ephemeral VMs anyway, so GC isn't really needed.
 	// https://mirrors.edge.kernel.org/pub/software/scm/git/docs/git-gc.html
-	err = runner.Run(gitFactory.Config("gc.auto", "0"))
+	err = g.runner.Run(gitFactory.Config("gc.auto", "0"))
 	if err != nil {
 		return CheckoutStateResult{}, newStepError(
 			"disable_gc",
@@ -130,7 +146,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		)
 	}
 
-	if err := setupSparseCheckout(gitFactory, cfg.SparseDirectories); err != nil {
+	if err := g.setupSparseCheckout(gitFactory, cfg.SparseDirectories); err != nil {
 		return CheckoutStateResult{}, err
 	}
 
@@ -142,12 +158,12 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		g.logger.Println()
 		g.logger.Warnf("Working tree is dirty, cleaning before checkout:")
 
-		err = runner.Run(gitFactory.Clean("-fd"))
+		err = g.runner.Run(gitFactory.Clean("-fd"))
 		if err != nil {
 			g.logger.Warnf("Failed to clean untracked files: %s", err)
 		}
 
-		err = runner.Run(gitFactory.Reset("--hard", "HEAD"))
+		err = g.runner.Run(gitFactory.Reset("--hard", "HEAD"))
 		if err != nil {
 			g.logger.Warnf("Failed to reset repository: %s", err)
 		}
@@ -160,7 +176,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 
 	if cfg.UpdateSubmodules {
 		startTime := time.Now()
-		if err := updateSubmodules(gitFactory, cfg); err != nil {
+		if err := g.updateSubmodules(gitFactory, cfg); err != nil {
 			return CheckoutStateResult{}, err
 		}
 		updateTime := time.Since(startTime).Round(time.Second)
@@ -178,7 +194,7 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 
 func (g GitCloner) checkoutState(gitFactory git.Factory, cfg Config) (strategy checkoutStrategy, isPR bool, err error) {
 	checkoutStartTime := time.Now()
-	checkoutMethod, diffFile := selectCheckoutMethod(cfg, g.patchSource, g.mergeRefChecker)
+	checkoutMethod, diffFile := g.selectCheckoutMethod(cfg)
 
 	fetchOpts := selectFetchOptions(checkoutMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 
@@ -190,7 +206,7 @@ func (g GitCloner) checkoutState(gitFactory git.Factory, cfg Config) (strategy c
 		return nil, false, fmt.Errorf("failed to select a checkout stategy")
 	}
 
-	if err := checkoutStrategy.do(gitFactory, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
+	if err := checkoutStrategy.do(&g, gitFactory, fetchOpts, selectFallbacks(checkoutMethod, fetchOpts)); err != nil {
 		g.logger.Infof("Checkout strategy used: %T", checkoutStrategy)
 		return nil, false, err
 	}
@@ -203,7 +219,7 @@ func (g GitCloner) checkoutState(gitFactory git.Factory, cfg Config) (strategy c
 	return checkoutStrategy, isPRCheckout(checkoutMethod), nil
 }
 
-func updateSubmodules(gitFactory git.Factory, cfg Config) error {
+func (g GitCloner) updateSubmodules(gitFactory git.Factory, cfg Config) error {
 	var opts []string
 	opts = append(opts, jobsFlag)
 
@@ -211,7 +227,7 @@ func updateSubmodules(gitFactory git.Factory, cfg Config) error {
 		opts = append(opts, fmt.Sprintf("--depth=%d", cfg.SubmoduleUpdateDepth))
 	}
 
-	if err := runner.Run(gitFactory.SubmoduleUpdate(opts...)); err != nil {
+	if err := g.runner.Run(gitFactory.SubmoduleUpdate(opts...)); err != nil {
 		return newStepError(
 			updateSubmoduleFailedTag,
 			fmt.Errorf("submodule update: %v", err),
@@ -222,13 +238,13 @@ func updateSubmodules(gitFactory git.Factory, cfg Config) error {
 	return nil
 }
 
-func setupSparseCheckout(gitFactory git.Factory, sparseDirectories []string) error {
+func (g GitCloner) setupSparseCheckout(gitFactory git.Factory, sparseDirectories []string) error {
 	if len(sparseDirectories) == 0 {
 		return nil
 	}
 
 	initCommand := gitFactory.SparseCheckoutInit(true)
-	if err := runner.Run(initCommand); err != nil {
+	if err := g.runner.Run(initCommand); err != nil {
 		return newStepError(
 			sparseCheckoutFailedTag,
 			fmt.Errorf("initializing sparse-checkout config failed: %v", err),
@@ -237,7 +253,7 @@ func setupSparseCheckout(gitFactory git.Factory, sparseDirectories []string) err
 	}
 
 	sparseSetCommand := gitFactory.SparseCheckoutSet(sparseDirectories...)
-	if err := runner.Run(sparseSetCommand); err != nil {
+	if err := g.runner.Run(sparseSetCommand); err != nil {
 		return newStepError(
 			sparseCheckoutFailedTag,
 			fmt.Errorf("updating sparse-checkout config failed: %v", err),
@@ -247,7 +263,7 @@ func setupSparseCheckout(gitFactory git.Factory, sparseDirectories []string) err
 
 	// Enable partial clone support for the remote
 	sparseConfigCmd := gitFactory.Config("extensions.partialClone", originRemoteName, "--local")
-	if err := runner.Run(sparseConfigCmd); err != nil {
+	if err := g.runner.Run(sparseConfigCmd); err != nil {
 		return newStepError(
 			sparseCheckoutFailedTag,
 			fmt.Errorf("enable partial clone support for the remote has failed: %v", err),

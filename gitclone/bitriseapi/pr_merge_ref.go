@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bitrise-io/go-utils/retry"
 	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-io/go-utils/v2/retry"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
 	"github.com/hashicorp/go-retryablehttp"
 )

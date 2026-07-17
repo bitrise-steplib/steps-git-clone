@@ -10,6 +10,7 @@ import (
 	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-io/go-utils/v2/pathutil"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
 	"github.com/stretchr/testify/require"
 )
@@ -70,9 +71,20 @@ func Test_GitCloneStep_IsCloneDirDangerous(t *testing.T) {
 	tracker := tracker.NewStepTracker(envRepo, logger)
 	inputParser := stepconf.NewInputParser(envRepo)
 	cmdFactory := command.NewFactory(envRepo)
+	pathChecker := pathutil.NewPathChecker()
 	pathModifier := pathutil.NewPathModifier()
+	runner := gitclone.NewDefaultRunner(logger)
 
-	gitCloneStep := NewGitCloneStep(logger, tracker, inputParser, envRepo, cmdFactory, pathModifier)
+	gitCloneStep := NewGitCloneStep(GitCloneStepParams{
+		Logger:       logger,
+		Tracker:      tracker,
+		InputParser:  inputParser,
+		EnvRepo:      envRepo,
+		CmdFactory:   cmdFactory,
+		PathChecker:  pathChecker,
+		PathModifier: pathModifier,
+		Runner:       runner,
+	})
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

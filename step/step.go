@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
-	"github.com/bitrise-io/go-utils/retry"
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-io/go-utils/v2/log/colorstring"
 	"github.com/bitrise-io/go-utils/v2/pathutil"
+	"github.com/bitrise-io/go-utils/v2/retryhttp"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
@@ -57,17 +57,32 @@ type GitCloneStep struct {
 	inputParser  stepconf.InputParser
 	envRepo      env.Repository
 	cmdFactory   command.Factory
+	pathChecker  pathutil.PathChecker
 	pathModifier pathutil.PathModifier
+	runner       gitclone.CommandRunner
 }
 
-func NewGitCloneStep(logger log.Logger, tracker tracker.StepTracker, inputParser stepconf.InputParser, envRepo env.Repository, cmdFactory command.Factory, pathModifier pathutil.PathModifier) GitCloneStep {
+type GitCloneStepParams struct {
+	Logger       log.Logger
+	Tracker      tracker.StepTracker
+	InputParser  stepconf.InputParser
+	EnvRepo      env.Repository
+	CmdFactory   command.Factory
+	PathChecker  pathutil.PathChecker
+	PathModifier pathutil.PathModifier
+	Runner       gitclone.CommandRunner
+}
+
+func NewGitCloneStep(params GitCloneStepParams) GitCloneStep {
 	return GitCloneStep{
-		logger:       logger,
-		tracker:      tracker,
-		inputParser:  inputParser,
-		envRepo:      envRepo,
-		cmdFactory:   cmdFactory,
-		pathModifier: pathModifier,
+		logger:       params.Logger,
+		tracker:      params.Tracker,
+		inputParser:  params.InputParser,
+		envRepo:      params.EnvRepo,
+		cmdFactory:   params.CmdFactory,
+		pathChecker:  params.PathChecker,
+		pathModifier: params.PathModifier,
+		runner:       params.Runner,
 	}
 }
 
@@ -104,17 +119,28 @@ func (g GitCloneStep) Run(cfg Config) (gitclone.CheckoutStateResult, error) {
 		return gitclone.CheckoutStateResult{}, err
 	}
 
+	g.runner.SetPerformanceMonitoring(cfg.PerformanceMonitoring)
+
 	gitCloneCfg := convertConfig(cfg)
 	patchSource := bitriseapi.NewPatchSource(cfg.BuildURL, cfg.BuildAPIToken, g.logger)
-	mergeRefChecker := bitriseapi.NewMergeRefChecker(cfg.BuildURL, cfg.BuildAPIToken, retry.NewHTTPClient(), g.logger, g.tracker)
-	cloner := gitclone.NewGitCloner(g.logger, g.tracker, g.cmdFactory, patchSource, mergeRefChecker, cfg.PerformanceMonitoring)
+	mergeRefChecker := bitriseapi.NewMergeRefChecker(cfg.BuildURL, cfg.BuildAPIToken, retryhttp.NewClient(g.logger), g.logger, g.tracker)
+	cloner := gitclone.NewGitCloner(gitclone.GitClonerParams{
+		Logger:          g.logger,
+		Tracker:         g.tracker,
+		CmdFactory:      g.cmdFactory,
+		PatchSource:     patchSource,
+		MergeRefChecker: mergeRefChecker,
+		Runner:          g.runner,
+		PathChecker:     g.pathChecker,
+		PathModifier:    g.pathModifier,
+	})
 	return cloner.CheckoutState(gitCloneCfg)
 }
 
 func (g GitCloneStep) ExportOutputs(runResult gitclone.CheckoutStateResult) error {
 	fmt.Println()
 
-	exporter := gitclone.NewOutputExporter(g.logger, g.cmdFactory, runResult)
+	exporter := gitclone.NewOutputExporter(g.logger, g.cmdFactory, g.runner, runResult)
 	if err := exporter.ExportCommitInfo(); err != nil {
 		return err
 	}
