@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/git"
@@ -83,8 +84,7 @@ func (r *DefaultRunner) Run(t git.Template) error {
 
 // RunWithRetry ...
 func (r *DefaultRunner) RunWithRetry(get func() git.Template) error {
-	// NOTE: Wait(5) is 5 nanoseconds, not 5 seconds — pre-existing latent bug.
-	return retry.Times(2).Wait(5).Try(func(attempt uint) error {
+	return retry.Times(2).Wait(5 * time.Second).Try(func(attempt uint) error {
 		if attempt > 0 {
 			r.logger.Warnf("Retrying...")
 		}
