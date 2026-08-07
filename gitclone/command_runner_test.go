@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/stretchr/testify/require"
 )
@@ -41,7 +42,7 @@ func TestPerformanceMonitoring(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := DefaultRunner{}
+			r := NewDefaultRunner(log.NewLogger())
 
 			if tt.initialState != nil {
 				r.SetPerformanceMonitoring(*tt.initialState)

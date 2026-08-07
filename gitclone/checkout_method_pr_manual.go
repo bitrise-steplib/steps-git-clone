@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/v2/git"
 )
 
@@ -58,25 +57,25 @@ type checkoutPRManualMerge struct {
 	params PRManualMergeParams
 }
 
-func (c checkoutPRManualMerge) do(gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error {
+func (c checkoutPRManualMerge) do(cloner *GitCloner, gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	// Fetch and checkout destinations branch
 	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
-	if err := forceCheckoutRemoteBranch(gitFactory, originRemoteName, destBranchRef, fetchOptions); err != nil {
+	if err := cloner.forceCheckoutRemoteBranch(gitFactory, originRemoteName, destBranchRef, fetchOptions); err != nil {
 		return fmt.Errorf("failed to fetch base branch: %w", err)
 	}
 
-	commitHash, err := runner.RunForOutput(gitFactory.Log("%H"))
+	commitHash, err := cloner.runner.RunForOutput(gitFactory.Log("%H"))
 	if err != nil {
-		log.Errorf("log commit hash: %v", err)
+		cloner.logger.Errorf("log commit hash: %v", err)
 	}
-	log.Printf("commit hash: %s", commitHash)
+	cloner.logger.Printf("commit hash: %s", commitHash)
 
 	var remoteName string
 	if c.params.SourceRepoURL != "" {
 		remoteName = forkRemoteName
 
 		// Add fork remote
-		if err := runner.Run(gitFactory.RemoteAdd(forkRemoteName, c.params.SourceRepoURL)); err != nil {
+		if err := cloner.runner.Run(gitFactory.RemoteAdd(forkRemoteName, c.params.SourceRepoURL)); err != nil {
 			return fmt.Errorf("adding remote fork repository failed (%s): %w", c.params.SourceRepoURL, err)
 		}
 
@@ -86,15 +85,15 @@ func (c checkoutPRManualMerge) do(gitFactory git.Factory, fetchOptions fetchOpti
 
 	// Fetch and merge
 	sourceBranchRef := refsHeadsPrefix + c.params.SourceBranch
-	if err := fetch(gitFactory, remoteName, sourceBranchRef, fetchOptions); err != nil {
+	if err := cloner.fetch(gitFactory, remoteName, sourceBranchRef, fetchOptions); err != nil {
 		return fmt.Errorf("failed to fetch compare branch: %w", err)
 	}
 
-	if err := mergeWithCustomRetry(gitFactory, c.params.SourceMergeArg, fallback); err != nil {
+	if err := cloner.mergeWithCustomRetry(gitFactory, c.params.SourceMergeArg, fallback); err != nil {
 		return err
 	}
 
-	return detachHead(gitFactory)
+	return cloner.detachHead(gitFactory)
 }
 
 func (c checkoutPRManualMerge) getBuildTriggerRef() string {

@@ -4,14 +4,14 @@ import (
 	"fmt"
 
 	"github.com/bitrise-io/bitrise-init/errormapper"
-	"github.com/bitrise-io/go-steputils/step"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/steperror"
 )
 
 const (
 	branchRecKey = "BranchRecommendation"
 )
 
-func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
+func mapDetailedErrorRecommendation(tag, errMsg string) steperror.Recommendation {
 	var matcher *errormapper.PatternErrorMatcher
 	switch tag {
 	case checkoutFailedTag:
@@ -22,7 +22,7 @@ func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
 		matcher = newFetchFailedPatternErrorMatcher()
 	}
 	if matcher != nil {
-		return matcher.Run(errMsg)
+		return steperror.Recommendation(matcher.Run(errMsg))
 	}
 	return nil
 }
@@ -30,22 +30,22 @@ func mapDetailedErrorRecommendation(tag, errMsg string) step.Recommendation {
 func newStepError(tag string, err error, shortMsg string) error {
 	recommendations := mapDetailedErrorRecommendation(tag, err.Error())
 	if recommendations != nil {
-		return step.NewErrorWithRecommendations("git-clone", tag, err, shortMsg, recommendations)
+		return steperror.NewErrorWithRecommendations("git-clone", tag, err, shortMsg, recommendations)
 	}
 
-	return step.NewError("git-clone", tag, err, shortMsg)
+	return steperror.NewError("git-clone", tag, err, shortMsg)
 }
 
 func newStepErrorWithBranchRecommendations(tag string, err error, shortMsg string, availableBranches []string) error {
 	// First: Map the error messages
 	newErr := newStepError(tag, err, shortMsg)
 
-	if mappedError, ok := newErr.(*step.Error); ok {
+	if mappedError, ok := newErr.(*steperror.Error); ok {
 		// Second: Extend recommendation with available branches, if has any
 		if len(availableBranches) > 0 {
 			rec := mappedError.Recommendations
 			if rec == nil {
-				rec = step.Recommendation{}
+				rec = steperror.Recommendation{}
 			}
 			rec[branchRecKey] = availableBranches
 		}

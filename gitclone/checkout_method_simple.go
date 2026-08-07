@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/v2/git"
 )
 
 // checkoutNone
 type checkoutNone struct{}
 
-func (c checkoutNone) do(gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error {
+func (c checkoutNone) do(_ *GitCloner, _ git.Factory, _ fetchOptions, _ fallbackRetry) error {
 	return nil
 }
 
@@ -47,40 +46,40 @@ type checkoutCommit struct {
 	fallbackCheckout fallbackCheckoutFunc
 }
 
-func (c checkoutCommit) do(gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error {
-	if err := c.performCheckout(gitFactory, fetchOptions, fallback); err != nil {
+func (c checkoutCommit) do(cloner *GitCloner, gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error {
+	if err := c.performCheckout(cloner, gitFactory, fetchOptions, fallback); err != nil {
 		if c.fallbackCheckout != nil {
-			log.Warnf("Failed to checkout commit: %s", err)
-			return c.fallbackCheckout(gitFactory)
+			cloner.logger.Warnf("Failed to checkout commit: %s", err)
+			return c.fallbackCheckout(cloner, gitFactory)
 		}
 		return err
 	}
 	return nil
 }
 
-func (c checkoutCommit) performCheckout(gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error {
+func (c checkoutCommit) performCheckout(cloner *GitCloner, gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	remote := originRemoteName
 	if c.params.SourceRepoURL != "" {
 		remote = forkRemoteName
-		if err := runner.Run(gitFactory.RemoteAdd(forkRemoteName, c.params.SourceRepoURL)); err != nil {
+		if err := cloner.runner.Run(gitFactory.RemoteAdd(forkRemoteName, c.params.SourceRepoURL)); err != nil {
 			return fmt.Errorf("adding remote fork repository failed (%s): %v", c.params.SourceRepoURL, err)
 		}
 	}
 
 	if c.params.IgnoreBranchForCommitFetch || c.params.BranchRef == "" {
-		if directFetchErr := fetch(gitFactory, remote, c.params.Commit, fetchOptions); directFetchErr != nil {
-			log.Warnf("Could not fetch commit directly: %v", directFetchErr)
-			log.Warnf("Note: To speed up checkouts, ensure your Git server allows fetching reachable SHAs directly (uploadpack.allowReachableSHA1InWant).")
+		if directFetchErr := cloner.fetch(gitFactory, remote, c.params.Commit, fetchOptions); directFetchErr != nil {
+			cloner.logger.Warnf("Could not fetch commit directly: %v", directFetchErr)
+			cloner.logger.Warnf("Note: To speed up checkouts, ensure your Git server allows fetching reachable SHAs directly (uploadpack.allowReachableSHA1InWant).")
 
 			return fmt.Errorf("failed to fetch commit directly: %w", directFetchErr)
 		}
 	} else {
-		if err := fetch(gitFactory, remote, c.params.BranchRef, fetchOptions); err != nil {
+		if err := cloner.fetch(gitFactory, remote, c.params.BranchRef, fetchOptions); err != nil {
 			return fmt.Errorf("failed to fetch branch ref (%s) while checking out commit: %w", c.params.BranchRef, err)
 		}
 	}
 
-	if err := checkoutWithCustomRetry(gitFactory, c.params.Commit, fallback); err != nil {
+	if err := cloner.checkoutWithCustomRetry(gitFactory, c.params.Commit, fallback); err != nil {
 		err = fmt.Errorf("failed to checkout commit: %w", err)
 		newErr := fmt.Errorf("please check if the provided commit hash (%s) is valid", c.params.Commit)
 		return fmt.Errorf("%v: %w", err, newErr)
@@ -114,8 +113,8 @@ type checkoutBranch struct {
 	params BranchParams
 }
 
-func (c checkoutBranch) do(gitFactory git.Factory, fetchOptions fetchOptions, _ fallbackRetry) error {
-	if err := forceCheckoutRemoteBranch(gitFactory, originRemoteName, c.localRef(), fetchOptions); err != nil {
+func (c checkoutBranch) do(cloner *GitCloner, gitFactory git.Factory, fetchOptions fetchOptions, _ fallbackRetry) error {
+	if err := cloner.forceCheckoutRemoteBranch(gitFactory, originRemoteName, c.localRef(), fetchOptions); err != nil {
 		return err
 	}
 
@@ -151,13 +150,13 @@ type checkoutTag struct {
 	params TagParams
 }
 
-func (c checkoutTag) do(gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error {
+func (c checkoutTag) do(cloner *GitCloner, gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	ref := fmt.Sprintf("%s:%s", c.ref(), c.ref())
-	if err := fetch(gitFactory, originRemoteName, ref, fetchOptions); err != nil {
+	if err := cloner.fetch(gitFactory, originRemoteName, ref, fetchOptions); err != nil {
 		return fmt.Errorf("failed to fetch tag (%s): %w", c.ref(), err)
 	}
 
-	if err := checkoutWithCustomRetry(gitFactory, c.params.Tag, fallback); err != nil {
+	if err := cloner.checkoutWithCustomRetry(gitFactory, c.params.Tag, fallback); err != nil {
 		return err
 	}
 

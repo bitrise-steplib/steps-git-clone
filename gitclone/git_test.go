@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/bitrise-io/bitrise-init/errormapper"
-	"github.com/bitrise-io/go-steputils/step"
+	"github.com/bitrise-steplib/steps-git-clone/gitclone/steperror"
 )
 
 func Test_getRepo(t *testing.T) {
@@ -122,7 +122,7 @@ func Test_handleCheckoutError(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *step.Error
+		want *steperror.Error
 	}{
 		{
 			name: "handleCheckoutError: generic error without branch recommendation",
@@ -133,12 +133,12 @@ func Test_handleCheckoutError(t *testing.T) {
 				shortMsg: "Fetching repository has failed",
 				branch:   "",
 			},
-			want: &step.Error{
+			want: &steperror.Error{
 				StepID:   "git-clone",
 				Tag:      "fetch_failed",
 				Err:      errors.New("Something bad happened"),
 				ShortMsg: "Fetching repository has failed",
-				Recommendations: step.Recommendation{
+				Recommendations: steperror.Recommendation{
 					errormapper.DetailedErrorRecKey: errormapper.DetailedError{
 						Title:       "We couldn’t fetch your repository.",
 						Description: "Our auto-configurator returned the following error:\nSomething bad happened",
@@ -159,12 +159,12 @@ func Test_handleCheckoutError(t *testing.T) {
 				shortMsg: "Checkout has failed",
 				branch:   "test",
 			},
-			want: &step.Error{
+			want: &steperror.Error{
 				StepID:   "git-clone",
 				Tag:      "checkout_failed",
 				Err:      errors.New("pathspec 'test' did not match any file(s) known to git"),
 				ShortMsg: "Checkout has failed",
-				Recommendations: step.Recommendation{
+				Recommendations: steperror.Recommendation{
 					branchRecKey: []string{"master", "develop"},
 					errormapper.DetailedErrorRecKey: errormapper.DetailedError{
 						Title:       "We couldn't find the branch 'test'.",
@@ -184,12 +184,12 @@ func Test_handleCheckoutError(t *testing.T) {
 				shortMsg: "Checkout has failed",
 				branch:   "test",
 			},
-			want: &step.Error{
+			want: &steperror.Error{
 				StepID:   "git-clone",
 				Tag:      "checkout_failed",
 				Err:      errors.New("pathspec 'test' did not match any file(s) known to git"),
 				ShortMsg: "Checkout has failed",
-				Recommendations: step.Recommendation{
+				Recommendations: steperror.Recommendation{
 					errormapper.DetailedErrorRecKey: errormapper.DetailedError{
 						Title:       "We couldn't find the branch 'test'.",
 						Description: "Please choose another branch and try again.",
@@ -210,12 +210,12 @@ func Test_handleCheckoutError(t *testing.T) {
 				shortMsg: "Checkout has failed",
 				branch:   "test",
 			},
-			want: &step.Error{
+			want: &steperror.Error{
 				StepID:   "git-clone",
 				Tag:      "checkout_failed",
 				Err:      errors.New("pathspec 'test' did not match any file(s) known to git"),
 				ShortMsg: "Checkout has failed",
-				Recommendations: step.Recommendation{
+				Recommendations: steperror.Recommendation{
 					errormapper.DetailedErrorRecKey: errormapper.DetailedError{
 						Title:       "We couldn't find the branch 'test'.",
 						Description: "Please choose another branch and try again.",
@@ -236,12 +236,12 @@ func Test_handleCheckoutError(t *testing.T) {
 				shortMsg: "Checkout has failed",
 				branch:   "test",
 			},
-			want: &step.Error{
+			want: &steperror.Error{
 				StepID:   "git-clone",
 				Tag:      "checkout_failed",
 				Err:      errors.New("pathspec 'test' did not match any file(s) known to git"),
 				ShortMsg: "Checkout has failed",
-				Recommendations: step.Recommendation{
+				Recommendations: steperror.Recommendation{
 					errormapper.DetailedErrorRecKey: errormapper.DetailedError{
 						Title:       "We couldn't find the branch 'test'.",
 						Description: "Please choose another branch and try again.",

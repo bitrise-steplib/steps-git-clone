@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/v2/git"
 )
 
@@ -37,7 +36,7 @@ const (
 	refsHeadsPrefix = "refs/heads/"
 )
 
-func fetch(gitFactory git.Factory, remote string, ref string, options fetchOptions) error {
+func (g GitCloner) fetch(gitFactory git.Factory, remote string, ref string, options fetchOptions) error {
 	var opts []string
 	opts = append(opts, jobsFlag)
 
@@ -66,11 +65,11 @@ func fetch(gitFactory git.Factory, remote string, ref string, options fetchOptio
 		branch = strings.TrimPrefix(ref, refsHeadsPrefix)
 	}
 
-	if err := runner.RunWithRetry(func() git.Template {
+	if err := g.runner.RunWithRetry(func() git.Template {
 		return gitFactory.Fetch(opts...)
 	}); err != nil {
 		return handleCheckoutError(
-			listBranches(gitFactory),
+			g.listBranches(gitFactory),
 			fetchFailedTag,
 			err,
 			"Fetching repository has failed",
@@ -81,15 +80,15 @@ func fetch(gitFactory git.Factory, remote string, ref string, options fetchOptio
 	return nil
 }
 
-func checkoutWithCustomRetry(gitFactory git.Factory, arg string, retry fallbackRetry) error {
-	if cErr := runner.Run(gitFactory.Checkout(arg)); cErr != nil {
+func (g GitCloner) checkoutWithCustomRetry(gitFactory git.Factory, arg string, retry fallbackRetry) error {
+	if cErr := g.runner.Run(gitFactory.Checkout(arg)); cErr != nil {
 		if retry != nil {
-			log.Warnf("Checkout failed (%s): %v", arg, cErr)
-			if err := retry.do(gitFactory); err != nil {
+			g.logger.Warnf("Checkout failed (%s): %v", arg, cErr)
+			if err := retry.do(&g, gitFactory); err != nil {
 				return err
 			}
 
-			return runner.Run(gitFactory.Checkout(arg))
+			return g.runner.Run(gitFactory.Checkout(arg))
 		}
 
 		return fmt.Errorf("checkout failed (%s): %w", arg, cErr)
@@ -98,9 +97,9 @@ func checkoutWithCustomRetry(gitFactory git.Factory, arg string, retry fallbackR
 	return nil
 }
 
-func forceCheckoutRemoteBranch(gitFactory git.Factory, remote string, branchRef string, fetchTraits fetchOptions) error {
+func (g GitCloner) forceCheckoutRemoteBranch(gitFactory git.Factory, remote string, branchRef string, fetchTraits fetchOptions) error {
 	branch := strings.TrimPrefix(branchRef, refsHeadsPrefix)
-	if err := fetch(gitFactory, remote, branchRef, fetchTraits); err != nil {
+	if err := g.fetch(gitFactory, remote, branchRef, fetchTraits); err != nil {
 		wErr := fmt.Errorf("fetch branch %s: %w", branchRef, err)
 		return fmt.Errorf("%v: %w", wErr, errors.New("please make sure the branch still exists"))
 	}
@@ -109,10 +108,10 @@ func forceCheckoutRemoteBranch(gitFactory git.Factory, remote string, branchRef 
 	// -B: create the branch if it doesn't exist, reset if it does
 	// The latter is important in persistent environments because shallow-fetching only fetches 1 commit,
 	// so the next run would see unrelated histories after shallow-fetching another single commit.
-	err := runner.Run(gitFactory.Checkout("-B", branch, remoteBranch))
+	err := g.runner.Run(gitFactory.Checkout("-B", branch, remoteBranch))
 	if err != nil {
 		return handleCheckoutError(
-			listBranches(gitFactory),
+			g.listBranches(gitFactory),
 			checkoutFailedTag,
 			err,
 			"Checkout has failed",
@@ -123,15 +122,15 @@ func forceCheckoutRemoteBranch(gitFactory git.Factory, remote string, branchRef 
 	return nil
 }
 
-func mergeWithCustomRetry(gitFactory git.Factory, arg string, retry fallbackRetry) error {
-	if mErr := runner.Run(gitFactory.Merge(arg)); mErr != nil {
+func (g GitCloner) mergeWithCustomRetry(gitFactory git.Factory, arg string, retry fallbackRetry) error {
+	if mErr := g.runner.Run(gitFactory.Merge(arg)); mErr != nil {
 		if retry != nil {
-			log.Warnf("Merge failed (%s): %v", arg, mErr)
-			if err := retry.do(gitFactory); err != nil {
+			g.logger.Warnf("Merge failed (%s): %v", arg, mErr)
+			if err := retry.do(&g, gitFactory); err != nil {
 				return err
 			}
 
-			return runner.Run(gitFactory.Merge(arg))
+			return g.runner.Run(gitFactory.Merge(arg))
 		}
 
 		wErr := fmt.Errorf("merge failed (%s): %w", arg, mErr)
@@ -141,8 +140,8 @@ func mergeWithCustomRetry(gitFactory git.Factory, arg string, retry fallbackRetr
 	return nil
 }
 
-func detachHead(gitFactory git.Factory) error {
-	if err := runner.Run(gitFactory.Checkout("--detach")); err != nil {
+func (g GitCloner) detachHead(gitFactory git.Factory) error {
+	if err := g.runner.Run(gitFactory.Checkout("--detach")); err != nil {
 		return newStepError(
 			"detach_head_failed",
 			fmt.Errorf("detaching head failed: %w", err),
@@ -153,6 +152,6 @@ func detachHead(gitFactory git.Factory) error {
 	return nil
 }
 
-func deleteRef(gitFactory git.Factory, ref string) error {
-	return runner.Run(gitFactory.UpdateRef("-d", ref))
+func (g GitCloner) deleteRef(gitFactory git.Factory, ref string) error {
+	return g.runner.Run(gitFactory.UpdateRef("-d", ref))
 }

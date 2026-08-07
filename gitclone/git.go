@@ -6,7 +6,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/v2/git"
 )
 
@@ -16,19 +15,17 @@ const (
 	jobsFlag          = "--jobs=10"
 )
 
-var runner CommandRunner = &DefaultRunner{}
-
-func isOriginPresent(gitFactory git.Factory, dir, repoURL string) (bool, error) {
-	absDir, err := pathutil.AbsPath(dir)
+func (g GitCloner) isOriginPresent(gitFactory git.Factory, dir, repoURL string) (bool, error) {
+	absDir, err := g.pathModifier.AbsPath(dir)
 	if err != nil {
 		return false, err
 	}
 
 	gitDir := filepath.Join(absDir, ".git")
-	if exist, err := pathutil.IsDirExists(gitDir); err != nil {
+	if exist, err := g.pathChecker.IsDirExists(gitDir); err != nil {
 		return false, err
 	} else if exist {
-		remotes, err := runner.RunForOutput(gitFactory.RemoteList())
+		remotes, err := g.runner.RunForOutput(gitFactory.RemoteList())
 		if err != nil {
 			return false, err
 		}
@@ -42,17 +39,17 @@ func isOriginPresent(gitFactory git.Factory, dir, repoURL string) (bool, error) 
 	return false, nil
 }
 
-func resetRepo(gitFactory git.Factory) error {
-	if err := runner.Run(gitFactory.Reset("--hard", "HEAD")); err != nil {
+func (g GitCloner) resetRepo(gitFactory git.Factory) error {
+	if err := g.runner.Run(gitFactory.Reset("--hard", "HEAD")); err != nil {
 		return err
 	}
-	if err := runner.Run(gitFactory.Clean("-x", "-d", "-f")); err != nil {
+	if err := g.runner.Run(gitFactory.Clean("-x", "-d", "-f")); err != nil {
 		return err
 	}
-	if err := runner.Run(gitFactory.SubmoduleForeach("reset", "--hard", "HEAD")); err != nil {
+	if err := g.runner.Run(gitFactory.SubmoduleForeach("reset", "--hard", "HEAD")); err != nil {
 		return err
 	}
-	return runner.Run(gitFactory.SubmoduleForeach("clean", "-x", "-d", "-f"))
+	return g.runner.Run(gitFactory.SubmoduleForeach("clean", "-x", "-d", "-f"))
 }
 
 func isFork(repoURL, prRepoURL string) bool {
@@ -93,14 +90,14 @@ func isPrivate(repoURL string) bool {
 
 type getAvailableBranches func() (map[string][]string, error)
 
-func listBranches(gitFactory git.Factory) getAvailableBranches {
+func (g GitCloner) listBranches(gitFactory git.Factory) getAvailableBranches {
 	return func() (map[string][]string, error) {
-		remoteList, err := runner.RunForOutput(gitFactory.RemoteList())
+		remoteList, err := g.runner.RunForOutput(gitFactory.RemoteList())
 		if err != nil {
 			return nil, err
 		}
 
-		remoteBranches, err := runner.RunForOutput(gitFactory.RemoteBranches())
+		remoteBranches, err := g.runner.RunForOutput(gitFactory.RemoteBranches())
 		if err != nil {
 			return nil, err
 		}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/v2/git"
 )
 
@@ -35,28 +34,28 @@ type checkoutPRDiffFile struct {
 	patchFile string
 }
 
-func (c checkoutPRDiffFile) do(gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error {
+func (c checkoutPRDiffFile) do(cloner *GitCloner, gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error {
 	destBranchRef := refsHeadsPrefix + c.params.DestinationBranch
-	if err := fetch(gitFactory, originRemoteName, destBranchRef, fetchOptions); err != nil {
+	if err := cloner.fetch(gitFactory, originRemoteName, destBranchRef, fetchOptions); err != nil {
 		return fmt.Errorf("failed to fetch base branch: %w", err)
 	}
 
-	if err := checkoutWithCustomRetry(gitFactory, c.params.DestinationBranch, fallback); err != nil {
+	if err := cloner.checkoutWithCustomRetry(gitFactory, c.params.DestinationBranch, fallback); err != nil {
 		return err
 	}
 
-	if err := runner.Run(gitFactory.Apply(c.patchFile)); err != nil {
-		log.Warnf("Could not apply patch (%s): %v", c.patchFile, err)
-		log.Warnf("Falling back to manual merge...")
+	if err := cloner.runner.Run(gitFactory.Apply(c.patchFile)); err != nil {
+		cloner.logger.Warnf("Could not apply patch (%s): %v", c.patchFile, err)
+		cloner.logger.Warnf("Falling back to manual merge...")
 
-		if err := c.params.PRManualMergeStrategy.do(gitFactory, fetchOptions, fallback); err != nil {
+		if err := c.params.PRManualMergeStrategy.do(cloner, gitFactory, fetchOptions, fallback); err != nil {
 			return fmt.Errorf("fallback failed for applying patch (%s): %v", c.patchFile, err)
 		}
 
 		return nil
 	}
 
-	return detachHead(gitFactory)
+	return cloner.detachHead(gitFactory)
 }
 
 func (c checkoutPRDiffFile) getBuildTriggerRef() string {

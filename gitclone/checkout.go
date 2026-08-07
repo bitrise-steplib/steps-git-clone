@@ -5,9 +5,7 @@ package gitclone
 import (
 	"fmt"
 
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/v2/git"
-	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 )
 
 // CheckoutMethod is the checkout method used
@@ -65,7 +63,7 @@ func NewParameterValidationError(msg string) error {
 
 // checkoutStrategy is the interface an actual checkout strategy implements
 type checkoutStrategy interface {
-	do(gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error
+	do(cloner *GitCloner, gitFactory git.Factory, fetchOptions fetchOptions, fallback fallbackRetry) error
 
 	// getBuildTriggerRef returns ref to the commit/branch/tag that triggered the build.
 	// For simple checkout strategies the returned ref will be HEAD (after running 'do').
@@ -89,7 +87,7 @@ type checkoutStrategy interface {
 // | headBranch  |        |     |        |          |  X         |           |
 // |=========================================================================|
 
-func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeRefChecker bitriseapi.MergeRefChecker) (CheckoutMethod, string) {
+func (g GitCloner) selectCheckoutMethod(cfg Config) (CheckoutMethod, string) {
 	isPR := cfg.PRSourceRepositoryURL != "" || cfg.PRDestBranch != "" || cfg.PRMergeRef != "" || cfg.PRUnverifiedMergeRef != ""
 	if !isPR {
 		if cfg.Commit != "" {
@@ -131,16 +129,16 @@ func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeR
 
 		// Fallback (Bitbucket only): it's a PR from a fork we can't access, so we fetch the PR patch file through
 		// the API and apply the diff manually
-		patchFile, err := patchSource.GetPRPatch()
+		patchFile, err := g.patchSource.GetPRPatch()
 		if err != nil {
-			log.Warnf("Patch file unavailable for PR: %v", err)
+			g.logger.Warnf("Patch file unavailable for PR: %v", err)
 		}
 		if err == nil && patchFile != "" {
-			log.Infof("Merging Pull Request despite the option to disable merging, as it is opened from a private fork.")
+			g.logger.Infof("Merging Pull Request despite the option to disable merging, as it is opened from a private fork.")
 			return CheckoutPRDiffFileMethod, patchFile
 		}
 
-		log.Warnf(privateForkAuthWarning)
+		g.logger.Warnf(privateForkAuthWarning)
 		return CheckoutForkCommitMethod, ""
 	}
 
@@ -157,12 +155,12 @@ func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeR
 	// Merge ref is available, but it might be outdated, we need to check its status and potentially trigger an update
 	// before we can use it for checkout
 	if cfg.PRUnverifiedMergeRef != "" {
-		log.Printf("\n")
-		log.Infof("Checking if %s is up to date...", cfg.PRUnverifiedMergeRef)
+		g.logger.Printf("\n")
+		g.logger.Infof("Checking if %s is up to date...", cfg.PRUnverifiedMergeRef)
 
-		upToDate, err := mergeRefChecker.IsMergeRefUpToDate(cfg.PRUnverifiedMergeRef)
+		upToDate, err := g.mergeRefChecker.IsMergeRefUpToDate(cfg.PRUnverifiedMergeRef)
 		if err != nil {
-			log.Warnf("Failed to check PR merge ref freshness: %s", err)
+			g.logger.Warnf("Failed to check PR merge ref freshness: %s", err)
 		}
 		if upToDate {
 			return CheckoutPRMergeBranchMethod, ""
@@ -170,11 +168,11 @@ func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeR
 	}
 
 	// Fallback (Bitbucket only): fetch the PR patch file through the API and apply the diff manually
-	log.Printf("\n")
-	log.Infof("Checking if PR patch file is available...")
-	patchFile, err := patchSource.GetPRPatch()
+	g.logger.Printf("\n")
+	g.logger.Infof("Checking if PR patch file is available...")
+	patchFile, err := g.patchSource.GetPRPatch()
 	if err != nil {
-		log.Warnf("Patch file unavailable for PR: %s", err)
+		g.logger.Warnf("Patch file unavailable for PR: %s", err)
 	}
 	if err == nil && patchFile != "" {
 		return CheckoutPRDiffFileMethod, patchFile
@@ -183,8 +181,8 @@ func selectCheckoutMethod(cfg Config, patchSource bitriseapi.PatchSource, mergeR
 	// As a last resort, fetch target + PR branches and do a manual merge
 	// This is not ideal because the merge requires fetched branch histories. If the fetch is too shallow,
 	// the merge is going to fail with "refusing to merge unrelated histories"
-	log.Printf("\n")
-	log.Warnf("Fallback strategy: we are going to check out the PR and target branches and do a manual merge")
+	g.logger.Printf("\n")
+	g.logger.Warnf("Fallback strategy: we are going to check out the PR and target branches and do a manual merge")
 	return CheckoutPRManualMergeMethod, ""
 }
 
@@ -250,8 +248,8 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 
 			return checkoutPRMergeRef{
 				params: *params,
-				fallbackCheckout: func(gitFactory git.Factory) error {
-					log.Warnf("Using manual merge strategy with PR source branch")
+				fallbackCheckout: func(cloner *GitCloner, gitFactory git.Factory) error {
+					cloner.logger.Warnf("Using manual merge strategy with PR source branch")
 
 					manualMergeFallbackFetchOpts := selectFetchOptions(CheckoutPRManualMergeMethod, cfg.CloneDepth, cfg.FetchTags, cfg.UpdateSubmodules, len(cfg.SparseDirectories) != 0)
 					manualMergeFallbackFallback := selectFallbacks(CheckoutPRManualMergeMethod, manualMergeFallbackFetchOpts)
@@ -267,7 +265,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 					}
 
 					// PR merge branch checkout falls back to PR manual merge strategy using the PR source branch
-					return fallbackManualMergeWithSourceBranch.do(gitFactory, manualMergeFallbackFetchOpts, manualMergeFallbackFallback)
+					return fallbackManualMergeWithSourceBranch.do(cloner, gitFactory, manualMergeFallbackFetchOpts, manualMergeFallbackFallback)
 				},
 			}, nil
 		}
@@ -314,8 +312,8 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 
 			return checkoutCommit{
 				params: *params,
-				fallbackCheckout: func(gitFactory git.Factory) error {
-					log.Warnf("Using commit checkout strategy with PR source branch")
+				fallbackCheckout: func(cloner *GitCloner, gitFactory git.Factory) error {
+					cloner.logger.Warnf("Using commit checkout strategy with PR source branch")
 
 					if cfg.Branch == "" || cfg.Commit == "" {
 						return fmt.Errorf("inconsistent checkout strategy and checkout params: branch=%s, commit=%s", cfg.Branch, cfg.Commit)
@@ -339,7 +337,7 @@ func createCheckoutStrategy(checkoutMethod CheckoutMethod, cfg Config, patchFile
 						params: *params,
 					}
 
-					return commitCheckoutFallbackCheckoutMethod.do(gitFactory, commitCheckoutFallbackFetchOpts, commitCheckoutFallbackFallback)
+					return commitCheckoutFallbackCheckoutMethod.do(cloner, gitFactory, commitCheckoutFallbackFetchOpts, commitCheckoutFallbackFallback)
 				},
 			}, nil
 		}

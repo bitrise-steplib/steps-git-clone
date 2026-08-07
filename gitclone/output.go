@@ -21,13 +21,15 @@ type gitOutput struct {
 
 type OutputExporter struct {
 	logger         log.Logger
+	runner         CommandRunner
 	checkoutResult CheckoutStateResult
 	exporter       export.Exporter
 }
 
-func NewOutputExporter(logger log.Logger, cmdFactory command.Factory, checkoutResult CheckoutStateResult) OutputExporter {
+func NewOutputExporter(logger log.Logger, cmdFactory command.Factory, runner CommandRunner, checkoutResult CheckoutStateResult) OutputExporter {
 	return OutputExporter{
 		logger:         logger,
+		runner:         runner,
 		checkoutResult: checkoutResult,
 		exporter:       export.NewExporter(cmdFactory, export.NewFileManager()),
 	}
@@ -112,10 +114,10 @@ func (e *OutputExporter) gitOutputs(gitRef string, isPR bool) []gitOutput {
 }
 
 func (e *OutputExporter) printLogAndExportEnv(gitTemplate git.Template, env string, maxEnvLength int) error {
-	runner.PausePerformanceMonitoring()
-	defer runner.ResumePerformanceMonitoring()
+	e.runner.PausePerformanceMonitoring()
+	defer e.runner.ResumePerformanceMonitoring()
 
-	l, err := runner.RunForOutput(gitTemplate)
+	l, err := e.runner.RunForOutput(gitTemplate)
 	if err != nil {
 		return fmt.Errorf("command failed: %s", err)
 	}

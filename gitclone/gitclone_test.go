@@ -9,6 +9,7 @@ import (
 	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/git"
 	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-io/go-utils/v2/pathutil"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/bitriseapi"
 	"github.com/bitrise-steplib/steps-git-clone/gitclone/tracker"
 
@@ -522,15 +523,11 @@ func Test_checkoutState(t *testing.T) {
 			} else {
 				mockRunner = givenMockRunnerSucceeds()
 			}
-			runner = mockRunner
 			gitFactory, err := git.DefaultFactory(t.TempDir(), command.NewFactory(env.NewRepository()))
 			assert.NoError(t, err)
 
 			// When
-			envRepo := env.NewRepository()
-			logger := log.NewLogger()
-			stepTracker := tracker.NewStepTracker(envRepo, logger)
-			cloner := NewGitCloner(log.NewLogger(), stepTracker, command.NewFactory(envRepo), tt.patchSource, tt.mergeRefChecker, false)
+			cloner := newTestCloner(mockRunner, tt.patchSource, tt.mergeRefChecker)
 			_, _, actualErr := cloner.checkoutState(gitFactory, tt.cfg)
 
 			// Then
@@ -594,12 +591,12 @@ func Test_SubmoduleUpdate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Given
 			mockRunner := givenMockRunnerSucceeds()
-			runner = mockRunner
 			gitFactory, err := git.DefaultFactory(t.TempDir(), command.NewFactory(env.NewRepository()))
 			assert.NoError(t, err)
 
 			// When
-			actualErr := updateSubmodules(gitFactory, tt.cfg)
+			cloner := newTestCloner(mockRunner, nil, nil)
+			actualErr := cloner.updateSubmodules(gitFactory, tt.cfg)
 
 			// Then
 			assert.NoError(t, actualErr)
@@ -638,18 +635,36 @@ func Test_SetupSparseCheckout(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Given
 			mockRunner := givenMockRunnerSucceeds()
-			runner = mockRunner
 			gitFactory, err := git.DefaultFactory(t.TempDir(), command.NewFactory(env.NewRepository()))
 			assert.NoError(t, err)
 
 			// When
-			actualErr := setupSparseCheckout(gitFactory, tt.sparseDirectories)
+			cloner := newTestCloner(mockRunner, nil, nil)
+			actualErr := cloner.setupSparseCheckout(gitFactory, tt.sparseDirectories)
 
 			// Then
 			assert.NoError(t, actualErr)
 			assert.Equal(t, tt.wantCmds, mockRunner.Cmds())
 		})
 	}
+}
+
+// newTestCloner constructs a GitCloner with a mock runner and real v2 pathutil helpers.
+// Used across gitclone tests to replace the removed package-level `runner` global.
+func newTestCloner(mockRunner CommandRunner, patchSource bitriseapi.PatchSource, mergeRefChecker bitriseapi.MergeRefChecker) GitCloner {
+	envRepo := env.NewRepository()
+	logger := log.NewLogger()
+	stepTracker := tracker.NewStepTracker(envRepo, logger)
+	return NewGitCloner(GitClonerParams{
+		Logger:          logger,
+		Tracker:         stepTracker,
+		CmdFactory:      command.NewFactory(envRepo),
+		PatchSource:     patchSource,
+		MergeRefChecker: mergeRefChecker,
+		Runner:          mockRunner,
+		PathChecker:     pathutil.NewPathChecker(),
+		PathModifier:    pathutil.NewPathModifier(),
+	})
 }
 
 // Mocks

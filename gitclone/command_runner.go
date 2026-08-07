@@ -7,11 +7,12 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
-	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/retry"
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/git"
+	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-io/go-utils/v2/retry"
 )
 
 // CommandRunner ...
@@ -26,8 +27,15 @@ type CommandRunner interface {
 
 // DefaultRunner ...
 type DefaultRunner struct {
+	logger                                   log.Logger
 	performanceMonitoringEnabled             bool
 	performanceMonitoringTemporarilyDisabled bool
+}
+
+func NewDefaultRunner(logger log.Logger) *DefaultRunner {
+	return &DefaultRunner{
+		logger: logger,
+	}
 }
 
 // RunForOutput ...
@@ -35,7 +43,7 @@ func (r *DefaultRunner) RunForOutput(t git.Template) (string, error) {
 	c := t.Create(nil, nil, r.performanceMonitoringEnvs())
 
 	fmt.Println()
-	log.Infof("$ %s &> out", c.PrintableCommandArgs())
+	r.logger.Infof("$ %s &> out", c.PrintableCommandArgs())
 
 	out, err := c.RunAndReturnTrimmedCombinedOutput()
 	if err != nil {
@@ -55,7 +63,7 @@ func (r *DefaultRunner) Run(t git.Template) error {
 	c := t.Create(os.Stdout, io.MultiWriter(os.Stderr, &buffer), r.performanceMonitoringEnvs())
 
 	fmt.Println()
-	log.Infof("$ %s", c.PrintableCommandArgs())
+	r.logger.Infof("$ %s", c.PrintableCommandArgs())
 
 	err := c.Run()
 	if err == nil {
@@ -76,14 +84,14 @@ func (r *DefaultRunner) Run(t git.Template) error {
 
 // RunWithRetry ...
 func (r *DefaultRunner) RunWithRetry(get func() git.Template) error {
-	return retry.Times(2).Wait(5).Try(func(attempt uint) error {
+	return retry.Times(2).Wait(5 * time.Second).Try(func(attempt uint) error {
 		if attempt > 0 {
-			log.Warnf("Retrying...")
+			r.logger.Warnf("Retrying...")
 		}
 
 		err := r.Run(get())
 		if err != nil {
-			log.Warnf("Attempt %d failed:", attempt+1)
+			r.logger.Warnf("Attempt %d failed:", attempt+1)
 			fmt.Println(err.Error())
 		}
 

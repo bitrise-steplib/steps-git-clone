@@ -103,7 +103,7 @@ func Test_gitOutputs(t *testing.T) {
 				isPR:       tt.args.isPR,
 				gitFactory: gitFactory,
 			}
-			e := NewOutputExporter(log.NewLogger(), command.NewFactory(env.NewRepository()), r)
+			e := NewOutputExporter(log.NewLogger(), command.NewFactory(env.NewRepository()), givenMockRunnerSucceeds(), r)
 			assert.Equalf(t, tt.want, e.gitOutputs(tt.args.gitRef, tt.args.isPR), "gitOutputs(%v, %v)", tt.args.gitRef, tt.args.isPR)
 		})
 	}

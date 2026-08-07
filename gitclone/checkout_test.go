@@ -262,7 +262,8 @@ func Test_selectCheckoutMethod(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got, _ := selectCheckoutMethod(tt.cfg, tt.patchSource, tt.mergeRefChecker); got != tt.want {
+			cloner := newTestCloner(givenMockRunnerSucceeds(), tt.patchSource, tt.mergeRefChecker)
+			if got, _ := cloner.selectCheckoutMethod(tt.cfg); got != tt.want {
 				t.Errorf("selectCheckoutMethod() = %v, want %v", got, tt.want)
 			}
 		})
