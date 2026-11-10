@@ -605,6 +605,26 @@ func Test_SubmoduleUpdate(t *testing.T) {
 	}
 }
 
+func Test_resetRepo(t *testing.T) {
+	// Given
+	mockRunner := givenMockRunnerSucceeds()
+	gitFactory, err := git.DefaultFactory(t.TempDir(), command.NewFactory(env.NewRepository()))
+	assert.NoError(t, err)
+
+	// When
+	cloner := newTestCloner(mockRunner, nil, nil)
+	actualErr := cloner.resetRepo(gitFactory)
+
+	// Then
+	assert.NoError(t, actualErr)
+	assert.Equal(t, []string{
+		`git "reset" "--hard" "HEAD"`,
+		`git "clean" "-x" "-d" "-f"`,
+		`git "submodule" "foreach" "git" "reset" "--hard" "HEAD"`,
+		`git "submodule" "foreach" "git" "clean" "-x" "-d" "-f"`,
+	}, mockRunner.Cmds())
+}
+
 func Test_SetupSparseCheckout(t *testing.T) {
 	tests := [...]struct {
 		name              string

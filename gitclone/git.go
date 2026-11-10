@@ -46,10 +46,10 @@ func (g GitCloner) resetRepo(gitFactory git.Factory) error {
 	if err := g.runner.Run(gitFactory.Clean("-x", "-d", "-f")); err != nil {
 		return err
 	}
-	if err := g.runner.Run(gitFactory.SubmoduleForeach("reset", "--hard", "HEAD")); err != nil {
+	if err := g.runner.Run(gitFactory.SubmoduleForeach("git", "reset", "--hard", "HEAD")); err != nil {
 		return err
 	}
-	return g.runner.Run(gitFactory.SubmoduleForeach("clean", "-x", "-d", "-f"))
+	return g.runner.Run(gitFactory.SubmoduleForeach("git", "clean", "-x", "-d", "-f"))
 }
 
 func isFork(repoURL, prRepoURL string) bool {
