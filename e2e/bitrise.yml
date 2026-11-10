@@ -10,6 +10,7 @@ app:
   - MERGE_PR: "yes"
   - CLONE_DEPTH: ""
   - SPARSE_DIRECTORIES: ""
+  - RESET_REPOSITORY: "No"
   # define these envs in your .bitrise.secrets.yml
   - GIT_CLONE_SSH_PRIVATE_KEY: $GIT_CLONE_SSH_PRIVATE_KEY
   - GIT_HTTP_PASSWORD_FOR_TEST: $GIT_HTTP_PASSWORD_FOR_TEST
@@ -53,6 +54,26 @@ workflows:
     after_run:
     - _run
     - _check_outputs
+    - _teardown
+
+  test_submodule_reset:
+    envs:
+    - BRANCH: master
+    - RESET_REPOSITORY: "Yes"
+    before_run:
+    - _setup
+    - _run
+    steps:
+    - script:
+        title: Leave an untracked file in the submodule
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -ex
+            touch "$WORKDIR/git-clone-test/untracked.txt"
+    after_run:
+    - _run
+    - _check_submodule_reset
     - _teardown
 
   test_error:
@@ -608,6 +629,18 @@ workflows:
             echo "GIT_CLONE_COMMIT_COMMITTER_NAME: ${GIT_CLONE_COMMIT_COMMITTER_NAME}"
             echo "GIT_CLONE_COMMIT_COMMITTER_EMAIL: ${GIT_CLONE_COMMIT_COMMITTER_EMAIL}"
 
+  _check_submodule_reset:
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -ex
+            if [[ -e "$WORKDIR/git-clone-test/untracked.txt" ]]; then
+              echo "The submodule was not cleaned"
+              exit 1
+            fi
+
   _setup:
     steps:
     - script:
@@ -670,6 +703,7 @@ workflows:
         - merge_pr: $MERGE_PR
         - clone_depth: $CLONE_DEPTH
         - sparse_directories: $SPARSE_DIRECTORIES
+        - reset_repository: $RESET_REPOSITORY
 
   _teardown:
     steps:
