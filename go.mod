@@ -5,8 +5,8 @@ go 1.22.0
 require (
 	github.com/bitrise-io/bitrise-init v0.0.0-20250909114624-fbfc915502b7
 	github.com/bitrise-io/envman v0.0.0-20210517135508-b2b4fe89eac5
-	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.50
-	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.36
+	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.55
+	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.39
 	github.com/bitrise-steplib/steps-authenticate-host-with-netrc v0.0.0-20230711084209-91fcd09b2017
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/stretchr/testify v1.10.0

@@ -31,7 +31,7 @@ func NewOutputExporter(logger log.Logger, cmdFactory command.Factory, runner Com
 		logger:         logger,
 		runner:         runner,
 		checkoutResult: checkoutResult,
-		exporter:       export.NewExporter(cmdFactory, export.NewFileManager()),
+		exporter:       export.NewDefaultExporter(cmdFactory),
 	}
 }
 
