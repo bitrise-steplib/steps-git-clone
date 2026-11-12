@@ -146,6 +146,8 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		)
 	}
 
+	g.pinConflictMarkerSizeIfVulnerable(cfg.CloneIntoDir)
+
 	if err := g.setupSparseCheckout(gitFactory, cfg.SparseDirectories); err != nil {
 		return CheckoutStateResult{}, err
 	}
