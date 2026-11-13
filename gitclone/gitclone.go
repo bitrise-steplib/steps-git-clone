@@ -146,6 +146,10 @@ func (g GitCloner) CheckoutState(cfg Config) (CheckoutStateResult, error) {
 		)
 	}
 
+	if err := pinConflictMarkerSize(cfg.CloneIntoDir); err != nil {
+		g.logger.Warnf("Failed to pin conflict-marker-size in .git/info/attributes: %s", err)
+	}
+
 	if err := g.setupSparseCheckout(gitFactory, cfg.SparseDirectories); err != nil {
 		return CheckoutStateResult{}, err
 	}
