@@ -57,27 +57,25 @@ func pinConflictMarkerSize(repoDir string) error {
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
-	for _, line := range strings.Split(string(content), "\n") {
-		if strings.TrimSpace(line) == conflictMarkerSizeAttribute {
-			return nil
+
+	// Later rules take precedence, so the pin is only effective as the last rule.
+	lines := strings.Split(strings.TrimRight(string(content), "\n"), "\n")
+	if strings.TrimSpace(lines[len(lines)-1]) == conflictMarkerSizeAttribute {
+		return nil
+	}
+
+	var updated strings.Builder
+	if len(content) > 0 {
+		for _, line := range lines {
+			if strings.TrimSpace(line) != conflictMarkerSizeAttribute {
+				updated.WriteString(line + "\n")
+			}
 		}
 	}
+	updated.WriteString(conflictMarkerSizeAttribute + "\n")
 
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		return err
-	}
-
-	line := conflictMarkerSizeAttribute + "\n"
-	if len(content) > 0 && !strings.HasSuffix(string(content), "\n") {
-		line = "\n" + line
-	}
-	if _, err := f.WriteString(line); err != nil {
-		_ = f.Close()
-		return err
-	}
-	return f.Close()
+	return os.WriteFile(path, []byte(updated.String()), 0o644)
 }

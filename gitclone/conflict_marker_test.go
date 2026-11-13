@@ -31,6 +31,11 @@ func Test_pinConflictMarkerSize(t *testing.T) {
 			want:     "* conflict-marker-size=99999999\n* conflict-marker-size=7\n",
 		},
 		{
+			name:     "Moves an overridden pin last",
+			existing: ptr("* conflict-marker-size=7\n* conflict-marker-size=99999999\n"),
+			want:     "* conflict-marker-size=99999999\n* conflict-marker-size=7\n",
+		},
+		{
 			name:     "Already pinned",
 			existing: ptr("* conflict-marker-size=7\n"),
 			want:     "* conflict-marker-size=7\n",
