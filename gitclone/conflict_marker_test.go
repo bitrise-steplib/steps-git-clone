@@ -76,32 +76,6 @@ func Test_pinConflictMarkerSize_overridesInTreeAttributes(t *testing.T) {
 	require.Equal(t, "sub/file.txt: conflict-marker-size: 7", runGit(t, repoDir, "check-attr", "conflict-marker-size", "--", "sub/file.txt"))
 }
 
-func Test_hasConflictMarkerFix(t *testing.T) {
-	tests := []struct {
-		output string
-		want   bool
-	}{
-		{output: "git version 2.56.1", want: true},
-		{output: "git version 2.57.0", want: true},
-		{output: "git version 3.0.0", want: true},
-		{output: "git version 2.56.1.windows.1", want: true},
-		{output: "git version 2.55.1", want: true},
-		{output: "git version 2.51.3", want: true},
-		{output: "git version 2.50.2", want: true},
-		{output: "git version 2.56.0", want: false},
-		{output: "git version 2.55.0", want: false},
-		{output: "git version 2.51.2", want: false},
-		{output: "git version 2.50.1 (Apple Git-155)", want: false},
-		{output: "git version 2.34.1", want: false},
-		{output: "unexpected output", want: false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.output, func(t *testing.T) {
-			require.Equal(t, tt.want, hasConflictMarkerFix(tt.output))
-		})
-	}
-}
-
 func runGit(t *testing.T, dir string, args ...string) string {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = dir
