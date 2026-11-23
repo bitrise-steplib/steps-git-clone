@@ -29,7 +29,7 @@ func Setup(cfg Config) error {
 	if err != nil {
 		return fmt.Errorf("failed to parse URL: %w", err)
 	}
-	host := u.Host
+	host := u.Hostname()
 	username := cfg.HTTPUsername
 	// Some providers (e.g. GitHub) doesn't care about the username, so we don't ask for it from the user
 	// But something still needs to be provided when making the network call
